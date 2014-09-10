@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+#SBATCH -A SNIC2014-1-158
+#SBATCH -p glenn
+#SBATCH -J JobFindPeakingFactor
+#SBATCH -N 2 # number of nodes to request
+#SBATCH -n 32 # total number of processes, max 16xN
+#SBATCH -t 12:00:00  # walltime limit 
+#SBATCH -o BATCHsfincsFindPeakingFactorOutput-%N.out # %N for name of 1st allocated node 
+#SBATCH -e BATCH.stderr
+
+
+module purge
+# module load gcc/4.7/4.7.3
+module load pgi/12.9
+module load openmpi
+module load acml/5.1.0/gfortran64_fma4_mp
+module load python
+module load numpy/py27/1.6.1-pgi12-acml
+module load h5py/2.1.0-gcc4.7-acml
+
+cd $SLURM_SUBMIT_DIR
+python sfincsFindPeakingFactor.py # launch MPI job
+ 
+# End script

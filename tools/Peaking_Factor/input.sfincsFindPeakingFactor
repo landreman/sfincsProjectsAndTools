@@ -1,0 +1,27 @@
+
+# This is a comment
+# Specify value of variable by: <VariableName> <Value>
+
+sfincsFindAmbipolarEr_INPUT input.sfincsFindAmbipolarEr #Input file to script for looking for ambipolar electric field
+
+PLOT_OUTPUT_PEAKING Plot_sfincsFindPeakingFactor.pdf #Name of output plot file of script
+ARRAY_OUTPUT_PEAKING sfincsFindPeakingFactor_Array.out #Name of output file containing particle fluxes and dNHatdpsiNs for each iteration
+RESULT_OUTPUT_PEAKING sfincsFindPeakingFactor_Result.out #Name of output file containing resulting peaking factor (dNHatdpsiN when particleFlux = 0) from final iteration
+
+#Absolute and relative errors
+ABS_ERROR_PEAKING 1e-16
+REL_ERROR_PEAKING 10e0
+
+#Maximum iterations
+MAX_ITER_PEAKING 20
+
+#If CONTINUE_SCAN_PEAKING=0 a new Peaking Factor scan is initiated from scratch, otherwise a restart from directory CONTINUE_DIR_PEAKING
+#CONTINUE_SCAN_PEAKING=1 can be used if one wants to improve the solution by reducing the error, and don't want to restart from the beginning
+CONTINUE_SCAN_PEAKING 0
+CONTINUE_DIR_PEAKING 2
+
+#Starting value of dNHatdpsiN for the species to find the peaking factor for in SFINCS
+dNHatdpsiN_START_PEAKING -0.0000244e+0
+
+#If 1 dNHatdpsiNs in SFINCS is modified to fulfill quasineutrality for each iteration, if 0 quasineutrality is ignored
+CHECK_QUASINEUTRALITY_PEAKING 1
