@@ -8,19 +8,33 @@
 # on the IPP cluster
 
 # Scan types (i.e. values for programMode) implemented in this script:
-# 2 = Convergence scan
-# 6 = Scan of Estar, at fixed resolutions.
-# 7 = Simultaneous convergence scan and scan of Estar
-# 8 = Scan of dPhiHatdpsi, at fixed resolutions.
-# 9 = Simultaneous convergence scan and scan of dPhiHatdpsi
+# 2  = Convergence scan
+# 6  = Scan of Estar, at fixed resolutions.
+# 7  = Simultaneous convergence scan and scan of Estar
+# 8  = Scan of dPhiHatdpsi, at fixed resolutions.
+# 9  = Simultaneous convergence scan and scan of dPhiHatdpsi
 # 10 = Simultaneous scan of dphiHatdpsi, of collisionOperator=0 and 1, and of DKES vs full trajectories, keeping resolutions fixed.
 # 20 = Scan radius, taking profiles from profiles.dat
 
 $filename="input.namelist"
 
-jobFilename="job.sfincs"
+$sfincs_system=ENV["SFINCS_SYSTEM"]
+case $sfincs_system
+when "hgw"
+  $jobSubmitCommand="qsub"
+when "hydra"
+  $jobSubmitCommand="llsubmit"
+else
+  puts "Error! SFINCS_SYSTEM=#{$sfincs_system} is not implemented in the ruby script!"
+      exit
+end
+jobFilename="job.#{$sfincs_system}"
 
 $profilesdatfile="profiles.dat"
+
+#The following line is only relevant on the hgw cluster:
+clusters=["wsclus","wsclus","edge01","edge01"]
+#clusters=["wsclus","wsclus","edge01","wsclus","edge02","wsclus","wsclus","edge03"]
 
 require 'fileutils'
 include FileUtils        
@@ -32,7 +46,7 @@ end
 puts "File #{$filename} exists."
 
 if !File.exists?(jobFilename)
-  puts "Error! #{$jobFilename} not found."
+  puts "Error! #{jobFilename} not found."
   exit
 end
 puts "File #{jobFilename} exists."
@@ -41,9 +55,22 @@ puts "File #{jobFilename} exists."
 inFile = File.open(jobFilename,"r")
 lines = inFile.readlines
 lines.each {|line| 
-  if (line.include? "-N")
-    puts "Error! #{jobFilename} should not include a -N line with job name."
-    exit
+  case $sfincs_system
+  when "hgw"
+    if (line.include? "-N")
+      puts "Error! #{jobFilename} should not include a -N line with job name."
+      exit
+    end
+  when "hydra"
+    if (line.include? "output")
+      puts "Error! #{jobFilename} should not include a output line with job name."
+    end
+    if (line.include? "error")
+      puts "Error! #{jobFilename} should not include an error line with job name."
+    end
+  else
+      puts "Error! SFINCS_SYSTEM=#{$sfincs_system} is not implemented in the ruby script!"
+      exit
   end
 }
 inFile.close
@@ -370,9 +397,15 @@ when 6
 when 8
   # Scan of E_r (i.e. of dPhiHatdpsi)
   
-  NErs = readInput("NErs",0)
-  dPhiHatdpsi_min = readInput("dPhiHatdpsi_min",1)
-  dPhiHatdpsi_max = readInput("dPhiHatdpsi_max",1)
+  # The following is ugly, but I do it to avoid changing in sfincs.
+  # I call dPhiHatdpsi parameters EStar in input.parameters
+  # and rename them here.
+  #NErs = readInput("NErs",0)
+  #dPhiHatdpsi_min = readInput("dPhiHatdpsi_min",1)
+  #dPhiHatdpsi_max = readInput("dPhiHatdpsi_max",1)
+  NErs = readInput("NEStar",0)
+  dPhiHatdpsi_min = readInput("EStarMin",1)
+  dPhiHatdpsi_max = readInput("EStarMax",1)
   dPhiHatdpsis = linspace(dPhiHatdpsi_min, dPhiHatdpsi_max, NErs)
   
   numRunsInScan = NErs
@@ -385,7 +418,7 @@ when 10
   numRunsInScan = 4
   
 when 20
-  parametersForScan=readProfiles($profilesdatfile, 7)
+  parametersForScan=readProfiles($profilesdatfile, 9)
   numRunsInScan = parametersForScan.size
 
 else
@@ -450,9 +483,24 @@ when 7,9,10
       outFile = File.open(outFilename,"w")
       lines = inFile.readlines
       outFile.write(lines[0])
-      outFile.write("#\$ -N #{outerDirName}.#{innerDirName}\n")
-      for j in 1..(lines.size-1)
-        outFile.write(lines[j])
+      case $sfincs_system 
+      when "hgw"
+        outFile.write("#\$ -N #{outerDirName}.#{innerDirName}\n")
+        for j in 1..(lines.size-1)
+          if lines[j].include? "CLUSTR"
+            clind=lines[j].index('CLUSTR')
+            iall=i*NErs+k
+            lines[j][clind..clind+5]=clusters[iall.modulo(clusters.size)]
+            puts lines[j]
+          end 
+          outFile.write(lines[j])
+        end
+      when "hydra"
+        outFile.write("# @ error = #{outerDirName}.#{innerDirName}.e$(jobid)\n")
+        outFile.write("# @ output = #{outerDirName}.#{innerDirName}.o$(jobid)\n")
+        for j in 1..(lines.size-1)
+          outFile.write(lines[j])
+        end
       end
       inFile.close
       outFile.close
@@ -576,11 +624,11 @@ when 7,9,10
       #if i==0 and programMode == 9
       if true
         # In this way of submitting a job, ruby waits for qsub to complete before moving on.
-        puts `cd #{dirName}; qsub #{jobFilename} &`
+        puts `cd #{dirName}; #{$jobSubmitCommand} #{jobFilename} &`
       else
         # In this way of submitting a job, ruby does not wait for qsub to complete before moving on.
         job1 = fork do
-          exec "cd #{dirName}; qsub #{jobFilename}"
+          exec "cd #{dirName}; #{$jobSubmitCommand} #{jobFilename}"
         end
         Process.detach(job1)
       end
@@ -606,28 +654,44 @@ else
     end until !File.exists?(dirName)
     mkdir(dirName)
     
+    case programMode
+    when 2
+      jobName="SfxConv.#{dirName}"
+    when 6
+      jobName="SfxEstr.#{dirName}"
+    when 8
+      jobName="SfxEr.#{dirName}"
+    when 20
+      jobName="SfxRad.#{dirName}"
+    else
+      jobName="Sfx.#{dirName}"
+    end
+
     # Copy sge file (pbs file in Matt's case)
     outFilename = dirName + "/" + jobFilename
     inFile = File.open(jobFilename,"r")
     outFile = File.open(outFilename,"w")
     lines = inFile.readlines
     outFile.write(lines[0])
-    case programMode
-    when 2
-      outFile.write("#\$ -N SfxConv.#{dirName}\n")
-      # for pbs files it should instead be "#PBS -N ... "
-    when 6
-      outFile.write("#\$ -N SfxEstr.#{dirName}\n")
-    when 8
-      outFile.write("#\$ -N SfxEr.#{dirName}\n")
-    when 20
-      outFile.write("#\$ -N SfxRad.#{dirName}\n")
-    else
-      outFile.write("#\$ -N Sfx.#{dirName}\n")
+    case $sfincs_system 
+    when "hgw"
+      outFile.write("#\$ -N #{jobName}\n")
+      for j in 1..(lines.size-1)
+        if lines[j].include? "CLUSTR"
+          clind=lines[j].index('CLUSTR')
+          lines[j][clind..clind+5]=clusters[i.modulo(clusters.size)]
+          puts lines[j]
+        end 
+        outFile.write(lines[j])
+      end
+    when "hydra"
+      outFile.write("# @ error = #{jobName}.e$(jobid)\n")
+      outFile.write("# @ output = #{jobName}.o$(jobid)\n")
+      for j in 1..(lines.size-1)
+        outFile.write(lines[j])
+      end
     end
-    for j in 1..(lines.size-1)
-      outFile.write(lines[j])
-    end
+
     inFile.close
     outFile.close
     
@@ -716,6 +780,14 @@ else
           line = "nuN = " + parametersForScan[i][6].to_s
         end
 
+        if namelistLineContains(line,"Estar")
+          line = "Estar = " + parametersForScan[i][7].to_s
+        end
+
+        if namelistLineContains(line,"nuPrime")
+          line = "nuPrime = " + parametersForScan[i][8].to_s
+        end
+
       end
       
       outFile.write(line + "\n")
@@ -729,12 +801,12 @@ else
     #if i==0
     if true
       # In this way of submitting a job, ruby waits for qsub to complete before moving on.
-      puts `cd #{dirName}; qsub #{jobFilename} &` #the ` signs make it happen!
+      puts `cd #{dirName}; #{$jobSubmitCommand} #{jobFilename} &` #the ` signs make it happen!
     else
       # In this way of submitting a job, ruby does not wait for qsub to complete before moving on.
       job1 = fork do
         
-        exec "cd #{dirName}; qsub #{jobFilename}"
+        exec "cd #{dirName}; #{$jobSubmitCommand} #{jobFilename}"
       end
       Process.detach(job1)
     end
