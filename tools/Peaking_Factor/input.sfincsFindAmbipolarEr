@@ -1,0 +1,35 @@
+
+# This is a comment
+# Specify value of variable by: <VariableName> <Value>
+
+SFINCS_INPUT input.namelist #Name of SFINCS input file
+SFINCS_OUTPUT sfincsOutput.h5 #Name of SFINCS output file
+
+PLOT_OUTPUT Plot_sfincsFindAmbipolarEr.pdf #Name of output plot file of script
+ARRAY_OUTPUT sfincsFindAmbipolarEr_Array.out #Name of output file containing radial current and dPhiHatdpsiN for each iteration
+RESULT_OUTPUT sfincsFindAmbipolarEr_Result.out #Name of output file containing results (particle fluxes and ambipolar field) from final iteration
+
+#Absolute and relative errors
+ABS_ERROR 1e-13
+REL_ERROR 10e0
+
+#Maximum iterations
+MAX_ITER 20
+
+#Number of processes used when running SFINCS
+NPROC 32
+
+#If CONTINUE_SCAN=0 a new Er scan is initiated from scratch, otherwise a restart from directory CONTINUE_DIR
+#CONTINUE_SCAN=1 can be used if one wants to improve the solution by reducing the error, and don't want to restart from the beginning
+CONTINUE_SCAN 0
+CONTINUE_DIR 5
+
+#Starting value of the radial electric field in SFINCS
+dPhiHatdpsiN_START 2.35041741429
+
+#Path to sfincs executable
+PATH_TO_SFINCS sfincs
+
+#If system uses aprun put 1, if mpirun put 0
+USE_APRUN 0
+

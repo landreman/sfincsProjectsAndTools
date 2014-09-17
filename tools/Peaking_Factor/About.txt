@@ -1,0 +1,130 @@
+##############################################################
+##############################################################
+DESCRIPTION OF PYTHON SCRIPTS sfincsFindPeakingFactor.py AND sfincsFindAmbipolarEr.py FOR SFINCS
+BY ALBERT MOLLÉN 2014
+##############################################################
+##############################################################
+
+
+
+
+
+########################
+sfincsFindAmbipolarEr.py
+########################
+To run sfincsFindAmbipolarEr.py an installed version of SFINCS multispecies fortran is required together with the file sfincsInputOutput.py located in the same simulation directory as sfincsFindAmbipolarEr.py. In the simulation directory there should also be a SFINCS input file together with an input file for the script, input.sfincsFindAmbipolarEr. If running on a batch system there should also be a jobscript submission file.
+
+The script works by iterating instances of SFINCS, modifying only the radial electric field, dPhiHatdpsiN, in the SFINCS input file trying to minimize the size of the total radial current. When the size of the current is smaller than a specified value (the absolute error) the script finishes and the current value of dPhiHatdpsiN is the ambipolar radial electric field. If the script fails to find such a solution within the specified tolerance it will finish after a certain number of iterations given by the user.
+The updating scheme of the radial electric field is a simple linear interpolation based on the results from the two former iteration steps. As shown in Phys. Plasmas. 21, 042503 (2014) figure 3(A) this is not always a good approximation, but the script has been found to function for a number of test cases.
+
+The output of the script is the full iteration in form of a directory structure named 1/, 2/, 3/, ... containing the input/output of the corresponding SFINCS instance, together with the results of the script summarized in two .out output files and a .pdf containing plots of the procedure.
+
+####################################################################
+PARAMETERS IN input.sfincsFindAmbipolarEr WITH DEFAULT VALUE IN ( )
+
+SFINCS_INPUT (input.namelist)
+- Name of the input file used in SFINCS.
+
+SFINCS_OUTPUT (sfincsOutput.h5)
+- Name of the output file from SFINCS.
+
+PLOT_OUTPUT (Plot_sfincsFindAmbipolarEr.pdf)
+- Name of pdf file containing plots of the iteration steps.
+
+ARRAY_OUTPUT (sfincsFindAmbipolarEr_Array.out)
+- Name of output file containing the radial current and dPhiHatdpsiN for each iteration step.
+
+RESULT_OUTPUT (sfincsFindAmbipolarEr_Result.out)
+- Name of output file containing results (particle fluxes for all species and ambipolar field) from final iteration.
+
+ABS_ERROR (1e-8) 
+- The tolerance in absolute error |Sum particle currents|, when the size of the total radial current is smaller than this value the solution is found and iteration stops.
+
+REL_ERROR (1e0)
+- This parameter should be removed.
+
+MAX_ITER (10)
+- Maximum number of iterations. If a solution is not found within the specified number the script will finish anyway.
+
+NPROC (1)
+- Number of MPI processes to use when running SFINCS
+This parameter should be removed and replaced by a full command for running SFINCS.
+
+CONTINUE_SCAN (0)
+- If this parameter is 0 a new scan is started from the beginning. If one wants to improve a solution by continuing on a scan this parameter should be 1.
+
+CONTINUE_DIR (1)
+- This is the directory number to continue doing the next iteration step in if CONTINUE_SCAN is 1. The preceding directories must exist as dPhiHatdpsiN is calculated based on the results in them.
+
+dPhiHatdpsiN_START (0.0)
+- This is the starting value of dPhiHatdpsiN in the first iteration when CONTINUE_SCAN is 0. 
+If using another than the default value it is probably good to use a value which is of the same order as expected for the solution.
+
+PATH_TO_SFINCS (sfincs)
+- The path to the SFINCS executable.
+This parameter should be replaced by a full command line for running SFINCS, including MPI information.
+
+USE_APRUN (0)
+- This parameter should be removed.
+
+
+
+
+
+##########################
+sfincsFindPeakingFactor.py
+##########################
+To run sfincsFindPeakingFactor.py everything required for sfincsFindAmbipolarEr.py is also required. In addition an input file, input.sfincsFindPeakingFactor, is required. If running on a batch system there should also be a jobscript submission file.
+
+This script iterates the other script sfincsFindAmbipolarEr.py, only changing the SFINCS input density gradients, dNHatdpsiNs, to find the peaking factor (zero-flux density gradient) of the last species. The script works for an arbitrary number of plasma species, but will only modify the density gradient of the last two species. The second-to-last species density gradient is modified only to maintain radial quasineutrality. One can choose to neglect radial quasineutrality and then only the last species density gradient is modified. 
+The intention is that the script should be used for searching for impurity peaking factors, and expectedly works best when the concentration of the last species is significantly smaller than that of the main species.
+
+When the size of the flux of the last species is smaller than a specified value (the absolute error) the script finishes and the current value of the last element in dNHatdpsiNs corresponds to the steady-state density gradient of the last species. If the script fails to find such a solution within the specified tolerance it will finish after a certain number of iterations given by the user.
+The updating scheme of the last species density gradient is a simple linear interpolation based on the results from the two former iteration steps. 
+
+The output of the script is the full iteration in form of a directory structure named peaking1/, peaking2/, peaking3/, ... containing the input/output of the corresponding sfincsFindAmbipolarEr.py runs, together with the results of the script summarized in two .out output files and a .pdf containing plots of the procedure.
+
+####################################################################
+PARAMETERS IN input.sfincsFindPeakingFactor WITH DEFAULT VALUE IN ( )
+
+sfincsFindAmbipolarEr_INPUT (input.sfincsFindAmbipolarEr)
+- Name of input file to sfincsFindAmbipolarEr.py
+
+PLOT_OUTPUT_PEAKING (Plot_sfincsFindPeakingFactor.pdf)
+- Name of pdf file containing plots of the iteration steps.
+
+ARRAY_OUTPUT_PEAKING (sfincsFindPeakingFactor_Array.out)
+- Name of output file containing the radial particle flux of the last species and dNHatdpsiNs for each iteration step.
+
+RESULT_OUTPUT_PEAKING (sfincsFindPeakingFactor_Result.out)
+- Name of output file containing resulting peaking factor (dNHatdpsiN when particleFlux = 0) and particle fluxes for all species and ambipolar radial electric field from final iteration.
+
+ABS_ERROR_PEAKING (1e-4)
+- The tolerance in absolute error |Particle flux last species|, when the size of the flux of the last species is smaller than this value the solution is found and iteration stops.
+
+REL_ERROR_PEAKING (1e0)
+- This parameter should be removed.
+
+MAX_ITER_PEAKING (10)
+- Maximum number of iterations. If a solution is not found within the specified number the script will finish anyway.
+
+CONTINUE_SCAN_PEAKING (0)
+- If this parameter is 0 a new scan is started from the beginning. If one wants to improve a solution by continuing on a scan this parameter should be 1.
+
+CONTINUE_DIR_PEAKING (1)
+- This is the directory number to continue doing the next iteration step in if CONTINUE_SCAN_PEAKING is 1. The preceding directories must exist as dNHatdpsiNs is calculated based on the results in them.
+
+dNHatdpsiN_START_PEAKING (-1.0)
+- This is the starting value of the last element in dNHatdpsiNs in the first iteration when CONTINUE_SCAN is 0. 
+It is probably good to use a value which is of the same order as expected for the solution. Rather use a low value than a large. 
+
+CHECK_QUASINEUTRALITY_PEAKING (1)
+- If this parameter is set to 1, the second-to-last element in dNHatdpsiNs is changed together with the last element in order to maintain radial quasineutrality. If it is 0 radial quasineutrality is neglected and only the last element in dNHatdpsiNs is changed in the iteration procedure.
+
+
+##################
+ADDITIONAL REMARKS
+##################
+
+* It is recommended to use absolute paths to SFINCS input files (e.g. geometry file) because the Python scripts can enter other directories than where they are launched from.
+
