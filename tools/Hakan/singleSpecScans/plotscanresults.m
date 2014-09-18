@@ -1,4 +1,4 @@
-function runs=plotscanresults(dirpath,param)
+function runs=plotscanresults(dirpath,param,makeplots)
 %This funtion plots the results of a combined convergence and parameter scan
 %"dirpath" is the path to the directory where "baseCase" and the different directories
 %for convergence tested parameters.
@@ -13,6 +13,9 @@ function runs=plotscanresults(dirpath,param)
 %         'fig2ErScan_ecb2_conv/']; %I am running the base case with the new NTVMatrix storage
 %param='EStar';
 %param='dPhiHatdpsi';
+if nargin==2
+  makeplots=1;
+end
 
 [runs,P,Nval,missing]=getscanresults(dirpath,param);
 
@@ -34,7 +37,7 @@ showparam={'Ntheta','Nzeta','Nx','Nxi'};%,'solverTolerance'};
 Nrow=length(showparam);
 Ncol=6+1;
 
-makeplots=1;
+%makeplots=1;
 if makeplots
 close all
 %For each value of 'param', make different scan variable plots
