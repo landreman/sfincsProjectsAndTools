@@ -178,9 +178,15 @@ Ntheta36 =[];
 Nzeta36 =[];
 Nxi36 =[];
 Nx36=[];
+timeNN =[];
+NthetaNN =[];
+NzetaNN =[];
+NxiNN =[];
+NxNN=[];
 
 ind16=0;
 ind36=0;
+indNN=0;
 for rind=1:length(runs)
   for uind=1:length(runs{rind}.NumElements)
     if runs{rind}.run(uind).proc==16
@@ -198,45 +204,81 @@ for rind=1:length(runs)
       Nxi36(ind36)=runs{rind}.Nxi(uind);
       Nx36(ind36)=runs{rind}.Nx(uind);      
     else
-      error('Not implemented yet!')
+      indNN=indNN+1;
+      timeNN(indNN)=runs{rind}.run(uind).time/60; %minutes
+      NthetaNN(indNN)=runs{rind}.Ntheta(uind);
+      NzetaNN(indNN)=runs{rind}.Nzeta(uind);
+      NxiNN(indNN)=runs{rind}.Nxi(uind);
+      NxNN(indNN)=runs{rind}.Nx(uind);      
+    %else
+    %  disp(['Number of cores: ',num2str(runs{rind}.run(uind).proc)])
+    %  error('Not implemented yet!')
     end
   end
 end
 
 Ntot16=Nx16.*Nxi16.*Nzeta16.*Ntheta16;
 Ntot36=Nx36.*Nxi36.*Nzeta36.*Ntheta36;
+NtotNN=NxNN.*NxiNN.*NzetaNN.*NthetaNN;
 time16(find(time16<0))=NaN;
 time36(find(time36<0))=NaN;
+timeNN(find(timeNN<0))=NaN;
 
 options.Display='off';lb=[0,-500];ub=[200,500];
 fun = @(k,xdata)k(1)*xdata+k(2);
-k = lsqcurvefit(fun,[200/3e6,0],Ntot16,time16,lb,ub,options);
+if not(isempty(Ntot16))
+  k = lsqcurvefit(fun,[200/3e6,0],Ntot16,time16,lb,ub,options);
+else
+  k = lsqcurvefit(fun,[200/3e6,0],NtotNN,timeNN,lb,ub,options);  
+end
 disp(['minutes per Ntot: ',num2str(k(1))])
-
 disp(['minutes per Ntheta (crude): ',num2str(k(1)*Nzetabase*Nxibase*Nxbase)])
 disp(['minutes per Nzeta  (crude): ',num2str(k(1)*Nthetabase*Nxibase*Nxbase)])
 disp(['minutes per Nxi    (crude): ',num2str(k(1)*Nthetabase*Nzetabase*Nxbase)])
 disp(['minutes per Nx     (crude): ',num2str(k(1)*Nthetabase*Nzetabase*Nxibase)])
 
-inds=find((Nzeta16==Nzetabase) & (Nxi16==Nxibase) & (Nx16==Nxbase));
-if length(inds)>=2
-  ktheta=lsqcurvefit(fun,[k(1)*Nzetabase*Nxibase*Nxbase,0],Ntheta16(inds),time16(inds),lb,ub,options);
-  disp(['minutes per Ntheta: ',num2str(ktheta(1))])
-end
-inds=find((Ntheta16==Nthetabase) & (Nxi16==Nxibase) & (Nx16==Nxbase));
-if length(inds)>=2
-  kzeta=lsqcurvefit(fun,[k(1)*Nthetabase*Nxibase*Nxbase,0],Nzeta16(inds),time16(inds),lb,ub,options);
-  disp(['minutes per Nzeta : ',num2str(kzeta(1))])
-end
-inds=find((Ntheta16==Nthetabase) & (Nzeta16==Nzetabase) & (Nx16==Nxbase));
-if length(inds)>=2
-  kxi=lsqcurvefit(fun,[k(1)*Nthetabase*Nzetabase*Nxbase,0],Nxi16(inds),time16(inds),lb,ub,options);
-  disp(['minutes per Nxi   : ',num2str(kxi(1))])
-end
-inds=find((Ntheta16==Nthetabase) & (Nzeta16==Nzetabase) & (Nxi16==Nxibase));
-if length(inds)>=2
-  kx=lsqcurvefit(fun,[k(1)*Nthetabase*Nzetabase*Nxbase,0],Nx16(inds),time16(inds),lb,ub,options);
-  disp(['minutes per Nx    : ',num2str(kx(1))])
+if not(isempty(Ntot16))
+  inds=find((Nzeta16==Nzetabase) & (Nxi16==Nxibase) & (Nx16==Nxbase));
+  if length(inds)>=2
+    ktheta=lsqcurvefit(fun,[k(1)*Nzetabase*Nxibase*Nxbase,0],Ntheta16(inds),time16(inds),lb,ub,options);
+    disp(['16 cores: minutes per Ntheta: ',num2str(ktheta(1))])
+  end
+  inds=find((Ntheta16==Nthetabase) & (Nxi16==Nxibase) & (Nx16==Nxbase));
+  if length(inds)>=2
+    kzeta=lsqcurvefit(fun,[k(1)*Nthetabase*Nxibase*Nxbase,0],Nzeta16(inds),time16(inds),lb,ub,options);
+    disp(['16 cores: minutes per Nzeta : ',num2str(kzeta(1))])
+  end
+  inds=find((Ntheta16==Nthetabase) & (Nzeta16==Nzetabase) & (Nx16==Nxbase));
+  if length(inds)>=2
+    kxi=lsqcurvefit(fun,[k(1)*Nthetabase*Nzetabase*Nxbase,0],Nxi16(inds),time16(inds),lb,ub,options);
+    disp(['16 cores: minutes per Nxi   : ',num2str(kxi(1))])
+  end
+  inds=find((Ntheta16==Nthetabase) & (Nzeta16==Nzetabase) & (Nxi16==Nxibase));
+  if length(inds)>=2
+    kx=lsqcurvefit(fun,[k(1)*Nthetabase*Nzetabase*Nxbase,0],Nx16(inds),time16(inds),lb,ub,options);
+    disp(['16 cores: minutes per Nx    : ',num2str(kx(1))])
+  end
+else
+  inds=find((NzetaNN==Nzetabase) & (NxiNN==Nxibase) & (NxNN==Nxbase));
+  if length(inds)>=2
+    ktheta=lsqcurvefit(fun,[k(1)*Nzetabase*Nxibase*Nxbase,0],NthetaNN(inds),timeNN(inds),lb,ub,options);
+    disp(['NN cores: minutes per Ntheta: ',num2str(ktheta(1))])
+  end
+  inds=find((NthetaNN==Nthetabase) & (NxiNN==Nxibase) & (NxNN==Nxbase));
+  if length(inds)>=2
+    kzeta=lsqcurvefit(fun,[k(1)*Nthetabase*Nxibase*Nxbase,0],NzetaNN(inds),timeNN(inds),lb,ub,options);
+    disp(['NN cores: minutes per Nzeta : ',num2str(kzeta(1))])
+  end
+  inds=find((NthetaNN==Nthetabase) & (NzetaNN==Nzetabase) & (NxNN==Nxbase));
+  if length(inds)>=2
+    kxi=lsqcurvefit(fun,[k(1)*Nthetabase*Nzetabase*Nxbase,0],NxiNN(inds),timeNN(inds),lb,ub,options);
+    disp(['NN cores: minutes per Nxi   : ',num2str(kxi(1))])
+  end
+  inds=find((NthetaNN==Nthetabase) & (NzetaNN==Nzetabase) & (NxiNN==Nxibase));
+  if length(inds)>=2
+    kx=lsqcurvefit(fun,[k(1)*Nthetabase*Nzetabase*Nxbase,0],NxNN(inds),timeNN(inds),lb,ub,options);
+    disp(['NN cores: minutes per Nx    : ',num2str(kx(1))])
+  end
 end
 
 
@@ -248,8 +290,13 @@ end
 Ntotv=linspace(0,3e6,1000);
 
 fig(7)
-plot(Ntot16,time16,'b+',Ntotv,k(1)*Ntotv+k(2),'b-',Ntot36,time36,'r+')
+if not(isempty(Ntot16)&isempty(Ntot36))
+  plot(Ntot16,time16,'b+',Ntotv,k(1)*Ntotv+k(2),'b-',Ntot36,time36,'r+')
+  legend('16 proc data','16 proc appr','36 proc',2)
+else
+  plot(NtotNN,timeNN,'b+',Ntotv,k(1)*Ntotv+k(2),'b-')
+  legend('data','appr')
+end
 xlabel('Nx * Nxi * Nzeta * Ntheta')
 ylabel('time (min)')
 title('simulation time')
-legend('16 proc data','16 proc appr','36 proc',2)
