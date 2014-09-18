@@ -34,7 +34,7 @@ showparam={'Ntheta','Nzeta','Nx','Nxi'};%,'solverTolerance'};
 Nrow=length(showparam);
 Ncol=6+1;
 
-makeplots=1
+makeplots=1;
 if makeplots
 close all
 %For each value of 'param', make different scan variable plots
@@ -72,7 +72,11 @@ for vind=1:Nval
       %tauhat_s(n)=runs{goodind(n,1)}.tauhat_s(goodind(n,2));
     end
    
-    other=[1:base-1,base+1:Ngood];
+    if isempty(base)
+      other=1:Ngood;
+    else
+      other=[1:base-1,base+1:Ngood];
+    end
     
     Lind=1; %L11
     subplot(Nrow,Ncol,(shind-1)*Ncol+Lind)
@@ -157,7 +161,10 @@ rat3
 
 end
 
-%%%%%%%%%%%%%%%%% run time vs discretisation
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%   Plot run time vs discretisation
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 curvefitworked=0;
 Nthetabase=NaN;
 Nzetabase=NaN;
