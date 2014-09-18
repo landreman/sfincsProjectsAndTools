@@ -192,6 +192,7 @@ ind16=0;
 ind36=0;
 indNN=0;
 for rind=1:length(runs)
+  runs{rind}.NumElements
   for uind=1:length(runs{rind}.NumElements)
     if runs{rind}.run(uind).proc==16
       ind16=ind16+1;
@@ -208,8 +209,8 @@ for rind=1:length(runs)
       Nxi36(ind36)=runs{rind}.Nxi(uind);
       Nx36(ind36)=runs{rind}.Nx(uind);      
     else
-      indNN=indNN+1;
-      timeNN(indNN)=runs{rind}.run(uind).time/60; %minutes
+      indNN=indNN+1
+      timeNN(indNN)=runs{rind}.run(uind).time/60 %minutes
       NthetaNN(indNN)=runs{rind}.Ntheta(uind);
       NzetaNN(indNN)=runs{rind}.Nzeta(uind);
       NxiNN(indNN)=runs{rind}.Nxi(uind);
