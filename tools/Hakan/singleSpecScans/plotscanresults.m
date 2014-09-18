@@ -226,17 +226,23 @@ timeNN(find(timeNN<0))=NaN;
 
 options.Display='off';lb=[0,-500];ub=[200,500];
 fun = @(k,xdata)k(1)*xdata+k(2);
-if not(isempty(Ntot16))
-  k = lsqcurvefit(fun,[200/3e6,0],Ntot16,time16,lb,ub,options);
-else
-  k = lsqcurvefit(fun,[200/3e6,0],NtotNN,timeNN,lb,ub,options);  
+try
+  if not(isempty(Ntot16))
+    k = lsqcurvefit(fun,[200/3e6,0],Ntot16,time16,lb,ub,options);
+  else
+    k = lsqcurvefit(fun,[200/3e6,0],NtotNN,timeNN,lb,ub,options);  
+  end
+  curvefitworked=1;
+  disp(['minutes per Ntot: ',num2str(k(1))])
+  disp(['minutes per Ntheta (crude): ',num2str(k(1)*Nzetabase*Nxibase*Nxbase)])
+  disp(['minutes per Nzeta  (crude): ',num2str(k(1)*Nthetabase*Nxibase*Nxbase)])
+  disp(['minutes per Nxi    (crude): ',num2str(k(1)*Nthetabase*Nzetabase*Nxbase)])
+  disp(['minutes per Nx     (crude): ',num2str(k(1)*Nthetabase*Nzetabase*Nxibase)])
+catch me
+  curvefitworked=0;
+  disp('Could not do the curve fit.')
 end
-disp(['minutes per Ntot: ',num2str(k(1))])
-disp(['minutes per Ntheta (crude): ',num2str(k(1)*Nzetabase*Nxibase*Nxbase)])
-disp(['minutes per Nzeta  (crude): ',num2str(k(1)*Nthetabase*Nxibase*Nxbase)])
-disp(['minutes per Nxi    (crude): ',num2str(k(1)*Nthetabase*Nzetabase*Nxbase)])
-disp(['minutes per Nx     (crude): ',num2str(k(1)*Nthetabase*Nzetabase*Nxibase)])
-
+  
 if not(isempty(Ntot16))
   inds=find((Nzeta16==Nzetabase) & (Nxi16==Nxibase) & (Nx16==Nxbase));
   if length(inds)>=2
@@ -291,11 +297,16 @@ Ntotv=linspace(0,3e6,1000);
 
 fig(7)
 if not(isempty(Ntot16)&isempty(Ntot36))
-  plot(Ntot16,time16,'b+',Ntotv,k(1)*Ntotv+k(2),'b-',Ntot36,time36,'r+')
-  legend('16 proc data','16 proc appr','36 proc',2)
+  plot(Ntot16,time16,'b+',Ntot36,time36,'r+')
+  legend('16 proc data','36 proc',2)
 else
-  plot(NtotNN,timeNN,'b+',Ntotv,k(1)*Ntotv+k(2),'b-')
-  legend('data','appr')
+  plot(NtotNN,timeNN,'b+')
+  legend('data',2)
+end
+if curvefitworked
+  hold on
+  plot(Ntotv,k(1)*Ntotv+k(2),'b-')
+  hold off
 end
 xlabel('Nx * Nxi * Nzeta * Ntheta')
 ylabel('time (min)')
