@@ -22,7 +22,7 @@ end
 if length(missing)>0
   disp('Missing in action:')
   for mind=1:length(missing)
-    disp(missing(mind).dir)
+    disp([missing(mind).message(4:end),': ',missing(mind).dir])
   end
 end
 
