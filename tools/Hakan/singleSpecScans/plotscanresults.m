@@ -100,8 +100,8 @@ for vind=1:Nval
     
     Lind=Lind+1; %L13
     subplot(Nrow,Ncol,(shind-1)*Ncol+Lind)
-    plot(scanval(base),L(base,1,3),'r+',scanval(other),L(other,1,3),'g+',...
-         [min(scanval)*0.97,max(scanval)*1.03],-1/runs{1}.iota(1)*[1,1],'k:')
+    plot(scanval(base),L(base,1,3),'r+',scanval(other),L(other,1,3),'g+')%,...
+         %[min(scanval)*0.97,max(scanval)*1.03],-1/runs{1}.iota(1)*[1,1],'k:')
     xlabel(showparam{shind})
     ylabel('L13')
     title([param,' = ',num2str(P(vind).val)])
