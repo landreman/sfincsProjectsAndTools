@@ -243,10 +243,10 @@ inScriptFile = File.open($ScanInput,"r")
 ScriptLines = inScriptFile.readlines
 inScriptFile.close
 
-ScriptLines.each_line do |ScriptLine|
-#for j in 0..(ScriptLines.size-1)
+#ScriptLines.each_line do |ScriptLine|
+for lineNum in 0..(ScriptLines.size-1)
   
-  ScriptLine = ScriptLine.strip
+  ScriptLine = ScriptLines[lineNum].strip
   
   if (ScriptLine[0].chr == "!" or ScriptLine.empty?)
     next #Jump to next iteration
