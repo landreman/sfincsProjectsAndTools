@@ -8,7 +8,7 @@
 # This ruby script launches a bunch of single species fortran sfincs jobs
 # in a batch system, with the capability to perform several types of scans.
 
-$SFINCSinputfile="input.namelist"
+$sfincs_inputfile="input.namelist"
 
 $sfincs_system=ENV["SFINCS_SYSTEM"]
 case $sfincs_system
@@ -22,7 +22,7 @@ else
 end
 jobFilename="job.#{$sfincs_system}"
 
-$ScanInput="input.sfincsScan"
+$scanInput="input.sfincsScan"
 
 #The following line is only relevant on the hgw cluster:
 clusters=["wsclus","wsclus","edge01","edge01"]
@@ -31,11 +31,11 @@ clusters=["wsclus","wsclus","edge01","edge01"]
 require 'fileutils'
 include FileUtils        
             
-if !File.exists?($SFINCSinputfile)
-  puts "Error! #{$SFINCSinputfile} not found."
+if !File.exists?($sfincs_inputfile)
+  puts "Error! #{$sfincs_inputfile} not found."
   exit
 end
-puts "File #{$SFINCSinputfile} exists."
+puts "File #{$sfincs_inputfile} exists."
 
 if !File.exists?(jobFilename)
   puts "Error! #{jobFilename} not found."
@@ -107,7 +107,7 @@ def readInput(variableName, intOrFloat)
   end
   
   variableName = variableName.downcase
-  s = `grep -i #{variableName} #{$SFINCSinputfile}`
+  s = `grep -i #{variableName} #{$sfincs_inputfile}`
   numMatches = 0
   value = 0
   s.each_line do |line|
@@ -130,11 +130,11 @@ def readInput(variableName, intOrFloat)
     end
   end
   if numMatches < 1
-    puts "Error! No lines in #{$SFINCSinputfile} match #{variableName}."
+    puts "Error! No lines in #{$sfincs_inputfile} match #{variableName}."
     exit
   end
   if numMatches > 1
-    puts "Warning: more than 1 line in #{$SFINCSinputfile} matches #{variableName}."
+    puts "Warning: more than 1 line in #{$sfincs_inputfile} matches #{variableName}."
   end
   if intOrFloat == 0
     puts "Read #{variableName} = " + value.to_i.to_s
@@ -213,7 +213,7 @@ end
 
   
 #when 20
-#  parametersForScan=readProfiles($ScanInput, 9)
+#  parametersForScan=readProfiles($scanInput, 9)
 #  numRunsInScan = parametersForScan.size
 
 #else
@@ -239,23 +239,23 @@ end
 numRunsInScan = 0
 dirNum = 0
 
-inScriptFile = File.open($ScanInput,"r")
-ScriptLines = inScriptFile.readlines
+inScriptFile = File.open($scanInput,"r")
+scriptLines = inScriptFile.readlines
 inScriptFile.close
 
-#ScriptLines.each_line do |ScriptLine|
-for lineNum in 0..(ScriptLines.size-1)
+#scriptLines.each_line do |scriptLine|
+for lineNum in 0..(scriptLines.size-1)
   
-  ScriptLine = ScriptLines[lineNum].strip
+  scriptLine = scriptLines[lineNum].strip
   
-  if (ScriptLine[0].chr == "!" or ScriptLine.empty?)
+  if (scriptLine[0].chr == "!" or scriptLine.empty?)
     next #Jump to next iteration
   end
 
-  ParametersToSet = ScriptLine.split(',')
+  parametersToSet = scriptLine.split(',')
 
-  for k in 0..(ParametersToSet.size-1)
-    puts ParametersToSet[k].strip
+  for k in 0..(parametersToSet.size-1)
+    puts parametersToSet[k].strip
   end
   exit
   
@@ -302,8 +302,8 @@ for lineNum in 0..(ScriptLines.size-1)
   outFile.close
     
   # Copy input.namelist
-  outFilename = dirName + "/" + $SFINCSinputfile
-  inFile = File.open($SFINCSinputfile,"r")
+  outFilename = dirName + "/" + $sfincs_inputfile
+  inFile = File.open($sfincs_inputfile,"r")
   outFile = File.open(outFilename,"w")
   lines = inFile.readlines
 
