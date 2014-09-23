@@ -248,7 +248,7 @@ for lineNum in 0..(scriptLines.size-1)
   
   scriptLine = scriptLines[lineNum].strip
   
-  if (scriptLine[0].chr == "!" or scriptLine.empty?)
+  if (scriptLine[0] == "!" or scriptLine.empty?)
     next #Jump to next iteration
   end
 
