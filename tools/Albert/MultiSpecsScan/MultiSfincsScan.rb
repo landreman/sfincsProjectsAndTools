@@ -248,16 +248,15 @@ for lineNum in 0..(scriptLines.size-1)
   
   scriptLine = scriptLines[lineNum].strip
   
-  if (scriptLine.chr == "!" or scriptLine.empty?)
+  if (scriptLine[0,1] == '!' or scriptLine.empty?)
     next #Jump to next iteration
   end
 
   parametersToSet = scriptLine.split(',')
 
-  for k in 0..(parametersToSet.size-1)
-    puts parametersToSet[k].strip
-  end
-  exit
+#  for k in 0..(parametersToSet.size-1)
+#    puts parametersToSet[k].strip
+#  end
   
   # Starting with 0, look for the first unused whole number to use for a directory name:
   begin
@@ -307,47 +306,58 @@ for lineNum in 0..(scriptLines.size-1)
   outFile = File.open(outFilename,"w")
   lines = inFile.readlines
 
+
+
   for j in 0..(lines.size-1)
     line = lines[j].strip
       
     #if namelistLineContains(line,"programMode")
     #  line = "programMode = 1"
     #end
+
+    for k in 0..(parametersToSet.size-1)
+      #puts parametersToSet[k].strip
+      parameterSet = parametersToSet[k].strip
+      variableName = parameterSet.split('=')[0]
       
 
-    if namelistLineContains(line,"normradius_wish")
-      line = "normradius_wish = " + parametersForScan[i][0].to_s
+      if namelistLineContains(line, variableName)
+        #line = "normradius_wish = " + parametersForScan[i][0].to_s
+	line = parameterSet
+	break
+      end    
+    
+      
     end
-    
-    if namelistLineContains(line,"THat")
-      line = "THat = " + parametersForScan[i][1].to_s
-    end
-    
-    
-    
     outFile.write(line + "\n")
   end
+
   inFile.close
   outFile.close
+
+  
   
   # Submit job!
-  puts "Submitting job #{dirName}"
-  # Make sure job 0 gets submitted first:
-  #if i==0
-  if true
-    # In this way of submitting a job, ruby waits for qsub to complete before moving on.
-    puts `cd #{dirName}; #{$jobSubmitCommand} #{jobFilename} &` #the ` signs make it happen!
-  else
-    # In this way of submitting a job, ruby does not wait for qsub to complete before moving on.
-    job1 = fork do
-      
-      exec "cd #{dirName}; #{$jobSubmitCommand} #{jobFilename}"
-    end
-    Process.detach(job1)
-  end
-  puts "Done submitting job #{dirName}"
+#  puts "Submitting job #{dirName}"
+#  # Make sure job 0 gets submitted first:
+#  #if i==0
+#  if true
+#    # In this way of submitting a job, ruby waits for qsub to complete before moving on.
+#    puts `cd #{dirName}; #{$jobSubmitCommand} #{jobFilename} &` #the ` signs make it happen!
+#  else
+#    # In this way of submitting a job, ruby does not wait for qsub to complete before moving on.
+#    job1 = fork do
+#      
+#      exec "cd #{dirName}; #{$jobSubmitCommand} #{jobFilename}"
+#    end
+#    Process.detach(job1)
+#  end
+#  puts "Done submitting job #{dirName}"
+
+  numRunsInScan += 1
 end
 
 #end
 
 puts "Finished submitting jobs for scan."
+puts "Submitted #{numRunsInScan} jobs."
