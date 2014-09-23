@@ -145,43 +145,43 @@ def readInput(variableName, intOrFloat)
   end
 end
 
-def readScriptInput(ScriptInputfile, noElems)
-  if !File.exists?(ScriptInputfile)
-    puts "Error! #{ScriptInputfile} not found."
-    exit
-  end
-  puts "File #{ScriptInputfile} exists."
-  
-  inFile = File.open(ScriptInputfile,"r")
-  lines = inFile.readlines
-  inFile.close
-
-  radparams=Array.new(lines.size){Array.new(noElems)}
-  lind = 0
-  lines.each do |line|
-    if line.length>1
-      if line[0].chr != "!"
-        #puts line
-        substr=line
-        varind=0
-        while varind<noElems-1 do
-          varstr=substr[0..substr.index(" ")-1]
-          radparams[lind][varind]=varstr.to_f
-          substr=substr[(substr.index(" ")+1)..(substr.size-1)]
-          while substr.index(" ")==0
-            substr=substr[1..(substr.size-1)]
-          end
-          #puts "Element #{lind},#{varind} is #{radparams[lind][varind]}"
-          varind += 1
-        end
-        radparams[lind][noElems-1]=substr.to_f
-        #puts "Element #{lind},#{noElems-1} is #{radparams[lind][noElems-1]}"
-        lind += 1
-      end
-    end
-  end
-  return radparams[0..(lind-1)]
-end
+#def readScriptInput(ScriptInputfile, noElems)
+#  if !File.exists?(ScriptInputfile)
+#    puts "Error! #{ScriptInputfile} not found."
+#    exit
+#  end
+#  puts "File #{ScriptInputfile} exists."
+#  
+#  inFile = File.open(ScriptInputfile,"r")
+#  lines = inFile.readlines
+#  inFile.close
+#
+#  radparams=Array.new(lines.size){Array.new(noElems)}
+#  lind = 0
+#  lines.each do |line|
+#    if line.length>1
+#      if line[0].chr != "!"
+#        #puts line
+#        substr=line
+#        varind=0
+#        while varind<noElems-1 do
+#          varstr=substr[0..substr.index(" ")-1]
+#          radparams[lind][varind]=varstr.to_f
+#          substr=substr[(substr.index(" ")+1)..(substr.size-1)]
+#          while substr.index(" ")==0
+#            substr=substr[1..(substr.size-1)]
+#          end
+#          #puts "Element #{lind},#{varind} is #{radparams[lind][varind]}"
+#          varind += 1
+#        end
+#        radparams[lind][noElems-1]=substr.to_f
+#        #puts "Element #{lind},#{noElems-1} is #{radparams[lind][noElems-1]}"
+#        lind += 1
+#      end
+#    end
+#  end
+#  return radparams[0..(lind-1)]
+#end
 
 def linspace(min, max, nn)
   return (0..(nn-1)).collect{|x| x*(max-min)/(nn-1.0)+min}
