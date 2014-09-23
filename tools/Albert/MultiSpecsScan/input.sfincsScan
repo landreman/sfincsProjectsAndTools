@@ -1,0 +1,7 @@
+!!INPUT FILE FOR MultiSfincsScan.rb
+!This is a comment
+!Separate the input for each run by endline
+!Separate the input of each parameter in a run by comma
+
+Zs = -1 1 6, mHats = 0.000545509d+0 1.0 11.924, nHats = 0.66d+0 0.6534 0.0011, dPhiHatdpsiN = -1
+Zs = -1 1 12, mHats = 0.000545509d+0 1.0 24, nHats = 1.0d+0 0.976 0.001, dPhiHatdpsiN = 0
