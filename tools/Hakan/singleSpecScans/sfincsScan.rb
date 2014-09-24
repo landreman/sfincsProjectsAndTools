@@ -62,11 +62,14 @@ lines.each {|line|
       exit
     end
   when "hydra"
-    if (line.include? "output")
-      puts "Error! #{jobFilename} should not include a output line with job name."
-    end
-    if (line.include? "error")
-      puts "Error! #{jobFilename} should not include an error line with job name."
+    #if (line.include? "output")
+    #  puts "Error! #{jobFilename} should not include a output line with job name."
+    #end
+    #if (line.include? "error")
+    #  puts "Error! #{jobFilename} should not include an error line with job name."
+    #end
+    if (line.include? "job_name")
+      puts "Error! #{jobFilename} should not include a job_name line with job name."
     end
   else
       puts "Error! SFINCS_SYSTEM=#{$sfincs_system} is not implemented in the ruby script!"
@@ -496,9 +499,10 @@ when 7,9,10
           outFile.write(lines[j])
         end
       when "hydra"
-        outFile.write("# @ error = #{outerDirName}.#{innerDirName}.e$(jobid)\n")
-        outFile.write("# @ output = #{outerDirName}.#{innerDirName}.o$(jobid)\n")
-        for j in 1..(lines.size-1)
+        #outFile.write("# @ error = #{outerDirName}.#{innerDirName}.e$(jobid)\n")
+        #outFile.write("# @ output = #{outerDirName}.#{innerDirName}.o$(jobid)\n")
+        outFile.write("# @ job_name = #{outerDirName}.#{innerDirName}.j$(jobid)\n")
+	for j in 1..(lines.size-1)
           outFile.write(lines[j])
         end
       end
