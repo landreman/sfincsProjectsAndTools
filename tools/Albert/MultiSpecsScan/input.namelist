@@ -38,7 +38,7 @@
   ! If you make the sign of programMode negative, the program will print the number of runs required
   ! for the scan corresponding to abs(programMode) and then exit without actually carrying out any solves.
 
-  RHSMode = 1
+  RHSMode = 2
   ! Options for RHSMode:
   ! 1 = Solve for a single right-hand side.
   ! 2 = Solve for three right-hand sides to get the full 3x3 transport matrix.

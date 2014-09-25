@@ -2,11 +2,8 @@
 
 #By AM 2014-09#
 
-#This ruby script launches a bunch of multiple sspecies fortran sfincs job to a batch system.
+#This ruby script launches a bunch of multi species fortran sfincs jobs to a batch system.
 #Each step in the scan is specified in the file input.sfincsScan
-
-# This ruby script launches a bunch of single species fortran sfincs jobs
-# in a batch system, with the capability to perform several types of scans.
 
 $sfincs_inputfile="input.namelist"
 
@@ -54,12 +51,6 @@ lines.each {|line|
       exit
     end
   when "hydra"
-    #if (line.include? "output")
-    #  puts "Error! #{jobFilename} should not include a output line with job name."
-    #end
-    #if (line.include? "error")
-    #  puts "Error! #{jobFilename} should not include an error line with job name."
-    #end
     if (line.include? "job_name")
       puts "Error! #{jobFilename} should not include a job_name line with job name."
     end
@@ -145,44 +136,6 @@ def readInput(variableName, intOrFloat)
   end
 end
 
-#def readScriptInput(ScriptInputfile, noElems)
-#  if !File.exists?(ScriptInputfile)
-#    puts "Error! #{ScriptInputfile} not found."
-#    exit
-#  end
-#  puts "File #{ScriptInputfile} exists."
-#  
-#  inFile = File.open(ScriptInputfile,"r")
-#  lines = inFile.readlines
-#  inFile.close
-#
-#  radparams=Array.new(lines.size){Array.new(noElems)}
-#  lind = 0
-#  lines.each do |line|
-#    if line.length>1
-#      if line[0].chr != "!"
-#        #puts line
-#        substr=line
-#        varind=0
-#        while varind<noElems-1 do
-#          varstr=substr[0..substr.index(" ")-1]
-#          radparams[lind][varind]=varstr.to_f
-#          substr=substr[(substr.index(" ")+1)..(substr.size-1)]
-#          while substr.index(" ")==0
-#            substr=substr[1..(substr.size-1)]
-#          end
-#          #puts "Element #{lind},#{varind} is #{radparams[lind][varind]}"
-#          varind += 1
-#        end
-#        radparams[lind][noElems-1]=substr.to_f
-#        #puts "Element #{lind},#{noElems-1} is #{radparams[lind][noElems-1]}"
-#        lind += 1
-#      end
-#    end
-#  end
-#  return radparams[0..(lind-1)]
-#end
-
 def linspace(min, max, nn)
   return (0..(nn-1)).collect{|x| x*(max-min)/(nn-1.0)+min}
 end
@@ -199,9 +152,9 @@ def logspace(min, max, nn)
 end
 
 
-##############################################################
-# Load the data from input.namelist and prepare order of runs
-##############################################################
+###############################################################
+# Load the data from input.namelist and prepare and submit runs
+###############################################################
 programMode = readInput("programMode",0)
 ##This script only runs for programMode=1
 if (programMode != 1)
@@ -209,33 +162,6 @@ if (programMode != 1)
   exit
 end
 
-#case programMode
-
-  
-#when 20
-#  parametersForScan=readProfiles($scanInput, 9)
-#  numRunsInScan = parametersForScan.size
-
-#else
-#  puts "I do not know what to do with programMode = "+programMode.to_s
-#  exit
-#end
-
-
-##############################################################
-# Make subdirs and write input.namelist in them, then launch.
-##############################################################
-#case programMode
-#when 7,9,10
-
-  
-#else
-  # A standard scan, like programMode = 2, 6, 8 or 20 but not 7, 9 or 10.
-  
-  # puts "Scan will consist of #{numRunsInScan} runs."
-  
-  
-  #for i in 0..(numRunsInScan-1)
 numRunsInScan = 0
 dirNum = 0
 
@@ -289,8 +215,6 @@ for lineNum in 0..(scriptLines.size-1)
       outFile.write(lines[j])
     end
   when "hydra"
-    #outFile.write("# @ error = #{jobName}.e$(jobid)\n")
-    #outFile.write("# @ output = #{jobName}.o$(jobid)\n")
     outFile.write("# @ job_name = #{jobName}.$(jobid)\n")
     for j in 1..(lines.size-1)
       outFile.write(lines[j])
@@ -338,21 +262,21 @@ for lineNum in 0..(scriptLines.size-1)
   
   
   # Submit job!
-#  puts "Submitting job #{dirName}"
-#  # Make sure job 0 gets submitted first:
-#  #if i==0
-#  if true
-#    # In this way of submitting a job, ruby waits for qsub to complete before moving on.
-#    puts `cd #{dirName}; #{$jobSubmitCommand} #{jobFilename} &` #the ` signs make it happen!
-#  else
-#    # In this way of submitting a job, ruby does not wait for qsub to complete before moving on.
-#    job1 = fork do
-#      
-#      exec "cd #{dirName}; #{$jobSubmitCommand} #{jobFilename}"
-#    end
-#    Process.detach(job1)
-#  end
-#  puts "Done submitting job #{dirName}"
+  puts "Submitting job #{dirName}"
+  # Make sure job 0 gets submitted first:
+  #if i==0
+  if true
+    # In this way of submitting a job, ruby waits for qsub to complete before moving on.
+    puts `cd #{dirName}; #{$jobSubmitCommand} #{jobFilename} &` #the ` signs make it happen!
+  else
+    # In this way of submitting a job, ruby does not wait for qsub to complete before moving on.
+    job1 = fork do
+      
+      exec "cd #{dirName}; #{$jobSubmitCommand} #{jobFilename}"
+    end
+    Process.detach(job1)
+  end
+  puts "Done submitting job #{dirName}"
 
   numRunsInScan += 1
 end
