@@ -7,6 +7,7 @@ excludeRunsThatDidntConverge = true;
 %excludeRunsThatDidntConverge = false;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Quantities to show
 %QuantitiesToPlot = {'ArrayFirstSpeciesParticleFluxCoefficients'; 'particleFlux'};
 QuantitiesToPlotArray = cellstr({'ArrayFirstSpeciesParticleFluxCoefficients'; 'particleFlux'})
 %QuantitiesOnXaxis = {'nHats'; 'd(PhiHat)d(psi_N)'};
@@ -16,31 +17,51 @@ XindicesToPlot = {1 1}; %This is an array of integers which controls which array
 %contain positive integers. '1' should be used if the parameter is a scalar
 %in SFINCS
 
-yAxesLabels = {};
-xAxesLabels = {}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-if length(QuantitiesOnXaxisArray) ~= length(XindicesToPlot)
-    error('Arrays QuantitiesOnXaxis and XindicesToPlot must have the same length')
-end
-
+%% Plot options
+FigureWindowSize = 15; 
 figureOffset = 0;
 
-colors = [1,0,0;
-    0.8,0.6,0;
-    0,0.7,0;
-    0,0.8,0.9;
-    0,0,1;
-    1,0,1;
-    0.6,0.6,0.6;
-    0,0,0];
+PlotColors = [1,0,0;  0.8,0.6,0;  0,0.7,0;  0,0.8,0.9;  0,0,1;  1,0,1;  0.6,0.6,0.6;  0,0,0];
 
-linespecs = {'.-r','.-g','.-b','.-m','.-c','.-r','.-r','.-b','.-m'};
+PlotLinespecs = {'.-r', 'o-g', 'x-b', '.-m', '*-c', '.-r', '.-r', '.-b', '.-m'};
+
+yAxesLabels = {'L_{11}^{zz}', 'L_{11}^{zi}', 'L_{12}^{zz} + L_{12}^{zi}', '\Gamma_{i}', '\Gamma_{z}'};
+xAxesLabels = {'n_{i}', 'd \Phi / d \psi'};
+
+
+leftMargin = 0.1;
+rightMargin = 0.02;
+topMargin = 0.065;
+bottomMargin = 0.1;
+interPlotHorizontalSpacing = 0.08;
+interPlotVerticalSpacing = 0.1;
+
+
+xLabelSize = 15;
+yLabelSize = 15;
+PlotLineWidth = 2.5;
+PlotMarkerSize = 8;
+TickFontSize = 13;
+
+%Not used at the moment%
+LegendSize = 11;
+LabelSize = 16;
+%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+if length(QuantitiesOnXaxisArray) ~= length(XindicesToPlot)
+    error('Arrays QuantitiesOnXaxis and XindicesToPlot must have the same length');
+end
+
+assert(length(QuantitiesToPlotArray) > 0, 'Quantities to plot empty');
+assert(length(QuantitiesOnXaxisArray) > 0, 'Parameter quantities empty');
 
 numRuns = 0;
-RHSMode1s = 1;
+%RHSMode1s = 1;
 %RHSMode1s = 0;
-RHSMode2s = 0;
+%RHSMode2s = 0;
 files = dir();
 dumpedFieldsYet = false;
 didItConverges = [];
@@ -161,8 +182,11 @@ for j=1:length(QuantitiesToPlotArray)
     end
 end
 
-NumberOfPlotRows = ceil(NumberOfFigs / sqrt(NumberOfFigs));
-NumberOfPlotCols = ceil(NumberOfFigs / NumberOfPlotRows);
+%NumberOfPlotRows = ceil(NumberOfFigs / sqrt(NumberOfFigs));
+%NumberOfPlotCols = ceil(NumberOfFigs / NumberOfPlotRows);
+
+NumberOfPlotCols = ceil(NumberOfFigs / sqrt(NumberOfFigs));
+NumberOfPlotRows = ceil(NumberOfFigs / NumberOfPlotCols);
 
 %return
 %PlotYarray
@@ -236,23 +260,8 @@ FigPlot = figure(1)
 clf
 
 set(gcf,'Color','w')
-set(gcf,'Units','inches','Position',[1,1,6.5*1.7,4.5*1.7])
+set(gcf,'Units','inches','Position',[1,1,1.5*FigureWindowSize*NumberOfPlotCols/(NumberOfPlotCols + NumberOfPlotRows),1.0*FigureWindowSize*NumberOfPlotRows/(NumberOfPlotCols + NumberOfPlotRows)])
 
-LegendSize = 11;
-axesSize = 9;
-nuPrimeSize = 15;
-PlotLineWidth = 2.5;
-PlotMarkerSize = 8;
-TickFontSize = 13;
-LabelSize = 16;
-
-%leftMargin = 0.085;
-leftMargin = 0.1;
-rightMargin = 0.02;
-topMargin = 0.065;
-bottomMargin = 0.1;
-interPlotHorizontalSpacing = 0.05;
-interPlotVerticalSpacing = 0.05;
 
 plotHeight = (1-topMargin-bottomMargin-(NumberOfPlotRows - 1)*interPlotVerticalSpacing)/NumberOfPlotRows;
 %plotBottom_topRow = bottomMargin + plotHeight + interPlotVerticalSpacing;
@@ -289,6 +298,7 @@ Yarray
 
 %return
 
+PosYaxesLabel = 0;
 for j=1:length(QuantitiesToPlotArray)
     for k=1:length(QuantitiesOnXaxisArray)
         for l=1:length(PlotYarray{j,k,1})
@@ -302,249 +312,50 @@ for j=1:length(QuantitiesToPlotArray)
             plotNumber = plotNumber + 1;
             plotCol = rem(plotNumber - 1,NumberOfPlotCols) + 1;
             plotRow = ceil(plotNumber / NumberOfPlotCols);
+            
+            PlotColor = [0 0 0];
+            PlotLine = 'o-k';
+            
+            xAxesLabel = '';
+            yAxesLabel = '';
+            
+            if plotNumber <= length(PlotColors) 
+                PlotColor = PlotColors(plotNumber,:);
+            end
+            if plotNumber <= length(PlotLinespecs) 
+                PlotLine = PlotLinespecs{plotNumber};
+            end
+            
+            if k <= length(xAxesLabels) 
+                xAxesLabel = xAxesLabels{k};
+            end
+            if PosYaxesLabel + l <= length(yAxesLabels) 
+                yAxesLabel = yAxesLabels{PosYaxesLabel + l};
+            end
+            
             subplot('Position',[leftMargin + (plotCol - 1)*(plotWidth + interPlotHorizontalSpacing), bottomMargin + (NumberOfPlotRows - plotRow)*(plotHeight + interPlotVerticalSpacing), plotWidth, plotHeight])
-            plot(Xarray, Yarray,'o-r', 'linewidth', PlotLineWidth, 'MarkerSize', PlotMarkerSize, 'Color', [1 0 0])
+            plot(Xarray, Yarray, PlotLine, 'linewidth', PlotLineWidth, 'MarkerSize', PlotMarkerSize, 'Color', PlotColor)
+            
+            set(gca,'XMinorTick','on','YMinorTick','on','XGrid','on','YGrid','on','XMinorGrid','off','YMinorGrid','off', 'FontSize', TickFontSize)
+            
+            xlabel(xAxesLabel,'FontSize',xLabelSize)
+            ylabel(yAxesLabel,'FontSize',yLabelSize)
+            
+            %length(PlotColors)
+            %length(PlotLinespecs)
+            %PlotColors = [1,0,0;  0.8,0.6,0;  0,0.7,0;  0,0.8,0.9;  0,0,1;  1,0,1;  0.6,0.6,0.6;  0,0,0];
+
+            %PlotLinespecs = {'.-r', '.-g', '.-b', '.-m', '.-c', '.-r', '.-r', '.-b', '.-m'};
+
+            %yAxesLabels = {};
+            %xAxesLabels = {};
         end
     end
+    PosYaxesLabel = PosYaxesLabel + length(PlotYarray{j,1,1});
 end
 
 
 return;
-
-if Nspecies == 1
-    yAxesLabels = {'Particle flux','q','<V|| B>','Did it converge','elapsed time'};
-    numQuantities = numel(yAxesLabels);
-    plotRows = 1:numQuantities;
-    numRows=numQuantities;
-else
-    yAxesLabels=cell(0);
-    for i=1:Nspecies
-        yAxesLabels{end+1} = ['Particle flux, species ', num2str(i)];
-        yAxesLabels{end+1} = ['Heat flux, species ', num2str(i)];
-        yAxesLabels{end+1} = ['<V|| B>, species ', num2str(i)];
-    end
-    numQuantities = numel(yAxesLabels);
-    plotRows = 1:numQuantities;
-    numRows=numQuantities;
-end
-
-%{
-if RHSMode1s > 0
-    % Scan used RHSMode = 1
-    yAxesLabels = {'Particle flux','q','<V|| B>','Did it converge','elapsed time'};
-    numQuantities = numel(yAxesLabels);
-    plotRows = 1:numQuantities;
-    numRows=numQuantities;
-else
-    % Scan used RHSMode = 2
-    yAxesLabels = {'L_{11}','L_{12}=L_{21}','L_{13}=L_{31}','L_{22}','L_{23}=L_{32}','L_{33}'};
-    plotRows = [1, 2, 3, 2, 4, 5, 3, 5, 6];
-    numQuantities = 9;
-    numRows = 6;
-end
-%}
-
-parametersToVary = {};
-abscissae = {};
-convergeds = {};
-quantities = {};
-
-%elapsedTimes = zeros(numRuns,1);
-%didItConverges = zeros(numRuns,1);
-
-% Check whether Ntheta was scanned:
-data=Nthetas;
-[values, runIndices, scanIndices] = unique(data,'first');
-if numel(values)>1
-    parametersToVary{end+1} = 'Ntheta';
-    abscissae{end+1} = values;
-    % Ensure only one value is repeated:
-    numRepeatedValues = 0;
-    convergedValue = 0;
-    for i=1:numel(values)
-        indices = find(data == values(i));
-        if numel(indices)>1
-            numRepeatedValues = numRepeatedValues + 1;
-            convergedValue = values(i);
-        end
-    end
-    if numRepeatedValues>1
-        error('More than one value of input parameter Ntheta was repeated.')
-    end
-    assert(numRepeatedValues>0)
-    convergeds{end+1} = convergedValue;
-    quantities{end+1} = outputs(runIndices, :);
-end
-
-% Check whether Nzeta was scanned:
-data=Nzetas;
-[values, runIndices, scanIndices] = unique(data,'first');
-if numel(values)>1
-    parametersToVary{end+1} = 'Nzeta';
-    abscissae{end+1} = values;
-    % Ensure only one value is repeated:
-    numRepeatedValues = 0;
-    convergedValue = 0;
-    for i=1:numel(values)
-        indices = find(data == values(i));
-        if numel(indices)>1
-            numRepeatedValues = numRepeatedValues + 1;
-            convergedValue = values(i);
-        end
-    end
-    if numRepeatedValues>1
-        error('More than one value of input parameter Nzeta was repeated.')
-    end
-    assert(numRepeatedValues>0)
-    convergeds{end+1} = convergedValue;
-    quantities{end+1} = outputs(runIndices, :);
-end
-
-% Check whether Nxi was scanned:
-data = Nxis;
-[values, runIndices, scanIndices] = unique(data,'first');
-if numel(values)>1
-    parametersToVary{end+1} = 'Nxi';
-    abscissae{end+1} = values;
-    % Ensure only one value is repeated:
-    numRepeatedValues = 0;
-    convergedValue = 0;
-    for i=1:numel(values)
-        indices = find(data == values(i));
-        if numel(indices)>1
-            numRepeatedValues = numRepeatedValues + 1;
-            convergedValue = values(i);
-        end
-    end
-    if numRepeatedValues>1
-        error('More than one value of input parameter Nxi was repeated.')
-    end
-    assert(numRepeatedValues>0)
-    convergeds{end+1} = convergedValue;
-    quantities{end+1} = outputs(runIndices, :);
-end
-
-% Check whether NL was scanned:
-data = NLs;
-[values, runIndices, scanIndices] = unique(data,'first');
-if numel(values)>1
-    parametersToVary{end+1} = 'NL';
-    abscissae{end+1} = values;
-    % Ensure only one value is repeated:
-    numRepeatedValues = 0;
-    convergedValue = 0;
-    for i=1:numel(values)
-        indices = find(data == values(i));
-        if numel(indices)>1
-            numRepeatedValues = numRepeatedValues + 1;
-            convergedValue = values(i);
-        end
-    end
-    if numRepeatedValues>1
-        error('More than one value of input parameter NL was repeated.')
-    end
-    assert(numRepeatedValues>0)
-    convergeds{end+1} = convergedValue;
-    quantities{end+1} = outputs(runIndices, :);
-end
-
-% Check whether Nx was scanned:
-data = Nxs;
-[values, runIndices, scanIndices] = unique(data,'first');
-if numel(values)>1
-    parametersToVary{end+1} = 'Nx';
-    abscissae{end+1} = values;
-    % Ensure only one value is repeated:
-    numRepeatedValues = 0;
-    convergedValue = 0;
-    for i=1:numel(values)
-        indices = find(data == values(i));
-        if numel(indices)>1
-            numRepeatedValues = numRepeatedValues + 1;
-            convergedValue = values(i);
-        end
-    end
-    if numRepeatedValues>1
-        error('More than one value of input parameter Nx was repeated.')
-    end
-    assert(numRepeatedValues>0)
-    convergeds{end+1} = convergedValue;
-    quantities{end+1} = outputs(runIndices, :);
-end
-
-% Check whether NxPotentialsPerVth was scanned:
-data = NxPotentialsPerVths;
-[values, runIndices, scanIndices] = unique(data,'first');
-if numel(values)>1
-    parametersToVary{end+1} = 'NxPotentialsPerVth';
-    abscissae{end+1} = values;
-    % Ensure only one value is repeated:
-    numRepeatedValues = 0;
-    convergedValue = 0;
-    for i=1:numel(values)
-        indices = find(data == values(i));
-        if numel(indices)>1
-            numRepeatedValues = numRepeatedValues + 1;
-            convergedValue = values(i);
-        end
-    end
-    if numRepeatedValues>1
-        error('More than one value of input parameter NxPotentialsPerVths was repeated.')
-    end
-    assert(numRepeatedValues>0)
-    convergeds{end+1} = convergedValue;
-    quantities{end+1} = outputs(runIndices, :);
-end
-
-% Check whether xMax was scanned:
-data = xMaxs;
-[values, runIndices, scanIndices] = unique(data,'first');
-if numel(values)>1
-    parametersToVary{end+1} = 'xMax';
-    abscissae{end+1} = values;
-    % Ensure only one value is repeated:
-    numRepeatedValues = 0;
-    convergedValue = 0;
-    for i=1:numel(values)
-        indices = find(data == values(i));
-        if numel(indices)>1
-            numRepeatedValues = numRepeatedValues + 1;
-            convergedValue = values(i);
-        end
-    end
-    if numRepeatedValues>1
-        error('More than one value of input parameter xMax was repeated.')
-    end
-    convergeds{end+1} = convergedValue;
-    quantities{end+1} = outputs(runIndices, :);
-end
-
-
-% Check whether log10tol was scanned:
-data = log10tols;
-[values, runIndices, scanIndices] = unique(data,'first');
-if numel(values)>1
-    parametersToVary{end+1} = 'log_{10}tol';
-    abscissae{end+1} = values;
-    % Ensure only one value is repeated:
-    numRepeatedValues = 0;
-    convergedValue = 0;
-    for i=1:numel(values)
-        indices = find(data == values(i));
-        if numel(indices)>1
-            numRepeatedValues = numRepeatedValues + 1;
-            convergedValue = values(i);
-        end
-    end
-    if numRepeatedValues>1
-        error('More than one value of input parameter log10tol was repeated.')
-    end
-    convergeds{end+1} = convergedValue;
-    quantities{end+1} = outputs(runIndices, :);
-end
-
-
-numParameters = numel(parametersToVary);
 
 
 %maxs=ones(numQuantities,1)*(-1e10);
@@ -570,7 +381,7 @@ for iQuantity = 1:numQuantities
     end
     for iParameter = 1:numParameters
         subplot(numRows, numCols, iParameter  + (plotRows(iQuantity) - 1)*numParameters)
-        plot(1./abscissae{iParameter}, quantities{iParameter}(:,iQuantity)', linespecs{iQuantity})
+        plot(1./abscissae{iParameter}, quantities{iParameter}(:,iQuantity)', PlotLinespecs{iQuantity})
         hold on
         plot(1./[convergeds{iParameter}, convergeds{iParameter}], [mins(iQuantity),maxs(iQuantity)],'k')
         ylim([mins(iQuantity), maxs(iQuantity)])
@@ -594,37 +405,8 @@ annotation('textbox',[0 0 1 .04],'HorizontalAlignment','center',...
            'Interpreter','none','VerticalAlignment','top',...
            'FontSize',12,'LineStyle','none','String', ...
            stringForBottom);
-
-figure(2+figureOffset)
-clf
-set(gcf,'Color','w')
-
-for iQuantity = 1:numQuantities
-    if maxs(iQuantity) <= mins(iQuantity)
-        maxs(iQuantity) = mins(iQuantity)+1;
-    end
-    for iParameter = 1:numParameters
-        subplot(numRows, numCols, iParameter  + (plotRows(iQuantity) - 1)*numParameters)
-        plot(abscissae{iParameter}, quantities{iParameter}(:,iQuantity)', linespecs{iQuantity})
-        hold on
-        plot([convergeds{iParameter}, convergeds{iParameter}], [mins(iQuantity),maxs(iQuantity)],'k')
-        ylim([mins(iQuantity), maxs(iQuantity)])
-        xlabel(parametersToVary{iParameter})
-        ylabel(yAxesLabels{plotRows(iQuantity)})
-    end
-end
-
-annotation('textbox',[0 0.96 1 .04],'HorizontalAlignment','center',...
-    'Interpreter','none','VerticalAlignment','bottom',...
-    'FontSize',12,'LineStyle','none','String',stringForTop);
-
-annotation('textbox',[0 0 1 .04],'HorizontalAlignment','center',...
-           'Interpreter','none','VerticalAlignment','top',...
-           'FontSize',12,'LineStyle','none','String', ...
-           stringForBottom);
-
-
-% --------------------------------------------------------
+       
+% --------------------------------------------------------   
 
     function l = getLocationString(runNum)
         l = sprintf('/run%3d/',runNum);
