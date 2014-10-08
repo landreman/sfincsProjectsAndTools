@@ -15,6 +15,9 @@ XindicesToPlot = {1 1}; %This is an array of integers which controls which array
 %XindicesToPlot must be of the same length as QuantitiesOnXaxisArray and only
 %contain positive integers. '1' should be used if the parameter is a scalar
 %in SFINCS
+
+yAxesLabels = {};
+xAxesLabels = {}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if length(QuantitiesOnXaxisArray) ~= length(XindicesToPlot)
@@ -132,8 +135,14 @@ for iFile = 1:size(files,1)
     end
 end
 
+if numRuns < 1
+    error('No runs found!')
+end
+
 PlotYarray = cell(length(QuantitiesToPlotArray), length(QuantitiesOnXaxisArray), numRuns);
 PlotXarray = cell(length(QuantitiesToPlotArray), length(QuantitiesOnXaxisArray), numRuns);
+
+NumberOfFigs = 0;
 
 for j=1:length(QuantitiesToPlotArray)
     for k=1:length(QuantitiesOnXaxisArray)
@@ -148,8 +157,14 @@ for j=1:length(QuantitiesToPlotArray)
             %PlotXarray(runNum) = h5read(filename,[location,QuantitiesOnXaxisArray(k)]);
             PlotXarray{j,k,runNum} = h5read(filename,[location,char(QuantitiesOnXaxisArray(k))]);
         end
+        NumberOfFigs = NumberOfFigs + length(PlotYarray{j,k,1});
     end
 end
+
+NumberOfPlotRows = ceil(NumberOfFigs / sqrt(NumberOfFigs));
+NumberOfPlotCols = ceil(NumberOfFigs / NumberOfPlotRows);
+
+%return
 %PlotYarray
 %PlotYarray{1,1,1}
 %PlotYarray{1,1,2}
@@ -213,10 +228,86 @@ end
     
 %end
 
-%%%%%%%%%%%Jag är här!
-
 PlotYarray
 PlotXarray
+
+%%PLOT 
+FigPlot = figure(1)
+clf
+
+set(gcf,'Color','w')
+set(gcf,'Units','inches','Position',[1,1,6.5*1.7,4.5*1.7])
+
+LegendSize = 11;
+axesSize = 9;
+nuPrimeSize = 15;
+PlotLineWidth = 2.5;
+PlotMarkerSize = 8;
+TickFontSize = 13;
+LabelSize = 16;
+
+%leftMargin = 0.085;
+leftMargin = 0.1;
+rightMargin = 0.02;
+topMargin = 0.065;
+bottomMargin = 0.1;
+interPlotHorizontalSpacing = 0.05;
+interPlotVerticalSpacing = 0.05;
+
+plotHeight = (1-topMargin-bottomMargin-(NumberOfPlotRows - 1)*interPlotVerticalSpacing)/NumberOfPlotRows;
+%plotBottom_topRow = bottomMargin + plotHeight + interPlotVerticalSpacing;
+
+plotWidth = (1-leftMargin-rightMargin-(NumberOfPlotCols - 1)*interPlotHorizontalSpacing)/NumberOfPlotCols;
+%plotLeft_middleColumn = leftMargin + plotWidth + interPlotHorizontalSpacing;
+%plotLeft_rightColumn = leftMargin + 1*(plotWidth + interPlotHorizontalSpacing);
+
+
+
+%NumberOfPlotRows
+%NumberOfPlotCols
+
+plotNumber = 0;
+
+PlotYarray{1,1,:}
+PlotYarray{1,1,2}(3)
+PlotArrr = PlotYarray{1,1,:}
+PlotArrr(1,:)
+PlotXarray{1,1,:}
+
+%return
+
+Xarray = [];
+Yarray = [];
+
+for runNum=1:numRuns
+    Xarray(runNum) = PlotXarray{1,1,runNum}(2);
+    Yarray(runNum) = PlotYarray{1,1,runNum}(2);
+end
+
+Xarray
+Yarray
+
+%return
+
+for j=1:length(QuantitiesToPlotArray)
+    for k=1:length(QuantitiesOnXaxisArray)
+        for l=1:length(PlotYarray{j,k,1})
+            Xarray = [];
+            Yarray = [];
+            for runNum=1:numRuns
+                Xarray(runNum) = PlotXarray{j,k,runNum}(XindicesToPlot{k});
+                Yarray(runNum) = PlotYarray{j,k,runNum}(l);
+            end
+            
+            plotNumber = plotNumber + 1;
+            plotCol = rem(plotNumber - 1,NumberOfPlotCols) + 1;
+            plotRow = ceil(plotNumber / NumberOfPlotCols);
+            subplot('Position',[leftMargin + (plotCol - 1)*(plotWidth + interPlotHorizontalSpacing), bottomMargin + (NumberOfPlotRows - plotRow)*(plotHeight + interPlotVerticalSpacing), plotWidth, plotHeight])
+            plot(Xarray, Yarray,'o-r', 'linewidth', PlotLineWidth, 'MarkerSize', PlotMarkerSize, 'Color', [1 0 0])
+        end
+    end
+end
+
 
 return;
 
