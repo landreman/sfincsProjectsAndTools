@@ -24,6 +24,11 @@ XindicesToPlot = {2}; %This is an array of integers which controls which array e
 %% Plot options
 set(0, 'defaultTextInterpreter', 'tex'); 
 
+PrintToEps = 2; %If PrintToEps = 1 print .eps using Matlab built in print command. If PrintToEps = 2  print using export_fig, this requires downloading this package and xpdf. Otherwise do not print to figure.
+PathToExportFig = 'ojwoodford-export_fig-4c15bf4'; %Only used if PrintToEps = 2.
+
+epsFigName = 'CarbonTransportCoefficients_W7X_StandardConfig_ra0p88_Zeff1p05';
+
 PlotLabel = {'(impurityFlux) = (sfincsFactor) \{ L_{11}^{zz} [(1/n_{z}) (dn_{z}/d\psi) + (Ze/T_{z}) (d\Phi/d\psi) - (3/2T_{z}) (dT_{z}/d\psi)] +', ...
     '+ L_{11}^{zi} [(1/n_{i}) (dn_{i}/d\psi) + (e/T_{i}) (d\Phi/d\psi) - (3/2T_{i}) (dT_{i}/d\psi)] + L_{12}^{zz} [(1/T_{z})(dT_{z}/d\psi)] + L_{12}^{zi} [(1/T_{i})(dT_{i}/d\psi)]\}'};
 
@@ -261,6 +266,15 @@ for j=1:length(QuantitiesToPlotArray)
 end
 
 suptitle(PlotLabel);
+
+if PrintToEps == 1
+    print(FigPlot, '-depsc', strcat(epsFigName, '.eps'));
+elseif PrintToEps == 2
+    addpath(PathToExportFig);
+    %addpath('xpdfbin-win-3.04\bin32');
+    export_fig(gcf,epsFigName,'-eps');
+%else
+end
 
 return;
   
