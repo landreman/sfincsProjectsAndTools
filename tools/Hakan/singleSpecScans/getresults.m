@@ -1,13 +1,25 @@
 function [out,missing]=getresults(directory,sortafter)
-% Retrieves the output from the sfincs runs in the numbered subdirectories in
-% "directory". Only succesful runs are loaded. The output struct "out"
+% Retrieves the output from the sfincs runs with the same discretisation
+% in the numbered subdirectories in "directory". 
+% Only succesful runs are loaded. The output struct "out"
 % is sorted after the vaiable with the name in the input "sortafter"
-
+%directory
 H=loadallh5(directory);
 
 ind=0;  %Index for successful runs
 mind=0; %index for missing runs
 missing=[];
+%for backward compatibility, check if x is an output
+xoutputexists=0;
+for hind=1:length(H)
+  if isstruct(H{hind})
+    if isfield(H{hind}.run1,'x')
+      xoutputexists=1;
+      xoutputlength=length(H{hind}.run1.x);
+    end
+  end
+end
+
 for hind=1:length(H)
   if not(isstruct(H{hind})) %this simulation is missing in action
     mind=mind+1;
@@ -69,13 +81,18 @@ for hind=1:length(H)
     out.NxPotentialsPerVth(ind)=double(H{hind}.run1.NxPotentialsPerVth);
     out.xMax(ind)              =H{hind}.run1.xMax;
     out.solverTolerance(ind)   =H{hind}.run1.solverTolerance;
-    out.theta(ind,:)             =H{hind}.run1.theta;
-    out.zeta(ind,:)              =H{hind}.run1.zeta;
-    if isfield(H{hind}.run1,'x') %for backward compatibility
-      out.x(ind,:)               =H{hind}.run1.x;
-      out.fNormIsotropic(ind,:)  =H{hind}.run1.fNormIsotropic;
+    out.theta{ind}             =H{hind}.run1.theta;
+    out.theta{ind}             =H{hind}.run1.theta;
+    out.zeta{ind}              =H{hind}.run1.zeta;
+    if xoutputexists %for backward compatibility
+      if isfield(H{hind}.run1,'x')  %for backward compatibility
+        out.x{ind}                 =H{hind}.run1.x;
+        out.fNormIsotropic{ind}    =H{hind}.run1.fNormIsotropic;
+      else
+        out.x{ind}              =NaN*ones(1,xoutputlength);
+        out.fNormIsotropic{ind} =NaN*ones(1,xoutputlength);
+      end
     end
-    
     out.GHat(ind)          =H{hind}.run1.GHat;
     out.IHat(ind)          =H{hind}.run1.IHat;
     out.iota(ind)          =H{hind}.run1.iota;
@@ -113,13 +130,13 @@ if out.NumElements>0
         elseif strcmp(fnames{find},'NTVMatrix')
           out.NTVMatrix=out.NTVMatrix(orderedInds,:);
         elseif strcmp(fnames{find},'theta')
-          out.theta=out.theta(orderedInds,:);
+          out.theta=out.theta{orderedInds};
         elseif strcmp(fnames{find},'zeta')
-          out.zeta=out.zeta(orderedInds,:);
+          out.zeta=out.zeta{orderedInds};
         elseif strcmp(fnames{find},'x')
-          out.x=out.x(orderedInds,:);
+          out.x=out.x{orderedInds};
         elseif strcmp(fnames{find},'fNormIsotropic')
-          out.fNormIsotropic=out.fNormIsotropic(orderedInds,:);
+          out.fNormIsotropic=out.fNormIsotropic{orderedInds};
         elseif not(strcmp(fnames{find},'NumElements'))
           tmp=getfield(out,fnames{find});
           out=setfield(out,fnames{find},tmp(orderedInds));

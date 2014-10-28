@@ -15,6 +15,7 @@
 # 9  = Simultaneous convergence scan and scan of dPhiHatdpsi
 # 10 = Simultaneous scan of dphiHatdpsi, of collisionOperator=0 and 1, and of DKES vs full trajectories, keeping resolutions fixed.
 # 20 = Scan radius, taking profiles from profiles.dat
+# 21 = make a run for each line in the file runspec.dat
 
 $filename="input.namelist"
 
@@ -31,10 +32,12 @@ end
 jobFilename="job.#{$sfincs_system}"
 
 $profilesdatfile="profiles.dat"
+$runspecfile="runspec.dat"
 
 #The following line is only relevant on the hgw cluster:
 clusters=["wsclus","wsclus","edge01","edge01"]
 #clusters=["wsclus","wsclus","edge01","wsclus","edge02","wsclus","wsclus","edge03"]
+sizeFactor=0.1e-3
 
 require 'fileutils'
 include FileUtils        
@@ -191,6 +194,54 @@ def readProfiles(profilefilename, noElems)
   return radparams[0..(lind-1)]
 end
 
+def readRunspec(runspecfilename)
+  if !File.exists?(runspecfilename)
+    puts "Error! #{runspecfilename} not found."
+    exit
+  end
+  puts "File #{runspecfilename} exists."
+  
+  inFile = File.open(runspecfilename,"r")
+  lines = inFile.readlines
+  inFile.close
+
+  #runparams=Array.new(lines.size){Array.new(noElems)}
+  lind = 0
+  while lines[lind][0].chr =="!"
+    lind=lind+1
+  end
+  #now read the names of the variables to read
+  nameline=lines[lind-1][1..-1]
+  runparamnames=nameline.split
+  noElems=runparamnames.size
+  datalines=lines[lind..-1]
+  runparams=Array.new(datalines.size){Array.new(noElems)}
+  lind=0
+  datalines.each do |line|
+    if line.length>1
+      if line[0].chr != "!"
+        #puts line
+        substr=line
+        varind=0
+        while varind<noElems-1 do
+          varstr=substr[0..substr.index(" ")-1]
+          runparams[lind][varind]=varstr.to_f
+          substr=substr[(substr.index(" ")+1)..(substr.size-1)]
+          while substr.index(" ")==0
+            substr=substr[1..(substr.size-1)]
+          end
+          #puts "Element #{lind},#{varind} is #{runparams[lind][varind]}"
+          varind += 1
+        end
+        runparams[lind][noElems-1]=substr.to_f
+        #puts "Element #{lind},#{noElems-1} is #{runparams[lind][noElems-1]}"
+        lind += 1
+      end
+    end
+  end
+  return runparamnames, runparams[0..(lind-1)]
+end
+
 def linspace(min, max, nn)
   return (0..(nn-1)).collect{|x| x*(max-min)/(nn-1.0)+min}
 end
@@ -205,7 +256,6 @@ def logspace(min, max, nn)
   logs = linspace(Math.log(min), Math.log(max), nn)
   return logs.collect {|x| Math.exp(x)}
 end
-
 
 ##############################################################
 # Load the data from input.namelist and prepare order of runs
@@ -424,6 +474,10 @@ when 20
   parametersForScan=readProfiles($profilesdatfile, 9)
   numRunsInScan = parametersForScan.size
 
+when 21
+  parameternamesForScan, parametersForScan=readRunspec($runspecfile)
+  numRunsInScan = parametersForScan.size
+
 else
   puts "I do not know what to do with programMode = "+programMode.to_s
   exit
@@ -439,22 +493,22 @@ when 7,9,10
   
   case programMode
   when 7
-  NErs = readInput("NEStar",0)
-  EStarMin = readInput("EStarMin",1)
-  EStarMax = readInput("EStarMax",1)
-  EStars = logspace(EStarMin, EStarMax, NErs)
-  
-  puts "EStars:"
-  p EStars
+    NErs = readInput("NEStar",0)
+    EStarMin = readInput("EStarMin",1)
+    EStarMax = readInput("EStarMax",1)
+    EStars = logspace(EStarMin, EStarMax, NErs)
+    
+    puts "EStars:"
+    p EStars
     
   else
-  NErs = readInput("NErs",0)
-  dPhiHatdpsi_min = readInput("dPhiHatdpsi_min",1)
-  dPhiHatdpsi_max = readInput("dPhiHatdpsi_max",1)
-  dPhiHatdpsis = linspace(dPhiHatdpsi_min, dPhiHatdpsi_max, NErs)
-  
-  puts "dPhiHatdpsis:"
-  p dPhiHatdpsis
+    NErs = readInput("NErs",0)
+    dPhiHatdpsi_min = readInput("dPhiHatdpsi_min",1)
+    dPhiHatdpsi_max = readInput("dPhiHatdpsi_max",1)
+    dPhiHatdpsis = linspace(dPhiHatdpsi_min, dPhiHatdpsi_max, NErs)
+    
+    puts "dPhiHatdpsis:"
+    p dPhiHatdpsis
   end
 
   puts "Scan will consist of #{numRunsInScan} runs for each of #{NErs} Ers, for a total of #{numRunsInScan*NErs} runs."
@@ -464,7 +518,12 @@ when 7,9,10
     if !File.exists?(outerDirName)
       mkdir(outerDirName)
     end
-    
+    case programMode
+    when 7,9
+      # Calculate  discrSize=Ntheta*Nzeta*Nxi*Nx
+      discrSize=parametersForScan[i][0]*parametersForScan[i][1]*parametersForScan[i][2]*parametersForScan[i][4]
+    end
+
     puts "Beginning to submit jobs for "+descriptions[i]
     
     for k in 0...NErs
@@ -489,13 +548,27 @@ when 7,9,10
       case $sfincs_system 
       when "hgw"
         outFile.write("#\$ -N #{outerDirName}.#{innerDirName}\n")
+        mem_phys=0
         for j in 1..(lines.size-1)
+          if lines[j].include? "mem_phys"
+            mem_phys=lines[j][lines[j].index('=')+1..lines[j].index('G')-1]
+          end
           if lines[j].include? "CLUSTR"
             clind=lines[j].index('CLUSTR')
             iall=i*NErs+k
             lines[j][clind..clind+5]=clusters[iall.modulo(clusters.size)]
             puts lines[j]
           end 
+          case programMode
+          when 7,9
+            if lines[j].include? "ompi_b"
+              if mem_phys>0
+                lines[j][lines[j].index('ompi_b')+6..-1]=4*((discrSize*sizeFactor/mem_phys)/4).ceil
+              else
+                puts "WARNING: mem_phys and processor line in the wrong order!"
+              end
+            end
+          end
           outFile.write(lines[j])
         end
       when "hydra"
@@ -641,7 +714,7 @@ when 7,9,10
   end # of loop i over convergence scan
   
 else
-  # A standard scan, like programMode = 2, 6, 8 or 20 but not 7, 9 or 10.
+  # A standard scan, like programMode = 2, 6, 8, 20 or 21 but not 7, 9 or 10.
   
   puts "Scan will consist of #{numRunsInScan} runs."
   
@@ -661,12 +734,16 @@ else
     case programMode
     when 2
       jobName="SfxConv.#{dirName}"
+      # Calculate  discrSize=Ntheta*Nzeta*Nxi*Nx
+      discrSize=parametersForScan[i][0]*parametersForScan[i][1]*parametersForScan[i][2]*parametersForScan[i][4]
     when 6
       jobName="SfxEstr.#{dirName}"
     when 8
       jobName="SfxEr.#{dirName}"
     when 20
       jobName="SfxRad.#{dirName}"
+    when 21
+      jobName="Sfx.#{dirName}"
     else
       jobName="Sfx.#{dirName}"
     end
@@ -680,12 +757,26 @@ else
     case $sfincs_system 
     when "hgw"
       outFile.write("#\$ -N #{jobName}\n")
+      mem_phys=0
       for j in 1..(lines.size-1)
+        if lines[j].include? "mem_phys"
+          mem_phys=lines[j][lines[j].index('=')+1..lines[j].index('G')-1]
+        end
         if lines[j].include? "CLUSTR"
           clind=lines[j].index('CLUSTR')
           lines[j][clind..clind+5]=clusters[i.modulo(clusters.size)]
           puts lines[j]
         end 
+        case programMode
+        when 2
+          if lines[j].include? "ompi_b"
+            if mem_phys>0
+              lines[j][lines[j].index('ompi_b')+6..-1]=4*((discrSize*sizeFactor/mem_phys)/4).ceil
+            else
+              puts "WARNING: mem_phys and processor line in the wrong order!"
+            end
+          end
+        end
         outFile.write(lines[j])
       end
     when "hydra"
@@ -791,7 +882,12 @@ else
         if namelistLineContains(line,"nuPrime")
           line = "nuPrime = " + parametersForScan[i][8].to_s
         end
-
+      when 21
+        for nameind in 0..(parameternamesForScan.size-1)
+          if namelistLineContains(line,parameternamesForScan[nameind])
+            line = parameternamesForScan[nameind] + " = " + parametersForScan[i][nameind].to_s
+          end
+        end
       end
       
       outFile.write(line + "\n")
