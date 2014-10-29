@@ -1,4 +1,4 @@
-function runs=plotscanresults(dirpath,param,makeplots)
+function runs=plotcomboscanresults(dirpath,param,makeplots)
 %This funtion plots the results of a combined convergence and parameter scan
 %"dirpath" is the path to the directory where "baseCase" and the different directories
 %for convergence tested parameters.
@@ -17,7 +17,7 @@ if nargin==2
   makeplots=1;
 end
 
-[runs,P,Nval,missing]=getscanresults(dirpath,param);
+[runs,P,Nval,missing]=getcomboscanresults(dirpath,param);
 
 if not(runs{1}.RHSMode==2)
   error('I assumed RHSMode==2 but it is not!')

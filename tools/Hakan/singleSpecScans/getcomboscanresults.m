@@ -1,4 +1,4 @@
-function [runs,P,Nval,missing]=getscanresults(dirpath,sortafter)
+function [runs,P,Nval,missing]=getcomboscanresults(dirpath,sortafter)
 % For a combined convergence and parameter scan in Sfincs, 
 % this loads the results stored in the subdirectories to "dirpath" 
 % typically named baseCase/, Ntheta13/, Ntheta19/, Nx6/,...
@@ -12,7 +12,7 @@ function [runs,P,Nval,missing]=getscanresults(dirpath,sortafter)
 % where i lies in (1:Nval), and j lies in (1:length(P(i).scanParam))
 
 %addpath('~/Forskning/Stellarator/sfincs/matlab')
-
+ 
 list=dir(dirpath);
 if not(dirpath(end)=='/')
   dirpath=[dirpath,'/'];
