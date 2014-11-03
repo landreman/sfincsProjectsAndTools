@@ -68,6 +68,7 @@ for j_item=0:num_objs-1,
 	  rethrow(exc);
 	end
 	if isempty(path_parts)
+          name(find(name=='.'))='_';
           parpos=find((name=='(')|(name==')')|(name==' '));
           while not(isempty(parpos))
             name=[name(1:parpos(1)-1),name(parpos(1)+1:end)];
@@ -100,6 +101,7 @@ for j_item=0:num_objs-1,
 	sub_data = fix_data(sub_data);
 	
 	if isempty(path_parts)
+          name(find(name=='.'))='_';
           parpos=find((name=='(')|(name==')')|(name==' '));
           while not(isempty(parpos))
             name=[name(1:parpos(1)-1),name(parpos(1)+1:end)];
