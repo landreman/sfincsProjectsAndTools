@@ -23,7 +23,11 @@ end
 for hind=1:length(H)
   if not(isstruct(H{hind})) %this simulation is missing in action
     mind=mind+1;
-    missing(mind).dir =[directory,H{hind}(1:2)];
+    if directory(end)=='/'
+      missing(mind).dir =[directory,H{hind}(1:2)];
+    else
+      missing(mind).dir =[directory,'/',H{hind}(1:2)];
+    end
     missing(mind).message=H{hind};
   else
     ind=ind+1;

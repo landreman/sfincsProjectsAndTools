@@ -7,10 +7,11 @@ function [runs,missing]=getconvergencescanresults(dirpath,makeplots)
 
 convParams={'Ntheta','Nzeta','Nxi','Nx','solverTolerance','NL','NxPotentialsPerVth'};
 isScanned=[];
+vals=NaN*zeros(length(convParams),runs.NumElements);
 for pind=1:length(convParams)
   vals(pind,:)=getfield(runs,convParams{pind});
   if all(vals(pind,:)==vals(pind,1))
-    baseVals(pind)=vals(1,pind);
+    baseVals(pind)=vals(pind,1);
     scanVals{pind}=[];
     scanRuns{pind}=[];
   else
@@ -56,53 +57,107 @@ if makeplots
 
   L=runs.transportMatrix;
   LNTV=runs.NTVMatrix;
-
+  didItConverge=runs.didItConverge;
+  if didItConverge(baseRun)==1
+    baseColor='r';
+  else
+    baseColor='y';
+  end
+  
   for pind=1:NParam
+    
+    Nscanruns=length(scanRuns{pind});
+    colors=[];
+    for j=1:Nscanruns
+      colors=[colors,'b'];
+    end
+    colors(find(didItConverge(scanRuns{pind})~=1))='c';
     
     Lind=1; %L11
     subplot(Nrow,Ncol,(pind-1)*Ncol+Lind)
-    plot(baseVals(pind),L(baseRun,1,1),'r+',scanVals{pind},L(scanRuns{pind},1,1),'g+',...
-         baseVals(pind),LNTV(baseRun,1),'ro',scanVals{pind},LNTV(scanRuns{pind},1),'go')
+    if not(isempty(baseRun))
+      plot(baseVals(pind),L(baseRun,1,1),[baseColor,'+']);hold on;
+      plot(baseVals(pind),LNTV(baseRun,1),[baseColor,'o'])
+    end
+    for srind=1:Nscanruns
+      plot(scanVals{pind}(srind),L(scanRuns{pind}(srind),1,1),...
+           [colors(srind),'+'])    
+      plot(scanVals{pind}(srind),LNTV(scanRuns{pind}(srind),1),...
+           [colors(srind),'o'])
+    end
+    hold off
     xlabel(convParams{pind})
     ylabel('L11 +, LNTV1 o')
     %title([param,' = ',num2str(P(vind).val)])
     
     Lind=Lind+1; %L12
     subplot(Nrow,Ncol,(pind-1)*Ncol+Lind)
-    plot(baseVals(pind),L(baseRun,1,2),'r+',scanVals{pind},L(scanRuns{pind},1,2),'g+',...
-         baseVals(pind),LNTV(baseRun,2),'ro',scanVals{pind},LNTV(scanRuns{pind},2),'go')
+    if not(isempty(baseRun))
+      plot(baseVals(pind),L(baseRun,1,2),[baseColor,'+']);hold on;
+      plot(baseVals(pind),LNTV(baseRun,2),[baseColor,'o'])
+    end
+    for srind=1:Nscanruns
+      plot(scanVals{pind}(srind),L(scanRuns{pind}(srind),1,2),...
+           [colors(srind),'+'])    
+      plot(scanVals{pind}(srind),LNTV(scanRuns{pind}(srind),2),...
+           [colors(srind),'o'])
+    end
+    hold off
     xlabel(convParams{pind})
     ylabel('L12 +, LNTV2 o')
     %title([param,' = ',num2str(P(vind).val)])
     
     Lind=Lind+1; %L22
     subplot(Nrow,Ncol,(pind-1)*Ncol+Lind)
-    plot(baseVals(pind),L(baseRun,2,2),'r+',scanVals{pind},L(scanRuns{pind},2,2),'g+')%,...
-                                                                                      %baseVals(pind),LNTV(baseRun,3),'ro',scanVals{pind},LNTV(scanRuns{pind},3),'go')
+    if not(isempty(baseRun))
+      plot(baseVals(pind),L(baseRun,2,2),[baseColor,'+']);hold on;
+    end
+    for srind=1:Nscanruns
+      plot(scanVals{pind}(srind),L(scanRuns{pind}(srind),2,2),...
+           [colors(srind),'+'])    
+    end
+    hold off
     xlabel(convParams{pind})
-    ylabel('L22')% +, LNTV3 o')
-                 %title([param,' = ',num2str(P(vind).val)])
+    ylabel('L22')   
     
     Lind=Lind+1; %L13
     subplot(Nrow,Ncol,(pind-1)*Ncol+Lind)
-    plot(baseVals(pind),L(baseRun,1,3),'r+',scanVals{pind},L(scanRuns{pind},1,3),'g+')%,...
-                                                                                      %[min(scanval)*0.97,max(scanval)*1.03],-1/runs{1}.iota(1)*[1,1],'k:')
+    if not(isempty(baseRun))
+      plot(baseVals(pind),L(baseRun,1,3),[baseColor,'+']);hold on;
+    end
+    for srind=1:Nscanruns
+      plot(scanVals{pind}(srind),L(scanRuns{pind}(srind),1,3),...
+           [colors(srind),'+'])    
+    end
+    hold off
     xlabel(convParams{pind})
     ylabel('L13')
-    %title([param,' = ',num2str(P(vind).val)])
     
     Lind=Lind+1; %L23
     subplot(Nrow,Ncol,(pind-1)*Ncol+Lind)
-    plot(baseVals(pind),L(baseRun,2,3),'r+',scanVals{pind},L(scanRuns{pind},2,3),'g+')%,...
-                                                                                      % [min(scanval),max(scanval)],-4.57*/runs{1}.iota*[1,1],'k:')
-                                                                                      %Matt's value 4.57 could be wrong here
+    if not(isempty(baseRun))
+      plot(baseVals(pind),L(baseRun,2,3),[baseColor,'+']);hold on;
+    end
+    for srind=1:Nscanruns
+      plot(scanVals{pind}(srind),L(scanRuns{pind}(srind),2,3),...
+           [colors(srind),'+'])    
+    end
+    hold off
+    % [min(scanval),max(scanval)],-4.57*/runs{1}.iota*[1,1],'k:')
+    %Matt's value 4.57 could be wrong here
     xlabel(convParams{pind})
     ylabel('L23')
-    %title([param,' = ',num2str(P(vind).val)])
     
     Lind=Lind+1; %L33
     subplot(Nrow,Ncol,(pind-1)*Ncol+Lind)
-    plot(baseVals(pind),L(baseRun,3,3),'r+',scanVals{pind},L(scanRuns{pind},3,3),'g+')
+    if not(isempty(baseRun))
+      plot(baseVals(pind),L(baseRun,3,3),[baseColor,'+']);hold on;
+    end
+    for srind=1:Nscanruns
+      plot(scanVals{pind}(srind),L(scanRuns{pind}(srind),3,3),...
+           [colors(srind),'+'])    
+    end
+    hold off
     xlabel(convParams{pind})
     ylabel('L33')
     %title([param,' = ',num2str(P(vind).val)])
@@ -123,10 +178,16 @@ if makeplots
     
     Lind=Lind+1;
     subplot(Nrow,Ncol,(pind-1)*Ncol+Lind)
-    plot(baseVals(pind),LNTV(baseRun,3),'r+',scanVals{pind},LNTV(scanRuns{pind},3),'g+')
+    if not(isempty(baseRun))
+      plot(baseVals(pind),LNTV(baseRun,3),[baseColor,'+']);hold on;
+    end
+    for srind=1:Nscanruns
+      plot(scanVals{pind}(srind),LNTV(scanRuns{pind}(srind),3),...
+           [colors(srind),'+'])    
+    end
+    hold off
+    %plot(baseVals(pind),LNTV(baseRun,3),'r+',scanVals{pind},LNTV(scanRuns{pind},3),'g+')
     xlabel(convParams{pind})
     ylabel('LNTV_3')
-    %title([param,' = ',num2str()])
-
   end
 end
