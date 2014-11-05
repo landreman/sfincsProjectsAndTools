@@ -97,7 +97,8 @@ for hind=1:length(H)
     out.IHat(ind)          =H{hind}.run1.IHat;
     out.iota(ind)          =H{hind}.run1.iota;
     out.B0OverBBar(ind)    =H{hind}.run1.B0OverBBar;
-    out.FSABHat2(ind)         =H{hind}.run1.FSABHat2;
+    out.FSABHat2(ind)      =H{hind}.run1.FSABHat2;
+    out.didItConverge(ind) =H{hind}.run1.didItConverge;
   end
 end
 out.NumElements=ind;
