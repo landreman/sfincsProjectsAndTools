@@ -13,9 +13,9 @@ missing=[];
 xoutputexists=0;
 for hind=1:length(H)
   if isstruct(H{hind})
-    if isfield(H{hind}.run1,'x')
+    if isfield(H{hind}.run1,'fNormIsotropicBeforeSurfaceIntegral')
       xoutputexists=1;
-      xoutputlength=length(H{hind}.run1.x);
+      %xoutputlength=length(H{hind}.run1.x);
     end
   end
 end
@@ -85,12 +85,14 @@ for hind=1:length(H)
     out.theta{ind}             =H{hind}.run1.theta;
     out.zeta{ind}              =H{hind}.run1.zeta;
     if xoutputexists %for backward compatibility
-      if isfield(H{hind}.run1,'x')  %for backward compatibility
+      if isfield(H{hind}.run1,'fNormIsotropicBeforeSurfaceIntegral')  %for backward compatibility
         out.x{ind}                 =H{hind}.run1.x;
         out.fNormIsotropic{ind}    =H{hind}.run1.fNormIsotropic;
+        out.fNormIsotropicBeforeSurfaceIntegral{ind}=H{hind}.run1.fNormIsotropicBeforeSurfaceIntegral;
       else
-        out.x{ind}              =NaN*ones(1,xoutputlength);
-        out.fNormIsotropic{ind} =NaN*ones(1,xoutputlength);
+        out.x{ind}              =NaN*ones(1,out.Nx(ind));
+        out.fNormIsotropic{ind} =NaN*ones(1,out.Nx(ind));
+        out.fNormIsotropicBeforeSurfaceIntegral{ind}=NaN*ones(out.Ntheta(ind),out.Nzeta(ind),out.Nx(ind));
       end
     end
     out.GHat(ind)          =H{hind}.run1.GHat;
@@ -137,9 +139,15 @@ if out.NumElements>0
           out.x=out.x{orderedInds};
         elseif strcmp(fnames{find},'fNormIsotropic')
           out.fNormIsotropic=out.fNormIsotropic{orderedInds};
+        elseif strcmp(fnames{find},'fNormIsotropic')
+          out.fNormIsotropicBeforeSurfaceIntegral=out.fNormIsotropicBeforeSurfaceIntegral{orderedInds};
         elseif not(strcmp(fnames{find},'NumElements'))
           tmp=getfield(out,fnames{find});
-          out=setfield(out,fnames{find},tmp(orderedInds));
+          if size(tmp,1)>1 && size(tmp,2)>1
+            out=setfield(out,fnames{find},tmp(orderedInds,:));
+          else
+            out=setfield(out,fnames{find},tmp(orderedInds));
+          end
         end
       end
     end
