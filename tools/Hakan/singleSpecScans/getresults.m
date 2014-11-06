@@ -23,7 +23,11 @@ end
 for hind=1:length(H)
   if not(isstruct(H{hind})) %this simulation is missing in action
     mind=mind+1;
-    missing(mind).dir =[directory,H{hind}(1:2)];
+    if directory(end)=='/'
+      missing(mind).dir =[directory,H{hind}(1:2)];
+    else
+      missing(mind).dir =[directory,'/',H{hind}(1:2)];
+    end
     missing(mind).message=H{hind};
   else
     ind=ind+1;
@@ -99,7 +103,8 @@ for hind=1:length(H)
     out.IHat(ind)          =H{hind}.run1.IHat;
     out.iota(ind)          =H{hind}.run1.iota;
     out.B0OverBBar(ind)    =H{hind}.run1.B0OverBBar;
-    out.FSABHat2(ind)         =H{hind}.run1.FSABHat2;
+    out.FSABHat2(ind)      =H{hind}.run1.FSABHat2;
+    out.didItConverge(ind) =H{hind}.run1.didItConverge;
   end
 end
 out.NumElements=ind;
