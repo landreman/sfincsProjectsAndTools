@@ -8,10 +8,8 @@ if nargin<4
   maxabs_n=inf;
 end
 if nargin<5
-  symmetry='StelSym';
+  symmetry='unknown';
 end
-
-Geom.StelSym=strcmp(symmetry,'StelSym');
 
 fid = fopen(filename);
 if fid<0
@@ -69,11 +67,23 @@ if strcmp(filetype,'JG')
     dpds(rind)  = surfheader(5);
     dVdsoverNper(rind)  = surfheader(6);
     fgetl(fid); %just skip the return character
-    Geom.headertext.datavars=fgetl(fid); %Skip units line
-    
+    tmpstr=fgetl(fid); %units line
+    if rind==1
+      Geom.headertext.datavars=tmpstr;
+      Geom.StelSym=isempty(strfind(Geom.headertext.datavars, 'rmnc'))
+      if not(strcmp(symmetry,'unknown'))
+        if Geom.StelSym && not(strcmp(symmetry,'StelSym'))
+          error(['Boozer file is stellarator symmetric, but input to readBoozerfile ', ...
+                 'said it should be non-stellarator symmetric!'])
+        elseif not(Geom.StelSym) && strcmp(symmetry,'StelSym')
+          error(['Boozer file is non-stellarator symmetric, but input to readBoozerfile ', ...
+                 'said it should be stellarator symmetric!'])          
+        end
+      end
+    end
     position=ftell(fid);
     tmp_str=fgetl(fid);
-    if strcmp(symmetry,'StelSym')
+    if Geom.StelSym
       tmp=sscanf(tmp_str,'%d %d %f %f %f %f',6);
       while not(tmp(1)==0 && tmp(2)==0)
         tmp_str=fgetl(fid);
@@ -81,7 +91,7 @@ if strcmp(filetype,'JG')
       end
       B00(rind)=tmp(6);
       R00(rind)=tmp(3);
-    elseif strcmp(symmetry,'NonStelSym')
+    else
       tmp=sscanf(tmp_str,'%d %d %f %f %f %f %f %f %f %f',10);
       while not(tmp(1)==0 && tmp(2)==0)
         tmp_str=fgetl(fid);
@@ -89,8 +99,6 @@ if strcmp(filetype,'JG')
       end
       B00(rind)=tmp(9);
       R00(rind)=tmp(3);     
-    else
-      error('Non-defined symmetry case!')
     end
     fseek(fid,position,'bof'); %Rewind to beginning of surface data
     
@@ -106,7 +114,7 @@ if strcmp(filetype,'JG')
       elseif not(isempty(find(tmp_str=='s'))) %Next flux surface has been reached
         proceed=0;
       else
-        if strcmp(symmetry,'StelSym')
+        if Geom.StelSym
           tmp=sscanf(tmp_str,'%d %d %f %f %f %f',6);
           if (abs(tmp(6))/B00(rind)>min_Bmn)&&(tmp(1)<=max_m)&&(abs(tmp(2))<=maxabs_n)
             modeind=modeind+1;
@@ -118,7 +126,7 @@ if strcmp(filetype,'JG')
             modesb{rind}(modeind)=tmp(6);
             modesbnorm{rind}(modeind)=tmp(6)/B00(rind);
           end
-        elseif strcmp(symmetry,'NonStelSym')
+        else
           tmp=sscanf(tmp_str,'%d %d %f %f %f %f %f %f %f %f',10);
           if (tmp(1)<=max_m)&&(abs(tmp(2))<=maxabs_n)
             if (abs(tmp(9))/B00(rind)>min_Bmn)
@@ -146,8 +154,6 @@ if strcmp(filetype,'JG')
               modespar{rind}(modeind)=0; %parity 0 <=> Sinus component
             end
           end
-        else
-          error('Non-defined symmetry case!')
         end
       end
     end
@@ -176,13 +182,16 @@ if strcmp(filetype,'JG')
   Geom.R=modesr;
   Geom.Z=modesz;
   Geom.Dphi=modesp;
-  if strcmp(symmetry,'NonStelSym')
+  if not(Geom.StelSym)
     Geom.parity=modespar;
   end
-  fprintf(1,'\b\b\b\b\b\b\b\b\b\b\b')
+  %fprintf(1,'\b\b\b\b\b\b\b\b\b\b\b')
+  fprintf(1,'\n')
   
   
 elseif strcmp(filetype,'HM')
+  Geom.StelSym=1;
+  
   tmp_str=fgetl(fid);
   while tmp_str(2)=='c' || tmp_str(2)=='C'; %Skip comment line
     tmp_str=fgetl(fid);
