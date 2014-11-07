@@ -90,6 +90,8 @@ end
 minRoutboard=min(Routboard);
 maxRinboard=max(Rinboard);
 cylPossible=(maxRinboard<minRoutboard);
+Booz.cylPossible=cylPossible;
+Ham.cylPossible=cylPossible;
 
 if cylPossible
   cylR00=(maxRinboard+minRoutboard)/2;

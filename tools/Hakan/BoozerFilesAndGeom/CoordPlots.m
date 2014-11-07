@@ -11,8 +11,10 @@ theta=Discr.theta;
 phi=Discr.phi;
 vthet=Discr.vthet;
 cylphi=Discr.cylphi;
-cylth=Discr.cylth;
-cylr=Discr.cylr;
+if Discr.cylPossible
+  cylth=Discr.cylth;
+  cylr=Discr.cylr;
+end
 cylR=Discr.cylR;
 cylZ=Discr.cylZ;
 
@@ -22,8 +24,9 @@ phif=makefulltordata(phi,Nperiods,'toroidal coordinate');
 cylphif=makefulltordata(cylphi,Nperiods,'toroidal coordinate');
 thetaf=makefulltordata(theta,Nperiods,'poloidal coordinate');
 vthetf=makefulltordata(vthet,Nperiods,'poloidal coordinate');
-cylthf=makefulltordata(cylth,Nperiods,'poloidal coordinate');
-
+if Discr.cylPossible
+  cylthf=makefulltordata(cylth,Nperiods,'poloidal coordinate');
+end
 
 %make versions of coords which are within (0,2*pi)
 zetafmod=mod(zetaf,2*pi);
@@ -31,7 +34,9 @@ thetafmod=mod(thetaf,2*pi);
 phifmod=mod(phif,2*pi);
 vthetfmod=mod(vthetf,2*pi);
 cylphifmod=mod(cylphif,2*pi);
-cylthfmod=mod(cylthf,2*pi);
+if Discr.cylPossible
+  cylthfmod=mod(cylthf,2*pi);
+end
 
 geomang=-cylphi; %cylphi is minus the geometrical angle
 X=R.*cos(geomang);
@@ -43,7 +48,9 @@ Xf=Rf.*cos(geomangf);
 Yf=Rf.*sin(geomangf);
 Zf=makefulltordata(Z,Nperiods);
 Bf=makefulltordata(B,Nperiods);
-cylrf=makefulltordata(cylr,Nperiods);
+if Discr.cylPossible
+  cylrf=makefulltordata(cylr,Nperiods);
+end
 cylRf=makefulltordata(cylR,Nperiods);
 cylZf=makefulltordata(cylZ,Nperiods);
 
@@ -77,13 +84,15 @@ title('Cylindrical toroidal coordinate')
 shading flat
 axis equal
 
-fig(6)
-surf(Xf,Yf,Zf,mod(cylthfmod,pi/2))
-%surf(X,Y,Z,vthet)
-title('Cylindrical poloidal coordinate')
-shading flat
-axis equal
-view(0,90);colorbar
+if Discr.cylPossible
+  fig(6)
+  surf(Xf,Yf,Zf,mod(cylthfmod,pi/2))
+  %surf(X,Y,Z,vthet)
+  title('Cylindrical poloidal coordinate')
+  shading flat
+  axis equal
+  view(0,90);colorbar
+end
 
 fig(7)
 surf(Xf,Yf,Zf,cylRf)
@@ -93,13 +102,15 @@ shading flat
 axis equal
 view(0,90);colorbar
 
-fig(8)
-surf(Xf,Yf,Zf,cylrf)
-%surf(X,Y,Z,vthet)
-title('Cylindrical minor radius coordinate')
-shading flat
-axis equal
-colorbar
+if Discr.cylPossible
+  fig(8)
+  surf(Xf,Yf,Zf,cylrf)
+  %surf(X,Y,Z,vthet)
+  title('Cylindrical minor radius coordinate')
+  shading flat
+  axis equal
+  colorbar
+end
 
 fig(12)
 surf(Xf,Yf,Zf,cylZf)
