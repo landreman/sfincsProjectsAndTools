@@ -5,6 +5,10 @@ function [runs,missing]=getconvergencescanresults(dirpath,makeplots)
 
 [runs,missing]=getresults(dirpath);
 
+if runs.NumElements==0
+  warning('There were no successful runs !!')
+else
+  
 convParams={'Ntheta','Nzeta','Nxi','Nx','solverTolerance','NL','NxPotentialsPerVth'};
 isScanned=[];
 vals=NaN*zeros(length(convParams),runs.NumElements);
@@ -190,4 +194,5 @@ if makeplots
     xlabel(convParams{pind})
     ylabel('LNTV_3')
   end
+end
 end

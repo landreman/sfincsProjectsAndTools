@@ -62,6 +62,17 @@ for hind=1:length(H)
 
         out.particleFluxBeforeSurfaceIntegral(ind,:,:)=...
             H{hind}.run1.particleFluxBeforeSurfaceIntegral;
+        if xoutputexists %for backward compatibility
+          if isfield(H{hind}.run1,'fNormIsotropicBeforeSurfaceIntegral')  %for backward compatibility
+            out.x{ind}                 =H{hind}.run1.x;
+            out.fNormIsotropic{ind}    =H{hind}.run1.fNormIsotropic;
+            out.fNormIsotropicBeforeSurfaceIntegral{ind}=H{hind}.run1.fNormIsotropicBeforeSurfaceIntegral;
+          else
+            out.x{ind}              =NaN*ones(1,out.Nx(ind));
+            out.fNormIsotropic{ind} =NaN*ones(1,out.Nx(ind));
+            out.fNormIsotropicBeforeSurfaceIntegral{ind}=NaN*ones(out.Ntheta(ind),out.Nzeta(ind),out.Nx(ind));
+          end
+        end
       end
     else
       out.nu_n(ind)          =H{hind}.run1.nu_n;
@@ -77,6 +88,7 @@ for hind=1:length(H)
       end    
     end    
     
+    out.NPeriods(ind)          =double(H{hind}.run1.NPeriods);
     out.Ntheta(ind)            =double(H{hind}.run1.Ntheta);
     out.Nzeta(ind)             =double(H{hind}.run1.Nzeta);
     out.Nxi(ind)               =double(H{hind}.run1.Nxi);
@@ -88,17 +100,6 @@ for hind=1:length(H)
     out.theta{ind}             =H{hind}.run1.theta;
     out.theta{ind}             =H{hind}.run1.theta;
     out.zeta{ind}              =H{hind}.run1.zeta;
-    if xoutputexists %for backward compatibility
-      if isfield(H{hind}.run1,'fNormIsotropicBeforeSurfaceIntegral')  %for backward compatibility
-        out.x{ind}                 =H{hind}.run1.x;
-        out.fNormIsotropic{ind}    =H{hind}.run1.fNormIsotropic;
-        out.fNormIsotropicBeforeSurfaceIntegral{ind}=H{hind}.run1.fNormIsotropicBeforeSurfaceIntegral;
-      else
-        out.x{ind}              =NaN*ones(1,out.Nx(ind));
-        out.fNormIsotropic{ind} =NaN*ones(1,out.Nx(ind));
-        out.fNormIsotropicBeforeSurfaceIntegral{ind}=NaN*ones(out.Ntheta(ind),out.Nzeta(ind),out.Nx(ind));
-      end
-    end
     out.GHat(ind)          =H{hind}.run1.GHat;
     out.IHat(ind)          =H{hind}.run1.IHat;
     out.iota(ind)          =H{hind}.run1.iota;
