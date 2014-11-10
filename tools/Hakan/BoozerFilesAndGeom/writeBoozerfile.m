@@ -44,7 +44,7 @@ for rind=1:Geom.nsurf
       Nm=length(ms);
       for mind=1:Nm
         m=ms(mind);
-        mninds=find((Geom.n{rind}==n)&(Geom.m{rind}=m));
+        mninds=find((Geom.n{rind}==n)&(Geom.m{rind}==m));
         if length(mninds)>2 || isempty(mninds)
           error('This is impossible!')
         end
