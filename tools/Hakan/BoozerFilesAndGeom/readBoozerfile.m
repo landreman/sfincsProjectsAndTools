@@ -70,7 +70,7 @@ if strcmp(filetype,'JG')
     tmpstr=fgetl(fid); %units line
     if rind==1
       Geom.headertext.datavars=tmpstr;
-      Geom.StelSym=isempty(strfind(Geom.headertext.datavars, 'rmnc'))
+      Geom.StelSym=isempty(strfind(Geom.headertext.datavars, 'rmnc'));
       if not(strcmp(symmetry,'unknown'))
         if Geom.StelSym && not(strcmp(symmetry,'StelSym'))
           error(['Boozer file is stellarator symmetric, but input to readBoozerfile ', ...
