@@ -10,7 +10,7 @@ if fid<0
 end
 
 fprintf(fid,'%s\n',Geom.headertext.maincomment);
-fprintf(fid,'CC The file has beeen interpolated to a new set of radii\n');
+%fprintf(fid,'CC The file has been interpolated to a new set of radii\n');
 
 fprintf(fid,'%s\n',Geom.headertext.globalvars);
 fprintf(fid,'%3d%5d%6d%4d%16.6E%10.5f%10.5f\n',...

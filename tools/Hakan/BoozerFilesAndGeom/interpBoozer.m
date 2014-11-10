@@ -23,6 +23,8 @@ out.minorradius=Geom.minorradius;
 out.majorradius=Geom.majorradius;
 out.Bfilter=Geom.Bfilter;
 
+out.headertext.maincomment=sprintf([out.headertext.maincomment,'\n',...
+                    'CC The file has been interpolated to a new set of radii']);
 
 out.rnorm=interp1(Geom.s,Geom.rnorm,s);
 out.s=s;
