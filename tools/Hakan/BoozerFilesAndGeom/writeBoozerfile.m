@@ -41,7 +41,6 @@ for rind=1:Geom.nsurf
       m=ms(mind);
       allns=sort(Geom.n{rind}(find(Geom.m{rind}==m)));
       ns=allns([1,find(diff(allns))+1]);
-      ns=[ns(find(ns>=0)),fliplr(ns(find(ns<0)))];
       Nn=length(ns);
       for nind=1:Nn
         n=ns(nind);
