@@ -34,16 +34,17 @@ for rind=1:Geom.nsurf
               Geom.Dphi{rind}(ind),Geom.Bmn{rind}(ind));
     end
   else     
-    allns=sort(Geom.n{rind});
-    ns=allns([1,find(diff(allns))+1]);
-    Nn=length(ns);
-    for nind=1:Nn
-      n=ns(nind);
-      allms=sort(Geom.m{rind}(find(Geom.n{rind}==n)));
-      ms=allms([1,find(diff(allms))+1]);
-      Nm=length(ms);
-      for mind=1:Nm
-        m=ms(mind);
+    allms=sort(Geom.m{rind});
+    ms=allms([1,find(diff(allms))+1]);
+    Nm=length(ms);
+    for mind=1:Nm
+      m=ms(mind);
+      allns=sort(Geom.n{rind}(find(Geom.m{rind}==m)));
+      ns=allns([1,find(diff(allns))+1]);
+      ns=[ns(find(ns>=0),fliplr(ns(find(ns<0)))];
+      Nn=length(ns);
+      for nind=1:Nn
+        n=ns(nind);
         mninds=find((Geom.n{rind}==n)&(Geom.m{rind}==m));
         if length(mninds)>2 || isempty(mninds)
           error('This is impossible!')
