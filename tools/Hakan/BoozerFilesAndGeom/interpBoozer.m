@@ -36,9 +36,20 @@ out.R00=interp1(Geom.s,Geom.R00,s);
 
 for surfind=1:out.nsurf
 
-  Lind=find(diff(sign(Geom.s-s(surfind))));
-  Rind=Lind+1;
-  
+  if isempty(find(Geom.s==s(surfind)))
+    Lind=find(diff(sign(Geom.s-s(surfind))));
+    Rind=Lind+1;
+  else
+    exactind=find(Geom.s==s(surfind));
+    if exactind==length(Geom.s)
+      Rind=length(Geom.s);
+      Lind=Rind-1;
+    else
+      Lind=exactind;
+      Rind=Lind+1;
+    end
+  end
+    
   if not(Geom.StelSym)
     mode=0;
     for par=0:1
