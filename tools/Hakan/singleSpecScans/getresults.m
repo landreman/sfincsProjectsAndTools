@@ -39,12 +39,14 @@ for hind=1:length(H)
     %find out if it is single or multi species version
     multi=isfield(H{hind}.run1,'Nspecies');
       
-    out.geometryScheme(ind) =H{hind}.run1.geometryScheme;
-    if out.geometryScheme(ind)==11
-      out.JGboozer_file{ind} = H{hind}.run1.JGboozer_file;
-    elseif out.geometryScheme(ind)==12
-      out.JGboozer_file_NonStelSym{ind}=H{hind}.run1.JGboozer_file_NonStelSym;
-    end
+    % The following is sadly not stored as output other than in 
+    % H{hind}.input_namelist'
+    %out.geometryScheme(ind) =H{hind}.run1.geometryScheme;
+    %if out.geometryScheme(ind)==11
+    %  out.JGboozer_file{ind} = H{hind}.run1.JGboozer_file;
+    %elseif out.geometryScheme(ind)==12
+    %  out.JGboozer_file_NonStelSym{ind}=H{hind}.run1.JGboozer_file_NonStelSym;
+    %end
     if not(multi) %only in single species version
       out.RHSMode(ind)      =H{hind}.run1.RHSMode;
       out.normradius(ind)   =H{hind}.run1.normradius;
