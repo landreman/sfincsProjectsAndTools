@@ -26,11 +26,47 @@ for rind=1:Geom.nsurf
           Geom.Btheta(rind)/(1/2/pi*(4*pi*1e-7)),...
           Geom.dpds(rind),Geom.dVdsoverNper(rind));
   fprintf(fid,'%s\n',Geom.headertext.datavars);
-  for ind=1:Geom.nmodes(rind)
-    fprintf(fid,'%5d%5d%16.8E%16.8E%16.8E%16.8E\n',...
-            Geom.m{rind}(ind),Geom.n{rind}(ind),...
-            Geom.R{rind}(ind),Geom.Z{rind}(ind),...
-            Geom.Dphi{rind}(ind),Geom.Bmn{rind}(ind));
+  if Geom.StelSym
+    for ind=1:Geom.nmodes(rind)
+      fprintf(fid,'%5d%5d%16.8E%16.8E%16.8E%16.8E\n',...
+              Geom.m{rind}(ind),Geom.n{rind}(ind),...
+              Geom.R{rind}(ind),Geom.Z{rind}(ind),...
+              Geom.Dphi{rind}(ind),Geom.Bmn{rind}(ind));
+    end
+  else     
+    allns=sort(Geom.n{rind});
+    ns=allns([1,find(diff(allns))+1]);
+    Nn=length(ns);
+    for nind=1:Nn
+      n=ns(nind);
+      allms=sort(Geom.m{rind}(find(Geom.n{rind}==n)));
+      ms=allms([1,find(diff(allms))+1]);
+      Nm=length(ms);
+      for mind=1:Nm
+        m=ms(mind);
+        mninds=find((Geom.n{rind}==n)&(Geom.m{rind}=m));
+        if length(mninds)>2 || isempty(mninds)
+          error('This is impossible!')
+        end
+        rmnc=0;rmns=0;zmnc=0;zmns=0;
+        vmnc=0;vmns=0;bmnc=0;bmns=0;
+        for iind=1:length(mninds)
+          if Geom.parity{rind}(mninds(iind))==1 %1<=>cosinus Bmn (stelsym part)
+            rmnc=Geom.R{rind}(mninds(iind));
+            zmns=Geom.Z{rind}(mninds(iind));
+            vmns=Geom.Dphi{rind}(mninds(iind));
+            bmnc=Geom.Bmn{rind}(mninds(iind));
+          else %0<=>sinus Bmn (non-stelsym part)
+            rmns=Geom.R{rind}(mninds(iind));
+            zmnc=Geom.Z{rind}(mninds(iind));
+            vmnc=Geom.Dphi{rind}(mninds(iind));
+            bmns=Geom.Bmn{rind}(mninds(iind));            
+          end
+        end
+      fprintf(fid,'%5d%5d%17.8E%17.8E%17.8E%17.8E%17.8E%17.8E%17.8E%17.8E\n',...
+              m,n,rmnc,rmns,zmnc,zmns,vmnc,vmns,bmnc,bmns);        
+      end
+    end
   end
 end
 fclose(fid);
