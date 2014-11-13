@@ -161,11 +161,21 @@ if strcmp(filetype,'JG')
     %modesbnorm{rind}=modesb{rind}/B00(rind);
   end
   
+  rthetazeta_righthanded=sign(Geom.torfluxtot*Bphi(1));
+  if rthetazeta_righthanded==-1
+    warning(['The coordinate system in the Boozer file was left handed,'...
+             ' typical, e.g., for AUG. This has now been corrected in',...
+             ' the loaded data struct Geom. The output Geom.Dphi',...
+             'may be unreliable I think!'])
+  end
+  %if a left handed system switch direction of toroidal coordinate
+  Geom.torfluxtot=Geom.torfluxtot*rthetazeta_righthanded;
+  
   Geom.rnorm=sqrt(torfluxnorm);
   Geom.s=torfluxnorm;
-  Geom.iota=iota;
-  Geom.Bphi=Bphi;
-  Geom.Btheta=Btheta;
+  Geom.Bphi=Bphi*rthetazeta_righthanded^2;%amperes law minus sign and direction switch sign
+  Geom.Btheta=Btheta*rthetazeta_righthanded;%amperes law minus sign
+  Geom.iota=iota*rthetazeta_righthanded;
   Geom.dpds=dpds;
   Geom.dVdsoverNper=dVdsoverNper;
   Geom.nmodes=no_of_modes;
