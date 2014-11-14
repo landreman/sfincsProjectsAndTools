@@ -147,15 +147,15 @@ if out.NumElements>0
         elseif strcmp(fnames{find},'NTVMatrix')
           out.NTVMatrix=out.NTVMatrix(orderedInds,:);
         elseif strcmp(fnames{find},'theta')
-          out.theta=out.theta{orderedInds};
+          out.theta={out.theta{orderedInds}};
         elseif strcmp(fnames{find},'zeta')
-          out.zeta=out.zeta{orderedInds};
+          out.zeta={out.zeta{orderedInds}};
         elseif strcmp(fnames{find},'x')
-          out.x=out.x{orderedInds};
+          out.x={out.x{orderedInds}};
         elseif strcmp(fnames{find},'fNormIsotropic')
-          out.fNormIsotropic=out.fNormIsotropic{orderedInds};
+          out.fNormIsotropic={out.fNormIsotropic{orderedInds}};
         elseif strcmp(fnames{find},'fNormIsotropic')
-          out.fNormIsotropicBeforeSurfaceIntegral=out.fNormIsotropicBeforeSurfaceIntegral{orderedInds};
+          out.fNormIsotropicBeforeSurfaceIntegral={out.fNormIsotropicBeforeSurfaceIntegral{orderedInds}};
         elseif not(strcmp(fnames{find},'NumElements'))
           tmp=getfield(out,fnames{find});
           if size(tmp,1)>1 && size(tmp,2)>1
