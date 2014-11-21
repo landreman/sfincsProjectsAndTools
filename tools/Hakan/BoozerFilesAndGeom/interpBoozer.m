@@ -4,6 +4,9 @@ if strcmp(invarname,'s')
   s=invar;
 elseif strcmp(invarname,'rnorm')
   s=interp1(Geom.rnorm,Geom.s,invar);
+  if any(isnan(s))
+    error('Chosen rnorm out of range!')
+  end
 else
   error('not implemented')
 end
@@ -55,7 +58,7 @@ for surfind=1:out.nsurf
   if not(Geom.StelSym)
     mode=0;
     for par=0:1
-      
+
       pindsL=find(Geom.parity{Lind}==par);
       pindsR=find(Geom.parity{Rind}==par);
       
