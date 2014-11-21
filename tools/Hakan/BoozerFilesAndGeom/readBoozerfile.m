@@ -181,7 +181,7 @@ if strcmp(filetype,'JG')
   Geom.nmodes=no_of_modes;
   Geom.nmodes=no_of_modes;
   Geom.m=modesm;
-  Geom.n=modesn*rthetazeta_righthanded;
+  Geom.n=modesn
   Geom.Bmn=modesb;
   Geom.Bnorm=modesbnorm;
   Geom.B00=B00;
@@ -192,6 +192,12 @@ if strcmp(filetype,'JG')
   Geom.R=modesr;
   Geom.Z=modesz;
   Geom.Dphi=modesp*rthetazeta_righthanded;
+  if rthetazeta_righthanded==-1
+    for tmpind=1:length(Geom.n)
+      Geom.n{tmpind}=-Geom.n{tmpind};
+      Geom.Dphi{tmpind}=-Geom.Dphi{tmpind};
+    end
+  end
   if not(Geom.StelSym)
     Geom.parity=modespar;
   end
