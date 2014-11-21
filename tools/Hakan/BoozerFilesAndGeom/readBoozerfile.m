@@ -191,7 +191,7 @@ if strcmp(filetype,'JG')
   Geom.R00=R00;
   Geom.R=modesr;
   Geom.Z=modesz;
-  Geom.Dphi=modesp*rthetazeta_righthanded;
+  Geom.Dphi=modesp;
   if rthetazeta_righthanded==-1
     for tmpind=1:length(Geom.n)
       Geom.n{tmpind}=-Geom.n{tmpind};
@@ -205,6 +205,9 @@ if strcmp(filetype,'JG')
   fprintf(1,'\n')
   
   
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  
+% Henning Maassberg type Boozer file  
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  
 elseif strcmp(filetype,'HM')
   Geom.StelSym=1;
   
