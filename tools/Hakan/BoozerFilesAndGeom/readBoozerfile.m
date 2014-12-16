@@ -57,7 +57,7 @@ if strcmp(filetype,'JG')
   
   while not(eof)
     rind=rind+1;
-    fprintf(1,'\b\b\b\b\b\b\b\b\b\b\b%i/%i',rind,Geom.nsurf)
+    fprintf(1,'\b\b\b\b\b\b\b\b\b\b\b%5i/%5i',rind,Geom.nsurf)
     Geom.headertext.surfvarunits=fgetl(fid);
     surfheader=fscanf(fid,'%f',6);
     torfluxnorm(rind) = surfheader(1);
