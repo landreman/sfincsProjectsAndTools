@@ -118,7 +118,6 @@ h=1./(B.^2);
 VPrimeHat=sum(sum(h))*4*pi^2/(Nzeta*Ntheta); %Note: VPrime=VPrimeHat*(G+iota*I)
 FSAB2=4*pi^2/VPrimeHat;
 %h00=VPrimeHat/(4*pi^2);
-%Btest=zeros(Ntheta,Nzeta);
 
 if not(Geom.StelSym) %sine components exist
   for m=0:floor(Ntheta/2)-1 %Nyquist max freq.

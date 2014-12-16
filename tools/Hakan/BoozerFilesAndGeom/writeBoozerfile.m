@@ -9,6 +9,21 @@ if fid<0
  error(['Unable to open file: ',filename])
 end
 
+% Change the signs from right to left handed (r,poloidal,toroidal)
+signchange=-1; %sign changer
+Geom.torfluxtot=Geom.torfluxtot*signchange;
+Geom.Bphi=Geom.Bphi*signchange^2;
+Geom.Btheta=Geom.Btheta*signchange;
+Geom.iota=Geom.iota*signchange;
+Geom.dVdsoverNper=Geom.dVdsoverNper*signchange;
+for tmpind=1:length(Geom.n)
+  Geom.n{tmpind}=-Geom.n{tmpind};
+  Geom.Dphi{tmpind}=-Geom.Dphi{tmpind};
+end
+
+
+%Begin writing to the file
+
 fprintf(fid,'%s\n',Geom.headertext.maincomment);
 
 fprintf(fid,'%s\n',Geom.headertext.globalvars);

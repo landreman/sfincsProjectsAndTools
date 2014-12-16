@@ -62,7 +62,6 @@ title('Magnetic field')
 shading flat
 axis equal
 
-
 fig(1)
 surf(Xf,Yf,Zf,phifmod)
 %surf(X,Y,Z,phi)

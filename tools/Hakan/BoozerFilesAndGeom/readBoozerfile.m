@@ -160,15 +160,40 @@ if strcmp(filetype,'JG')
     no_of_modes(rind)=modeind;
     %modesbnorm{rind}=modesb{rind}/B00(rind);
   end
-  
-  rthetazeta_righthanded=sign(Geom.torfluxtot*Bphi(1));
-  if rthetazeta_righthanded==-1
-    warning(['The coordinate system in the Boozer file was left handed,'...
-             ' typical, e.g., for AUG. This has now been corrected in',...
-             ' the loaded data struct Geom. The output Geom.Dphi',...
-             'may be unreliable I think!'])
+  fprintf(1,'\n')
+
+  if any(dVdsoverNper>0)
+    error(['The coordinate system in the Boozer file should be left handed,'...
+          ' but it has a positive Jacobian. Something is wrong!'])
   end
-  %if a left handed system switch direction of toroidal coordinate
+  
+  if Geom.torfluxtot*Bphi(1)>0
+    disp(['This is a stellarator symmetric file from Joachim Geiger.'...
+          ' It will now be turned 180 degrees around a ' ...
+          'horizontal axis <=> flip the sign of G and I, so that it matches the sign ' ...
+          'of its total toroidal flux.'])
+    Geom.headertext.maincomment=sprintf([Geom.headertext.maincomment,'\n',...
+               'CC This stellarator symmetric file has been turned 180 degrees around an\n', ...
+               'CC horizontal axis by flipping the signs of Itor and Ipol compared with the\n',...
+               'CC original file. This was done in order for these signs to be consistent with\n',...
+               'CC the total toroidal flux, which has the same sign as in the original file.']);
+    
+    % Such a rotation does not make it necessary to change the Fourier coefficients, 
+    % in the case of Stellarator symmetry
+    if not(Geom.StelSym)
+      error('Rotating 180 degrees only allowed for stellarator symmetric cases!')
+    end
+    Bphi=-Bphi;
+    Btheta=-Btheta;
+  end
+    
+  rthetazeta_righthanded=sign(Geom.torfluxtot*Bphi(1)); %This is -1, because
+                                                        %the Boozer file is supposed to be left handed
+  
+  if rthetazeta_righthanded==1
+    error('The coordinate system in the Boozer file was right handed')
+  end
+  
   Geom.torfluxtot=Geom.torfluxtot*rthetazeta_righthanded;
   
   Geom.rnorm=sqrt(torfluxnorm);
@@ -177,11 +202,10 @@ if strcmp(filetype,'JG')
   Geom.Btheta=Btheta*rthetazeta_righthanded;%amperes law minus sign
   Geom.iota=iota*rthetazeta_righthanded;
   Geom.dpds=dpds;
-  Geom.dVdsoverNper=dVdsoverNper;
-  Geom.nmodes=no_of_modes;
+  Geom.dVdsoverNper=dVdsoverNper*rthetazeta_righthanded;
   Geom.nmodes=no_of_modes;
   Geom.m=modesm;
-  Geom.n=modesn
+  Geom.n=modesn; %sign is switched below
   Geom.Bmn=modesb;
   Geom.Bnorm=modesbnorm;
   Geom.B00=B00;
