@@ -1,13 +1,19 @@
 function Geom=readBoozerfile(filename,min_Bmn,max_m,maxabs_n,symmetry)
 
-if nargin<2
+switch nargin
+ case 1
   min_Bmn=0;
-end
-if nargin<4
   max_m=inf;
   maxabs_n=inf;
-end
-if nargin<5
+  symmetry='unknown';
+ case 2
+  max_m=inf;
+  maxabs_n=inf;
+  symmetry='unknown';
+ case 3
+  maxabs_n=inf;
+  symmetry='unknown';
+ case 4
   symmetry='unknown';
 end
 
@@ -302,19 +308,24 @@ elseif strcmp(filetype,'HM')
     end      
   end
 
+  %Geom.torfluxtot is not stored in Henning Maassberg's files. Because they are 
+  %based on Joachim Geiger's .bc files, however, they are left-handed (r,pol,tor) and
+  %inconsistent with the sign of torfluxtot in the .bc file. The same correction is
+  %therefore made here as for the .bc files above.
+  rthetazeta_righthanded=-1;
+  
   Geom.nsurf=length(radii);
   Geom.Nperiods=Nperiods;
-  %Geom.torfluxtot=?
   Geom.minorradius=minorradius;
   Geom.majorradius=majorradius;
   Geom.rnorm=radii/Geom.minorradius;
   Geom.s=torfluxnorm;
-  Geom.iota=iota;
+  Geom.iota=iota*rthetazeta_righthanded;
   Geom.Bphi=Bphi;
-  Geom.Btheta=Btheta;
+  Geom.Btheta=Btheta*rthetazeta_righthanded;
   Geom.nmodes=no_of_modes;
   Geom.m=modesm;
-  Geom.n=modesn;
+  Geom.n=modesn; %sign is switched below
   Geom.Bmn=modesb;
   Geom.Bnorm=modesbnorm;
   Geom.B00=B00;
@@ -324,6 +335,11 @@ elseif strcmp(filetype,'HM')
   Geom.R00=R00;
   Geom.R=modesr;
   Geom.Z=modesz;
+  if rthetazeta_righthanded==-1
+    for tmpind=1:length(Geom.n)
+      Geom.n{tmpind}=-Geom.n{tmpind};
+    end
+  end
    
 end
 

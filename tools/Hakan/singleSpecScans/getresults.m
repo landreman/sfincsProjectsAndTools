@@ -121,7 +121,6 @@ out.NumElements=ind;
 
 if out.NumElements>0
   if not(multi)
-    if out.NumElements>0
       if all((out.RHSMode==2)|(out.RHSMode==0)); %The 0 is for a certain type of error
         out.transportMatrix=zeros(out.NumElements,3,3);
         for ind=1:out.NumElements
@@ -133,8 +132,12 @@ if out.NumElements>0
             out.NTVMatrix(ind,:)=H{goodhinds(ind)}.run1.NTVMatrix;
           end
         end
+      elseif all(out.RHSMode==3)
+        out.transportCoeffs=zeros(out.NumElements,2,2);        
+        for ind=1:out.NumElements
+          out.transportCoeffs(ind,:,:)=H{goodhinds(ind)}.run1.transportCoeffs;
+        end
       end
-    end
   end
 
   if out.NumElements>1
@@ -146,6 +149,8 @@ if out.NumElements>0
           out.transportMatrix=out.transportMatrix(orderedInds,:,:);
         elseif strcmp(fnames{find},'NTVMatrix')
           out.NTVMatrix=out.NTVMatrix(orderedInds,:);
+        elseif strcmp(fnames{find},'transportCoeffs')
+          out.transportCoeffs=out.transportCoeffs(orderedInds,:,:);
         elseif strcmp(fnames{find},'theta')
           out.theta={out.theta{orderedInds}};
         elseif strcmp(fnames{find},'zeta')

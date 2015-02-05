@@ -244,6 +244,8 @@ if strcmp(interptype,'linear') %This is the default case
     out.Bnorm{surfind}=out.Bmn{surfind}/out.B00(surfind);
     out.nmodes(surfind)=mode;
   end
+  fprintf(1,'\n')
+
   
 elseif strcmp(interptype,'nearest')
   out.headertext.maincomment=sprintf([out.headertext.maincomment,'\n',...

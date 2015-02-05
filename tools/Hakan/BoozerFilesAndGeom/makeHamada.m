@@ -5,9 +5,8 @@ Dzeta=2*pi/Nzeta/Geom.Nperiods;
 Dtheta=2*pi/Ntheta;
 zetavec=(0:Nzeta-1)*Dzeta;
 thetavec=(0:Ntheta-1)'*Dtheta;
-%[zeta, theta] = meshgrid(zetavec,thetavec);
-[theta, zeta] = ndgrid(thetavec,zetavec); %the same but more logical argument order
-
+[theta, zeta] = ndgrid(thetavec,zetavec); %the same as meshgrid but 
+                                          %more logical argument order
 
 NPeriods=Geom.Nperiods;
 I=Geom.Btheta(rind);

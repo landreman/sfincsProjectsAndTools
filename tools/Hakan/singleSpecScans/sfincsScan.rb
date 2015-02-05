@@ -46,13 +46,13 @@ if !File.exists?($filename)
   puts "Error! #{$filename} not found."
   exit
 end
-puts "File #{$filename} exists."
+#puts "File #{$filename} exists."
 
 if !File.exists?(jobFilename)
   puts "Error! #{jobFilename} not found."
   exit
 end
-puts "File #{jobFilename} exists."
+#puts "File #{jobFilename} exists."
 
 # Make sure job file does not already contain "#PBS -N"
 inFile = File.open(jobFilename,"r")
@@ -220,25 +220,22 @@ def readRunspec(runspecfilename)
   datalines.each do |line|
     if line.length>1
       if line[0].chr != "!"
-        #puts line
-        substr=line
         varind=0
-        while varind<noElems-1 do
-          varstr=substr[0..substr.index(" ")-1]
-          runparams[lind][varind]=varstr.to_f
-          substr=substr[(substr.index(" ")+1)..(substr.size-1)]
-          while substr.index(" ")==0
-            substr=substr[1..(substr.size-1)]
+        line.split.each do |varstr|
+          if varstr.include? "."
+            runparams[lind][varind]=varstr.to_f
+          else
+            runparams[lind][varind]=varstr.to_i            
           end
-          #puts "Element #{lind},#{varind} is #{runparams[lind][varind]}"
           varind += 1
         end
-        runparams[lind][noElems-1]=substr.to_f
-        #puts "Element #{lind},#{noElems-1} is #{runparams[lind][noElems-1]}"
         lind += 1
       end
     end
   end
+  puts "#{runparamnames}"
+  puts "#{runparams}"
+
   return runparamnames, runparams[0..(lind-1)]
 end
 
@@ -769,11 +766,20 @@ else
         end 
         case programMode
         when 2
-          if lines[j].include? "ompi_b"
-            if mem_phys>0
-              lines[j][lines[j].index('ompi_b')+6..-1]=4*((discrSize*sizeFactor/mem_phys)/4).ceil
-            else
-              puts "WARNING: mem_phys and processor line in the wrong order!"
+          #if lines[j].include? "ompi_b"
+          #  if mem_phys>0
+          #    lines[j][lines[j].index('ompi_b')+6..-1]=4*((discrSize*sizeFactor/mem_phys)/4).ceil
+          #  else
+          #    puts "WARNING: mem_phys and processor line in the wrong order!"
+          #  end
+          #end
+        when 21
+          for nameind in 0..(parameternamesForScan.size-1)
+            if parameternamesForScan[nameind]=="Nproc"
+              if lines[j].include? "ompi_b"
+                lines[j]=lines[j][0..lines[j].index('ompi_b')+6] + parametersForScan[j][nameind].to_s + "\n"
+                puts lines[j]
+              end
             end
           end
         end
@@ -792,6 +798,7 @@ else
     
     # Copy input.namelist
     outFilename = dirName + "/" + $filename
+    puts "writing the namelist file #{outFilename}"
     inFile = File.open($filename,"r")
     outFile = File.open(outFilename,"w")
     lines = inFile.readlines
