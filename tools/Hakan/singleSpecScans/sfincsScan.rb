@@ -786,9 +786,66 @@ else
         outFile.write(lines[j])
       end
     when "hydra"
+      ConsumableCpus=1
       outFile.write("# @ error = #{jobName}.e$(jobid)\n")
       outFile.write("# @ output = #{jobName}.o$(jobid)\n")
       for j in 1..(lines.size-1)
+        case programMode
+        when 21
+          for nameind in 0..(parameternamesForScan.size-1)
+            if parameternamesForScan[nameind]=="Nproc"
+              nproc=parametersForScan[j][nameind]
+              case nproc
+              when 16
+                case ConsumableCpus
+                when 1
+                  if lines[j].include? "# @ node ="
+                    lines[j]=lines[j][0..lines[j].index('node =')+6] + "1\n"
+                  end
+                  if lines[j].include? "tasks_per_node ="
+                    lines[j]=lines[j][0..lines[j].index('node =')+6] + "16\n"
+                  end
+                  if lines[j].include? "# @ resources ="
+                    lines[j]=lines[j][0..lines[j].index('sources =')+9] + "ConsumableCpus(1)\n"
+                  end
+                when 2
+                  if lines[j].include? "# @ node ="
+                    lines[j]=lines[j][0..lines[j].index('node =')+6] + "2\n"
+                  end
+                  if lines[j].include? "tasks_per_node ="
+                    lines[j]=lines[j][0..lines[j].index('node =')+6] + "8\n"
+                  end
+                  if lines[j].include? "# @ resources ="
+                    lines[j]=lines[j][0..lines[j].index('sources =')+9] + "ConsumableCpus(2)\n"
+                  end
+                end
+              when 32
+                case ConsumableCpus
+                when 1
+                  if lines[j].include? "# @ node ="
+                    lines[j]=lines[j][0..lines[j].index('node =')+6] + "2\n"
+                  end
+                  if lines[j].include? "tasks_per_node ="
+                    lines[j]=lines[j][0..lines[j].index('node =')+6] + "16\n"
+                  end
+                  if lines[j].include? "# @ resources ="
+                    lines[j]=lines[j][0..lines[j].index('sources =')+9] + "ConsumableCpus(1)\n"
+                  end
+                when 2
+                  if lines[j].include? "# @ node ="
+                    lines[j]=lines[j][0..lines[j].index('node =')+6] + "4\n"
+                  end
+                  if lines[j].include? "tasks_per_node ="
+                    lines[j]=lines[j][0..lines[j].index('node =')+6] + "8\n"
+                  end
+                  if lines[j].include? "# @ resources ="
+                    lines[j]=lines[j][0..lines[j].index('sources =')+9] + "ConsumableCpus(2)\n"
+                  end
+                end
+              end
+            end
+          end          
+        end
         outFile.write(lines[j])
       end
     end
