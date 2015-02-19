@@ -71,6 +71,8 @@ if makeplots
     Nrow=NParam;
     Ncol=6+1;
   else
+    runs
+    runs_RHSMode=runs.RHSMode
     error('RHSMode=1 not implemented!')
   end
   didItConverge=runs.didItConverge;

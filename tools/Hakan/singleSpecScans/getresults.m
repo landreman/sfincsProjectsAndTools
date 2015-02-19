@@ -29,6 +29,14 @@ for hind=1:length(H)
       missing(mind).dir =[directory,'/',H{hind}(1:2)];
     end
     missing(mind).message=H{hind};
+  elseif H{hind}.run1.RHSMode==0 %(for example)
+     mind=mind+1;
+    if directory(end)=='/'
+      missing(mind).dir =[directory,H{hind}.rundir];
+    else
+      missing(mind).dir =[directory,'/',H{hind}.rundir];
+    end
+    missing(mind).message=[H{hind}.rundir,' allval0'];
   else
     ind=ind+1;
     goodhinds(ind)=hind;
