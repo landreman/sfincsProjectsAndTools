@@ -14,8 +14,6 @@ G=Geom.Bphi(rind);
 iota=Geom.iota(rind);
 Bmn=Geom.Bmn{rind}; %NOTE: Not normalised to B00
 NHarmonics=Geom.nmodes(rind);
-%Geom_m=Geom.m{rind};
-%Geom_n=Geom.n{rind};
 
 if Geom.StelSym
   parity=ones(size(Bmn));
@@ -23,10 +21,9 @@ else
   parity=Geom.parity{rind};
 end
 
-%B = Geom.B00(rind) * ones(Ntheta,Nzeta); %Wrong! B00 is included in the Bmn list
 B = zeros(Ntheta,Nzeta);
-%dBdtheta = zeros(Ntheta,Nzeta);
-%dBdzeta = zeros(Ntheta,Nzeta);
+dBdtheta = zeros(Ntheta,Nzeta);
+dBdzeta = zeros(Ntheta,Nzeta);
 R=zeros(Ntheta,Nzeta);
 Z=zeros(Ntheta,Nzeta);
 Dzetacylphi = zeros(Ntheta,Nzeta);
@@ -35,11 +32,10 @@ for i=1:NHarmonics
   if parity(i) %The cosine components of B
     B = B + Bmn(i) *...
            cos(Geom.m{rind}(i) * theta - Geom.n{rind}(i) * NPeriods * zeta);
-    %dBdtheta = dBdtheta - Bmn(i) * Geom_m(i) *...
-    %    sin(Geom_m(i) * theta - Geom_n(i) * NPeriods * zeta);
-    %dBdzeta = dBdzeta + Bmn(i) * Geom_n(i) * NPeriods *...
-    %    sin(Geom_m(i) * theta - Geom_n(i) * NPeriods ...
-    %        * zeta);
+    dBdtheta = dBdtheta - Bmn(i) * Geom_m(i) *...
+        sin(Geom_m(i) * theta - Geom_n(i) * NPeriods * zeta);
+    dBdzeta = dBdzeta + Bmn(i) * Geom_n(i) * NPeriods *...
+        sin(Geom_m(i) * theta - Geom_n(i) * NPeriods * zeta);
     R    = R + Geom.R{rind}(i) *...
            cos(Geom.m{rind}(i) * theta - Geom.n{rind}(i) * NPeriods * zeta);
     Z    = Z + Geom.Z{rind}(i) * ...
@@ -50,11 +46,10 @@ for i=1:NHarmonics
   else  %The sine components of B
     B = B + Bmn(i) *...
            sin(Geom.m{rind}(i) * theta - Geom.n{rind}(i) * NPeriods * zeta);
-    %dBdtheta = dBdtheta + Bmn(i) * Geom_m(i) *...
-    %    cos(Geom_m(i) * theta - Geom_n(i) * NPeriods * zeta);
-    %dBdzeta = dBdzeta - Bmn(i) * Geom_n(i) * NPeriods *...
-    %    cos(Geom_m(i) * theta - Geom_n(i) * NPeriods ...
-    %        * zeta);                  
+    dBdtheta = dBdtheta + Bmn(i) * Geom_m(i) *...
+        cos(Geom_m(i) * theta - Geom_n(i) * NPeriods * zeta);
+    dBdzeta = dBdzeta - Bmn(i) * Geom_n(i) * NPeriods *...
+        cos(Geom_m(i) * theta - Geom_n(i) * NPeriods  * zeta);                  
     R    = R + Geom.R{rind}(i) *...
            sin(Geom.m{rind}(i) * theta - Geom.n{rind}(i) * NPeriods * zeta);
     Z    = Z + Geom.Z{rind}(i) * ...
@@ -66,9 +61,12 @@ for i=1:NHarmonics
 end
 cylphi=zeta-Dzetacylphi;         %cylphi is the geometrical toroidal angle.
 Booz.Dzetacylphi=Dzetacylphi;     %for later use
+Booz.dBdtheta=dBdtheta;
+Booz.dBdzeta=dBdzeta;
 
 Rinboard=zeros(1,Nzeta);
 Routboard=zeros(1,Nzeta);
+cylPossible=1;
 for zind=1:Nzeta
   Zv=Z(:,zind);
   inds=find(diff(sign(Zv))~=0);
@@ -78,17 +76,23 @@ for zind=1:Nzeta
     Zv
     inds
     error('not implemented case')
+  elseif isempty(inds)
+    cylPossible=0;
   end
-  Zvf=[Zv;Zv(1)];
-  Rvf=[R(:,zind);R(1,zind)];
-  R0s(1)=interp1(Zvf(inds(1):inds(1)+1),Rvf(inds(1):inds(1)+1),0);
-  R0s(2)=interp1(Zvf(inds(2):inds(2)+1),Rvf(inds(2):inds(2)+1),0);
-  Rinboard(zind)=min(R0s);
-  Routboard(zind)=max(R0s);
+  if cylPossible
+    Zvf=[Zv;Zv(1)];
+    Rvf=[R(:,zind);R(1,zind)];
+    R0s(1)=interp1(Zvf(inds(1):inds(1)+1),Rvf(inds(1):inds(1)+1),0);
+    R0s(2)=interp1(Zvf(inds(2):inds(2)+1),Rvf(inds(2):inds(2)+1),0);
+    Rinboard(zind)=min(R0s);
+    Routboard(zind)=max(R0s);
+  end
 end  
-minRoutboard=min(Routboard);
-maxRinboard=max(Rinboard);
-cylPossible=(maxRinboard<minRoutboard);
+if cylPossible
+  minRoutboard=min(Routboard);
+  maxRinboard=max(Rinboard);
+  cylPossible=(maxRinboard<minRoutboard);
+end
 Booz.cylPossible=cylPossible;
 Ham.cylPossible=cylPossible;
 
@@ -359,7 +363,7 @@ Ham.Jacob=1/Ham.FSAB2;
 % If possible, create a cylindrical discretization cylth,cylphi
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if not(cylPossible)
-  Cyl='Not possible to find R00!'
+  Cyl='Not possible to find R00!';
 else
   Cyl.Nperiods=Geom.Nperiods;
   Cyl.Ncylphi=Nzeta;
