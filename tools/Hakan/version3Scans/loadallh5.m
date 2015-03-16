@@ -13,14 +13,21 @@ else
   dirpath='';
 end
 
+if isempty(list)
+  error(['Nothing in the directory ',dirpath])
+end
+
 runlist={};
 runind=0;
 for ind=1:length(list)
-  if not(isempty(str2num(list(ind).name))) || ...
-        strcmp(list(ind).name,'baseCase') || ...
-        list(ind).name(1)=='N'
-    runind=runind+1;
-    runlist{runind}=list(ind).name;
+  if list(ind).name(1)~='.'
+    if not(isempty(str2num(list(ind).name))) || ...
+          strcmp(list(ind).name,'baseCase') || ...
+          list(ind).name(1)=='N' || ...
+          strcmp(list(ind).name(1:2),'Er')
+      runind=runind+1;
+      runlist{runind}=list(ind).name;
+    end
   end
 end
 

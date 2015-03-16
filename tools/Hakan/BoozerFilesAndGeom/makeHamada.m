@@ -1,5 +1,9 @@
 function [Ham,Booz,Cyl]=makeHamada(Geom,rind,Ntheta,Nzeta)
 
+if isempty(rind)
+  error('rind is empty!')
+end
+
 %Boozer discretisation
 Dzeta=2*pi/Nzeta/Geom.Nperiods;
 Dtheta=2*pi/Ntheta;

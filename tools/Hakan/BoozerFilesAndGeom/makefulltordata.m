@@ -22,10 +22,10 @@ else
   polPeriod=0;
 end
   
-in=[in;in(1,:)]; %add an extra line to complete the poloidal turn
+in=[in;in(1,:)+polPeriod]; %add an extra line to complete the poloidal turn
 
 out = zeros(size(in,1),Ntor*size(in,2)+1);
 for ind=0:Ntor-1
   out(:,1+ind*size(in,2):(ind+1)*size(in,2))=in+ind*torPeriod;
 end
-out(:,Ntor*size(in,2)+1)=in(:,1)+polPeriod;
+out(:,Ntor*size(in,2)+1)=in(:,1)+Ntor*torPeriod;
