@@ -49,7 +49,10 @@ scanVals={scanVals{isScanned}};
 scanRuns={scanRuns{isScanned}};
 vals=vals(isScanned,:);
 baseRun=find(prod(double(vals==(baseVals'*ones(1,Nruns)))));
-
+if length(baseRun)>1
+  baseRun=baseRun(1);
+  warning('More than one base case runs were found!');
+end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Plots
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -155,15 +158,30 @@ if makeplots
       
       Lind=1; %L11
       subplot(Nrow,Ncol,(pind-1)*Ncol+Lind)
-      if not(isempty(baseRun))
-        plot(baseVals(pind),L(baseRun,1,1),[baseColor,'+']);hold on;
-        plot(baseVals(pind),LNTV(baseRun,1),[baseColor,'o'])
-      end
-      for srind=1:Nscanruns
-        plot(scanVals{pind}(srind),L(scanRuns{pind}(srind),1,1),...
-             [colors(srind),'+'])    
+      if makeplots==1
+        if not(isempty(baseRun))
+          plot(baseVals(pind),L(baseRun,1,1),[baseColor,'+']);hold on;
+          plot(baseVals(pind),LNTV(baseRun,1),[baseColor,'o'])
+        end
+        for srind=1:Nscanruns
+          plot(scanVals{pind}(srind),L(scanRuns{pind}(srind),1,1),...
+               [colors(srind),'+'])    
         plot(scanVals{pind}(srind),LNTV(scanRuns{pind}(srind),1),...
              [colors(srind),'o'])
+        end
+      elseif makeplots==2
+        if not(isempty(baseRun))
+          plot(baseVals(pind),1,[baseColor,'+']);hold on;
+          plot(baseVals(pind),LNTV(baseRun,1)/L(baseRun,1,1),[baseColor,'o'])
+        else
+          error('No base run to compare with! (makeplots=2)')
+        end
+        for srind=1:Nscanruns
+          plot(scanVals{pind}(srind),L(scanRuns{pind}(srind),1,1)/L(baseRun,1,1),...
+               [colors(srind),'+'])    
+          plot(scanVals{pind}(srind),LNTV(scanRuns{pind}(srind),1)/L(baseRun,1,1),...
+               [colors(srind),'o'])
+        end
       end
       hold off
       xlabel(convParams{pind})
@@ -172,15 +190,28 @@ if makeplots
       
       Lind=Lind+1; %L12
       subplot(Nrow,Ncol,(pind-1)*Ncol+Lind)
-      if not(isempty(baseRun))
-        plot(baseVals(pind),L(baseRun,1,2),[baseColor,'+']);hold on;
-        plot(baseVals(pind),LNTV(baseRun,2),[baseColor,'o'])
-      end
-      for srind=1:Nscanruns
-        plot(scanVals{pind}(srind),L(scanRuns{pind}(srind),1,2),...
-             [colors(srind),'+'])    
-        plot(scanVals{pind}(srind),LNTV(scanRuns{pind}(srind),2),...
-             [colors(srind),'o'])
+      if makeplots==1
+        if not(isempty(baseRun))
+          plot(baseVals(pind),L(baseRun,1,2),[baseColor,'+']);hold on;
+          plot(baseVals(pind),LNTV(baseRun,2),[baseColor,'o'])
+        end
+        for srind=1:Nscanruns
+          plot(scanVals{pind}(srind),L(scanRuns{pind}(srind),1,2),...
+               [colors(srind),'+'])    
+          plot(scanVals{pind}(srind),LNTV(scanRuns{pind}(srind),2),...
+               [colors(srind),'o'])
+        end
+      elseif makeplots==2
+        if not(isempty(baseRun))
+          plot(baseVals(pind),1,[baseColor,'+']);hold on;
+          plot(baseVals(pind),LNTV(baseRun,2)/L(baseRun,1,2),[baseColor,'o'])
+        end
+        for srind=1:Nscanruns
+          plot(scanVals{pind}(srind),L(scanRuns{pind}(srind),1,2)/L(baseRun,1,2),...
+               [colors(srind),'+'])    
+          plot(scanVals{pind}(srind),LNTV(scanRuns{pind}(srind),2)/L(baseRun,1,2),...
+               [colors(srind),'o'])
+        end        
       end
       hold off
       xlabel(convParams{pind})
@@ -189,12 +220,22 @@ if makeplots
       
       Lind=Lind+1; %L22
       subplot(Nrow,Ncol,(pind-1)*Ncol+Lind)
-      if not(isempty(baseRun))
-        plot(baseVals(pind),L(baseRun,2,2),[baseColor,'+']);hold on;
-      end
-      for srind=1:Nscanruns
-        plot(scanVals{pind}(srind),L(scanRuns{pind}(srind),2,2),...
-             [colors(srind),'+'])    
+      if makeplots==1
+        if not(isempty(baseRun))
+          plot(baseVals(pind),L(baseRun,2,2),[baseColor,'+']);hold on;
+        end
+        for srind=1:Nscanruns
+          plot(scanVals{pind}(srind),L(scanRuns{pind}(srind),2,2),...
+               [colors(srind),'+'])    
+        end
+      elseif makeplots==2
+        if not(isempty(baseRun))
+          plot(baseVals(pind),1,[baseColor,'+']);hold on;
+        end
+        for srind=1:Nscanruns
+          plot(scanVals{pind}(srind),L(scanRuns{pind}(srind),2,2)/L(baseRun,2,2),...
+               [colors(srind),'+'])    
+        end      
       end
       hold off
       xlabel(convParams{pind})
@@ -202,12 +243,22 @@ if makeplots
       
       Lind=Lind+1; %L13
       subplot(Nrow,Ncol,(pind-1)*Ncol+Lind)
-      if not(isempty(baseRun))
-        plot(baseVals(pind),L(baseRun,1,3),[baseColor,'+']);hold on;
-      end
-      for srind=1:Nscanruns
-        plot(scanVals{pind}(srind),L(scanRuns{pind}(srind),1,3),...
-             [colors(srind),'+'])    
+      if makeplots==1
+        if not(isempty(baseRun))
+          plot(baseVals(pind),L(baseRun,1,3),[baseColor,'+']);hold on;
+        end
+        for srind=1:Nscanruns
+          plot(scanVals{pind}(srind),L(scanRuns{pind}(srind),1,3),...
+               [colors(srind),'+'])    
+        end
+      elseif makeplots==2
+        if not(isempty(baseRun))
+          plot(baseVals(pind),1,[baseColor,'+']);hold on;
+        end
+        for srind=1:Nscanruns
+          plot(scanVals{pind}(srind),L(scanRuns{pind}(srind),1,3)/L(baseRun,1,3),...
+               [colors(srind),'+'])    
+        end
       end
       hold off
       xlabel(convParams{pind})
@@ -215,13 +266,24 @@ if makeplots
       
       Lind=Lind+1; %L23
       subplot(Nrow,Ncol,(pind-1)*Ncol+Lind)
-      if not(isempty(baseRun))
-        plot(baseVals(pind),L(baseRun,2,3),[baseColor,'+']);hold on;
-      end
-      for srind=1:Nscanruns
-        plot(scanVals{pind}(srind),L(scanRuns{pind}(srind),2,3),...
+      if makeplots==1
+        if not(isempty(baseRun))
+          plot(baseVals(pind),L(baseRun,2,3),[baseColor,'+']);hold on;
+        end
+        for srind=1:Nscanruns
+          plot(scanVals{pind}(srind),L(scanRuns{pind}(srind),2,3),...
              [colors(srind),'+'])    
+        end
+      elseif makeplots==2
+        if not(isempty(baseRun))
+          plot(baseVals(pind),1,[baseColor,'+']);hold on;
+        end
+        for srind=1:Nscanruns
+          plot(scanVals{pind}(srind),L(scanRuns{pind}(srind),2,3)/L(baseRun,2,3),...
+             [colors(srind),'+'])    
+        end
       end
+      hold off
       hold off
       % [min(scanval),max(scanval)],-4.57*/runs{1}.iota*[1,1],'k:')
       %Matt's value 4.57 could be wrong here
@@ -230,12 +292,22 @@ if makeplots
       
       Lind=Lind+1; %L33
       subplot(Nrow,Ncol,(pind-1)*Ncol+Lind)
-      if not(isempty(baseRun))
-        plot(baseVals(pind),L(baseRun,3,3),[baseColor,'+']);hold on;
-      end
-      for srind=1:Nscanruns
-        plot(scanVals{pind}(srind),L(scanRuns{pind}(srind),3,3),...
-             [colors(srind),'+'])    
+      if makeplots==1
+        if not(isempty(baseRun))
+          plot(baseVals(pind),L(baseRun,3,3),[baseColor,'+']);hold on;
+        end
+        for srind=1:Nscanruns
+          plot(scanVals{pind}(srind),L(scanRuns{pind}(srind),3,3),...
+               [colors(srind),'+'])    
+        end
+      elseif makeplots==2
+        if not(isempty(baseRun))
+          plot(baseVals(pind),1,[baseColor,'+']);hold on;
+        end
+        for srind=1:Nscanruns
+          plot(scanVals{pind}(srind),L(scanRuns{pind}(srind),3,3)/L(baseRun,3,3),...
+               [colors(srind),'+'])    
+        end
       end
       hold off
       xlabel(convParams{pind})
@@ -258,12 +330,22 @@ if makeplots
       
       Lind=Lind+1;
       subplot(Nrow,Ncol,(pind-1)*Ncol+Lind)
-      if not(isempty(baseRun))
-        plot(baseVals(pind),LNTV(baseRun,3),[baseColor,'+']);hold on;
-      end
-      for srind=1:Nscanruns
-        plot(scanVals{pind}(srind),LNTV(scanRuns{pind}(srind),3),...
-             [colors(srind),'+'])    
+      if makeplots==1
+        if not(isempty(baseRun))
+          plot(baseVals(pind),LNTV(baseRun,3),[baseColor,'+']);hold on;
+        end
+        for srind=1:Nscanruns
+          plot(scanVals{pind}(srind),LNTV(scanRuns{pind}(srind),3),...
+               [colors(srind),'+'])    
+        end
+      elseif makeplots==2
+        if not(isempty(baseRun))
+          plot(baseVals(pind),1,[baseColor,'+']);hold on;
+        end
+        for srind=1:Nscanruns
+          plot(scanVals{pind}(srind),LNTV(scanRuns{pind}(srind),3)/LNTV(baseRun,3),...
+               [colors(srind),'+'])    
+        end
       end
       hold off
       %plot(baseVals(pind),LNTV(baseRun,3),'r+',scanVals{pind},LNTV(scanRuns{pind},3),'g+')
