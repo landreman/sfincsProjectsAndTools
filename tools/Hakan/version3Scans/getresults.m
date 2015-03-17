@@ -64,9 +64,9 @@ for hind=1:length(H)
 
     
     if out.RHSMode(ind)==3 %Monoenergetic
-    %  out.nuPrime(ind)=H{hind}.nuPrime; %Does not work just yet
-    %  out.EStar(ind)=H{hind}.EStar;
-    %  out.transportCoeffs(ind,:,:)=H{hind}.transportMatrix;
+      out.nuPrime(ind)=H{hind}.nuPrime; %Does not work just yet
+      out.EStar(ind)=H{hind}.EStar;
+      out.transportCoeffs(ind,:,:)=H{hind}.transportMatrix;
     else
       out.nHats(ind,:)       =H{hind}.nHats;
       out.THats(ind,:)       =H{hind}.THats;
@@ -107,7 +107,8 @@ for hind=1:length(H)
     out.B0OverBBar(ind)    =H{hind}.B0OverBBar;
     out.VPrimeHat(ind)     =H{hind}.VPrimeHat;
     out.FSABHat2(ind)      =H{hind}.FSABHat2;
-    %out.didItConverge(ind) =H{hind}.didItConverge;
+    %out.didItConverge(ind) =H{hind}.didItConverge; %old name
+    out.finished(ind) =H{hind}.finished; %new name?
      
   end
 end
