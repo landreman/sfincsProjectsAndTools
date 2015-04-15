@@ -1,7 +1,8 @@
 function [runs,missing]=getconvergencescanresults(dirpath,makeplots)
 % For a simple convergence scan in Sfincs, 
 % this loads the results stored in the subdirectories named 00/, 01/,... in "dirpath" 
-% Plotting is made if makeplots=1.
+% Normal plotting is made if makeplots=1.
+% Plotting of values relative to baseCase is made if makeplots=2.
 
 [runs,missing]=getresults(dirpath);
 
@@ -58,6 +59,8 @@ if length(baseRun)>1
   baseRun=baseRun(1);
   warning('More than one base case runs were found!');
 end
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Plots
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -69,19 +72,28 @@ if makeplots
 
   if all(runs.RHSMode==3) %Mono-energetic
     D=runs.transportCoeffs;
-    monoenergetic=1;
     Nrow=3;
     Ncol=NParam;
+    stringForTop=sprintf(...
+      'r/a = %4.2f,  nuPrime = %7.2e,  EStar = %7.2e',...
+      runs.rN(1),runs.nuPrime(1),...
+      runs.EStar(1));
   elseif all(runs.RHSMode==2)
     L=runs.transportMatrix;
     LNTV=runs.NTVMatrix;
-    monoenergetic=0;
     Nrow=NParam;
     Ncol=6+1;
+    stringForTop=sprintf(...
+      'r/a = %4.2f,  nuPrime = %7.2e,  EStar = %7.2e',...
+      runs.rN(1),runs.nuPrime(1),...
+      runs.EStar(1));
   else
-    runs
-    runs_RHSMode=runs.RHSMode
-    error('RHSMode=1 not implemented!')
+    Nrow=NParam;
+    Ncol=runs.Nspecies(1)*4;
+    stringForTop=sprintf(...
+      'r/a = %4.2f, dPhiHatdpsiN = %7.2e',...
+      runs.rN(1),...
+      runs.dPhiHatdpsiN(1));
   end
   finished=runs.finished;
   if finished(baseRun)==1
@@ -94,7 +106,7 @@ if makeplots
   pos(3:4)=[200*Ncol,200*Nrow];
   set(gcf,'Position',pos);
   
-  if monoenergetic
+  if all(runs.RHSMode==3) %monoenergetic
     for pind=1:NParam
       
       Nscanruns=length(scanRuns{pind});
@@ -186,7 +198,7 @@ if makeplots
     end
     
     
-  else
+  elseif all(runs.RHSMode==2)
     for pind=1:NParam
       
       Nscanruns=length(scanRuns{pind});
@@ -392,11 +404,117 @@ if makeplots
       xlabel(convParams{pind})
       ylabel('LNTV_3')
     end
+  else
+    for pind=1:NParam
+      
+      Nscanruns=length(scanRuns{pind});
+      colors=[];
+      for j=1:Nscanruns
+        colors=[colors,'b'];
+      end
+      colors(find(finished(scanRuns{pind})~=1))='c';
+      Lind=0;
+
+      for spec=1:runs.Nspecies(1)
+        Lind=Lind+1; %particleFlux
+        subplot(Nrow,Ncol,(pind-1)*Ncol+Lind)
+        if makeplots==1
+          if not(isempty(baseRun))
+            plot(baseVals(pind),runs.particleFlux_vm_psiN(baseRun,spec),[baseColor,'+']);hold on;
+          end
+          for srind=1:Nscanruns
+            plot(scanVals{pind}(srind),runs.particleFlux_vm_psiN(scanRuns{pind}(srind),spec),...
+                 [colors(srind),'+'])    
+          end
+        elseif makeplots==2
+          if not(isempty(baseRun))
+            plot(baseVals(pind),1,[baseColor,'+']);hold on;
+          end
+          for srind=1:Nscanruns
+            plot(scanVals{pind}(srind),...
+            runs.particleFlux_vm_psiN(scanRuns{pind}(srind),spec)/...
+            runs.particleFlux_vm_psiN(baseRun,spec) ,...
+                 [colors(srind),'+'])    
+          end
+        end
+        xlabel(convParams{pind})
+        ylabel(['particleFlux spec. ',num2str(spec)])
+
+        Lind=Lind+1;
+        subplot(Nrow,Ncol,(pind-1)*Ncol+Lind)
+        if makeplots==1
+          if not(isempty(baseRun))
+            plot(baseVals(pind),runs.heatFlux_vm_psiN(baseRun,spec),[baseColor,'+']);hold on;
+          end
+          for srind=1:Nscanruns
+            plot(scanVals{pind}(srind),runs.heatFlux_vm_psiN(scanRuns{pind}(srind),spec),...
+                 [colors(srind),'+'])    
+          end
+        elseif makeplots==2
+          if not(isempty(baseRun))
+            plot(baseVals(pind),1,[baseColor,'+']);hold on;
+          end
+          for srind=1:Nscanruns
+            plot(scanVals{pind}(srind),...
+                 runs.heatFlux_vm_psiN(scanRuns{pind}(srind),spec)/...
+                 runs.heatFlux_vm_psiN(baseRun,spec),...
+                 [colors(srind),'+'])    
+          end
+        end
+        xlabel(convParams{pind})
+        ylabel(['heatFlux spec. ',num2str(spec)])
+  
+        Lind=Lind+1;
+        subplot(Nrow,Ncol,(pind-1)*Ncol+Lind)
+        if makeplots==1
+          if not(isempty(baseRun))
+            plot(baseVals(pind),runs.FSABFlow(baseRun,spec),[baseColor,'+']);hold on;
+          end
+          for srind=1:Nscanruns
+            plot(scanVals{pind}(srind),runs.FSABFlow(scanRuns{pind}(srind),spec),...
+                 [colors(srind),'+'])    
+          end
+        elseif makeplots==2
+          if not(isempty(baseRun))
+            plot(baseVals(pind),1,[baseColor,'+']);hold on;
+          end
+          for srind=1:Nscanruns
+            plot(scanVals{pind}(srind),...
+                 runs.FSABFlow(scanRuns{pind}(srind),spec)/...
+                 runs.FSABFlow(baseRun,spec),...
+                 [colors(srind),'+'])    
+          end
+        end
+        xlabel(convParams{pind})
+        ylabel(['FSABFlow spec. ',num2str(spec)])
+
+        Lind=Lind+1;
+        subplot(Nrow,Ncol,(pind-1)*Ncol+Lind)
+        if makeplots==1
+          if not(isempty(baseRun))
+            plot(baseVals(pind),runs.NTV(baseRun,spec),[baseColor,'+']);hold on;
+          end
+          for srind=1:Nscanruns
+            plot(scanVals{pind}(srind),runs.NTV(scanRuns{pind}(srind),spec),...
+                 [colors(srind),'+'])    
+          end
+        elseif makeplots==2
+          if not(isempty(baseRun))
+            plot(baseVals(pind),1,[baseColor,'+']);hold on;
+          end
+          for srind=1:Nscanruns
+            plot(scanVals{pind}(srind),...
+                 runs.NTV(scanRuns{pind}(srind),spec)/...
+                 runs.NTV(baseRun,spec),...
+                 [colors(srind),'+'])    
+          end
+        end
+        xlabel(convParams{pind})
+        ylabel(['NTV spec. ',num2str(spec)])
+
+      end
+    end
   end
-  stringForTop=sprintf(...
-      'r/a = %4.2f,  nuPrime = %7.2e,  EStar = %7.2e',...
-      runs.rN(1),runs.nuPrime(1),...
-      runs.EStar(1));
   annotation('textbox',[0 0.96 1 .07],...
              'HorizontalAlignment','center',...
             'Interpreter','none',...

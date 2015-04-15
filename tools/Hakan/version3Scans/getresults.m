@@ -34,8 +34,8 @@ for hind=1:length(H)
     out.run(ind).input_namelist  =H{hind}.input_namelist;
     %[out.run(ind).time,out.run(ind).proc]=runtime(out.run(ind).dir);
 
-    out.RHSMode(ind)      =H{hind}.RHSMode;
-    out.Nspecies(ind)     =H{hind}.Nspecies;
+    out.RHSMode(ind)      =double(H{hind}.RHSMode);
+    out.Nspecies(ind)     =double(H{hind}.Nspecies);
     Nsp=out.Nspecies(ind);
     out.inputRadialCoordinate(ind)=H{hind}.inputRadialCoordinate;
     out.inputRadialCoordinateForGradients(ind)=H{hind}.inputRadialCoordinateForGradients;
@@ -78,11 +78,22 @@ for hind=1:length(H)
     
     
     if out.RHSMode(ind)==1
-      out.tauhat_m(ind,:)             =H{hind}.NTV';
-      out.particleFlux_vm_psiN(ind,:) =H{hind}.particleFlux_vm_psiN';
-      out.heatFlux_vm_psiN(ind,:)     =H{hind}.heatFlux_vm_psiN';
-      out.momentumFlux_vm_psiN(ind,:) =H{hind}.momentumFlux_vm_psiN';
-      out.FSABFlow(ind,:)             =H{hind}.FSABFlow';
+      %out.tauhat_m(ind,:)             =H{hind}.NTV';
+      if isfield(H{hind},'finished')
+        out.NTV(ind,:)                   =H{hind}.NTV';
+        out.particleFlux_vm_psiN(ind,:) =H{hind}.particleFlux_vm_psiN';
+        out.heatFlux_vm_psiN(ind,:)     =H{hind}.heatFlux_vm_psiN';
+        out.momentumFlux_vm_psiN(ind,:) =H{hind}.momentumFlux_vm_psiN';
+        out.FSABFlow(ind,:)             =H{hind}.FSABFlow';
+        out.finished(ind)               =H{hind}.finished;
+      else
+        out.NTV(ind,:)                  =NaN*ones(out.Nspecies(ind),1);
+        out.particleFlux_vm_psiN(ind,:) =NaN*ones(out.Nspecies(ind),1);
+        out.heatFlux_vm_psiN(ind,:)     =NaN*ones(out.Nspecies(ind),1);
+        out.momentumFlux_vm_psiN(ind,:) =NaN*ones(out.Nspecies(ind),1);
+        out.FSABFlow(ind,:)             =NaN*ones(out.Nspecies(ind),1);
+        out.finished(ind)               =0;
+      end
     end    
     
     
@@ -108,7 +119,7 @@ for hind=1:length(H)
     out.VPrimeHat(ind)     =H{hind}.VPrimeHat;
     out.FSABHat2(ind)      =H{hind}.FSABHat2;
     %out.didItConverge(ind) =H{hind}.didItConverge; %old name
-    out.finished(ind) =H{hind}.finished; %new name?
+    %out.finished(ind) =H{hind}.finished; %new name?
      
   end
 end
