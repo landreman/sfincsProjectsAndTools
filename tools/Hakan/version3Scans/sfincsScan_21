@@ -64,7 +64,7 @@ for runNum in range(numRunsInScan):
    # Copy the job.sfincsScan file:
    thisJobFile = list(jobFile)
    # This next function is defined separately for each system in sfincsScan
-   nameJobFile(thisJobFile,directory)
+   nameJobFile(thisJobFile,jobName)
    if sfincsSystem=="hydra":
        for parind in range(len(runparamnames)):
            if runparamnames[parind]=="Nnodes":
