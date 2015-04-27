@@ -10,7 +10,7 @@ print "Beginning a runspec.dat scan."
 
 runspecFilename = "runspec.dat"
 
-def readRunspec(therunspecFilename)
+def readRunspec(therunspecFilename):
     if not os.path.isfile(therunspecFilename):
         print "Error! The file "+therunspecFilename+" must be present in the directory from which you call sfincsScan."
         exit(1)
