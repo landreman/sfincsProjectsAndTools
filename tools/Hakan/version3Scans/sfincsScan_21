@@ -10,12 +10,12 @@ print "Beginning a runspec.dat scan."
 
 runspecFilename = "runspec.dat"
 
-def readRunspec(runspecFilename)
-    if not os.path.isfile(runspecFilename):
-        print "Error! The file "+runspecFilename+" must be present in the directory from which you call sfincsScan."
+def readRunspec(therunspecFilename)
+    if not os.path.isfile(therunspecFilename):
+        print "Error! The file "+therunspecFilename+" must be present in the directory from which you call sfincsScan."
         exit(1)
     # Load the runspec file:
-    with open(runspecFilename, 'r') as rsf:
+    with open(therunspecFilename, 'r') as rsf:
         runspecLines = rsf.readlines()
     
     lind=0
