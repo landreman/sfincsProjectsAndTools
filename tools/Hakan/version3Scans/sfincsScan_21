@@ -70,15 +70,15 @@ for runNum in range(numRunsInScan):
            if runparamnames[parind]=="Nnodes":
                for line in thisJobFile:
                    if "# @ node =" in line:
-                       thisJobFile[thisJobFile.index(line)]="# @ node = "+str(runparams[runNum][parind])
+                       thisJobFile[thisJobFile.index(line)]="# @ node = "+str(runparams[runNum][parind])+"\n"
            if runparamnames[parind]=="Nppernode":
                for line in thisJobFile:
                    if "# @ tasks_per_node =" in line:
-                       thisJobFile[thisJobFile.index(line)]="# @ tasks_per_node = "+str(runparams[runNum][parind])
+                       thisJobFile[thisJobFile.index(line)]="# @ tasks_per_node = "+str(runparams[runNum][parind])+"\n"
            if runparamnames[parind]=="ConsCpus":
                for line in thisJobFile:
                    if "# @ resources = ConsumableCpus" in line:
-                       thisJobFile[thisJobFile.index(line)]="# @ resources = ConsumableCpus("+str(runparams[runNum][parind])+")"
+                       thisJobFile[thisJobFile.index(line)]="# @ resources = ConsumableCpus("+str(runparams[runNum][parind])+")\n"
 
    f = open(jobFilename,"w")
    f.writelines(thisJobFile)
@@ -99,12 +99,12 @@ for runNum in range(numRunsInScan):
         # I'm not sure why python requires this. 
         submissionResult = subprocess.call(submitCommand.split(" "))
    except:
-        print "ERROR! Unable to submit run "+directory+" for some reason."
+        print "ERROR! Unable to submit run "+jobName+" for some reason."
         raise
    else:
         if submissionResult==0:
-            print "No errors submitting job "+directory
+            print "No errors submitting job "+jobName
         else:
-            print "Nonzero exit code returned when trying to submit job "+directory
+            print "Nonzero exit code returned when trying to submit job "+jobName
 
    os.chdir("..")
