@@ -60,50 +60,50 @@ for runNum in range(numRunsInScan):
    jobName="Sfx."+dirName
    print "Beginning to handle job "+str(runNum+1)+" of "+str(numRunsInScan)+": "+dirName
 
-    # Copy the job.sfincsScan file:
-    thisJobFile = list(jobFile)
-    # This next function is defined separately for each system in sfincsScan
-    nameJobFile(thisJobFile,directory)
-    if sfincsSystem=="hydra":
-        for parind in range(len(runparamnames)):
-            if runparamnames[parind]=="Nnodes":
-                for line in thisJobFile:
-                    if "# @ node =" in line:
-                        thisJobFile[thisJobFile.index(line)]="# @ node = "+str(runparams[runNum][parind])
-            if runparamnames[parind]=="Nppernode":
-                for line in thisJobFile:
-                    if "# @ tasks_per_node =" in line:
-                        thisJobFile[thisJobFile.index(line)]="# @ tasks_per_node = "+str(runparams[runNum][parind])
-            if runparamnames[parind]=="ConsCpus":
-                for line in thisJobFile:
-                    if "# @ resources = ConsumableCpus" in line:
-                        thisJobFile[thisJobFile.index(line)]="# @ resources = ConsumableCpus("+str(runparams[runNum][parind])+")"
+   # Copy the job.sfincsScan file:
+   thisJobFile = list(jobFile)
+   # This next function is defined separately for each system in sfincsScan
+   nameJobFile(thisJobFile,directory)
+   if sfincsSystem=="hydra":
+       for parind in range(len(runparamnames)):
+           if runparamnames[parind]=="Nnodes":
+               for line in thisJobFile:
+                   if "# @ node =" in line:
+                       thisJobFile[thisJobFile.index(line)]="# @ node = "+str(runparams[runNum][parind])
+           if runparamnames[parind]=="Nppernode":
+               for line in thisJobFile:
+                   if "# @ tasks_per_node =" in line:
+                       thisJobFile[thisJobFile.index(line)]="# @ tasks_per_node = "+str(runparams[runNum][parind])
+           if runparamnames[parind]=="ConsCpus":
+               for line in thisJobFile:
+                   if "# @ resources = ConsumableCpus" in line:
+                       thisJobFile[thisJobFile.index(line)]="# @ resources = ConsumableCpus("+str(runparams[runNum][parind])+")"
 
-    f = open(jobFilename,"w")
-    f.writelines(thisJobFile)
-    f.close()
+   f = open(jobFilename,"w")
+   f.writelines(thisJobFile)
+   f.close()
 
-    # Now copy the input.namelist file:
-    f = open(filename,"w")
-    for line in inputFile:
+   # Now copy the input.namelist file:
+   f = open(filename,"w")
+   for line in inputFile:
         for parind in range(len(runparamnames)):
             if namelistLineContains(line,runparamnames[parind]):
                 line = "  "+runparamnames[parind]+" = "+str(runparams[runNum][parind])+" ! Set by sfincsScan.\n"
         f.write(line)
-    f.close()
+   f.close()
 
-    # Submit the sfincs job:
-    try:
+   # Submit the sfincs job:
+   try:
         # We need to include .split(" ") to separate the command-line arguments into an array of strings.   
         # I'm not sure why python requires this. 
         submissionResult = subprocess.call(submitCommand.split(" "))
-    except:
+   except:
         print "ERROR! Unable to submit run "+directory+" for some reason."
         raise
-    else:
+   else:
         if submissionResult==0:
             print "No errors submitting job "+directory
         else:
             print "Nonzero exit code returned when trying to submit job "+directory
 
-    os.chdir("..")
+   os.chdir("..")
