@@ -21,7 +21,7 @@ def readRunspec(therunspecFilename):
     lind=0
     while runspecLines[lind][0]=="!":
         lind+=1
-    runparamnames=runspecLines[lind-1].split
+    runparamnames=runspecLines[lind-1].split()
     noElems=len(runparamnames)
     datalines=runspecLines[lind:]
     runparams=[[0 for j in range(noElems)] for i in range(len(datalines))]
