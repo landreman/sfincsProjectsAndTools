@@ -25,13 +25,13 @@ def readRunspec(therunspecFilename):
     noElems=len(runparamnames)
     datalines=runspecLines[lind:]
     runparams=[[0 for j in range(noElems)] for i in range(len(datalines))]
-    for datalineind in range(len(datalines))
-        for parind in range(noElems)
+    for datalineind in range(len(datalines)):
+        for parind in range(noElems):
            thestring=datalines[datalineind].split[parind]
            thestring= thestring.replace('d','e').replace('D','e')
-           if ("." in thestring) or ("e" in thestring)
+           if ("." in thestring) or ("e" in thestring):
                runparams[datalineind][parind]=float(thestring)
-           else
+           else:
                runparams[datalineind][parind]=int(thestring)
     
     rsf.close()
@@ -47,7 +47,7 @@ with open(jobFilename, 'r') as f:
 numRunsInScan=len(runparams)
 for runNum in range(numRunsInScan):
    dirNum = runNum-1
-less   while True:
+   while True:
       dirNum+=1
       dirName=str(dirNum)
       if dirNum<10:
@@ -64,19 +64,19 @@ less   while True:
     thisJobFile = list(jobFile)
     # This next function is defined separately for each system in sfincsScan
     nameJobFile(thisJobFile,directory)
-    if sfincsSystem=="hydra"
-        for parind in range(len(runparamnames))
-            if runparamnames[parind]=="Nnodes"
-                for line in thisJobFile
-                    if "# @ node =" in line
+    if sfincsSystem=="hydra":
+        for parind in range(len(runparamnames)):
+            if runparamnames[parind]=="Nnodes":
+                for line in thisJobFile:
+                    if "# @ node =" in line:
                         thisJobFile[thisJobFile.index(line)]="# @ node = "+str(runparams[runNum][parind])
-            if runparamnames[parind]=="Nppernode"
-                for line in thisJobFile
-                    if "# @ tasks_per_node =" in line
+            if runparamnames[parind]=="Nppernode":
+                for line in thisJobFile:
+                    if "# @ tasks_per_node =" in line:
                         thisJobFile[thisJobFile.index(line)]="# @ tasks_per_node = "+str(runparams[runNum][parind])
-            if runparamnames[parind]=="ConsCpus"
-                for line in thisJobFile
-                    if "# @ resources = ConsumableCpus" in line
+            if runparamnames[parind]=="ConsCpus":
+                for line in thisJobFile:
+                    if "# @ resources = ConsumableCpus" in line:
                         thisJobFile[thisJobFile.index(line)]="# @ resources = ConsumableCpus("+str(runparams[runNum][parind])+")"
 
     f = open(jobFilename,"w")
@@ -86,7 +86,7 @@ less   while True:
     # Now copy the input.namelist file:
     f = open(filename,"w")
     for line in inputFile:
-        for parind in range(len(runparamnames))
+        for parind in range(len(runparamnames)):
             if namelistLineContains(line,runparamnames[parind]):
                 line = "  "+runparamnames[parind]+" = "+str(runparams[runNum][parind])+" ! Set by sfincsScan.\n"
         f.write(line)
