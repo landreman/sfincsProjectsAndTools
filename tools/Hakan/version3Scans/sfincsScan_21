@@ -66,10 +66,18 @@ less   while True:
     nameJobFile(thisJobFile,directory)
     if sfincsSystem=="hydra"
         for parind in range(len(runparamnames))
-            if runparamnames[parind]=="node"
+            if runparamnames[parind]=="Nnodes"
                 for line in thisJobFile
                     if "# @ node =" in line
                         thisJobFile[thisJobFile.index(line)]="# @ node = "+str(runparams[runNum][parind])
+            if runparamnames[parind]=="Nppernode"
+                for line in thisJobFile
+                    if "# @ tasks_per_node =" in line
+                        thisJobFile[thisJobFile.index(line)]="# @ tasks_per_node = "+str(runparams[runNum][parind])
+            if runparamnames[parind]=="ConsCpus"
+                for line in thisJobFile
+                    if "# @ resources = ConsumableCpus" in line
+                        thisJobFile[thisJobFile.index(line)]="# @ resources = ConsumableCpus("+str(runparams[runNum][parind])+")"
 
     f = open(jobFilename,"w")
     f.writelines(thisJobFile)
