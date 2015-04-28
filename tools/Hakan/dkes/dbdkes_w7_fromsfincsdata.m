@@ -1,6 +1,7 @@
 function dbdkes_w7_fromsfincsdata(runsdir)
 addpath([getenv('SFINCS_PROJECTSANDTOOLS_HOME'),'/tools/Hakan/BoozerFilesAndGeom'])
 addpath([getenv('SFINCS_PROJECTSANDTOOLS_HOME'),'/tools/Hakan/dkes'])
+addpath([getenv('SFINCS_PROJECTSANDTOOLS_HOME'),'/tools/Hakan/version3Scans'])
 
 [runs,missing]=getresults(runsdir);
 
@@ -22,8 +23,9 @@ if isempty(indpbc)
 else
   confnameend=indpbc-1;
 end
-strconf=bcfile(confnamestart:confnameend)
+strconf=bcfile(confnamestart:confnameend);
 
+disp(['Loading the boozer file ',bcfile])
 Geom=readBoozerfile(bcfile);
 
 %bcfile=[CONFBC,strconf,'.bc'];
@@ -60,17 +62,17 @@ for rind=1:length(dkdata.Nruns)
   B00=Geom.B00(Grind(rind));
   dPsidr_GIDKES=rN*Geom.minorradius*B00;
   
-  nuPrimes=nuPrime1(rindstarts(rind):rindstarts(rind)+NrNs(rind)-1);
-  EStars=EStar1(rindstarts(rind):rindstarts(rind)+NrNs(rind)-1);
-  transportCoeffss=transportCoeffs1(rindstarts(rind):rindstarts(rind)+NrNs(rind)-1,:,:);
+  nuPrimes=nuPrime1(rindstarts(rind):rindstarts(rind)+dkdata.Nruns(rind)-1);
+  EStars=EStar1(rindstarts(rind):rindstarts(rind)+dkdata.Nruns(rind)-1);
+  transportCoeffss=transportCoeffs1(rindstarts(rind):rindstarts(rind)+dkdata.Nruns(rind)-1,:,:);
   
   dkdata.cmul{rind}=nuPrimes*3*sqrt(pi)/4*(erf(1)-Chandra1)*B00/(G+iota*I);
   dkdata.efld{rind}=-EStars*iota/G*dPsidr_GIDKES;
-  dkdata.d11{rind}=transportCoeffss(:,1,1)...
+  dkdata.d11{rind}=squeeze(transportCoeffss(:,1,1))' ...
         /dPsidr_GIDKES^2*sqrt(pi)/8*G^2/(G+iota*I)/B00;
-  dkdata.d31{rind}=(transportCoeffss(:,2,1)+transportCoeffss(:,1,2))/2...
+  dkdata.d31{rind}=squeeze(transportCoeffss(:,2,1)+transportCoeffss(:,1,2))'/2 ...
         /dPsidr_GIDKES*sqrt(pi)/4*G;
-  dkdata.d33{rind}=transportCoeffss(:,2,2)...
+  dkdata.d33{rind}=squeeze(transportCoeffss(:,2,2))' ...
       *(-sqrt(pi)/2)*(G+iota*I)*B00;
   dkdata.d11e{rind}=zeros(size(dkdata.d11{rind}));
   dkdata.d31e{rind}=zeros(size(dkdata.d31{rind}));
@@ -242,7 +244,8 @@ end
 
 %%%%%%%%%%%% Interactive fit to the D_11 data %%%%%%%%%%%%%%%%%%%
 
-%Geomdat=readBoozerfile(datfile);
+%%%%Geomdat=readBoozerfile(datfile);
+%%%%% Make reduced data struct with only the chosen radii:
 Geomdat.rnorm=Geom.rnorm(Grind);
 Geomdat.B00=Geom.B00(Grind);
 Geomdat.R00=Geom.R00(Grind);
@@ -251,11 +254,12 @@ Geomdat.Bphi=Geom.Bphi(Grind);
 Geomdat.Btheta=Geom.Btheta(Grind);
 Geomdat.majorradius=Geom.majorradius;
 Geomdat.minorradius=Geom.minorradius;
-Geomdat.m=Geom.m{Grind};
-Geomdat.n=Geom.n{Grind};
-Geomdat.Bnorm=Geom.Bnorm{Grind};
-Geomdat.Bmn=Geom.Bmn{Grind};
+Geomdat.m={Geom.m{Grind}};
+Geomdat.n={Geom.n{Grind}};
+Geomdat.Bnorm={Geom.Bnorm{Grind}};
+Geomdat.Bmn={Geom.Bmn{Grind}};
 
+dkdata
 
 d11fits=dkes_ftd11(Geomdat,dkdata);
 
