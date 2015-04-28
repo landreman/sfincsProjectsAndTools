@@ -19,7 +19,9 @@ for hind=1:length(H)
       missing(mind).dir =[directory,'/',H{hind}(1:2)];
     end
     missing(mind).message=H{hind};
-  elseif H{hind}.RHSMode==0 %(e.g., or some other quantity=0)
+  elseif H{hind}.RHSMode==0 || ...
+        (H{hind}.RHSMode==3 && not(isfield(H{hind},'transportMatrix')))
+    %(e.g., or if some other quantity=0)
      mind=mind+1;
     if directory(end)=='/'
       missing(mind).dir =[directory,H{hind}.rundir];
