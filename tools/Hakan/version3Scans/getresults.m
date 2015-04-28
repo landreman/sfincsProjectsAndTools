@@ -31,7 +31,7 @@ for hind=1:length(H)
     ind=ind+1;
     goodhinds(ind)=hind;
     out.run(ind).dir       =[H{hind}.dirpath,H{hind}.rundir];
-    out.run(ind).input_namelist  =H{hind}.input_namelist;
+    out.run(ind).input_namelist  =(H{hind}.input_namelist)';
     %[out.run(ind).time,out.run(ind).proc]=runtime(out.run(ind).dir);
 
     out.RHSMode(ind)      =double(H{hind}.RHSMode);
