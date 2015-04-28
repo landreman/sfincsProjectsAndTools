@@ -62,11 +62,14 @@ for hind=1:length(H)
 
     out.rN(ind)=H{hind}.rN;
 
-    
     if out.RHSMode(ind)==3 %Monoenergetic
-      out.nuPrime(ind)=H{hind}.nuPrime; %Does not work just yet
-      out.EStar(ind)=H{hind}.EStar;
-      out.transportCoeffs(ind,:,:)=H{hind}.transportMatrix;
+      if isfield(H{hind},'nuPrime')
+        out.nuPrime(ind)=H{hind}.nuPrime; %Does not work just yet
+        out.EStar(ind)=H{hind}.EStar;
+        out.transportCoeffs(ind,:,:)=H{hind}.transportMatrix;
+      else
+        warning('nuPrime not stored!!')
+      end
     else
       out.nHats(ind,:)       =H{hind}.nHats;
       out.THats(ind,:)       =H{hind}.THats;
@@ -76,23 +79,26 @@ for hind=1:length(H)
       out.EParallelHat(ind)  =H{hind}.EParallelHat;
     end
     
+
+    if isfield(H{hind},'finished')
+      out.finished(ind)               =H{hind}.finished;
+    else    
+      out.finished(ind)               =0;
+    end
     
     if out.RHSMode(ind)==1
-      %out.tauhat_m(ind,:)             =H{hind}.NTV';
-      if isfield(H{hind},'finished')
-        out.NTV(ind,:)                   =H{hind}.NTV';
+      if out.finished(ind)
+        out.NTV(ind,:)                  =H{hind}.NTV';
         out.particleFlux_vm_psiN(ind,:) =H{hind}.particleFlux_vm_psiN';
         out.heatFlux_vm_psiN(ind,:)     =H{hind}.heatFlux_vm_psiN';
         out.momentumFlux_vm_psiN(ind,:) =H{hind}.momentumFlux_vm_psiN';
         out.FSABFlow(ind,:)             =H{hind}.FSABFlow';
-        out.finished(ind)               =H{hind}.finished;
       else
         out.NTV(ind,:)                  =NaN*ones(out.Nspecies(ind),1);
         out.particleFlux_vm_psiN(ind,:) =NaN*ones(out.Nspecies(ind),1);
         out.heatFlux_vm_psiN(ind,:)     =NaN*ones(out.Nspecies(ind),1);
         out.momentumFlux_vm_psiN(ind,:) =NaN*ones(out.Nspecies(ind),1);
         out.FSABFlow(ind,:)             =NaN*ones(out.Nspecies(ind),1);
-        out.finished(ind)               =0;
       end
     end    
     
