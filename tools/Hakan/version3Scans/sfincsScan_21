@@ -10,7 +10,14 @@ print "Beginning a runspec.dat scan."
 
 runspecFilename = "runspec.dat"
 
+################## Read the runspec file ##################
 def readRunspec(therunspecFilename):
+    def numberatend(strng):
+        thenumb=0
+        if strng[-2]=="_":
+            thenumb=int(strng[-1])
+        return thenumb
+
     if not os.path.isfile(therunspecFilename):
         print "Error! The file "+therunspecFilename+" must be present in the directory from which you call sfincsScan."
         exit(1)
@@ -36,9 +43,19 @@ def readRunspec(therunspecFilename):
                runparams[datalineind][parind]=int(thestring)
     
     rsf.close()
-    return runparamnames, runparams
 
-runparamnames, runparams=readRunspec(runspecFilename)
+    runnumbersatend=[0 for j in range(noElems)]
+    runvectorlength=[0 for j in range(noElems)]
+    for parind in range(noElems):
+        runnumbersatend[parind]=numberatend(runparamnames[parind])
+        if runnumbersatend[parind]>0:
+            runvectorlength[parind+1-runnumbersatend[parind]:parind]=runnumbersatend[parind]
+
+    return runparamnames, runparams, runnumbersatend, runvectorlength
+
+##############################################################################
+
+runparamnames, runparams, runnumbersatend, runvectorlength=readRunspec(runspecFilename)
 
 # Read in the job.sfincsScan file:
 with open(jobFilename, 'r') as f:
@@ -97,9 +114,18 @@ for runNum in range(numRunsInScan):
    # Now copy the input.namelist file:
    f = open(filename,"w")
    for line in inputFile:
-        for parind in range(len(runparamnames)):
-            if namelistLineContains(line,runparamnames[parind]):
-                line = "  "+runparamnames[parind]+" = "+str(runparams[runNum][parind])+" ! Set by sfincsScan.\n"
+       for parind in range(len(runparamnames)):
+           if runnumbersatend[parind]==0:
+               if namelistLineContains(line,runparamnames[parind]):
+                   line = "  "+runparamnames[parind]+" = "+str(runparams[runNum][parind])+" ! Set by sfincsScan.\n"
+           else:
+               if namelistLineContains(line,runparamnames[parind][:-3]):
+                   if runnumbersatend[parind]==1:
+                       str_stack="  "+runparamnames[parind][:-3]+" = "+str(runparams[runNum][parind])
+                   else:
+                       str_stack=str_stack+"  "+str(runparams[runNum][parind])
+                   if runnumbersatend[parind]==runvectorlength[parind]:
+                       line = str_stack+" ! Set by sfincsScan.\n"
         f.write(line)
    f.close()
 
