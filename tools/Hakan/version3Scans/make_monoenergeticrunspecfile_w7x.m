@@ -89,25 +89,34 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Sfincs experience with the configuration
 % w7x-sc1-ecb2.bc
+% note that transportCoeffs(2,1) has converged but not 
+% transportCoeffs(1,2) at high collisionality
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %r/a=0.5, Er=0:
 SF.NuPrimes     =  [3e-5,1e-4,3e-4,1e-3,1e-2,0.1,0.3,  1, 10,100];
 SF.Nthetas      =  [  41,  41,  35,  41,  47, 47, 47, 45, 37, 37];
-SF.Nzetas       =  [ 260, 200, 150,  90,  47, 37, 37, 37, 37, 31];
+SF.Nzetas       =  [ 260, 200, 150,  90,  47, 37, 37, 37, 37, 37];
 SF.Nxis         =  [ 220, 180, 150,  90,  37, 21, 15,  9,  7,  5];
-SF.hgw.Nproc    =  [ NaN, NaN, NaN, NaN, NaN,NaN,NaN,NaN,NaN,NaN];
 SF.hydra.Nnodes =  [   16, 16,   8,   1,   1,  1,  1,  1,  1,  1];
 SF.hydra.Nppernode=[    4,  4,   4,   4,   2,  2,  1,  1,  1,  1];
 SF.hydra.ConsCpus =[    4,  4,   4,   4,   4,  4,  4,  4,  4,  4];
+SF.hydra.walClock =[   90, 60,  60,  40,  30, 30, 30, 30, 30, 30];
+%SF.hgw.Nproc    =  [ NaN, NaN, NaN, NaN, NaN,NaN,NaN,NaN,NaN,NaN];
+
+%for nuPrime=1e-4 16 nodes goes under 30 min, and 8 nodes also work but take ~60 min
+
+%r/a=0.9, Er=0:
+%SF.NuPrimes     =  [3e-5,1e-4,3e-4,1e-3,1e-2,0.1,0.3,  1, 10,100];
+%SF.Nthetas      =  [                                  41, 41, 41];
+%SF.Nzetas       =  [                                  41, 41, 41];
+%SF.Nxis         =  [                                   9,  5,  5];
+%SF.hydra.Nnodes =  [   16, 16,   8,   1,   1,  1,  1,  1,  1,  1];
+%SF.hydra.Nppernode=[    4,  4,   4,   4,   2,  2,  1,  1,  1,  1];
+%SF.hydra.ConsCpus =[    4,  4,   4,   4,   4,  4,  4,  4,  4,  4];
+
 
 %SF.solverTolerance = 1e-6;
 
-%SF.NuPrimes=[1e-8,0.001,0.01,0.1,0.3,  1, 10, 100];
-%SF.Nthetas= [  19,   11,  11, 11, 11, 13, 13,  11];
-%SF.Nzetas = [ 125,   83,  64, 37, 29, 31, 35,  37];
-%SF.Nxis   = [ 140,  122,  68, 37, 30, 24, 12,  13];
-%SF.Nproc  = [  16,   16,   4,  4,  4,  4,  1,   1];
-%SF.solverTolerance = 1e-7;
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -224,7 +233,8 @@ fprintf(runspec_fid,['!normradius_wish',...
                     '   Nxi',...
                     ' Nnodes',...
                     ' Nppernode',...
-                    ' ConsCpus\n']);
+                    ' ConsCpus',...
+                    ' WalClock\n']);
 %                    ' Nx',...
 %                    '         Delta',...
 %                    '         omega',...
@@ -275,6 +285,7 @@ for rind=1:Nr
       Nnodes=SF.hydra.Nnodes(nuPvind);
       Nppernode=SF.hydra.Nppernode(nuPvind);
       ConsCpus=SF.hydra.ConsCpus(nuPvind);
+      WalClock=SF.hydra.WalClock(nuPvind);
 
       if useHMnormEr
         efield=HM.efield_norm'*B00*iota*...
@@ -285,9 +296,9 @@ for rind=1:Nr
 
       
       efield_min=exp(interp1(log(HM.cmul),log(HM.efield_min),...
-                             log(cmul(cmulind)),'cubic'));
+                             log(cmul(cmulind)),'pchip'));
       if useHMminEr
-        efield_forthis_cmul=[0;efield(find(abs(efield)>efield_min))];
+        efield_forthis_cmul=[0;efield(find(abs(efield)>=efield_min))];
         if length(efield_forthis_cmul)==1
           efield_forthis_cmul=...
               [0;efield(find(abs(efield)==max(abs(efield))))];
@@ -312,10 +323,10 @@ for rind=1:Nr
         fprintf(runspec_fid,...
                 ['%14.6e%14.6e%14.6e',...
                  '%7i%6i%6i',...
-                 '%7i%10i%9i\n'],...
+                 '%7i%10i%9i%9i\n'],...
                 normradius_wish,nuPrime,EStar,...
                 Ntheta,Nzeta,Nxi,...
-                Nnodes,Nppernode,ConsCpus);
+                Nnodes,Nppernode,ConsCpus,WalClock);
       end
     end
   end
