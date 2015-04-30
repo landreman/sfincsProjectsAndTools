@@ -107,10 +107,20 @@ SF.hydra.walClock =[   90, 60,  60,  60,  30, 30, 30, 30, 30, 30];
 
 %r/a=0.9, Er=0:
 %SF.NuPrimes     =  [3e-5,1e-4,3e-4,1e-3,1e-2,0.1,0.3,  1, 10,100];
-%SF.Nthetas      =  [                          47, 41, 41, 41, 41];
-%SF.Nzetas       =  [                          41, 41, 41, 41, 41];
-%SF.Nxis         =  [                          21, 15,  9,  5,  5];
+%SF.Nthetas      =  [                      47, 47, 41, 41, 41, 41];
+%SF.Nzetas       =  [                      47, 41, 41, 41, 41, 41];
+%SF.Nxis         =  [                      37, 21, 15,  9,  5,  5];
 %SF.hydra.Nnodes =  [   16, 16,   8,   1,   1,  1,  1,  1,  1,  1];
+%SF.hydra.Nppernode=[    4,  4,   4,   4,   2,  2,  1,  1,  1,  1];
+%SF.hydra.ConsCpus =[    4,  4,   4,   4,   4,  4,  4,  4,  4,  4];
+%SF.hydra.walClock =[   90, 60,  60,  60,  30, 30, 30, 30, 30, 30];
+
+%r/a=0.1, Er=0:
+%SF.NuPrimes     =  [3e-5,1e-4,3e-4,1e-3,1e-2,0.1,0.3,  1, 10,100];
+%SF.Nthetas      =  [                                            ];
+%SF.Nzetas       =  [                                            ];
+%SF.Nxis         =  [                                            ];
+%SF.hydra.Nnodes =  [   16, 16,   8,   ?,   1,  1,  1,  1,  1,  1];
 %SF.hydra.Nppernode=[    4,  4,   4,   4,   2,  2,  1,  1,  1,  1];
 %SF.hydra.ConsCpus =[    4,  4,   4,   4,   4,  4,  4,  4,  4,  4];
 %SF.hydra.walClock =[   90, 60,  60,  60,  30, 30, 30, 30, 30, 30];
