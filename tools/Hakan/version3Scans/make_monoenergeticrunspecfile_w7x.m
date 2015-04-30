@@ -97,9 +97,9 @@ SF.NuPrimes     =  [3e-5,1e-4,3e-4,1e-3,1e-2,0.1,0.3,  1, 10,100];
 SF.Nthetas      =  [  41,  41,  35,  41,  47, 47, 47, 45, 37, 37];
 SF.Nzetas       =  [ 260, 200, 150,  90,  47, 37, 37, 37, 37, 37];
 SF.Nxis         =  [ 220, 180, 150,  90,  37, 21, 15,  9,  7,  5];
-SF.hydra.Nnodes =  [   16, 16,   8,   1,   1,  1,  1,  1,  1,  1];
-SF.hydra.Nppernode=[    4,  4,   4,   4,   2,  2,  1,  1,  1,  1];
-SF.hydra.ConsCpus =[    4,  4,   4,   4,   4,  4,  4,  4,  4,  4];
+SF.hydra.node =  [   16, 16,   8,   1,   1,  1,  1,  1,  1,  1];
+SF.hydra.tasks_per_node=[    4,  4,   4,   4,   2,  2,  1,  1,  1,  1];
+SF.hydra.ConsumableCpus =[    4,  4,   4,   4,   4,  4,  4,  4,  4,  4];
 SF.hydra.walClock =[   90, 60,  60,  60,  30, 30, 30, 30, 30, 30];
 %SF.hgw.Nproc    =  [ NaN, NaN, NaN, NaN, NaN,NaN,NaN,NaN,NaN,NaN];
 
@@ -110,9 +110,9 @@ SF.hydra.walClock =[   90, 60,  60,  60,  30, 30, 30, 30, 30, 30];
 %SF.Nthetas      =  [                      47, 47, 41, 41, 41, 41];
 %SF.Nzetas       =  [                      47, 41, 41, 41, 41, 41];
 %SF.Nxis         =  [                      37, 21, 15,  9,  5,  5];
-%SF.hydra.Nnodes =  [   16, 16,   8,   1,   1,  1,  1,  1,  1,  1];
-%SF.hydra.Nppernode=[    4,  4,   4,   4,   2,  2,  1,  1,  1,  1];
-%SF.hydra.ConsCpus =[    4,  4,   4,   4,   4,  4,  4,  4,  4,  4];
+%SF.hydra.node =  [   16, 16,   8,   1,   1,  1,  1,  1,  1,  1];
+%SF.hydra.tasks_per_node=[    4,  4,   4,   4,   2,  2,  1,  1,  1,  1];
+%SF.hydra.ConsumableCpus =[    4,  4,   4,   4,   4,  4,  4,  4,  4,  4];
 %SF.hydra.walClock =[   90, 60,  60,  60,  30, 30, 30, 30, 30, 30];
 
 %r/a=0.1, Er=0:
@@ -120,9 +120,9 @@ SF.hydra.walClock =[   90, 60,  60,  60,  30, 30, 30, 30, 30, 30];
 %SF.Nthetas      =  [                                            ];
 %SF.Nzetas       =  [                                            ];
 %SF.Nxis         =  [                                            ];
-%SF.hydra.Nnodes =  [   16, 16,   8,   ?,   1,  1,  1,  1,  1,  1];
-%SF.hydra.Nppernode=[    4,  4,   4,   4,   2,  2,  1,  1,  1,  1];
-%SF.hydra.ConsCpus =[    4,  4,   4,   4,   4,  4,  4,  4,  4,  4];
+%SF.hydra.node =  [   16, 16,   8,   ?,   1,  1,  1,  1,  1,  1];
+%SF.hydra.tasks_per_node=[    4,  4,   4,   4,   2,  2,  1,  1,  1,  1];
+%SF.hydra.ConsumableCpus =[    4,  4,   4,   4,   4,  4,  4,  4,  4,  4];
 %SF.hydra.walClock =[   90, 60,  60,  60,  30, 30, 30, 30, 30, 30];
 
 
@@ -242,10 +242,10 @@ fprintf(runspec_fid,['!        rN_wish',...
                     ' Ntheta',...
                     ' Nzeta',...
                     '   Nxi',...
-                    ' Nnodes',...
-                    ' Nppernode',...
-                    ' ConsCpus',...
-                    ' WalClock\n']);
+                    ' node',...
+                    ' tasks_per_node',...
+                    ' ConsumableCpus',...
+                    ' wall_clock_limit\n']);
 %                    ' Nx',...
 %                    '         Delta',...
 %                    '         omega',...
@@ -293,10 +293,10 @@ for rind=1:Nr
       Nzeta =ceil(interp1(log(SF.NuPrimes),SF.Nzetas, log(abs(nuPrime))));
       Nxi   =ceil(interp1(log(SF.NuPrimes),SF.Nxis,   log(abs(nuPrime))));
       nuPvind=floor(interp1(log(SF.NuPrimes),1:length(SF.NuPrimes),log(abs(nuPrime))));
-      Nnodes=SF.hydra.Nnodes(nuPvind);
-      Nppernode=SF.hydra.Nppernode(nuPvind);
-      ConsCpus=SF.hydra.ConsCpus(nuPvind);
-      WalClock=SF.hydra.WalClock(nuPvind);
+      node=SF.hydra.node(nuPvind);
+      tasks_per_node=SF.hydra.tasks_per_node(nuPvind);
+      ConsumableCpus=SF.hydra.ConsumableCpus(nuPvind);
+      wall_clock_limit=SF.hydra.wall_clock_limit(nuPvind);
 
       if useHMnormEr
         efield=HM.efield_norm'*B00*iota*...
@@ -337,7 +337,7 @@ for rind=1:Nr
                  '%7i%10i%9i%9i\n'],...
                 normradius_wish,nuPrime,EStar,...
                 Ntheta,Nzeta,Nxi,...
-                Nnodes,Nppernode,ConsCpus,WalClock);
+                node,tasks_per_node,ConsumableCpus,wall_clock_limit);
       end
     end
   end

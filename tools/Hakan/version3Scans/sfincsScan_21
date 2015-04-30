@@ -2,6 +2,27 @@
 
 # This script will not work if called directly.
 # From the command line, you should call sfincsScan instead.
+#
+#
+# This script launches a number of runs with parameters listed in the file runspec.dat.
+# Such a file contains first a number of comment lines, beginning with ! (or % or #). 
+# The last line beginning with ! contains the names of the variables listed on the lines
+# below it. Each data line corresponds to one sfincs run. The variables not listed
+# are left unchanged in the input.namelist. 
+#
+# On the hydra system some variables for the job file can also be included.
+#
+# Here is an example of a runspec.dat file:
+#
+#! This is a very short and ridiculous runspec.dat example file
+#!
+#! rN_wish dPhiHatdpsiN
+#      0.5          0.0
+#      0.2          0.7
+#      0.2          2.0
+#
+#
+# 
 
 import os, inspect
 
@@ -26,17 +47,17 @@ def readRunspec(therunspecFilename):
         runspecLines = rsf.readlines()
     
     lind=0
-    while runspecLines[lind][0]=="!":
+    while runspecLines[lind][0]=="!" or runspecLines[lind][0]=="%" or runspecLines[lind][0]=="#":
         lind+=1
-    runparamnames=runspecLines[lind-1].split()
+    runparamnames=runspecLines[lind-1][2:].split()
     noElems=len(runparamnames)
     datalines=runspecLines[lind:]
     runparams=[[0 for j in range(noElems)] for i in range(len(datalines))]
     for datalineind in range(len(datalines)):
+        thesplittedstring=datalines[datalineind].split()
         for parind in range(noElems):
-           thesplittedstring=datalines[datalineind].split()
            thestring=thesplittedstring[parind]
-           thestring= thestring.replace('d','e').replace('D','e')
+           thestring=thestring.replace('d','e').replace('D','e')
            if ("." in thestring) or ("e" in thestring):
                runparams[datalineind][parind]=float(thestring)
            else:
@@ -49,7 +70,7 @@ def readRunspec(therunspecFilename):
     for parind in range(noElems):
         runnumbersatend[parind]=numberatend(runparamnames[parind])
         if runnumbersatend[parind]>0:
-            runvectorlength[parind+1-runnumbersatend[parind]:parind]=runnumbersatend[parind]
+            runvectorlength[parind+1-runnumbersatend[parind]:parind]=[runnumbersatend[parind] for j in range(runnumbersatend[parind])]
 
     return runparamnames, runparams, runnumbersatend, runvectorlength
 
@@ -75,7 +96,7 @@ for runNum in range(numRunsInScan):
    os.mkdir(dirName)
    os.chdir(dirName)
 
-   jobName="Sfx."+dirName
+   jobName="Sfnx."+dirName
    print "Beginning to handle job "+str(runNum+1)+" of "+str(numRunsInScan)+": "+dirName
 
    # Copy the job.sfincsScan file:
@@ -84,20 +105,20 @@ for runNum in range(numRunsInScan):
    nameJobFile(thisJobFile,jobName)
    if sfincsSystem=="hydra":
        for parind in range(len(runparamnames)):
-           if runparamnames[parind]=="Nnodes":
+           if runparamnames[parind]=="node":
                for line in thisJobFile:
                    if "# @ node =" in line:
                        thisJobFile[thisJobFile.index(line)]="# @ node = "+str(runparams[runNum][parind])+"\n"
-           if runparamnames[parind]=="Nppernode":
+           if runparamnames[parind]=="tasks_per_node":
                for line in thisJobFile:
                    if "# @ tasks_per_node =" in line:
                        thisJobFile[thisJobFile.index(line)]="# @ tasks_per_node = "+str(runparams[runNum][parind])+"\n"
-           if runparamnames[parind]=="ConsCpus":
+           if runparamnames[parind]=="ConsumableCpus":
                for line in thisJobFile:
                    if "# @ resources = ConsumableCpus" in line:
                        thisJobFile[thisJobFile.index(line)]="# @ resources = ConsumableCpus("+str(runparams[runNum][parind])+")\n"
-           if runparamnames[parind]=="WalClock":
-               hours=runparams[runNum][parind]/60
+           if runparamnames[parind]=="wall_clock_limit":
+               hours=runparams[runNum][parind]//60
                minutes=runparams[runNum][parind]%60
                if hours<10:
                   hour_str="0"+str(hours)
@@ -126,14 +147,14 @@ for runNum in range(numRunsInScan):
                        str_stack=str_stack+"  "+str(runparams[runNum][parind])
                    if runnumbersatend[parind]==runvectorlength[parind]:
                        line = str_stack+" ! Set by sfincsScan.\n"
-        f.write(line)
+       f.write(line)
    f.close()
 
    # Submit the sfincs job:
    try:
         # We need to include .split(" ") to separate the command-line arguments into an array of strings.   
         # I'm not sure why python requires this. 
-        submissionResult = subprocess.call(submitCommand.split(" "))
+        submissionResult = 1#subprocess.call(submitCommand.split(" "))
    except:
         print "ERROR! Unable to submit run "+jobName+" for some reason."
         raise
