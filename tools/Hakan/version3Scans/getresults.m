@@ -73,6 +73,8 @@ for hind=1:length(H)
         warning('nuPrime not stored!!')
       end
     else
+      out.Zs(ind,:)          =H{hind}.Zs;
+      out.mHats(ind,:)       =H{hind}.mHats;
       out.nHats(ind,:)       =H{hind}.nHats;
       out.THats(ind,:)       =H{hind}.THats;
       out.dnHatdpsiN(ind,:)  =H{hind}.dnHatdpsiN;
