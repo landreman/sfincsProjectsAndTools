@@ -90,40 +90,41 @@ end
 % Sfincs experience with the configuration
 % w7x-sc1-ecb2.bc
 % note that transportCoeffs(2,1) has converged but not 
-% transportCoeffs(1,2) at high collisionality
+% transportCoeffs(1,2) at high collisionality (nuPrime ~ 100)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %r/a=0.5, Er=0:
-SF.NuPrimes     =  [3e-5,1e-4,3e-4,1e-3,1e-2,0.1,0.3,  1, 10,100];
-SF.Nthetas      =  [  41,  41,  35,  41,  47, 47, 47, 45, 37, 37];
-SF.Nzetas       =  [ 260, 200, 150,  90,  47, 37, 37, 37, 37, 37];
-SF.Nxis         =  [ 220, 180, 150,  90,  37, 21, 15,  9,  7,  5];
-SF.hydra.node =  [   16, 16,   8,   1,   1,  1,  1,  1,  1,  1];
-SF.hydra.tasks_per_node=[    4,  4,   4,   4,   2,  2,  1,  1,  1,  1];
-SF.hydra.ConsumableCpus =[    4,  4,   4,   4,   4,  4,  4,  4,  4,  4];
-SF.hydra.walClock =[   90, 60,  60,  60,  30, 30, 30, 30, 30, 30];
+SF.NuPrimes           =  [3e-5,1e-4,3e-4,1e-3,1e-2,0.1,0.3,  1, 10,100];
+SF.Nthetas            =  [  41,  41,  35,  41,  47, 47, 47, 45, 37, 37];
+SF.Nzetas             =  [ 260, 200, 150,  90,  47, 37, 37, 37, 37, 37];
+SF.Nxis               =  [ 220, 180, 150,  90,  37, 21, 15,  9,  7,  5];
+SF.hydra.node         =  [   16, 16,   8,   1,   1,  1,  1,  1,  1,  1];
+SF.hydra.tasks_per_node= [    4,  4,   4,   4,   2,  2,  1,  1,  1,  1];
+SF.hydra.ConsumableCpus= [    4,  4,   4,   4,   4,  4,  4,  4,  4,  4];
+SF.hydra.walClock      = [   90, 60,  60,  60,  30, 30, 30, 30, 30, 30];
 %SF.hgw.Nproc    =  [ NaN, NaN, NaN, NaN, NaN,NaN,NaN,NaN,NaN,NaN];
 
 %for nuPrime=1e-4 16 nodes goes under 30 min, and 8 nodes also work but take ~60 min
+%for nuPrime=1e-3 2 nodes goes usually under 30 min, and 1 node also works but take ~40 min
 
 %r/a=0.9, Er=0:
-%SF.NuPrimes     =  [3e-5,1e-4,3e-4,1e-3,1e-2,0.1,0.3,  1, 10,100];
-%SF.Nthetas      =  [                      47, 47, 41, 41, 41, 41];
-%SF.Nzetas       =  [                      47, 41, 41, 41, 41, 41];
-%SF.Nxis         =  [                      37, 21, 15,  9,  5,  5];
-%SF.hydra.node =  [   16, 16,   8,   1,   1,  1,  1,  1,  1,  1];
-%SF.hydra.tasks_per_node=[    4,  4,   4,   4,   2,  2,  1,  1,  1,  1];
-%SF.hydra.ConsumableCpus =[    4,  4,   4,   4,   4,  4,  4,  4,  4,  4];
-%SF.hydra.walClock =[   90, 60,  60,  60,  30, 30, 30, 30, 30, 30];
+%SF.NuPrimes            = [3e-5,1e-4,3e-4,1e-3,1e-2,0.1,0.3,  1, 10,100];
+%SF.Nthetas             = [                 41,  47, 47, 41, 41, 41, 41];
+%SF.Nzetas              = [                 90,  47, 41, 41, 41, 41, 41];
+%SF.Nxis                = [                 90,  37, 21, 15,  9,  5,  5];
+%SF.hydra.node          = [   16, 16,  16,   1,   1,  1,  1,  1,  1,  1];
+%SF.hydra.tasks_per_node= [    4,  4,   4,   4,   2,  2,  1,  1,  1,  1];
+%SF.hydra.ConsumableCpus= [    4,  4,   4,   4,   4,  4,  4,  4,  4,  4];
+%SF.hydra.walClock      = [    ?,  ?,  60,  60,  30, 30, 30, 30, 30, 30];
 
 %r/a=0.1, Er=0:
-%SF.NuPrimes     =  [3e-5,1e-4,3e-4,1e-3,1e-2,0.1,0.3,  1, 10,100];
-%SF.Nthetas      =  [                                            ];
-%SF.Nzetas       =  [                                            ];
-%SF.Nxis         =  [                                            ];
-%SF.hydra.node =  [   16, 16,   8,   ?,   1,  1,  1,  1,  1,  1];
-%SF.hydra.tasks_per_node=[    4,  4,   4,   4,   2,  2,  1,  1,  1,  1];
-%SF.hydra.ConsumableCpus =[    4,  4,   4,   4,   4,  4,  4,  4,  4,  4];
-%SF.hydra.walClock =[   90, 60,  60,  60,  30, 30, 30, 30, 30, 30];
+%SF.NuPrimes            = [3e-5,1e-4,3e-4,1e-3,1e-2,0.1,0.3,  1, 10,100];
+%SF.Nthetas             = [  35,  35,  29,  35,  47, 47, 41  41, 41, 41];
+%SF.Nzetas              = [ 221, 171, 127,  77,  51, 41, 41  41, 41, 41];
+%SF.Nxis                = [ 220, 189, 150,  90,  41, 21, 15   9,  5,  5];
+%SF.hydra.node          = [  16,  16,   8,   1,   1,  1,  1,  1,  1,  1];
+%SF.hydra.tasks_per_node= [   4,   4,   4,   4,   2,  2,  1,  1,  1,  1];
+%SF.hydra.ConsumableCpus= [   4,   4,   4,   4,   4,  4,  4,  4,  4,  4];
+%SF.hydra.walClock      = [  90,  60,  60,  60,  30, 30, 30, 30, 30, 30];
 
 
 %SF.solverTolerance = 1e-6;

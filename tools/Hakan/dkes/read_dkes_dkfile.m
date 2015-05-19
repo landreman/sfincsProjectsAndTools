@@ -268,10 +268,23 @@ for rind=1:dk.nr
   thisind=thisind+entry_len;
 end
 
-if isempty(find(EovervB~=0))
-  disp(['All Er=0 in the file ',filename])
+dk.interp.r_factor=dk.r(end)/5;
+
+if isempty(find(EovervB~=0)) 
+  dk.Einterp_type='Er=0';
+  disp(['All Er=0 in the file ',filename,' !'])
+end
+  
+if strcmp(dk.Einterp_type,'Er=0')
+  valids=find(EovervB==0);
+  X=[r(valids)/dk.interp.r_factor,logcmul(valids)];
+  dk.interp.Flgg11u=TriScatteredInterp(X, log(-g11u(valids)));
+  dk.interp.Flgg11l=TriScatteredInterp(X, log(-g11l(valids)));
+  dk.interp.Fg13u=TriScatteredInterp(X, g13u(valids));
+  dk.interp.Fg13l=TriScatteredInterp(X, g13l(valids));
+  dk.interp.Flgg33u=TriScatteredInterp(X, log(-g33u(valids)));
+  dk.interp.Flgg33l=TriScatteredInterp(X, log(-g33l(valids)));
 else
-  dk.interp.r_factor=dk.r(end)/5;
   dk.interp.EovervBmin=max(EovervB(find(EovervB==0)+1));
   if strcmp(dk.Einterp_type,'asinh')
     Enorm=asinh(EovervB/dk.interp.EovervBmin);
@@ -280,16 +293,16 @@ else
   else
     error('The given dk.Einterp_type is not implemented !')
   end
-  
   X=[r/dk.interp.r_factor,logcmul,Enorm];
-  
   dk.interp.Flgg11u=TriScatteredInterp(X, log(-g11u));
   dk.interp.Flgg11l=TriScatteredInterp(X, log(-g11l));
   dk.interp.Fg13u=TriScatteredInterp(X, g13u);
   dk.interp.Fg13l=TriScatteredInterp(X, g13l);
   dk.interp.Flgg33u=TriScatteredInterp(X, log(-g33u));
   dk.interp.Flgg33l=TriScatteredInterp(X, log(-g33l));
-end
+end  
+
+
 
 % A help function
 function out=ramp(in)
