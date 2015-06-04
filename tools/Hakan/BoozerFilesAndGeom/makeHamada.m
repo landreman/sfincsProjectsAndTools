@@ -25,45 +25,79 @@ else
   parity=Geom.parity{rind};
 end
 
-B = zeros(Ntheta,Nzeta);
-dBdtheta = zeros(Ntheta,Nzeta);
-dBdzeta = zeros(Ntheta,Nzeta);
-R=zeros(Ntheta,Nzeta);
-Z=zeros(Ntheta,Nzeta);
+B           = zeros(Ntheta,Nzeta);
+dBdtheta    = zeros(Ntheta,Nzeta);
+dBdzeta     = zeros(Ntheta,Nzeta);
+R           = zeros(Ntheta,Nzeta);
+dRdtheta    = zeros(Ntheta,Nzeta);
+dRdzeta     = zeros(Ntheta,Nzeta);
+Z           = zeros(Ntheta,Nzeta);
+dZdtheta    = zeros(Ntheta,Nzeta);
+dZdzeta     = zeros(Ntheta,Nzeta);
 Dzetacylphi = zeros(Ntheta,Nzeta);
+dDzetacylphi_dtheta = zeros(Ntheta,Nzeta);
+dDzetacylphi_dzeta  = zeros(Ntheta,Nzeta);
 
 for i=1:NHarmonics
+  m=Geom.m{rind}(i);
+  n=Geom.n{rind}(i);
+  c=cos(m * theta - n * NPeriods * zeta);
+  s=sin(m * theta - n * NPeriods * zeta);
   if parity(i) %The cosine components of B
-    B = B + Bmn(i) *...
-           cos(Geom.m{rind}(i) * theta - Geom.n{rind}(i) * NPeriods * zeta);
-    dBdtheta = dBdtheta - Bmn(i) * Geom.m{rind}(i) *...
-        sin(Geom.m{rind}(i) * theta - Geom.n{rind}(i) * NPeriods * zeta);
-    dBdzeta = dBdzeta + Bmn(i) * Geom.n{rind}(i) * NPeriods *...
-        sin(Geom.m{rind}(i) * theta - Geom.n{rind}(i) * NPeriods * zeta);
-    R    = R + Geom.R{rind}(i) *...
-           cos(Geom.m{rind}(i) * theta - Geom.n{rind}(i) * NPeriods * zeta);
-    Z    = Z + Geom.Z{rind}(i) * ...
-           sin(Geom.m{rind}(i) * theta - Geom.n{rind}(i) * NPeriods * zeta);
-    Dzetacylphi = Dzetacylphi + 2*pi/NPeriods*Geom.Dphi{rind}(i) * ...
-           sin(Geom.m{rind}(i) * theta - Geom.n{rind}(i) * NPeriods * zeta);
-
+    B = B + Bmn(i) * c;
+    dBdtheta = dBdtheta - Bmn(i) * m * s;
+    dBdzeta  = dBdzeta  + Bmn(i) * n * NPeriods * s;
+    
+    R    = R + Geom.R{rind}(i) * c;
+    dRdtheta = dRdtheta - Geom.R{rind}(i) * m * s;
+    dRdzeta  = dRdzeta  + Geom.R{rind}(i) * n * NPeriods * s;
+    
+    Z    = Z + Geom.Z{rind}(i) * s;
+    dZdtheta = dZdtheta + Geom.Z{rind}(i) * m * c;
+    dZdzeta  = dZdzeta  - Geom.Z{rind}(i) * n * NPeriods * c;
+    
+    Dzetacylphi = Dzetacylphi + 2*pi/NPeriods*Geom.Dphi{rind}(i) * s;
+    dDzetacylphi_dtheta = dDzetacylphi_dtheta + 2*pi/NPeriods*Geom.Dphi{rind}(i) * m * c;
+    dDzetacylphi_dzeta  = dDzetacylphi_dzeta - 2*pi/NPeriods*Geom.Dphi{rind}(i) * n * NPeriods * c;
+  
   else  %The sine components of B
-    B = B + Bmn(i) *...
-           sin(Geom.m{rind}(i) * theta - Geom.n{rind}(i) * NPeriods * zeta);
-    dBdtheta = dBdtheta + Bmn(i) * Geom.m{rind}(i) *...
-        cos(Geom.m{rind}(i) * theta - Geom.n{rind}(i) * NPeriods * zeta);
-    dBdzeta = dBdzeta - Bmn(i) * Geom.n{rind}(i) * NPeriods *...
-        cos(Geom.m{rind}(i) * theta - Geom.n{rind}(i) * NPeriods  * zeta); 
-    R    = R + Geom.R{rind}(i) *...
-           sin(Geom.m{rind}(i) * theta - Geom.n{rind}(i) * NPeriods * zeta);
-    Z    = Z + Geom.Z{rind}(i) * ...
-           cos(Geom.m{rind}(i) * theta - Geom.n{rind}(i) * NPeriods * zeta);
-    Dzetacylphi = Dzetacylphi + 2*pi/NPeriods*Geom.Dphi{rind}(i) * ...
-           cos(Geom.m{rind}(i) * theta - Geom.n{rind}(i) * NPeriods * zeta);
-
+    B = B + Bmn(i) * s;
+    dBdtheta = dBdtheta + Bmn(i) * m * c;
+    dBdzeta  = dBdzeta  - Bmn(i) * n * NPeriods * c; 
+    
+    R    = R + Geom.R{rind}(i) * s;
+    dRdtheta = dRdtheta + Geom.R{rind}(i) * m * c;
+    dRdzeta  = dRdzeta  - Geom.R{rind}(i) * n * NPeriods * c; 
+    
+    Z    = Z + Geom.Z{rind}(i) * c;
+    dZdtheta = dZdtheta - Geom.Z{rind}(i) * m * s;
+    dZdzeta  = dZdzeta  + Geom.Z{rind}(i) * n * NPeriods * s;
+    
+    Dzetacylphi = Dzetacylphi + 2*pi/NPeriods*Geom.Dphi{rind}(i) * c;
+    dDzetacylphi_dtheta = dDzetacylphi_dtheta - 2*pi/NPeriods*Geom.Dphi{rind}(i) * m * s;
+    dDzetacylphi_dzeta  = dDzetacylphi_dzeta + 2*pi/NPeriods*Geom.Dphi{rind}(i) * n * NPeriods * s;
+  
   end
 end
-cylphi=zeta-Dzetacylphi;         %cylphi is the geometrical toroidal angle.
+cylphi=zeta-Dzetacylphi;     %cylphi is minus the geometrical toroidal angle.
+geomang=-cylphi;             %(R,Z,cylphi) and (R,geomang,Z) are right handed systems. 
+dgeomangdtheta=dDzetacylphi_dtheta;
+dgeomangdzeta =dDzetacylphi_dzeta - 1;
+X=R.*cos(geomang);
+Y=R.*sin(geomang);
+dXdtheta=dRdtheta.*cos(geomang)-R.*dgeomangdtheta.*sin(geomang);
+dXdzeta =dRdzeta .*cos(geomang)-R.*dgeomangdzeta .*sin(geomang);
+dYdtheta=dRdtheta.*sin(geomang)+R.*dgeomangdtheta.*cos(geomang);
+dYdzeta =dRdzeta .*sin(geomang)+R.*dgeomangdzeta .*cos(geomang);
+g_thetatheta=dXdtheta.^2+dYdtheta.^2+dZdtheta.^2;
+g_zetazeta  =dXdzeta.^2 +dYdzeta.^2 +dZdzeta.^2;
+g_thetazeta =dXdtheta.*dXdzeta+dYdtheta.*dYdzeta+dZdtheta.*dZdzeta;
+
+gradpsi.X=B.^2./(G+iota*I).*(dYdtheta.*dZdzeta-dZdtheta.*dYdzeta);
+gradpsi.Y=B.^2./(G+iota*I).*(dZdtheta.*dXdzeta-dXdtheta.*dZdzeta);
+gradpsi.Z=B.^2./(G+iota*I).*(dXdtheta.*dYdzeta-dYdtheta.*dZdzeta);
+gpsipsi=gradpsi.X.^2+gradpsi.Y.^2+gradpsi.Z.^2;
+
 Booz.Dzetacylphi=Dzetacylphi;     %for later use
 Booz.dBdtheta=dBdtheta;
 Booz.dBdzeta=dBdzeta;
@@ -117,8 +151,8 @@ end
 % Calculate parallel current u from harmonics of 1/B^2. Used in NTV calculation.
 % \nabla_\parallel u = (2/B^4) \nabla B \times \vector{B} \cdot \iota \nabla \psi 
 % ---------------------------------------------------------------------------------------
-u = zeros(Ntheta,Nzeta); %normalised u
-Dzetaphi=zeros(Ntheta,Nzeta); %difference between phi (tor Hamada coord) and zeta
+u = zeros(Ntheta,Nzeta); 
+Dzetaphi        =zeros(Ntheta,Nzeta); %difference between zeta and phi (tor Hamada coord) 
 %dudtheta = zeros(Ntheta,Nzeta);
 %dudzeta = zeros(Ntheta,Nzeta);
 h=1./(B.^2);
@@ -147,7 +181,7 @@ if not(Geom.StelSym) %sine components exist
             FSAB2/(G+iota*I)/m*(umnc/iota-I*hmnc);     %for m~=0
         Dzetaphi2_mns = ...
             FSAB2/(G+iota*I)/n/NPeriods*(umnc+G*hmnc); %for n~=0
-
+        
         %sin
         hmns = 2/(Ntheta*Nzeta) *...
             sum(sum(s.*h));
@@ -214,6 +248,24 @@ end
 %fig(2)
 %surf(theta,zeta,Btest);view(0,90);shading flat;colorbar;%caxis([2.6 3.7])
 
+dDzetaphi_dtheta= FSAB2/(G+iota*I)/iota*(u-iota*I*(h-1/FSAB2));
+dDzetaphi_dzeta =-FSAB2/(G+iota*I) *    (u +    G*(h-1/FSAB2));
+
+XtozmXzot=dXdtheta.*dDzetaphi_dzeta-dXdzeta.*dDzetaphi_dtheta;
+YtozmYzot=dYdtheta.*dDzetaphi_dzeta-dYdzeta.*dDzetaphi_dtheta;
+ZtozmZzot=dZdtheta.*dDzetaphi_dzeta-dZdzeta.*dDzetaphi_dtheta;
+
+dXdphi=B.^2/FSAB2.*(dXdzeta+iota*XtozmXzot);
+dYdphi=B.^2/FSAB2.*(dYdzeta+iota*YtozmYzot);
+dZdphi=B.^2/FSAB2.*(dZdzeta+iota*ZtozmZzot);
+
+dXdvthet=B.^2/FSAB2.*(dXdtheta-XtozmXzot);
+dYdvthet=B.^2/FSAB2.*(dYdtheta-YtozmYzot);
+dZdvthet=B.^2/FSAB2.*(dZdtheta-ZtozmZzot);
+
+g_phiphi    =dXdphi.^2  +dYdphi.^2  +dZdphi.^2;
+g_vthetvthet=dXdvthet.^2+dYdvthet.^2+dZdvthet.^2;
+g_vthetphi  =dXdphi.*dXdvthet+dYdphi.*dYdvthet+dZdphi.*dZdvthet;
 
 Booz.Nperiods=Geom.Nperiods;
 Booz.Nzeta=Nzeta;
@@ -242,6 +294,15 @@ Booz.u=u;
 Booz.h=h;
 Booz.FSAB2=FSAB2;
 Booz.Jacob=Booz.h*(G+iota*I);
+Booz.g_thetatheta=g_thetatheta;
+Booz.g_thetazeta =g_thetazeta;
+Booz.g_zetazeta  =g_zetazeta;
+Booz.g_phiphi=g_phiphi;
+Booz.g_vthetvthet=g_vthetvthet;
+Booz.g_vthetphi=g_vthetphi;
+Booz.gpsipsi=gpsipsi;
+Booz.FSAg_phiphi=sum(sum(g_phiphi.*h))/sum(sum(h));
+Booz.FSAgpsipsi=sum(sum(gpsipsi.*h))/sum(sum(h));
 
 %Copy data from Geom struct
 Booz.B00=Geom.B00(rind);
