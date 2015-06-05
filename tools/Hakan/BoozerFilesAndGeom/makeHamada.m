@@ -60,7 +60,7 @@ Dzetacylphi = zeros(Ntheta,Nzeta);
 dDzetacylphi_dtheta = zeros(Ntheta,Nzeta);
 dDzetacylphi_dzeta  = zeros(Ntheta,Nzeta);
 
-tic
+%tic
 for i=1:NHarmonics
   m=Geom.m{rind}(i);
   n=Geom.n{rind}(i);
@@ -110,7 +110,7 @@ for i=1:NHarmonics
   
   end
 end
-toc
+%toc
 
 cylphi=zeta-Dzetacylphi;     %cylphi is minus the geometrical toroidal angle.
 geomang=-cylphi;             %(R,Z,cylphi) and (R,geomang,Z) are right handed systems. 
@@ -192,7 +192,7 @@ h=1./(B.^2);
 VPrimeHat=sum(sum(h))*4*pi^2/(Nzeta*Ntheta); %Note: VPrime=VPrimeHat*(G+iota*I)
 FSAB2=4*pi^2/VPrimeHat;
 %h00=VPrimeHat/(4*pi^2);
-tic
+%tic
 if not(Geom.StelSym) %sine components exist
   for m=0:floor(Ntheta/2)-1 %Nyquist max freq.
     if m==0
@@ -284,7 +284,7 @@ else %only cosinus components
     end              
   end
 end
-toc
+%toc
 
 dDzetaphi_dtheta= FSAB2/(G+iota*I)/iota*(u-iota*I*(h-1/FSAB2));
 dDzetaphi_dzeta =-FSAB2/(G+iota*I) *    (u +    G*(h-1/FSAB2));
@@ -552,7 +552,7 @@ Ham.m=0;
 Ham.n=0;
 Ham.Bmn=Ham.B00;
 ind=1;
-tic
+%tic
 if not(Geom.StelSym) %sine components exist
   Ham.parity=1; %this is for the 00 component
   for m=0:floor(Nvthet/2)-1 %Nyquist max freq.
@@ -620,7 +620,7 @@ else %only cosinus components
     end              
   end
 end
-toc
+%toc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 % Test if the Fourier decomposition was done correctly
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
