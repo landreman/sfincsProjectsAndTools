@@ -61,12 +61,25 @@ for hind=1:length(H)
       end
     end
     
+    out.theta{ind}             =H{hind}.theta;
+    out.theta{ind}             =H{hind}.theta;
+    out.zeta{ind}              =H{hind}.zeta;
+    out.psiAHat(ind)           =H{hind}.psiAHat;
+    out.psiHat(ind)            =H{hind}.psiHat;
+    out.rN(ind)            =H{hind}.rN;
+    out.GHat(ind)          =H{hind}.GHat;
+    out.IHat(ind)          =H{hind}.IHat;
+    out.iota(ind)          =H{hind}.iota;
+    out.B0OverBBar(ind)    =H{hind}.B0OverBBar;
+    out.VPrimeHat(ind)     =H{hind}.VPrimeHat;
+    out.FSABHat2(ind)      =H{hind}.FSABHat2;
+    out.alpha(ind)         =H{hind}.alpha;
+    out.Delta(ind)         =H{hind}.Delta;
 
-    out.rN(ind)=H{hind}.rN;
 
     if out.RHSMode(ind)==3 %Monoenergetic
       if isfield(H{hind},'nuPrime')
-        out.nuPrime(ind)=H{hind}.nuPrime; %Does not work just yet
+        out.nuPrime(ind)=H{hind}.nuPrime; 
         out.EStar(ind)=H{hind}.EStar;
         out.transportCoeffs(ind,:,:)=H{hind}.transportMatrix;
       else
@@ -77,10 +90,25 @@ for hind=1:length(H)
       out.mHats(ind,:)       =H{hind}.mHats;
       out.nHats(ind,:)       =H{hind}.nHats;
       out.THats(ind,:)       =H{hind}.THats;
+      out.vTHats(ind,:)      =sqrt(out.THats(ind,:)./out.mHats(ind,:));
       out.dnHatdpsiN(ind,:)  =H{hind}.dnHatdpsiN;
       out.dTHatdpsiN(ind,:)  =H{hind}.dTHatdpsiN;      
       out.dPhiHatdpsiN(ind)  =H{hind}.dPhiHatdpsiN;
       out.EParallelHat(ind)  =H{hind}.EParallelHat;
+    end
+    if out.RHSMode(ind)==2
+       out.transportMatrix(ind,:,:)=H{hind}.transportMatrix;
+       out.nu_n(ind)=H{hind}.nu_n;
+       if not(isfield(H{hind},'nuPrime'))
+         out.nuPrime(ind)=out.nu_n(ind)*...
+             (out.GHat(ind)+ out.iota(ind)*out.IHat(ind)) ...
+             /sqrt(out.THats(ind,1))/out.B0OverBBar(ind);
+       end
+       if not(isfield(H{hind},'EStar'))
+         out.EStar(ind) = out.GHat(ind)/out.iota(ind)/out.vTHats(ind,1)...
+             /out.B0OverBBar(ind)* out.dPhiHatdpsiN(ind)...
+             *out.alpha(ind)*out.Delta(ind)/2/out.psiAHat(ind);
+       end
     end
     
 
@@ -92,11 +120,23 @@ for hind=1:length(H)
     
     if out.RHSMode(ind)==1
       if out.finished(ind)
-        out.NTV(ind,:)                  =H{hind}.NTV';
-        out.particleFlux_vm_psiN(ind,:) =H{hind}.particleFlux_vm_psiN';
-        out.heatFlux_vm_psiN(ind,:)     =H{hind}.heatFlux_vm_psiN';
-        out.momentumFlux_vm_psiN(ind,:) =H{hind}.momentumFlux_vm_psiN';
-        out.FSABFlow(ind,:)             =H{hind}.FSABFlow';
+        if isfield(H{hind},'NTV')
+          out.NTV(ind,:)                  =H{hind}.NTV';
+          out.particleFlux_vm_psiN(ind,:) =H{hind}.particleFlux_vm_psiN';
+          out.heatFlux_vm_psiN(ind,:)     =H{hind}.heatFlux_vm_psiN';
+          out.momentumFlux_vm_psiN(ind,:) =H{hind}.momentumFlux_vm_psiN';
+          out.FSABFlow(ind,:)             =H{hind}.FSABFlow';
+        else
+          out.finished(ind)=-1;
+          warning(['Run number ',num2str(ind),...
+                   ' in the directory ',out.run(ind).dir ,...
+                   ' says ''finished'' but output results are missing']);
+          out.NTV(ind,:)                  =NaN*zeros(Nsp,1);
+          out.particleFlux_vm_psiN(ind,:) =NaN*zeros(Nsp,1);
+          out.heatFlux_vm_psiN(ind,:)     =NaN*zeros(Nsp,1);
+          out.momentumFlux_vm_psiN(ind,:) =NaN*zeros(Nsp,1);
+          out.FSABFlow(ind,:)             =NaN*zeros(Nsp,1);
+        end
       else
         out.NTV(ind,:)                  =NaN*ones(out.Nspecies(ind),1);
         out.particleFlux_vm_psiN(ind,:) =NaN*ones(out.Nspecies(ind),1);
@@ -119,18 +159,16 @@ for hind=1:length(H)
       out.x{ind}                 =H{hind}.x;
     end
     out.solverTolerance(ind)   =H{hind}.solverTolerance;
-    out.theta{ind}             =H{hind}.theta;
-    out.theta{ind}             =H{hind}.theta;
-    out.zeta{ind}              =H{hind}.zeta;
-    out.GHat(ind)          =H{hind}.GHat;
-    out.IHat(ind)          =H{hind}.IHat;
-    out.iota(ind)          =H{hind}.iota;
-    out.B0OverBBar(ind)    =H{hind}.B0OverBBar;
-    out.VPrimeHat(ind)     =H{hind}.VPrimeHat;
-    out.FSABHat2(ind)      =H{hind}.FSABHat2;
     %out.didItConverge(ind) =H{hind}.didItConverge; %old name
     %out.finished(ind) =H{hind}.finished; %new name?
-     
+    if out.RHSMode(ind)==1 &&  out.finished(ind)==1
+      %out.NTVtot(ind)=sum(out.NTV(ind,:));
+      out.NTVfromFlux(ind,:)=1e-3*out.iota(ind)*...
+            sqrt(2*1.6022e-19*1e3/1.6726e-27)* out.psiAHat(ind)*...
+            out.particleFlux_vm_psiN(ind,:).*out.Zs(ind,:);
+    else
+      out.NTVfromFlux(ind,:)=NaN;
+    end
   end
 end
     

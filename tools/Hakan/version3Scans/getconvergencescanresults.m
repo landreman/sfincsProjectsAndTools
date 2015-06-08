@@ -3,6 +3,10 @@ function [runs,missing]=getconvergencescanresults(dirpath,makeplots)
 % this loads the results stored in the subdirectories named 00/, 01/,... in "dirpath" 
 % Normal plotting is made if makeplots=1.
 % Plotting of values relative to baseCase is made if makeplots=2.
+if nargin==1
+  makeplots=1; %optional input
+end
+
 
 [runs,missing]=getresults(dirpath);
 
@@ -80,7 +84,13 @@ if makeplots
       runs.EStar(1));
   elseif all(runs.RHSMode==2)
     L=runs.transportMatrix;
-    LNTV=runs.NTVMatrix;
+    NTVisstored=0;
+    if isfield(runs,'NTVMatrix')
+      NTVisstored=1;
+      LNTV=runs.NTVMatrix;
+    else
+      LNTV=NaN*ones(size(L,1),3);
+    end
     Nrow=NParam;
     Ncol=6+1;
     stringForTop=sprintf(...
@@ -89,7 +99,7 @@ if makeplots
       runs.EStar(1));
   else
     Nrow=NParam;
-    Ncol=runs.Nspecies(1)*4;
+    Ncol=runs.Nspecies(1)*4+1;
     stringForTop=sprintf(...
       'r/a = %4.2f, dPhiHatdpsiN = %7.2e',...
       runs.rN(1),...
@@ -108,7 +118,7 @@ if makeplots
   
   if all(runs.RHSMode==3) %monoenergetic
     for pind=1:NParam
-      
+
       Nscanruns=length(scanRuns{pind});
       colors=[];
       for j=1:Nscanruns
@@ -124,7 +134,7 @@ if makeplots
         end
         for srind=1:Nscanruns
           plot(scanVals{pind}(srind),D(scanRuns{pind}(srind),1,1),...
-               [colors(srind),'+'])    
+               [colors(srind),'+']);hold on    
         end
       elseif makeplots==2
         if not(isempty(baseRun))
@@ -134,7 +144,7 @@ if makeplots
         end
         for srind=1:Nscanruns
           plot(scanVals{pind}(srind),D(scanRuns{pind}(srind),1,1)/D(baseRun,1,1),...
-               [colors(srind),'+'])    
+               [colors(srind),'+']);hold on    
         end        
       end
       hold off
@@ -151,7 +161,7 @@ if makeplots
         end
         for srind=1:Nscanruns
           plot(scanVals{pind}(srind),D(scanRuns{pind}(srind),1,2),...
-               [colors(srind),'+'])    
+               [colors(srind),'+']);hold on    
           plot(scanVals{pind}(srind),D(scanRuns{pind}(srind),2,1),...
                [colors(srind),'o'])    
         end
@@ -162,7 +172,7 @@ if makeplots
         end
         for srind=1:Nscanruns
           plot(scanVals{pind}(srind),D(scanRuns{pind}(srind),1,2)/D(baseRun,1,2),...
-               [colors(srind),'+'])    
+               [colors(srind),'+']);hold on    
           plot(scanVals{pind}(srind),D(scanRuns{pind}(srind),2,1)/D(baseRun,1,2),...
                [colors(srind),'o'])    
         end
@@ -180,7 +190,7 @@ if makeplots
         end
         for srind=1:Nscanruns
           plot(scanVals{pind}(srind),D(scanRuns{pind}(srind),2,2),...
-               [colors(srind),'+'])    
+               [colors(srind),'+']);hold on    
         end
       elseif makeplots==2
         if not(isempty(baseRun))
@@ -188,7 +198,7 @@ if makeplots
         end
         for srind=1:Nscanruns
           plot(scanVals{pind}(srind),D(scanRuns{pind}(srind),2,2)/D(baseRun,2,2),...
-               [colors(srind),'+'])    
+               [colors(srind),'+']);hold on    
         end
       end
       hold off
@@ -380,6 +390,7 @@ if makeplots
       %ylabel('LNTV_2')
       %title([param,' = ',num2str(P(vind).val)])
       
+
       Lind=Lind+1;
       subplot(Nrow,Ncol,(pind-1)*Ncol+Lind)
       if makeplots==1
@@ -404,7 +415,9 @@ if makeplots
       xlabel(convParams{pind})
       ylabel('LNTV_3')
     end
-  else
+    
+  else %%%%%%%% RHSMode=1
+    
     for pind=1:NParam
       
       Nscanruns=length(scanRuns{pind});
@@ -418,12 +431,24 @@ if makeplots
       for spec=1:runs.Nspecies(1)
         Lind=Lind+1; %particleFlux
         subplot(Nrow,Ncol,(pind-1)*Ncol+Lind)
+        
+        if 0
+          e=1.6022e-19;
+          mp=1.6726e-27;
+          vbar=sqrt(2*1e3*e/mp);
+          a=0.6258; %%%%%% NOTE MANUAL INPUT
+          showthis=runs.particleFlux_vm_psiN*a/2/runs.rN(1)*vbar*1e20; str='particleFlux /m^2/s';
+        end
+        
+        %showthis=runs.NTVfromFlux; str='NTVfromFlux';
+        showthis=runs.particleFlux_vm_psiN; str='particleFlux';
+        
         if makeplots==1
           if not(isempty(baseRun))
-            plot(baseVals(pind),runs.particleFlux_vm_psiN(baseRun,spec),[baseColor,'+']);hold on;
+            plot(baseVals(pind),showthis(baseRun,spec),[baseColor,'+']);hold on;
           end
           for srind=1:Nscanruns
-            plot(scanVals{pind}(srind),runs.particleFlux_vm_psiN(scanRuns{pind}(srind),spec),...
+            plot(scanVals{pind}(srind),showthis(scanRuns{pind}(srind),spec),...
                  [colors(srind),'+'])    
           end
         elseif makeplots==2
@@ -432,13 +457,13 @@ if makeplots
           end
           for srind=1:Nscanruns
             plot(scanVals{pind}(srind),...
-            runs.particleFlux_vm_psiN(scanRuns{pind}(srind),spec)/...
-            runs.particleFlux_vm_psiN(baseRun,spec) ,...
+            showthis(scanRuns{pind}(srind),spec)/...
+            showthis(baseRun,spec) ,...
                  [colors(srind),'+'])    
           end
         end
         xlabel(convParams{pind})
-        ylabel(['particleFlux spec. ',num2str(spec)])
+        ylabel([str,' spec. ',num2str(spec)])
 
         Lind=Lind+1;
         subplot(Nrow,Ncol,(pind-1)*Ncol+Lind)
@@ -513,6 +538,34 @@ if makeplots
         ylabel(['NTV spec. ',num2str(spec)])
 
       end
+      
+      %factor=1.6022e-19*1e3*1e20; %conversion to SI
+      factor=1;
+      
+      Lind=Lind+1;
+      subplot(Nrow,Ncol,(pind-1)*Ncol+Lind)
+      if makeplots==1
+        for srind=1:Nscanruns
+          plot(scanVals{pind}(srind),...
+               factor*sum(runs.NTV(scanRuns{pind}(srind),:)),[colors(srind),'+'])    
+          plot(scanVals{pind}(srind),...
+               factor*sum(runs.NTVfromFlux(scanRuns{pind}(srind),:)),[colors(srind),'o'])    
+          %sr=sum(runs.NTVfromFlux(scanRuns{pind}(srind),:))./sum(runs.NTV(scanRuns{pind}(srind),:))
+        end
+      elseif makeplots==2
+        if not(isempty(baseRun))
+          plot(baseVals(pind),1,[baseColor,'+']);hold on;
+        end
+        for srind=1:Nscanruns
+          plot(scanVals{pind}(srind),...
+               sum(runs.NTV(scanRuns{pind}(srind),:))/...
+               sum(runs.NTV(baseRun,:)),...
+               [colors(srind),'+'])    
+        end
+      end
+      xlabel(convParams{pind})
+      ylabel('NTV tot')
+
     end
   end
   annotation('textbox',[0 0.96 1 .07],...
