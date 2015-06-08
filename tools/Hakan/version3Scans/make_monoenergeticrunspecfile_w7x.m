@@ -89,6 +89,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Sfincs experience with the configuration
 % w7x-sc1-ecb2.bc
+% using superlu_dist
 % note that transportCoeffs(2,1) has converged but not 
 % transportCoeffs(1,2) at high collisionality (nuPrime ~ 100)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
