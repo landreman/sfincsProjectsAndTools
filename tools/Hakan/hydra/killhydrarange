@@ -1,0 +1,27 @@
+#!/usr/bin/env ruby
+
+unless ARGV.length == 2
+  puts "Dude, not the right number of arguments."
+  puts "Usage: ruby killhydrarange.rb beginStepIdNumber endStepIdNumber\n"
+  exit
+end
+
+beginStepIdNumber= ARGV[0].to_i
+endStepIdNumber  = ARGV[1].to_i
+
+
+s = `llq -u smithh`
+
+s.each_line do |line|
+    # If not a comment:
+    if (line[0..1] == "ll")
+      if line[2].chr != "q" 
+        jobid=line[0..17]
+	jobno=line[8..13].to_i
+	if (jobno <= endStepIdNumber) and (jobno >= beginStepIdNumber)
+            puts jobid
+            puts `llcancel #{jobid}`
+        end
+      end    
+    end
+end	    

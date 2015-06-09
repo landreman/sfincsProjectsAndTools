@@ -61,20 +61,21 @@ for rind=1:length(dkdata.Nruns)
   iota=Geom.iota(Grind(rind));
   B00=Geom.B00(Grind(rind));
   dPsidr_GIDKES=rN*Geom.minorradius*B00;
-  
+
+  g11overL11s=sqrt(pi)/8*G/(G+iota*I)*G/B00/dPsidr_GIDKES^2;
+  g31overL31s=sqrt(pi)/4*G/dPsidr_GIDKES;
+  g33overL33s=-sqrt(pi)/2*(G+iota*I)*B00;
+
   nuPrimes=nuPrime1(rindstarts(rind):rindstarts(rind)+dkdata.Nruns(rind)-1);
   EStars=EStar1(rindstarts(rind):rindstarts(rind)+dkdata.Nruns(rind)-1);
   transportCoeffss=transportCoeffs1(rindstarts(rind):rindstarts(rind)+dkdata.Nruns(rind)-1,:,:);
   
   dkdata.cmul{rind}=nuPrimes*3*sqrt(pi)/4*(erf(1)-Chandra1)*B00/(G+iota*I);
   dkdata.efld{rind}=-EStars*iota/G*dPsidr_GIDKES;
-  dkdata.d11{rind}=squeeze(transportCoeffss(:,1,1))' ...
-        /dPsidr_GIDKES^2*sqrt(pi)/8*G^2/(G+iota*I)/B00;
+  dkdata.d11{rind}=squeeze(transportCoeffss(:,1,1))'*g11overL11s*B00^2;
   %Note that transportCoeffss(:,2,1) converges before the 1,2 component
-  dkdata.d31{rind}=squeeze(transportCoeffss(:,2,1))'/2 ...
-        /dPsidr_GIDKES*sqrt(pi)/4*G;
-  dkdata.d33{rind}=squeeze(transportCoeffss(:,2,2))' ...
-      *(-sqrt(pi)/2)*(G+iota*I)*B00;
+  dkdata.d31{rind}=squeeze(transportCoeffss(:,2,1))'*g31overL31s;
+  dkdata.d33{rind}=squeeze(transportCoeffss(:,2,2))'*g33overL33s/B00^2;
   dkdata.d11e{rind}=zeros(size(dkdata.d11{rind}));
   dkdata.d31e{rind}=zeros(size(dkdata.d31{rind}));
   dkdata.d33e{rind}=zeros(size(dkdata.d33{rind}));
