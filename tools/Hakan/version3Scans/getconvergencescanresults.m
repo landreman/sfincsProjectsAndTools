@@ -30,7 +30,7 @@ end
 isScanned=[];
 vals=NaN*zeros(length(convParams),runs.NumElements);
 for pind=1:length(convParams)
-  vals(pind,:)=getfield(runs,convParams{pind});
+  vals(pind,:)=getfield(runs,convParams{pind});  
   if all(vals(pind,:)==vals(pind,1))
     baseVals(pind)=vals(pind,1);
     scanVals{pind}=[];
