@@ -177,14 +177,27 @@ fclose(fid);
 
 totlen=0;
 for rind=1:dk.nr
+  
   totlen=totlen+dk.data{rind}.nrec;
   tmp=find(diff(dk.data{rind}.cmul));
   NEH(rind)=tmp(1);                      %number of E values for the runs with the highest cmul
-  NEL(rind)=dk.data{rind}.nrec-tmp(end); %number of E values for the runs with the lowest cmul
-  totlen=totlen+NEH(rind)+NEL(rind);
+  NEL(rind)=dk.data{rind}.nrec-tmp(end); %number of E values for the runs with the
+                                         %lowest cmul
+  
+  strangecorrfactor=0.1;
+  
+  g11factor(rind)=-4/3/dk.iota(rind)^2*dk.NormTorCurv(rind)^2;
+  invcmultilde=3*dk.data{rind}.EovervB(1:NEH(rind))/dk.iota(rind)^2/dk.r(rind)*dk.R(rind)^2;
+  invcmultilde=invcmultilde*strangecorrfactor;
+  approxinds= find(dk.data{rind}.cmul(1:NEH(rind)).*invcmultilde <1 & invcmultilde~=0);
+  xcmul{rind}=sort(1./invcmultilde(approxinds));
+  Nxcmul(rind)=length(xcmul{rind});
+
+  totlen=totlen+(Nxcmul(rind)+1)*NEH(rind)+NEL(rind);
 end
 
 extrapolpow1=100; %towards higher collisionalities
+extrapolpow1h=50;
 extrapolpow2=100; %towards lower collisionalities
 
 r=zeros(totlen,1);
@@ -203,69 +216,103 @@ for rind=1:dk.nr
   nE2=NEL(rind);
   nrec=dk.data{rind}.nrec;
   
-  entry_len=nrec+nE1+nE2;
+  entry_len=nrec+(Nxcmul(rind)+1)*nE1+nE2;
   r(thisind+(1:entry_len)) = dk.r(rind);
   
   logcmul(thisind+(1:nE1))=...
       log(dk.data{rind}.cmul(1:nE1))'+extrapolpow1;
-  logcmul(thisind+nE1+(1:nrec))=log(dk.data{rind}.cmul)';
-  logcmul(thisind+nE1+nrec+(1:nE2))=...
+  EovervB(thisind+(1:nE1))=dk.data{rind}.EovervB(1:nE1)';
+  for xind=1:Nxcmul(rind)
+    logcmul(thisind+xind*nE1+(1:nE1))=log(xcmul{rind}(xind));
+  end
+  logcmul(thisind+(Nxcmul(rind)+1)*nE1+(1:nrec))=log(dk.data{rind}.cmul)';
+  logcmul(thisind+(Nxcmul(rind)+1)*nE1+nrec+(1:nE2))=...
       log(dk.data{rind}.cmul(nrec-nE2+1:nrec))'-extrapolpow2;
   
   EovervB(thisind+(1:nE1))=dk.data{rind}.EovervB(1:nE1)';
-  EovervB(thisind+nE1+(1:nrec))=dk.data{rind}.EovervB';
-  EovervB(thisind+nE1+nrec+(1:nE2))=dk.data{rind}.EovervB(nrec-nE2+1:nrec)';
+  for xind=1:Nxcmul(rind)
+    EovervB(thisind+xind*nE1+(1:nE1))=dk.data{rind}.EovervB(1:nE1)';
+  end
+  EovervB(thisind+(Nxcmul(rind)+1)*nE1+(1:nrec))=dk.data{rind}.EovervB';
+  EovervB(thisind+(Nxcmul(rind)+1)*nE1+nrec+(1:nE2))=dk.data{rind}.EovervB(nrec-nE2+1:nrec)';
   
-  %Extrapolation to low collisionalities
-  %assume sqrt(nu) scaling:
-  g11u(thisind+nE1+nrec+(2:nE2))   = -ramp( -exp(-extrapolpow2/2)*...
-       (dk.data{rind}.g11_i(nrec-nE2+2:nrec)'+dk.data{rind}.g11_e(nrec-nE2+2:nrec)'));
-  g11l(thisind+nE1+nrec+(2:nE2))   = -ramp( -exp(-extrapolpow2/2)*...
-       (dk.data{rind}.g11_i(nrec-nE2+2:nrec)'-dk.data{rind}.g11_e(nrec-nE2+2:nrec)'));
-  %except for the E=0 case, where g11 propto 1/nu
-  g11u(thisind+nE1+nrec+1)   =exp(extrapolpow2)*...
-       (dk.data{rind}.g11_i(nrec-nE2+1)'+dk.data{rind}.g11_e(nrec-nE2+1)');
-  g11l(thisind+nE1+nrec+1)   =exp(extrapolpow2)*...
-       (dk.data{rind}.g11_i(nrec-nE2+1)'-dk.data{rind}.g11_e(nrec-nE2+1)');
+  %To know how to extrapolate g11 to high collisionalities, we check whether
+  % check = 3 vE^* nu^* /(iota eps_t) is < or > 1 for the highest given data.
+  invcmultilde=3*dk.data{rind}.EovervB(1:nE1)/dk.iota(rind)^2/dk.r(rind)*dk.R(rind)^2;
+  invcmultilde=invcmultilde*strangecorrfactor;
+  %cmultilde=dk.iota(rind)^2*dk.r(rind)/dk.R(rind)^2./dk.data{rind}.EovervB(1:nE1)/3;
+  %extrapinds= find(dk.data{rind}.cmul(1:nE1)./cmultilde > 1);
+
+  %approxinds= find(dk.data{rind}.cmul(1:nE1).*invcmultilde <1 & invcmultilde~=0);
+  %logcmul(thisind+nE1+(approxinds))=-log(invcmultilde(approxinds));
+
+  %g11factor=-4/3/dk.iota(rind)^2*dk.NormTorCurv(rind)^2;
   
-  g13u(thisind+nE1+nrec+(1:nE2))   =...
-       (dk.data{rind}.g13_i(nrec-nE2+1:nrec)'+dk.data{rind}.g13_e(nrec-nE2+1:nrec)');
-  g13l(thisind+nE1+nrec+(1:nE2))   =...
-       (dk.data{rind}.g13_i(nrec-nE2+1:nrec)'-dk.data{rind}.g13_e(nrec-nE2+1:nrec)');
-
-  g33u(thisind+nE1+nrec+(1:nE2))   =exp(extrapolpow2)*...
-       (dk.data{rind}.g33_i(nrec-nE2+1:nrec)'+dk.data{rind}.g33_e(nrec-nE2+1:nrec)');
-  g33l(thisind+nE1+nrec+(1:nE2))   =exp(extrapolpow2)*...
-       (dk.data{rind}.g33_i(nrec-nE2+1:nrec)'-dk.data{rind}.g33_e(nrec-nE2+1:nrec)');
-
   %Extrapolation to high collisionalities
-  g11u(thisind+(1:nE1))   =-ramp( -exp(extrapolpow1)*...
-       (dk.data{rind}.g11_i(1:nE1)'+dk.data{rind}.g11_e(1:nE1)'));
-  g11l(thisind+(1:nE1))   =-ramp( -exp(extrapolpow1)*...
-       (dk.data{rind}.g11_i(1:nE1)'-dk.data{rind}.g11_e(1:nE1)'));
-
-  g13u(thisind+(1:nE1))   =0*...
-       (dk.data{rind}.g13_i(1:nE1)'+dk.data{rind}.g13_e(1:nE1)');
-  g13l(thisind+(1:nE1))   =0*...
-       (dk.data{rind}.g13_i(1:nE1)'-dk.data{rind}.g13_e(1:nE1)');
+  g11u(thisind+(1:nE1))   =g11factor(rind)*exp(logcmul(thisind+(1:nE1)))...
+      ./(1+(exp(logcmul(thisind+(1:nE1))).*invcmultilde').^2);
+  g11l(thisind+(1:nE1)) = g11u(thisind+(1:nE1));
+  for xind=1:Nxcmul(rind)
+    g11u(thisind+xind*nE1+(1:nE1))   =...
+        g11factor(rind)*exp(logcmul(thisind+xind*nE1+(1:nE1)))...
+        ./(1+(exp(logcmul(thisind+xind*nE1+(1:nE1))).*invcmultilde').^2);
+    g11l(thisind+xind*nE1+(1:nE1)) = g11u(thisind+xind*nE1+(1:nE1));
+  end
+  
+  g13u(thisind+(1:(Nxcmul(rind)+1)*nE1))   =zeros((Nxcmul(rind)+1)*nE1,1);
+     %0*...
+     %  (dk.data{rind}.g13_i(1:nE1)'+dk.data{rind}.g13_e(1:nE1)');
+  g13l(thisind+(1:(Nxcmul(rind)+1)*nE1))   =zeros((Nxcmul(rind)+1)*nE1,1);
+     %0*...
+     %  (dk.data{rind}.g13_i(1:nE1)'-dk.data{rind}.g13_e(1:nE1)');
   
   g33u(thisind+(1:nE1))   =exp(-extrapolpow1)*...
        (dk.data{rind}.g33_i(1:nE1)'+dk.data{rind}.g33_e(1:nE1)');
   g33l(thisind+(1:nE1))   =exp(-extrapolpow1)*...
        (dk.data{rind}.g33_i(1:nE1)'-dk.data{rind}.g33_e(1:nE1)');
+  for xind=1:Nxcmul(rind)
+    extrapolpow1hX=logcmul(thisind+xind*nE1+(1:nE1))-log(dk.data{rind}.cmul(1:nE1))';
+    g33u(thisind+xind*nE1+(1:nE1))   =exp(-extrapolpow1hX).*...
+        (dk.data{rind}.g33_i(1:nE1)'+dk.data{rind}.g33_e(1:nE1)');
+    g33l(thisind+xind*nE1+(1:nE1))   =exp(-extrapolpow1hX).*...
+        (dk.data{rind}.g33_i(1:nE1)'-dk.data{rind}.g33_e(1:nE1)');
+  end
+
+  %Extrapolation to low collisionalities
+  %assume sqrt(nu) scaling:
+  g11u(thisind+(Nxcmul(rind)+1)*nE1+nrec+(2:nE2))   = -ramp( -exp(-extrapolpow2/2)*...
+       (dk.data{rind}.g11_i(nrec-nE2+2:nrec)'+dk.data{rind}.g11_e(nrec-nE2+2:nrec)'));
+  g11l(thisind+(Nxcmul(rind)+1)*nE1+nrec+(2:nE2))   = -ramp( -exp(-extrapolpow2/2)*...
+       (dk.data{rind}.g11_i(nrec-nE2+2:nrec)'-dk.data{rind}.g11_e(nrec-nE2+2:nrec)'));
+  %except for the E=0 case, where g11 propto 1/nu
+  g11u(thisind+(Nxcmul(rind)+1)*nE1+nrec+1)   =exp(extrapolpow2)*...
+       (dk.data{rind}.g11_i(nrec-nE2+1)'+dk.data{rind}.g11_e(nrec-nE2+1)');
+  g11l(thisind+(Nxcmul(rind)+1)*nE1+nrec+1)   =exp(extrapolpow2)*...
+       (dk.data{rind}.g11_i(nrec-nE2+1)'-dk.data{rind}.g11_e(nrec-nE2+1)');
+  
+  g13u(thisind+(Nxcmul(rind)+1)*nE1+nrec+(1:nE2))   =...
+       (dk.data{rind}.g13_i(nrec-nE2+1:nrec)'+dk.data{rind}.g13_e(nrec-nE2+1:nrec)');
+  g13l(thisind+(Nxcmul(rind)+1)*nE1+nrec+(1:nE2))   =...
+       (dk.data{rind}.g13_i(nrec-nE2+1:nrec)'-dk.data{rind}.g13_e(nrec-nE2+1:nrec)');
+
+  g33u(thisind+(Nxcmul(rind)+1)*nE1+nrec+(1:nE2))   =exp(extrapolpow2)*...
+       (dk.data{rind}.g33_i(nrec-nE2+1:nrec)'+dk.data{rind}.g33_e(nrec-nE2+1:nrec)');
+  g33l(thisind+(Nxcmul(rind)+1)*nE1+nrec+(1:nE2))   =exp(extrapolpow2)*...
+       (dk.data{rind}.g33_i(nrec-nE2+1:nrec)'-dk.data{rind}.g33_e(nrec-nE2+1:nrec)');
 
   %rind
   %max(dk.data{rind}.g13_i)
   %max(dk.data{rind}.g13_i'+dk.data{rind}.g13_e')
   %max(dk.data{rind}.g13_i'-dk.data{rind}.g13_e')
   
-  g11u(thisind+nE1+(1:nrec))   =-ramp(-dk.data{rind}.g11_i'+dk.data{rind}.g11_e');
-  g11l(thisind+nE1+(1:nrec))   =-ramp(-dk.data{rind}.g11_i'-dk.data{rind}.g11_e');
-  g13u(thisind+nE1+(1:nrec))   =(dk.data{rind}.g13_i'+dk.data{rind}.g13_e');
-  g13l(thisind+nE1+(1:nrec))   =(dk.data{rind}.g13_i'-dk.data{rind}.g13_e');
-  g33u(thisind+nE1+(1:nrec))   =dk.data{rind}.g33_i'+dk.data{rind}.g33_e';
-  g33l(thisind+nE1+(1:nrec))   =dk.data{rind}.g33_i'-dk.data{rind}.g33_e';
-  thisind=thisind+entry_len;
+  g11u(thisind+(Nxcmul(rind)+1)*nE1+(1:nrec))   =-ramp(-dk.data{rind}.g11_i'+dk.data{rind}.g11_e');
+  g11l(thisind+(Nxcmul(rind)+1)*nE1+(1:nrec))   =-ramp(-dk.data{rind}.g11_i'-dk.data{rind}.g11_e');
+  g13u(thisind+(Nxcmul(rind)+1)*nE1+(1:nrec))   =(dk.data{rind}.g13_i'+dk.data{rind}.g13_e');
+  g13l(thisind+(Nxcmul(rind)+1)*nE1+(1:nrec))   =(dk.data{rind}.g13_i'-dk.data{rind}.g13_e');
+  g33u(thisind+(Nxcmul(rind)+1)*nE1+(1:nrec))   =dk.data{rind}.g33_i'+dk.data{rind}.g33_e';
+  g33l(thisind+(Nxcmul(rind)+1)*nE1+(1:nrec))   =dk.data{rind}.g33_i'-dk.data{rind}.g33_e';
+  
+  thisind=thisind+entry_len;  %go to the next entry
 end
 
 dk.interp.r_factor=dk.r(end)/5;

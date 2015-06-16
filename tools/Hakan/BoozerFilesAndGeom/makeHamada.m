@@ -1,7 +1,13 @@
-function [Ham,Booz,Cyl]=makeHamada(Geom,rind,Ntheta,Nzeta)
+function [Ham,Booz,Cyl]=makeHamada(Geom,rind,Ntheta,Nzeta,varargin)
 
 if isempty(rind)
   error('rind is empty!')
+end
+
+if nargin==4
+  calcHamBmn=1;
+else
+  calcHamBmn=not(strcmp(varargin{1},'skipHamBmn'));
 end
 
 NPeriods=Geom.Nperiods;
@@ -543,107 +549,110 @@ end
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Ham.B00=sum(sum(Ham.B))/(Nvthet*Nphi);
-believedAccuracyLoss=1;
-min_Bmn=Geom.Bfilter.min_Bmn*Booz.B00/Ham.B00*believedAccuracyLoss;
 
-maxvthet=floor(Nvthet/2)-1; %Nyquist max freq.
-maxphi=floor(Nphi/2)-1;
-Ham.m=0;
-Ham.n=0;
-Ham.Bmn=Ham.B00;
-ind=1;
-%tic
-if not(Geom.StelSym) %sine components exist
-  Ham.parity=1; %this is for the 00 component
-  for m=0:floor(Nvthet/2)-1 %Nyquist max freq.
-    if m==0
-      nrange=nvecL0;%=1:floor(Nphi/2)-1;
-      c3D=cos(-n3D0 * NPeriods .* phi3D0);
-      s3D=sin(-n3D0 * NPeriods .* phi3D0);
-    else
-      nrange=nvecL;% =-floor(Nphi/2):(floor(Nphi/2)-1);
-      c3D=cos(m * vthet3D - n3D * NPeriods .* phi3D);
-      s3D=sin(m * vthet3D - n3D * NPeriods .* phi3D);
+if calcHamBmn
+  believedAccuracyLoss=1;
+  min_Bmn=Geom.Bfilter.min_Bmn*Booz.B00/Ham.B00*believedAccuracyLoss;
+
+  maxvthet=floor(Nvthet/2)-1; %Nyquist max freq.
+  maxphi=floor(Nphi/2)-1;
+  Ham.m=0;
+  Ham.n=0;
+  Ham.Bmn=Ham.B00;
+  ind=1;
+  %tic
+  if not(Geom.StelSym) %sine components exist
+    Ham.parity=1; %this is for the 00 component
+    for m=0:floor(Nvthet/2)-1 %Nyquist max freq.
+      if m==0
+        nrange=nvecL0;%=1:floor(Nphi/2)-1;
+        c3D=cos(-n3D0 * NPeriods .* phi3D0);
+        s3D=sin(-n3D0 * NPeriods .* phi3D0);
+      else
+        nrange=nvecL;% =-floor(Nphi/2):(floor(Nphi/2)-1);
+        c3D=cos(m * vthet3D - n3D * NPeriods .* phi3D);
+        s3D=sin(m * vthet3D - n3D * NPeriods .* phi3D);
+      end
+      for n=nrange
+        nind=find(nrange==n);  
+        c=squeeze(c3D(:,:,nind));
+        s=squeeze(s3D(:,:,nind));
+        %cos
+        Bmnc = 2/(Ntheta*Nzeta) *...
+               sum(sum(c.*Ham.B)); %FAST
+                                   %Bmnc = 2/(Ntheta*Nzeta) *...
+                                   %       sum(sum(cos(m * Ham.vthet - n * NPeriods * Ham.phi).*Ham.B)); %SLOW
+        if abs(Bmnc)>min_Bmn
+          ind=ind+1;
+          Ham.m(ind)=m;
+          Ham.n(ind)=n;
+          Ham.Bmn(ind)=Bmnc;
+          Ham.parity(ind)=1;
+        end
+        %sin
+        Bmns = 2/(Ntheta*Nzeta) *...
+               sum(sum(s.*Ham.B)); %FAST
+                                   %Bmns = 2/(Ntheta*Nzeta) *...
+                                   %       sum(sum(sin(m * Ham.vthet - n * NPeriods * Ham.phi).*Ham.B)); %SLOW
+        if abs(Bmns)>min_Bmn
+          ind=ind+1;
+          Ham.m(ind)=m;
+          Ham.n(ind)=n;
+          Ham.Bmn(ind)=Bmns;
+          Ham.parity(ind)=0;
+        end
+      end
     end
-    for n=nrange
-      nind=find(nrange==n);  
-      c=squeeze(c3D(:,:,nind));
-      s=squeeze(s3D(:,:,nind));
-      %cos
-      Bmnc = 2/(Ntheta*Nzeta) *...
-             sum(sum(c.*Ham.B)); %FAST
-      %Bmnc = 2/(Ntheta*Nzeta) *...
-      %       sum(sum(cos(m * Ham.vthet - n * NPeriods * Ham.phi).*Ham.B)); %SLOW
-      if abs(Bmnc)>min_Bmn
-        ind=ind+1;
-        Ham.m(ind)=m;
-        Ham.n(ind)=n;
-        Ham.Bmn(ind)=Bmnc;
-        Ham.parity(ind)=1;
+  else %only cosinus components
+    for m=0:floor(Ntheta/2)-1 %Nyquist max freq.
+      if m==0
+        nrange=nvecL0;%=1:floor(Nphi/2)-1;
+        c3D=cos(-n3D0 * NPeriods .* phi3D0);
+      else
+        nrange=nvecL;% =-floor(Nphi/2):(floor(Nphi/2)-1);
+        c3D=cos(m * vthet3D - n3D * NPeriods .* phi3D);
       end
-      %sin
-      Bmns = 2/(Ntheta*Nzeta) *...
-             sum(sum(s.*Ham.B)); %FAST
-      %Bmns = 2/(Ntheta*Nzeta) *...
-      %       sum(sum(sin(m * Ham.vthet - n * NPeriods * Ham.phi).*Ham.B)); %SLOW
-      if abs(Bmns)>min_Bmn
-        ind=ind+1;
-        Ham.m(ind)=m;
-        Ham.n(ind)=n;
-        Ham.Bmn(ind)=Bmns;
-        Ham.parity(ind)=0;
-      end
+      for n=nrange
+        nind=find(nrange==n);
+        c=squeeze(c3D(:,:,nind));
+        Bmnc = 2/(Ntheta*Nzeta) *...
+               sum(sum(c.*Ham.B)); %FAST
+                                   %Bmnc = 2/(Ntheta*Nzeta) *...
+                                   %       sum(sum(cos(m * Ham.vthet - n * NPeriods * Ham.phi).*Ham.B)); %SLOW
+        if (Bmnc>min_Bmn)
+          ind=ind+1;
+          Ham.m(ind)=m;
+          Ham.n(ind)=n;
+          Ham.Bmn(ind)=Bmnc;
+        end
+      end              
     end
   end
-else %only cosinus components
-  for m=0:floor(Ntheta/2)-1 %Nyquist max freq.
-    if m==0
-      nrange=nvecL0;%=1:floor(Nphi/2)-1;
-      c3D=cos(-n3D0 * NPeriods .* phi3D0);
-    else
-      nrange=nvecL;% =-floor(Nphi/2):(floor(Nphi/2)-1);
-      c3D=cos(m * vthet3D - n3D * NPeriods .* phi3D);
-    end
-    for n=nrange
-      nind=find(nrange==n);
-      c=squeeze(c3D(:,:,nind));
-      Bmnc = 2/(Ntheta*Nzeta) *...
-             sum(sum(c.*Ham.B)); %FAST
-      %Bmnc = 2/(Ntheta*Nzeta) *...
-      %       sum(sum(cos(m * Ham.vthet - n * NPeriods * Ham.phi).*Ham.B)); %SLOW
-      if (Bmnc>min_Bmn)
-        ind=ind+1;
-        Ham.m(ind)=m;
-        Ham.n(ind)=n;
-        Ham.Bmn(ind)=Bmnc;
+  %toc
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+  % Test if the Fourier decomposition was done correctly
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  if 0 %Not necessary. I already tested it.
+    HamB = zeros(Ntheta,Nzeta);
+    for i=1:length(Ham.Bmn)
+      if Ham.parity(i) %The cosine components of B
+        HamB = HamB + Ham.Bmn(i) *...
+               cos(Ham.m(i) * Ham.vthet - Ham.n(i) * NPeriods * Ham.phi);
+      else  %The sine components of B
+        HamB = HamB + Ham.Bmn(i) *...
+               sin(Ham.m(i) * Ham.vthet - Ham.n(i) * NPeriods * Ham.phi);
       end
-    end              
-  end
-end
-%toc
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-% Test if the Fourier decomposition was done correctly
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if 0 %Not necessary. I already tested it.
-  HamB = zeros(Ntheta,Nzeta);
-  for i=1:length(Ham.Bmn)
-    if Ham.parity(i) %The cosine components of B
-      HamB = HamB + Ham.Bmn(i) *...
-             cos(Ham.m(i) * Ham.vthet - Ham.n(i) * NPeriods * Ham.phi);
-    else  %The sine components of B
-      HamB = HamB + Ham.Bmn(i) *...
-             sin(Ham.m(i) * Ham.vthet - Ham.n(i) * NPeriods * Ham.phi);
     end
+    fig(1);surf(Ham.vthet,Ham.phi,HamB);view(0,90);shading flat
+    xlabel('\vartheta');ylabel('\phi')
+    fig(2);surf(Ham.vthet,Ham.phi,Ham.B);view(0,90);shading flat
+    xlabel('\vartheta');ylabel('\phi')
   end
-  fig(1);surf(Ham.vthet,Ham.phi,HamB);view(0,90);shading flat
-  xlabel('\vartheta');ylabel('\phi')
-  fig(2);surf(Ham.vthet,Ham.phi,Ham.B);view(0,90);shading flat
-  xlabel('\vartheta');ylabel('\phi')
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Some test plots
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if 1  
+if 0  
   
   if 0
     fig(3);surf(Booz.theta,Booz.zeta,Booz.B);view(0,90);shading flat
