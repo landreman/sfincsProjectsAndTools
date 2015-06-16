@@ -1,5 +1,5 @@
 %%%%%%%%%% Equilibrium data %%%%%%%%%%%%%%%%%%%%%
-equilibriumfile='~/sfincs/sfincs/equilibria/w7x-sc1.bc';
+equilibriumfile=[getenv('SFINCS_HOME'),'/equilibria/w7x-sc1.bc'];
 addpath ~/sfincs/sfincsProjectsAndTools/tools/Hakan/BoozerFilesAndGeom
 Geom=readBoozerfile(equilibriumfile);
 rind=24;
@@ -22,13 +22,18 @@ g33overL33s=-sqrt(pi)/2*(G+iota*I)*B00;
 
 
 %%%%%%%%%%%%%%%%%% DKES data %%%%%%%%%%%%%%%%%%%%%%%5
-dk=read_dkes_dkfile('~/sfincs/sfincsProjectsAndTools/tools/Hakan/dkes/w7x-sc1-ecb2.dk');
-data=dk.data{4};
+dk=read_dkes_dkfile([getenv('SFINCS_PROJECTSANDTOOLS_HOME'),'/tools/Hakan/dkes/w7x-sc1-ecb2.dk']);
+data=dk.data{4}; %radius 4 : r/a=0.5
+
+%%%%%%%%%%%%%%%%%% SFINCS .dk data %%%%%%%%%%%%%%%%%%%%%%%5
+S.dk=read_dkes_dkfile([getenv('SFINCS_PROJECTSANDTOOLS_HOME'),'/tools/Hakan/dkes/w7x-sc1-ecb2.sfincs.dk']);
+S.data=S.dk.data{1}; %only one radius so far: r/a=0.5
 
 
 %Look at Er=0 values
 
 Er0ind=find(data.EovervB==0);
+S.Er0ind=find(S.data.EovervB==0);
 
 
 cmul=data.cmul(Er0ind);
@@ -39,10 +44,17 @@ g11_e=data.g11_e(Er0ind)/B00^2;
 g13_e=data.g13_e(Er0ind);
 g33_e=data.g33_e(Er0ind)*B00^2;
 
+S.cmul=S.data.cmul(S.Er0ind);
+S.g11_i=S.data.g11_i(S.Er0ind)/B00^2;
+S.g13_i=S.data.g13_i(S.Er0ind);
+S.g33_i=S.data.g33_i(S.Er0ind)*B00^2;
+
+
+%Plot DKES data first
 fig(1)
 loglog(cmul,-g11_i,'k',cmul,-(g11_i+g11_e),'g',cmul,-(g11_i-g11_e),'g')
 xlabel('cmul')
-ylabel('g_{11}')
+ylabel('-g_{11}')
 
 fig(2)
 semilogx(cmul,g13_i,'k',cmul,g13_i+g13_e,'g',cmul,g13_i-g13_e,'g')
@@ -52,7 +64,7 @@ ylabel('g_{13}')
 fig(3)
 loglog(cmul,-g33_i,'k',cmul,-(g33_i+g33_e),'g',cmul,-(g33_i-g33_e),'g')
 xlabel('cmul')
-ylabel('g_{33}')
+ylabel('-g_{33}')
 
 
 %%%%%%%%%%%%%%% Monoenergetic sfincs data
@@ -76,11 +88,13 @@ nuPrime(2)=runs.nuPrime(runind);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 figure(1)
 hold on
+loglog(S.cmul,-S.g11_i,'r--')
 loglog(cmulovernuPrime*nuPrime,-g11overL11s*transportCoeffs(:,1,1),'r+')
 hold off
 
 figure(2)
 hold on
+semilogx(S.cmul,S.g13_i,'r--')
 semilogx(cmulovernuPrime*nuPrime,...
          g31overL31s*transportCoeffs(:,1,2),'r+',...
          cmulovernuPrime*nuPrime,...
@@ -89,6 +103,10 @@ hold off
 
 figure(3)
 hold on
+loglog(S.cmul,-S.g33_i,'r--')
 loglog(cmulovernuPrime*nuPrime,-g33overL33s*transportCoeffs(:,2,2),'r+')
 hold off
 
+%figure(1);print -depsc g11.eps
+%figure(2);print -depsc g31.eps
+%figure(3);print -depsc g33.eps

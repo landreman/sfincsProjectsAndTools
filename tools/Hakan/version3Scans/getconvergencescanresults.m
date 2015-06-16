@@ -545,9 +545,13 @@ if makeplots
       Lind=Lind+1;
       subplot(Nrow,Ncol,(pind-1)*Ncol+Lind)
       if makeplots==1
+        if not(isempty(baseRun))
+          plot(baseVals(pind),sum(runs.NTV(baseRun,:)),[baseColor,'+']);hold on;
+          plot(baseVals(pind),sum(runs.NTVfromFlux(baseRun,:)),[baseColor,'o']);
+        end        
         for srind=1:Nscanruns
           plot(scanVals{pind}(srind),...
-               factor*sum(runs.NTV(scanRuns{pind}(srind),:)),[colors(srind),'+'])    
+               factor*sum(runs.NTV(scanRuns{pind}(srind),:)),[colors(srind),'+'])
           plot(scanVals{pind}(srind),...
                factor*sum(runs.NTVfromFlux(scanRuns{pind}(srind),:)),[colors(srind),'o'])    
           %sr=sum(runs.NTVfromFlux(scanRuns{pind}(srind),:))./sum(runs.NTV(scanRuns{pind}(srind),:))
