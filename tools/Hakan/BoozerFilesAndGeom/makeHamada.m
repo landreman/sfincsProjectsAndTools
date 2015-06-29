@@ -1,13 +1,9 @@
-function [Ham,Booz,Cyl]=makeHamada(Geom,rind,Ntheta,Nzeta,varargin)
+function [Ham,Booz,Cyl]=makeHamada(Geom,rind,Ntheta,Nzeta)
+
+useFFT=1;
 
 if isempty(rind)
   error('rind is empty!')
-end
-
-if nargin==4
-  calcHamBmn=1;
-else
-  calcHamBmn=not(strcmp(varargin{1},'skipHamBmn'));
 end
 
 NPeriods=Geom.Nperiods;
@@ -53,70 +49,108 @@ else
   parity=Geom.parity{rind};
 end
 
-B           = zeros(Ntheta,Nzeta);
-dBdtheta    = zeros(Ntheta,Nzeta);
-dBdzeta     = zeros(Ntheta,Nzeta);
-R           = zeros(Ntheta,Nzeta);
-dRdtheta    = zeros(Ntheta,Nzeta);
-dRdzeta     = zeros(Ntheta,Nzeta);
-Z           = zeros(Ntheta,Nzeta);
-dZdtheta    = zeros(Ntheta,Nzeta);
-dZdzeta     = zeros(Ntheta,Nzeta);
-Dzetacylphi = zeros(Ntheta,Nzeta);
-dDzetacylphi_dtheta = zeros(Ntheta,Nzeta);
-dDzetacylphi_dzeta  = zeros(Ntheta,Nzeta);
+if useFFT 
+  %tic
+  Blist.cosparity=parity;
+  Blist.m=Geom.m{rind};
+  Blist.n=Geom.n{rind};
+  Blist.data=Bmn;
+  Rlist.cosparity=parity;
+  Rlist.m=Geom.m{rind};
+  Rlist.n=Geom.n{rind};
+  Rlist.data=Geom.R{rind};
+  Zlist.cosparity=not(parity);
+  Zlist.m=Geom.m{rind};
+  Zlist.n=Geom.n{rind};
+  Zlist.data=Geom.Z{rind};
+  Dzetacylphilist.cosparity=not(parity);
+  Dzetacylphilist.m=Geom.m{rind};
+  Dzetacylphilist.n=Geom.n{rind};
+  Dzetacylphilist.data=2*pi/NPeriods*Geom.Dphi{rind};
+  tmp=mnmatrix(Blist);
+  [B,R,Z,Dzetacylphi]=ifftmn([Blist,Rlist,Zlist,Dzetacylphilist],NPeriods,Ntheta,Nzeta);
+  [dBdtheta,dBdzeta,dRdtheta,dRdzeta,dZdtheta,dZdzeta,...
+   dDzetacylphi_dtheta,dDzetacylphi_dzeta]=...
+      ifftmn([mngrad(Blist,NPeriods),mngrad(Rlist,NPeriods),...
+              mngrad(Zlist,NPeriods),mngrad(Dzetacylphilist,NPeriods)],NPeriods,Ntheta,Nzeta);
+  %toc
+else %not(useFFT)
+  %tic
+  B           = zeros(Ntheta,Nzeta);
+  dBdtheta    = zeros(Ntheta,Nzeta);
+  dBdzeta     = zeros(Ntheta,Nzeta);
+  R           = zeros(Ntheta,Nzeta);
+  dRdtheta    = zeros(Ntheta,Nzeta);
+  dRdzeta     = zeros(Ntheta,Nzeta);
+  Z           = zeros(Ntheta,Nzeta);
+  dZdtheta    = zeros(Ntheta,Nzeta);
+  dZdzeta     = zeros(Ntheta,Nzeta);
+  Dzetacylphi = zeros(Ntheta,Nzeta);
+  dDzetacylphi_dtheta = zeros(Ntheta,Nzeta);
+  dDzetacylphi_dzeta  = zeros(Ntheta,Nzeta);
 
-%tic
-for i=1:NHarmonics
-  m=Geom.m{rind}(i);
-  n=Geom.n{rind}(i);
-  
-  if use4Dshortvecs %preparation of c4D,s4D takes too much time
-    mind=find(mvecS==m);
-    nind=find(nvecS==n);  
-    c=squeeze(c4D(:,:,mind,nind));
-    s=squeeze(s4D(:,:,mind,nind));
-  else
-    c=cos(m * theta - n * NPeriods * zeta);
-    s=sin(m * theta - n * NPeriods * zeta);
+  for i=1:NHarmonics
+    m=Geom.m{rind}(i);
+    n=Geom.n{rind}(i);
+    
+    if use4Dshortvecs %preparation of c4D,s4D takes too much time
+      mind=find(mvecS==m);
+      nind=find(nvecS==n);  
+      c=squeeze(c4D(:,:,mind,nind));
+      s=squeeze(s4D(:,:,mind,nind));
+    else
+      c=cos(m * theta - n * NPeriods * zeta);
+      s=sin(m * theta - n * NPeriods * zeta);
+    end
+    if parity(i) %The cosine components of B
+      B = B + Bmn(i) * c;
+      dBdtheta = dBdtheta - Bmn(i) * m * s;
+      dBdzeta  = dBdzeta  + Bmn(i) * n * NPeriods * s;
+      
+      R    = R + Geom.R{rind}(i) * c;
+      dRdtheta = dRdtheta - Geom.R{rind}(i) * m * s;
+      dRdzeta  = dRdzeta  + Geom.R{rind}(i) * n * NPeriods * s;
+      
+      Z    = Z + Geom.Z{rind}(i) * s;
+      dZdtheta = dZdtheta + Geom.Z{rind}(i) * m * c;
+      dZdzeta  = dZdzeta  - Geom.Z{rind}(i) * n * NPeriods * c;
+      
+      Dzetacylphi = Dzetacylphi + 2*pi/NPeriods*Geom.Dphi{rind}(i) * s;
+      dDzetacylphi_dtheta = dDzetacylphi_dtheta + 2*pi/NPeriods*Geom.Dphi{rind}(i) * m * c;
+      dDzetacylphi_dzeta  = dDzetacylphi_dzeta - 2*pi/NPeriods*Geom.Dphi{rind}(i) * n * NPeriods * c;
+      
+    else  %The sine components of B
+      B = B + Bmn(i) * s;
+      dBdtheta = dBdtheta + Bmn(i) * m * c;
+      dBdzeta  = dBdzeta  - Bmn(i) * n * NPeriods * c; 
+      
+      R    = R + Geom.R{rind}(i) * s;
+      dRdtheta = dRdtheta + Geom.R{rind}(i) * m * c;
+      dRdzeta  = dRdzeta  - Geom.R{rind}(i) * n * NPeriods * c; 
+      
+      Z    = Z + Geom.Z{rind}(i) * c;
+      dZdtheta = dZdtheta - Geom.Z{rind}(i) * m * s;
+      dZdzeta  = dZdzeta  + Geom.Z{rind}(i) * n * NPeriods * s;
+      
+      Dzetacylphi = Dzetacylphi + 2*pi/NPeriods*Geom.Dphi{rind}(i) * c;
+      dDzetacylphi_dtheta = dDzetacylphi_dtheta - 2*pi/NPeriods*Geom.Dphi{rind}(i) * m * s;
+      dDzetacylphi_dzeta  = dDzetacylphi_dzeta + 2*pi/NPeriods*Geom.Dphi{rind}(i) * n * NPeriods * s;
+      
+    end
   end
-  if parity(i) %The cosine components of B
-    B = B + Bmn(i) * c;
-    dBdtheta = dBdtheta - Bmn(i) * m * s;
-    dBdzeta  = dBdzeta  + Bmn(i) * n * NPeriods * s;
-    
-    R    = R + Geom.R{rind}(i) * c;
-    dRdtheta = dRdtheta - Geom.R{rind}(i) * m * s;
-    dRdzeta  = dRdzeta  + Geom.R{rind}(i) * n * NPeriods * s;
-    
-    Z    = Z + Geom.Z{rind}(i) * s;
-    dZdtheta = dZdtheta + Geom.Z{rind}(i) * m * c;
-    dZdzeta  = dZdzeta  - Geom.Z{rind}(i) * n * NPeriods * c;
-    
-    Dzetacylphi = Dzetacylphi + 2*pi/NPeriods*Geom.Dphi{rind}(i) * s;
-    dDzetacylphi_dtheta = dDzetacylphi_dtheta + 2*pi/NPeriods*Geom.Dphi{rind}(i) * m * c;
-    dDzetacylphi_dzeta  = dDzetacylphi_dzeta - 2*pi/NPeriods*Geom.Dphi{rind}(i) * n * NPeriods * c;
-  
-  else  %The sine components of B
-    B = B + Bmn(i) * s;
-    dBdtheta = dBdtheta + Bmn(i) * m * c;
-    dBdzeta  = dBdzeta  - Bmn(i) * n * NPeriods * c; 
-    
-    R    = R + Geom.R{rind}(i) * s;
-    dRdtheta = dRdtheta + Geom.R{rind}(i) * m * c;
-    dRdzeta  = dRdzeta  - Geom.R{rind}(i) * n * NPeriods * c; 
-    
-    Z    = Z + Geom.Z{rind}(i) * c;
-    dZdtheta = dZdtheta - Geom.Z{rind}(i) * m * s;
-    dZdzeta  = dZdzeta  + Geom.Z{rind}(i) * n * NPeriods * s;
-    
-    Dzetacylphi = Dzetacylphi + 2*pi/NPeriods*Geom.Dphi{rind}(i) * c;
-    dDzetacylphi_dtheta = dDzetacylphi_dtheta - 2*pi/NPeriods*Geom.Dphi{rind}(i) * m * s;
-    dDzetacylphi_dzeta  = dDzetacylphi_dzeta + 2*pi/NPeriods*Geom.Dphi{rind}(i) * n * NPeriods * s;
-  
-  end
+  %toc
 end
-%toc
+
+%Double-check the FFT results against the slow method
+%fig(1+useFFT*4)
+%surf(B);shading flat;view(0,90)
+%fig(2+useFFT*4)
+%surf(R);shading flat;view(0,90)
+%fig(3+useFFT*4)
+%surf(Z);shading flat;view(0,90)
+%fig(4+useFFT*4)
+%surf(Dzetacylphi);shading flat;view(0,90)
+%error('stop stop!')
 
 cylphi=zeta-Dzetacylphi;     %cylphi is minus the geometrical toroidal angle.
 geomang=-cylphi;             %(R,Z,cylphi) and (R,geomang,Z) are right handed systems. 
@@ -146,7 +180,7 @@ Routboard=zeros(1,Nzeta);
 cylPossible=1;
 for zind=1:Nzeta
   Zv=Z(:,zind);
-  inds=find(diff(sign(Zv))~=0);
+  inds=find(diff(sign(Zv+eps))~=0);
   if length(inds)==1
     inds=[inds;Ntheta];
   elseif length(inds)==3
@@ -198,99 +232,128 @@ h=1./(B.^2);
 VPrimeHat=sum(sum(h))*4*pi^2/(Nzeta*Ntheta); %Note: VPrime=VPrimeHat*(G+iota*I)
 FSAB2=4*pi^2/VPrimeHat;
 %h00=VPrimeHat/(4*pi^2);
-%tic
-if not(Geom.StelSym) %sine components exist
-  for m=0:floor(Ntheta/2)-1 %Nyquist max freq.
-    if m==0
-      nrange=nvecL0;%=1:floor(Nzeta/2)-1;
-      c3D=cos(-n3D0 * NPeriods .* zeta3D0);
-      s3D=sin(-n3D0 * NPeriods .* zeta3D0);
-    else
-      nrange=nvecL;% =-floor(Nzeta/2):(floor(Nzeta/2)-1);
-      c3D=cos(m * theta3D - n3D * NPeriods .* zeta3D);
-      s3D=sin(m * theta3D - n3D * NPeriods .* zeta3D);
-    end
-    for n=nrange
-        nind=find(nrange==n);  
-        c=squeeze(c3D(:,:,nind)); %FAST
-        s=squeeze(s3D(:,:,nind));
-        %c=cos(m * theta - n * NPeriods * zeta); %SLOW
-        %s=sin(m * theta - n * NPeriods * zeta);
-        %cos
-        hmnc = 2/(Ntheta*Nzeta) *...
-            sum(sum(c.*h));
-        umnc = ...
-            iota*(G*m + I*n * NPeriods)/(n * NPeriods - iota*m) * hmnc;
-        %There are two ways of calculating Dzetaphi. We need both.
-        Dzetaphi1_mns = ...
-            FSAB2/(G+iota*I)/m*(umnc/iota-I*hmnc);     %for m~=0
-        Dzetaphi2_mns = ...
-            FSAB2/(G+iota*I)/n/NPeriods*(umnc+G*hmnc); %for n~=0
-        
-        %sin
-        hmns = 2/(Ntheta*Nzeta) *...
-            sum(sum(s.*h));
-        umns = ...
-            iota*(G*m + I*n * NPeriods)/(n * NPeriods - iota*m) * hmns;
-        Dzetaphi1_mnc = ...  
-            -FSAB2/(G+iota*I)/m*(umns/iota-I*hmns);     %for m~=0
-        Dzetaphi2_mnc = ...
-            -FSAB2/(G+iota*I)/n/NPeriods*(umns+G*hmns); %for n~=0
-
-        %assemble
-        u = u + umnc * c + umns * s;
-        if m>0
-          Dzetaphi = Dzetaphi + Dzetaphi1_mnc * c + Dzetaphi1_mns * s;    
+if useFFT
+  %tic
+  hmn=fftmn(h);
+  umn.c=iota*(G*hmn.m + I*hmn.n * NPeriods)./(hmn.n * NPeriods - iota*hmn.m) .* hmn.c;
+  umn.c(hmn.m0ind,hmn.n0ind)=0;
+  umn.s=iota*(G*hmn.m + I*hmn.n * NPeriods)./(hmn.n * NPeriods - iota*hmn.m) .* hmn.s;
+  umn.s(hmn.m0ind,hmn.n0ind)=NaN;
+  Dzetaphi_mn.s  =  FSAB2/(G+iota*I)./hmn.m.*(umn.c/iota-I*hmn.c);     %for m~=0
+  Dzetaphi_mn.c  = -FSAB2/(G+iota*I)./hmn.m.*(umn.s/iota-I*hmn.s);    %for m~=0
+  Dzetaphi2_mn.s =  FSAB2/(G+iota*I)./hmn.n/NPeriods.*(umn.c+G*hmn.c); %for n~=0
+  Dzetaphi2_mn.c = -FSAB2/(G+iota*I)./hmn.n/NPeriods.*(umn.s+G*hmn.s); %for n~=0
+  Dzetaphi_mn.s(hmn.m0ind,:)=Dzetaphi2_mn.s(hmn.m0ind,:);
+  Dzetaphi_mn.c(hmn.m0ind,:)=Dzetaphi2_mn.c(hmn.m0ind,:);
+  Dzetaphi_mn.s(hmn.m0ind,hmn.n0ind)=NaN;
+  Dzetaphi_mn.c(hmn.m0ind,hmn.n0ind)=0;
+  Dzetaphi_mn.c(hmn.m0ind,end)=0; %info was lost here
+  Dzetaphi_mn.c(end,end)=0;       %info was lost here
+  Dzetaphi_mn.c(end,hmn.n0ind)=0; %info was lost here
+  [u,Dzetaphi]=ifftmn([umn,Dzetaphi_mn]);
+  %toc
+else %not(useFFT)
+  %tic
+    if not(Geom.StelSym) %sine components exist
+      for m=0:floor(Ntheta/2)-1 %Nyquist max freq.
+        if m==0
+          nrange=nvecL0;%=1:floor(Nzeta/2)-1;
+          c3D=cos(-n3D0 * NPeriods .* zeta3D0);
+          s3D=sin(-n3D0 * NPeriods .* zeta3D0);
         else
-          Dzetaphi = Dzetaphi + Dzetaphi2_mnc * c + Dzetaphi2_mns * s; 
+          nrange=nvecL;% =-floor(Nzeta/2):(floor(Nzeta/2)-1);
+          c3D=cos(m * theta3D - n3D * NPeriods .* zeta3D);
+          s3D=sin(m * theta3D - n3D * NPeriods .* zeta3D);
         end
-        %dudtheta = dudtheta ...
-        %    + umns * m * c - umnc * m * s;
-        %dudzeta = dudzeta ...
-        %    + umnc * n * NPeriods * s - umns * n * NPeriods * c; 
-    end
-  end
-else %only cosinus components
-  for m=0:floor(Ntheta/2)-1 %Nyquist max freq.
-    if m==0
-      nrange=nvecL0;%=1:floor(Nzeta/2)-1;
-      c3D=cos(-n3D0 * NPeriods .* zeta3D0);
-      s3D=sin(-n3D0 * NPeriods .* zeta3D0);
-    else
-      nrange=nvecL;% =-floor(Nzeta/2):(floor(Nzeta/2)-1);
-      c3D=cos(m * theta3D - n3D * NPeriods .* zeta3D);
-      s3D=sin(m * theta3D - n3D * NPeriods .* zeta3D);
-    end
-    for n=nrange
-        nind=find(nrange==n);  
-        c=squeeze(c3D(:,:,nind)); %FAST
-        s=squeeze(s3D(:,:,nind));
-        %c=cos(m * theta - n * NPeriods * zeta); %SLOW
-        %s=sin(m * theta - n * NPeriods * zeta);
+        for n=nrange
+          nind=find(nrange==n);  
+          c=squeeze(c3D(:,:,nind)); %FAST
+          s=squeeze(s3D(:,:,nind));
+          %c=cos(m * theta - n * NPeriods * zeta); %SLOW
+          %s=sin(m * theta - n * NPeriods * zeta);
+          %cos
+          hmnc = 2/(Ntheta*Nzeta) *...
+                 sum(sum(c.*h));
+          umnc = ...
+              iota*(G*m + I*n * NPeriods)/(n * NPeriods - iota*m) * hmnc;
+          %There are two ways of calculating Dzetaphi. We need both.
+          Dzetaphi1_mns = ...
+              FSAB2/(G+iota*I)/m*(umnc/iota-I*hmnc);     %for m~=0
+          Dzetaphi2_mns = ...
+              FSAB2/(G+iota*I)/n/NPeriods*(umnc+G*hmnc); %for n~=0
+          
+          %sin
+          hmns = 2/(Ntheta*Nzeta) *...
+                 sum(sum(s.*h));
+          umns = ...
+              iota*(G*m + I*n * NPeriods)/(n * NPeriods - iota*m) * hmns;
+          Dzetaphi1_mnc = ...  
+              -FSAB2/(G+iota*I)/m*(umns/iota-I*hmns);     %for m~=0
+          Dzetaphi2_mnc = ...
+              -FSAB2/(G+iota*I)/n/NPeriods*(umns+G*hmns); %for n~=0
 
-        hmnc = 2/(Ntheta*Nzeta) *...
-               sum(sum(c.*h));
-        umnc = ...
-            iota*(G*m + I*n * NPeriods)/(n * NPeriods - iota*m) * hmnc;
-        Dzetaphi1_mns = ...
-            FSAB2/(G+iota*I)/m*(umnc/iota-I*hmnc);     %for m~=0
-        Dzetaphi2_mns = ...
-            FSAB2/(G+iota*I)/n/NPeriods*(umnc+G*hmnc); %for n~=0
-
-        u = u + umnc * c;
-        if m>0
-          Dzetaphi = Dzetaphi + Dzetaphi1_mns * s;    
+          %assemble
+          u = u + umnc * c + umns * s;
+          if m>0
+            Dzetaphi = Dzetaphi + Dzetaphi1_mnc * c + Dzetaphi1_mns * s;    
+          else
+            Dzetaphi = Dzetaphi + Dzetaphi2_mnc * c + Dzetaphi2_mns * s; 
+          end
+          %dudtheta = dudtheta ...
+          %    + umns * m * c - umnc * m * s;
+          %dudzeta = dudzeta ...
+          %    + umnc * n * NPeriods * s - umns * n * NPeriods * c; 
+        end
+      end
+    else %only cosinus components
+      for m=0:floor(Ntheta/2)-1 %Nyquist max freq.
+        if m==0
+          nrange=nvecL0;%=1:floor(Nzeta/2)-1;
+          c3D=cos(-n3D0 * NPeriods .* zeta3D0);
+          s3D=sin(-n3D0 * NPeriods .* zeta3D0);
         else
-          Dzetaphi = Dzetaphi + Dzetaphi2_mns * s; 
+          nrange=nvecL;% =-floor(Nzeta/2):(floor(Nzeta/2)-1);
+          c3D=cos(m * theta3D - n3D * NPeriods .* zeta3D);
+          s3D=sin(m * theta3D - n3D * NPeriods .* zeta3D);
         end
-        %dudtheta = dudtheta ...
-        %    - umnc * m * s;
-        %dudzeta = dudzeta ...
-        %          + umnc * n * NPeriods * s;   
-    end              
-  end
+        for n=nrange
+          nind=find(nrange==n);  
+          c=squeeze(c3D(:,:,nind)); %FAST
+          s=squeeze(s3D(:,:,nind));
+          %c=cos(m * theta - n * NPeriods * zeta); %SLOW
+          %s=sin(m * theta - n * NPeriods * zeta);
+
+          hmnc = 2/(Ntheta*Nzeta) *...
+                 sum(sum(c.*h));
+          umnc = ...
+              iota*(G*m + I*n * NPeriods)/(n * NPeriods - iota*m) * hmnc;
+          Dzetaphi1_mns = ...
+              FSAB2/(G+iota*I)/m*(umnc/iota-I*hmnc);     %for m~=0
+          Dzetaphi2_mns = ...
+              FSAB2/(G+iota*I)/n/NPeriods*(umnc+G*hmnc); %for n~=0
+
+          u = u + umnc * c;
+          if m>0
+            Dzetaphi = Dzetaphi + Dzetaphi1_mns * s;    
+          else
+            Dzetaphi = Dzetaphi + Dzetaphi2_mns * s; 
+          end
+          %dudtheta = dudtheta ...
+          %    - umnc * m * s;
+          %dudzeta = dudzeta ...
+          %          + umnc * n * NPeriods * s;   
+        end              
+      end
+    end
+  %toc
 end
-%toc
+
+%Double-check the FFT results against the slow method
+%fig(1+useFFT*4)
+%surf(u);shading flat;view(0,90)
+%fig(2+useFFT*4)
+%surf(Dzetaphi);shading flat;view(0,90)
+
 
 dDzetaphi_dtheta= FSAB2/(G+iota*I)/iota*(u-iota*I*(h-1/FSAB2));
 dDzetaphi_dzeta =-FSAB2/(G+iota*I) *    (u +    G*(h-1/FSAB2));
@@ -396,7 +459,11 @@ Booz.DzetaphiBig=[Booz.Dzetaphi,Booz.Dzetaphi,Booz.Dzetaphi;
                  Booz.Dzetaphi,Booz.Dzetaphi,Booz.Dzetaphi;
                  Booz.Dzetaphi,Booz.Dzetaphi,Booz.Dzetaphi];
 
+%The following is the most time consuming step
+%tic
 HamDzetaphi=griddata(BoozphiBig,BoozvthetBig,Booz.DzetaphiBig,phi,vthet);
+%toc 
+
 Ham.zeta =Ham.phi+HamDzetaphi;
 Ham.theta=Ham.vthet+iota*HamDzetaphi;
 
@@ -554,93 +621,115 @@ if calcHamBmn
   believedAccuracyLoss=1;
   min_Bmn=Geom.Bfilter.min_Bmn*Booz.B00/Ham.B00*believedAccuracyLoss;
 
-  maxvthet=floor(Nvthet/2)-1; %Nyquist max freq.
-  maxphi=floor(Nphi/2)-1;
-  Ham.m=0;
-  Ham.n=0;
-  Ham.Bmn=Ham.B00;
-  ind=1;
-  %tic
-  if not(Geom.StelSym) %sine components exist
-    Ham.parity=1; %this is for the 00 component
-    for m=0:floor(Nvthet/2)-1 %Nyquist max freq.
-      if m==0
-        nrange=nvecL0;%=1:floor(Nphi/2)-1;
-        c3D=cos(-n3D0 * NPeriods .* phi3D0);
-        s3D=sin(-n3D0 * NPeriods .* phi3D0);
-      else
-        nrange=nvecL;% =-floor(Nphi/2):(floor(Nphi/2)-1);
-        c3D=cos(m * vthet3D - n3D * NPeriods .* phi3D);
-        s3D=sin(m * vthet3D - n3D * NPeriods .* phi3D);
+  if useFFT
+    %tic
+    HamBmn=mnlist(fftmn(Ham.B),min_Bmn,'relative');
+    Ham.m=HamBmn.m;
+    Ham.n=HamBmn.n;
+    if Geom.StelSym
+      if any(HamBmn.cosparity~=1)
+        error(['Something has gone wrong. The calculated Hamada Bmn is not stellarator ', ...
+               'symmetric!'])
       end
-      for n=nrange
-        nind=find(nrange==n);  
-        c=squeeze(c3D(:,:,nind));
-        s=squeeze(s3D(:,:,nind));
-        %cos
-        Bmnc = 2/(Ntheta*Nzeta) *...
-               sum(sum(c.*Ham.B)); %FAST
-                                   %Bmnc = 2/(Ntheta*Nzeta) *...
-                                   %       sum(sum(cos(m * Ham.vthet - n * NPeriods * Ham.phi).*Ham.B)); %SLOW
-        if abs(Bmnc)>min_Bmn
-          ind=ind+1;
-          Ham.m(ind)=m;
-          Ham.n(ind)=n;
-          Ham.Bmn(ind)=Bmnc;
-          Ham.parity(ind)=1;
+    else
+      Ham.parity=HamBmn.cosparity;
+    end  
+    Ham.Bmn=HamBmn.data;
+    %toc
+  else
+    maxvthet=floor(Nvthet/2)-1; %Nyquist max freq.
+    maxphi=floor(Nphi/2)-1;
+    Ham.m=0;
+    Ham.n=0;
+    Ham.Bmn=Ham.B00;
+    ind=1;
+    %tic
+      if not(Geom.StelSym) %sine components exist
+        Ham.parity=1; %this is for the 00 component
+        for m=0:floor(Nvthet/2)-1 %Nyquist max freq.
+          if m==0
+            nrange=nvecL0;%=1:floor(Nphi/2)-1;
+            c3D=cos(-n3D0 * NPeriods .* phi3D0);
+            s3D=sin(-n3D0 * NPeriods .* phi3D0);
+          else
+            nrange=nvecL;% =-floor(Nphi/2):(floor(Nphi/2)-1);
+            c3D=cos(m * vthet3D - n3D * NPeriods .* phi3D);
+            s3D=sin(m * vthet3D - n3D * NPeriods .* phi3D);
+          end
+          for n=nrange
+            nind=find(nrange==n);  
+            c=squeeze(c3D(:,:,nind));
+            s=squeeze(s3D(:,:,nind));
+            %cos
+            Bmnc = 2/(Ntheta*Nzeta) *...
+                   sum(sum(c.*Ham.B)); %FAST
+                                       %Bmnc = 2/(Ntheta*Nzeta) *...
+                                       %       sum(sum(cos(m * Ham.vthet - n * NPeriods * Ham.phi).*Ham.B)); %SLOW
+            if abs(Bmnc)>min_Bmn
+              ind=ind+1;
+              Ham.m(ind)=m;
+              Ham.n(ind)=n;
+              Ham.Bmn(ind)=Bmnc;
+              Ham.parity(ind)=1;
+            end
+            %sin
+            Bmns = 2/(Ntheta*Nzeta) *...
+                   sum(sum(s.*Ham.B)); %FAST
+                                       %Bmns = 2/(Ntheta*Nzeta) *...
+                                       %       sum(sum(sin(m * Ham.vthet - n * NPeriods * Ham.phi).*Ham.B)); %SLOW
+            if abs(Bmns)>min_Bmn
+              ind=ind+1;
+              Ham.m(ind)=m;
+              Ham.n(ind)=n;
+              Ham.Bmn(ind)=Bmns;
+              Ham.parity(ind)=0;
+            end
+          end
         end
-        %sin
-        Bmns = 2/(Ntheta*Nzeta) *...
-               sum(sum(s.*Ham.B)); %FAST
-                                   %Bmns = 2/(Ntheta*Nzeta) *...
-                                   %       sum(sum(sin(m * Ham.vthet - n * NPeriods * Ham.phi).*Ham.B)); %SLOW
-        if abs(Bmns)>min_Bmn
-          ind=ind+1;
-          Ham.m(ind)=m;
-          Ham.n(ind)=n;
-          Ham.Bmn(ind)=Bmns;
-          Ham.parity(ind)=0;
+      else %only cosinus components
+        for m=0:floor(Ntheta/2)-1 %Nyquist max freq.
+          if m==0
+            nrange=nvecL0;%=1:floor(Nphi/2)-1;
+            c3D=cos(-n3D0 * NPeriods .* phi3D0);
+          else
+            nrange=nvecL;% =-floor(Nphi/2):(floor(Nphi/2)-1);
+            c3D=cos(m * vthet3D - n3D * NPeriods .* phi3D);
+          end
+          for n=nrange
+            nind=find(nrange==n);
+            c=squeeze(c3D(:,:,nind));
+            Bmnc = 2/(Ntheta*Nzeta) *...
+                   sum(sum(c.*Ham.B)); %FAST
+                                       %Bmnc = 2/(Ntheta*Nzeta) *...
+                                       %       sum(sum(cos(m * Ham.vthet - n * NPeriods * Ham.phi).*Ham.B)); %SLOW
+            if abs(Bmnc)>min_Bmn
+              ind=ind+1;
+              Ham.m(ind)=m;
+              Ham.n(ind)=n;
+              Ham.Bmn(ind)=Bmnc;
+            end
+          end              
         end
       end
-    end
-  else %only cosinus components
-    for m=0:floor(Ntheta/2)-1 %Nyquist max freq.
-      if m==0
-        nrange=nvecL0;%=1:floor(Nphi/2)-1;
-        c3D=cos(-n3D0 * NPeriods .* phi3D0);
-      else
-        nrange=nvecL;% =-floor(Nphi/2):(floor(Nphi/2)-1);
-        c3D=cos(m * vthet3D - n3D * NPeriods .* phi3D);
-      end
-      for n=nrange
-        nind=find(nrange==n);
-        c=squeeze(c3D(:,:,nind));
-        Bmnc = 2/(Ntheta*Nzeta) *...
-               sum(sum(c.*Ham.B)); %FAST
-                                   %Bmnc = 2/(Ntheta*Nzeta) *...
-                                   %       sum(sum(cos(m * Ham.vthet - n * NPeriods * Ham.phi).*Ham.B)); %SLOW
-        if (Bmnc>min_Bmn)
-          ind=ind+1;
-          Ham.m(ind)=m;
-          Ham.n(ind)=n;
-          Ham.Bmn(ind)=Bmnc;
-        end
-      end              
-    end
+    %toc
   end
-  %toc
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
   % Test if the Fourier decomposition was done correctly
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   if 0 %Not necessary. I already tested it.
     HamB = zeros(Ntheta,Nzeta);
     for i=1:length(Ham.Bmn)
-      if Ham.parity(i) %The cosine components of B
-        HamB = HamB + Ham.Bmn(i) *...
-               cos(Ham.m(i) * Ham.vthet - Ham.n(i) * NPeriods * Ham.phi);
-      else  %The sine components of B
-        HamB = HamB + Ham.Bmn(i) *...
-               sin(Ham.m(i) * Ham.vthet - Ham.n(i) * NPeriods * Ham.phi);
+      if Geom.StelSym
+         HamB = HamB + Ham.Bmn(i) *...
+                 cos(Ham.m(i) * Ham.vthet - Ham.n(i) * NPeriods * Ham.phi);
+      else
+        if Ham.parity(i) %The cosine components of B
+          HamB = HamB + Ham.Bmn(i) *...
+                 cos(Ham.m(i) * Ham.vthet - Ham.n(i) * NPeriods * Ham.phi);
+        else  %The sine components of B
+          HamB = HamB + Ham.Bmn(i) *...
+                 sin(Ham.m(i) * Ham.vthet - Ham.n(i) * NPeriods * Ham.phi);
+        end
       end
     end
     fig(1);surf(Ham.vthet,Ham.phi,HamB);view(0,90);shading flat
