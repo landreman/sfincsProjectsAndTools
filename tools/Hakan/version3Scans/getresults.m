@@ -167,7 +167,7 @@ for hind=1:length(H)
             sqrt(2*1.6022e-19*1e3/1.6726e-27)* out.psiAHat(ind)*...
             out.particleFlux_vm_psiN(ind,:).*out.Zs(ind,:);
     else
-      out.NTVfromFlux(ind,:)=NaN;
+      out.NTVfromFlux(ind,1:out.Nspecies(ind))=NaN;
     end
   end
 end
