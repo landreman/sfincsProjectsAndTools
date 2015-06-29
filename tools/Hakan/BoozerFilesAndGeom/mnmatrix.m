@@ -1,5 +1,5 @@
 function Fmns=mnmatrix(lsts,varargin)
-securityLevel=0; %-1: no security, 0: warnings, 1:errors
+securityLevel=-1; %-1: no security, 0: warnings, 1:errors
 
 for inputind=1:length(lsts)
   
