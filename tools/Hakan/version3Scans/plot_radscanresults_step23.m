@@ -17,6 +17,13 @@ vbar=sqrt(1e3*e*2/mp);
 tau1=runs2.NTV*pbar;
 tauin=runs3.NTV*pbar;
 
+if runs2.NumElements~=runs3.NumElements
+  error('The number of finished runs in step 2 and 3 are different!')
+end
+if any(runs2.rN~=runs3.rN)
+  error('The radii in step 2 and three do not match')
+end
+
 %We can extract omega_meas from the input data of step 2.
 %the density gradient was calucated using
 %dni20dPsiN_step2= -Z  *ni20./TikeV.*...
@@ -54,7 +61,7 @@ else %calculated
     fprintf(1,'\b\b\b\b\b\b\b\b\b\b\b%3i/%3i',ind,length(runs2.rN))
     rnorm=runs2.rN(ind);
     rind=findnearest(Geom.rnorm,rnorm);
-    [Ham,Booz]=makeHamada(Geom,rind,100,100);
+    [Ham,Booz]=makeHamada(Geom,rind,128,128);
     FSAg_phiphi(ind)=Booz.FSAg_phiphi;
   end
   fprintf(1,'\n')
@@ -64,6 +71,12 @@ end
 
 nut = -tau1(:,2)./mi./ni.*FSAg_phiphi./omega_torrot;
 omegain = -tau1(:,2)./tauin(:,2).*omega_torrot;
+
+NTVtot=tau1(:,1)+tauin(:,1)+tau1(:,2)+tauin(:,2);
+integr=NTVtot.*4*pi./runs.FSABHat2.*(runs.GHat+runs.iota.*runs.IHat);
+s=sqrt(runs2.rN);
+NTV_Nm=trapz(s,integr)
+
 
 fig(1)
 plot(runs2.rN,omega_torrot,runs2.rN,omegain)
@@ -76,3 +89,10 @@ fig(2)
 plot(runs2.rN,1./nut)
 xlabel('r / a')
 ylabel('1 / \nu_t')
+
+fig(3)
+plot(runs2.rN,tau1(:,1)+tauin(:,1),runs2.rN,tau1(:,2)+tauin(:,2))
+title('torque')
+xlabel('r / a')
+ylabel('Nm')
+

@@ -4,6 +4,9 @@ function runs=loadallh5(dirpath)
 % or which have names beginning with "baseCase", "Ntheta", ...
 
 if nargin==1
+  if not(exist(dirpath,'dir'))
+    dirpath=[getenv('SFINCS_HOME'),'/fortran/version3/',dirpath];
+  end
   list=dir(dirpath);
   if not(dirpath(end)=='/')
     dirpath=[dirpath,'/'];
