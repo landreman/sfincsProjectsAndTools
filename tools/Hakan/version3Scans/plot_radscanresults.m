@@ -1,6 +1,20 @@
 function [runs,miss]=plot_radscanresults(directory)
 
-[runs,miss]=getresults(directory);
+if directory(end-3:end)=='.dat'
+  dirlist={};
+  fid = fopen(directory);
+  tline = fgetl(fid);
+  while ischar(tline)
+    if tline(1)~='%' && tline(1)~='!'
+      dirlist={dirlist{:},tline};
+    end
+    tline = fgetl(fid);
+  end
+  fclose(fid);
+  [runs,miss]=getresults(dirlist);
+else
+  [runs,miss]=getresults(directory);
+end
 
 nbar=1e20;
 Tbar=1.6022e-19*1e3;

@@ -1,7 +1,36 @@
 function plot_radscanresults_step23(step2dir,step3dir)
 
-[runs2,miss2]=getresults(step2dir);
-[runs3,miss3]=getresults(step3dir);
+if step2dir(end-3:end)=='.dat'
+  dirlist={};
+  fid = fopen(step2dir);
+  tline = fgetl(fid);
+  while ischar(tline)
+    if tline(1)~='%' && tline(1)~='!'
+      dirlist={dirlist{:},tline};
+    end
+    tline = fgetl(fid);
+  end
+  fclose(fid);
+  [runs2,miss2]=getresults(dirlist);
+else
+  [runs2,miss2]=getresults(step2dir);
+end
+
+if step3dir(end-3:end)=='.dat'
+  dirlist={};
+  fid = fopen(step3dir);
+  tline = fgetl(fid);
+  while ischar(tline)
+    if tline(1)~='%' && tline(1)~='!'
+      dirlist={dirlist{:},tline};
+    end
+    tline = fgetl(fid);
+  end
+  fclose(fid);
+  [runs3,miss3]=getresults(dirlist);
+else
+  [runs3,miss3]=getresults(step3dir);
+end
 
 e=1.6022e-19;
 mp=1.6726e-27;
@@ -72,8 +101,8 @@ end
 nut = -tau1(:,2)./mi./ni.*FSAg_phiphi./omega_torrot;
 omegain = -tau1(:,2)./tauin(:,2).*omega_torrot;
 
-NTVtot=tau1(:,1)+tauin(:,1)+tau1(:,2)+tauin(:,2);
-integr=NTVtot.*4*pi./runs.FSABHat2.*(runs.GHat+runs.iota.*runs.IHat);
+NTVtot=(tau1(:,1)+tauin(:,1)+tau1(:,2)+tauin(:,2))';
+integr=NTVtot.*4*pi./runs2.FSABHat2.*(runs2.GHat+runs2.iota.*runs2.IHat);
 s=sqrt(runs2.rN);
 NTV_Nm=trapz(s,integr)
 

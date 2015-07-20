@@ -13,22 +13,33 @@ missing=[];
 for hind=1:length(H)
   if not(isstruct(H{hind})) %this simulation is missing in action
     mind=mind+1;
-    if directory(end)=='/'
-      missing(mind).dir =[directory,H{hind}(1:2)];
+    if not(iscell(directory))
+      if directory(end)=='/'
+        missing(mind).dir =[directory,H{hind}(1:2)];
+      else
+        missing(mind).dir =[directory,'/',H{hind}(1:2)];
+      end
+      missing(mind).message=H{hind};
     else
-      missing(mind).dir =[directory,'/',H{hind}(1:2)];
+      missing(mind).dir =H{hind}(1:end-6);
+      missing(mind).message=H{hind};
     end
-    missing(mind).message=H{hind};
   elseif H{hind}.RHSMode==0 || ...
         (H{hind}.RHSMode==3 && not(isfield(H{hind},'transportMatrix')))
-    %(e.g., or if some other quantity=0)
+    %(e.g., or if some other quantity=0. Add more checks here if 
+    % necessary)
      mind=mind+1;
-    if directory(end)=='/'
-      missing(mind).dir =[directory,H{hind}.rundir];
+    if not(iscell(directory))
+      if directory(end)=='/'
+        missing(mind).dir =[directory,H{hind}.rundir];
+      else
+        missing(mind).dir =[directory,'/',H{hind}.rundir];
+      end
+      missing(mind).message=[H{hind}.rundir,' allval0'];
     else
-      missing(mind).dir =[directory,'/',H{hind}.rundir];
+      missing(mind).dir=H{hind}.rundir;
+      missing(mind).message=[H{hind}.rundir,' allval0'];
     end
-    missing(mind).message=[H{hind}.rundir,' allval0'];
   else
     ind=ind+1;
     goodhinds(ind)=hind;
