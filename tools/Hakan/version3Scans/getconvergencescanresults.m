@@ -97,7 +97,7 @@ if makeplots
       'r/a = %4.2f,  nuPrime = %7.2e,  EStar = %7.2e',...
       runs.rN(1),runs.nuPrime(1),...
       runs.EStar(1));
-  else
+  else %runs.RHSMode=1
     Nrow=NParam;
     Ncol=runs.Nspecies(1)*4+1;
     stringForTop=sprintf(...
@@ -207,7 +207,7 @@ if makeplots
       
     end
     
-    
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  
   elseif all(runs.RHSMode==2)
     for pind=1:NParam
       
@@ -416,6 +416,7 @@ if makeplots
       ylabel('LNTV_3')
     end
     
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   else %%%%%%%% RHSMode=1
     
     for pind=1:NParam
@@ -440,8 +441,8 @@ if makeplots
           showthis=runs.particleFlux_vm_psiN*a/2/runs.rN(1)*vbar*1e20; str='particleFlux /m^2/s';
         end
         
-        %showthis=runs.NTVfromFlux; str='NTVfromFlux';
-        showthis=runs.particleFlux_vm_psiN; str='particleFlux';
+        showthis=runs.NTVfromFlux; str='NTVfromFlux';
+        %showthis=runs.particleFlux_vm_psiN; str='particleFlux';
         
         if makeplots==1
           if not(isempty(baseRun))

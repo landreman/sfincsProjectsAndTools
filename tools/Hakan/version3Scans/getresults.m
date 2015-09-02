@@ -87,7 +87,26 @@ for hind=1:length(H)
     out.alpha(ind)         =H{hind}.alpha;
     out.Delta(ind)         =H{hind}.Delta;
 
-
+    doCorrection=1;
+    if doCorrection
+      if out.psiAHat(ind)*out.GHat(ind)<0
+        %This is to correct an old bug in geometry.F90 for psiAHat
+        out.psiAHat(ind)=abs(out.psiAHat(ind))*sign(out.GHat(ind));
+        if ind==1
+        disp(' WARNING: Signs of G and psiAHat are inconsistent !!!')
+        disp('          Changing sign of psiAHat.')  
+        end
+      end
+      if out.psiHat(ind)*out.GHat(ind)<0 
+        %This is to correct an old bug in geometry.F90 for psiHat (above it was phiAHat)
+        out.psiHat(ind)=abs(out.psiHat(ind))*sign(out.GHat(ind));
+        if ind==1
+          disp(' WARNING: Signs of G and psiHat are inconsistent !!!')
+          disp('          Changing sign of psiHat.')  
+        end
+      end
+    end
+    
     if out.RHSMode(ind)==3 %Monoenergetic
       if isfield(H{hind},'nuPrime')
         out.nuPrime(ind)=H{hind}.nuPrime; 
@@ -174,9 +193,11 @@ for hind=1:length(H)
     %out.finished(ind) =H{hind}.finished; %new name?
     if out.RHSMode(ind)==1 &&  out.finished(ind)==1
       %out.NTVtot(ind)=sum(out.NTV(ind,:));
-      out.NTVfromFlux(ind,:)=1e-3*out.iota(ind)*...
-            sqrt(2*1.6022e-19*1e3/1.6726e-27)* out.psiAHat(ind)*...
-            out.particleFlux_vm_psiN(ind,:).*out.Zs(ind,:);
+      %out.NTVfromFlux(ind,:)=1e-3*out.iota(ind)*...
+      %      sqrt(2*1.6022e-19*1e3/1.6726e-27)* out.psiAHat(ind)*...
+      %      out.particleFlux_vm_psiN(ind,:).*out.Zs(ind,:);%is equal to:
+      out.NTVfromFlux(ind,:)=out.psiAHat(ind)*out.iota(ind)*...
+          out.Zs(ind,:).*out.particleFlux_vm_psiN(ind,:)/(out.Delta(ind)/2);
     else
       out.NTVfromFlux(ind,1:out.Nspecies(ind))=NaN;
     end

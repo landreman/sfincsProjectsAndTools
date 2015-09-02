@@ -15,9 +15,15 @@ if nargin==0
 end
 
 if not(iscell(dirpath)) 
-
+if not(isempty(strfind(pwd,dirpath(2:end-1))))
+  dirpath=pwd; %We are already standing in that directory
+end
 if not(exist(dirpath,'dir'))
-  dirpath=[getenv('SFINCS_HOME'),'/fortran/version3/',dirpath];
+  if dirpath(1)=='/'
+    dirpath=[getenv('SFINCS_HOME'),'/fortran/version3',dirpath];
+  else    
+    dirpath=[getenv('SFINCS_HOME'),'/fortran/version3/',dirpath];
+  end
 end
 list=dir(dirpath);
 if not(dirpath(end)=='/')
@@ -70,8 +76,15 @@ end
 else %Input was a cell array
   runlist=dirpath;
   for ind=1:length(runlist)
+    if not(isempty(strfind(pwd,runlist{ind}(2:end-1))))
+      runlist{ind}=pwd; %We are already standing in that directory
+    end
     if not(exist(runlist{ind},'dir'))
-      runlist{ind}=[getenv('SFINCS_HOME'),'/fortran/version3/',runlist{ind}];
+      if runlist{ind}(1)=='/'
+        runlist{ind}=[getenv('SFINCS_HOME'),'/fortran/version3',runlist{ind}];
+      else    
+        runlist{ind}=[getenv('SFINCS_HOME'),'/fortran/version3/',runlist{ind}];
+      end
     end
     try
       runs{ind}=h5load([runlist{ind},'/sfincsOutput.h5']);
