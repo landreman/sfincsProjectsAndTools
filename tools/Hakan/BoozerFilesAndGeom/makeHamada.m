@@ -171,9 +171,25 @@ gradpsi.Y=B.^2./(G+iota*I).*(dZdtheta.*dXdzeta-dXdtheta.*dZdzeta);
 gradpsi.Z=B.^2./(G+iota*I).*(dXdtheta.*dYdzeta-dYdtheta.*dZdzeta);
 gpsipsi=gradpsi.X.^2+gradpsi.Y.^2+gradpsi.Z.^2;
 
+if 0 %Double-check the FFT results against the slow method
+  fig(1+useFFT*4)
+  surf(dYdzeta);shading flat;view(0,90)
+  fig(2+useFFT*4)
+  surf(dXdzeta);shading flat;view(0,90)
+  fig(3+useFFT*4)
+  surf(dYdtheta);shading flat;view(0,90)
+  fig(4+useFFT*4)
+  surf(dXdtheta);shading flat;view(0,90)
+  error('stop stop!')
+end
+
 Booz.Dzetacylphi=Dzetacylphi;     %for later use
 Booz.dBdtheta=dBdtheta;
 Booz.dBdzeta=dBdzeta;
+Booz.dRdtheta=dRdtheta;
+Booz.dRdzeta=dRdzeta;
+Booz.dZdtheta=dZdtheta;
+Booz.dZdzeta=dZdzeta;
 
 Rinboard=zeros(1,Nzeta);
 Routboard=zeros(1,Nzeta);
@@ -348,12 +364,6 @@ else %not(useFFT)
   %toc
 end
 
-%Double-check the FFT results against the slow method
-%fig(1+useFFT*4)
-%surf(u);shading flat;view(0,90)
-%fig(2+useFFT*4)
-%surf(Dzetaphi);shading flat;view(0,90)
-
 
 dDzetaphi_dtheta= FSAB2/(G+iota*I)/iota*(u-iota*I*(h-1/FSAB2));
 dDzetaphi_dzeta =-FSAB2/(G+iota*I) *    (u +    G*(h-1/FSAB2));
@@ -373,6 +383,18 @@ dZdvthet=B.^2/FSAB2.*(dZdtheta-ZtozmZzot);
 g_phiphi    =dXdphi.^2  +dYdphi.^2  +dZdphi.^2;
 g_vthetvthet=dXdvthet.^2+dYdvthet.^2+dZdvthet.^2;
 g_vthetphi  =dXdphi.*dXdvthet+dYdphi.*dYdvthet+dZdphi.*dZdvthet;
+
+
+if 0 %Double-check the FFT results against the slow method
+  fig(1+useFFT*4)
+  surf(g_phiphi);shading flat;view(0,90)
+  fig(2+useFFT*4)
+  surf(dXdphi);shading flat;view(0,90)
+  fig(3+useFFT*4)
+  surf(dYdphi);shading flat;view(0,90)
+  fig(4+useFFT*4)
+  surf(dZdphi);shading flat;view(0,90)
+end
 
 Booz.Nperiods=Geom.Nperiods;
 Booz.Nzeta=Nzeta;
@@ -400,6 +422,7 @@ Booz.B=B;
 Booz.u=u;
 Booz.h=h;
 Booz.FSAB2=FSAB2;
+Booz.FSAu2B2=sum(sum(u.^2.*B.^2.*h))/sum(sum(h));
 Booz.Jacob=Booz.h*(G+iota*I);
 Booz.g_thetatheta=g_thetatheta;
 Booz.g_thetazeta =g_thetazeta;
@@ -410,6 +433,12 @@ Booz.g_vthetphi=g_vthetphi;
 Booz.gpsipsi=gpsipsi;
 Booz.FSAg_phiphi=sum(sum(g_phiphi.*h))/sum(sum(h));
 Booz.FSAgpsipsi=sum(sum(gpsipsi.*h))/sum(sum(h));
+
+Booz.dpsidr_eff=sqrt(Booz.FSAgpsipsi);
+Booz.r_eff=sqrt(Booz.FSAg_phiphi*Booz.FSAgpsipsi)/abs(Booz.G);
+Booz.r_eff_appr1=sqrt(sum(sum(gpsipsi.*h./B.^2))/sum(sum(h)));
+Booz.r_eff_appr2=sqrt((Booz.FSAg_phiphi-Booz.FSAu2B2-G^2/FSAB2)/iota^2);
+%r_eff_appr3=sqrt(mean(mean(cylr.^2)))
 
 %Copy data from Geom struct
 Booz.B00=Geom.B00(rind);
@@ -539,6 +568,9 @@ end
 %Ham.FSAB2=(Nvthet*Nphi)/sum(sum(Ham.h)); %Wrong, only holds for Boozer
 Ham.FSAB2=Booz.FSAB2;
 Ham.Jacob=1/Ham.FSAB2;
+Ham.FSAg_phiphi=Booz.FSAg_phiphi;
+Ham.FSAgpsipsi =Booz.FSAgpsipsi;
+Ham.FSAu2B2=Booz.FSAu2B2;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % If possible, create a cylindrical discretization cylth,cylphi
@@ -617,9 +649,9 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Ham.B00=sum(sum(Ham.B))/(Nvthet*Nphi);
 
-
+precision=eps*1e3;
 believedAccuracyLoss=1;
-min_Bmn=Geom.Bfilter.min_Bmn*Booz.B00/Ham.B00*believedAccuracyLoss;
+min_Bmn=max(Geom.Bfilter.min_Bmn*Booz.B00/Ham.B00*believedAccuracyLoss,precision);
 
 if useFFT
   %tic

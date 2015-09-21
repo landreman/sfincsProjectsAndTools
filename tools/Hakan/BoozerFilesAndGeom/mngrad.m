@@ -15,15 +15,15 @@ if isfield(Fmn,'cosparity')  %Fmn is of list form
   ddvFmn.m        = [Fmn.m(cind), Fmn.m(sind)];
   ddvFmn.n        = [Fmn.n(cind), Fmn.n(sind)];
   ddvFmn.cosparity= not([Fmn.cosparity(cind), Fmn.cosparity(sind)]);
-  ddvFmn.data     = [-Fmn.n(cind)*Nperiods.*Fmn.data(cind),...
-                      Fmn.n(sind)*Nperiods.*Fmn.data(sind)];  
+  ddvFmn.data     = [ Fmn.n(cind)*Nperiods.*Fmn.data(cind),...
+                     -Fmn.n(sind)*Nperiods.*Fmn.data(sind)];  
   
 else %Fmn is of matrix form
   dduFmn.s = -Fmn.c.*Fmn.m;
   dduFmn.c =  Fmn.s.*Fmn.m;
 
-  ddvFmn.s = -Fmn.c.*Fmn.n*Nperiods;
-  ddvFmn.c =  Fmn.s.*Fmn.n*Nperiods;
+  ddvFmn.s =  Fmn.c.*Fmn.n*Nperiods;
+  ddvFmn.c = -Fmn.s.*Fmn.n*Nperiods;
   
   dduFmn.m=Fmn.m;
   ddvFmn.m=Fmn.m;

@@ -54,7 +54,8 @@ if strcmp(filetype,'JG')
   Geom.n0b        = header_d(2);
   Geom.nsurf      = header_d(3);
   Geom.Nperiods   = header_d(4);
-  Geom.torfluxtot = header_f(1); %No this is not what it is
+  Geom.psi_a=NaN; %Insert psi_a at this place in the list, but set it later.
+  Geom.torfluxtot = header_f(1); %Note that this is not per pol. angle
   Geom.minorradius= header_f(2);
   Geom.majorradius= header_f(3);
 
@@ -231,6 +232,7 @@ if strcmp(filetype,'JG')
   if not(Geom.StelSym)
     Geom.parity=modespar;
   end
+  Geom.psi_a=Geom.torfluxtot/2/pi;
   %fprintf(1,'\b\b\b\b\b\b\b\b\b\b\b')
   fprintf(1,'\n')
   
