@@ -2,6 +2,13 @@ function [runs,miss]=plot_radscanresults(directory)
 
 if directory(end-3:end)=='.dat'
   dirlist={};
+  if not(exist(directory,'file'))
+    if directory(1)=='/'
+      directory=[getenv('SFINCS_HOME'),'/fortran/version3',directory];
+    else    
+      directory=[getenv('SFINCS_HOME'),'/fortran/version3/',directory];
+    end
+  end
   fid = fopen(directory);
   tline = fgetl(fid);
   while ischar(tline)
@@ -38,15 +45,15 @@ Nspec=size(runs.NTV,2);
 
 fig(1)
 if Nspec==2
-  plot(runs.rN,pbar*runs.NTV(:,1),'r',runs.rN,pbar*runs.NTV(:,2),'b',...
-       runs.rN,pbar*runs.NTVfromFlux(:,1),'r--',runs.rN,pbar*runs.NTVfromFlux(:,2),'b--')
-  legend('NTV e','NTV i','NTVfromFlux e','NTVfromFlux i')
+  plot(runs.rN,-pbar*runs.NTV(:,1),'r',runs.rN,-pbar*runs.NTV(:,2),'b',...
+       runs.rN,-pbar*runs.NTVfromFlux(:,1),'r--',runs.rN,-pbar*runs.NTVfromFlux(:,2),'b--')
+  legend('\tau e','\tau i','\tau fromFlux e','\tau fromFlux i')
 elseif Nspec==1
-    plot(runs.rN,pbar*runs.NTV(:,1),'b',...
-       runs.rN,pbar*runs.NTVfromFlux(:,1),'b--')
-  legend('NTV','NTVfromFlux')
+    plot(runs.rN,-pbar*runs.NTV(:,1),'b',...
+       runs.rN,-pbar*runs.NTVfromFlux(:,1),'b--')
+  legend('\tau','\tau fromFlux')
 end
-%title('Terms of NTV')
+title('\tau ( = -NTV )')
 xlabel('r / a')
 
 
@@ -57,14 +64,19 @@ s=runs.rN.^2;
 if Nspec==2
   NTVtot=pbar*(runs.NTV(:,1)+runs.NTV(:,2));
   NTVfromFluxtot=pbar*(runs.NTVfromFlux(:,1)+runs.NTVfromFlux(:,2));
+  plot(runs.rN,-NTVtot,'g',...
+       runs.rN,-NTVfromFluxtot,'g--')
+  title('\tau total (all species together)')
+  xlabel('r /a')
 elseif Nspec==1
-   NTVtot=pbar*runs.NTV(:,1);
-   NTVfromFluxtot=pbar*runs.NTVfromFlux(:,1);
+  NTVtot=pbar*runs.NTV(:,1);
+  NTVfromFluxtot=pbar*runs.NTVfromFlux(:,1);
+  plot(runs.rN,-NTVtot,'g',...
+       runs.rN,-NTVfromFluxtot,'g--')
+  title('\tau total')
+  xlabel('r /a')
 end
-plot(s,NTVtot,'g',...
-     s,NTVfromFluxtot,'g--')
-title('NTV total (all species together)')
-xlabel('s')
+
 
 integr=NTVtot'.*abs(4*pi^2./runs.FSABHat2.*(runs.GHat+runs.iota.*runs.IHat)*...
        psiAHat*Rbar^3);
@@ -90,17 +102,19 @@ end
 
 NTV_Nm=trapz(s,integr)
 
-if Nspec==2
-  7
-else
-  A1=(runs.dnHatdpsiN(:,1)./runs.nHats(:,1)...
-     +runs.dPhiHatdpsiN'.*runs.Zs(:,1).*e./(runs.THats(:,1)*Tbar)...
-     -3/2*runs.dTHatdpsiN(:,1)./runs.THats(:,1))/psiAHat;
-  A2=runs.dTHatdpsiN(:,1)./runs.THats(:,1)/psiAHat;
-  kappaiFSAB2=vbar*Bbar*runs.FSABFlow(:,1)./runs.nHats(:,1)+...
-      runs.THats(:,1)*Tbar.*G./runs.Zs(:,1)/e./iota.*...
-      (A1+5/2*A2);
-end
+ion=find(runs.Zs(1,:)~=-1);
+A1=(runs.dnHatdpsiN(:,ion)./runs.nHats(:,ion)...
+    +runs.dPhiHatdpsiN'.*runs.Zs(:,ion).*e./(runs.THats(:,ion)*Tbar)...
+    -3/2*runs.dTHatdpsiN(:,ion)./runs.THats(:,ion))/psiAHat;
+A2=runs.dTHatdpsiN(:,ion)./runs.THats(:,ion)/psiAHat;
+kappaiFSAB2=vbar*Bbar*runs.FSABFlow(:,ion)./runs.nHats(:,ion)+...
+    runs.THats(:,ion)*Tbar.*G./runs.Zs(:,ion)/e./iota.*...
+    (A1+5/2*A2);
+FSAomegai=1./(runs.GHat'+runs.iota'.*runs.IHat').*...
+    (vbar*Bbar*runs.FSABFlow(:,ion)./runs.nHats(:,ion)...
+     -runs.THats(:,ion)*Tbar.*runs.IHat'./runs.Zs(:,ion)/e.*...
+     (A1+5/2*A2));
+
 
 %%%%%%%%%% This is for step 1 %%%%%%%%%%
 fig(5)
