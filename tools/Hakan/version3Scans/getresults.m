@@ -72,6 +72,12 @@ for hind=1:length(H)
       end
     end
     
+    out.NPeriods(ind)          =double(H{hind}.NPeriods);
+    out.Ntheta(ind)            =double(H{hind}.Ntheta);
+    out.Nzeta(ind)             =double(H{hind}.Nzeta);
+    out.Nxi(ind)               =double(H{hind}.Nxi);
+    out.NL(ind)                =double(H{hind}.NL);
+
     out.theta{ind}             =H{hind}.theta;
     out.theta{ind}             =H{hind}.theta;
     out.zeta{ind}              =H{hind}.zeta;
@@ -156,7 +162,7 @@ for hind=1:length(H)
           out.heatFlux_vm_psiN(ind,:)     =H{hind}.heatFlux_vm_psiN';
           out.momentumFlux_vm_psiN(ind,:) =H{hind}.momentumFlux_vm_psiN';
           out.FSABFlow(ind,:)             =H{hind}.FSABFlow';
-          out.flow{ind}                   =H{hind}.flow;
+          out.flow{ind}                   =H{hind}.flow';
         else
           out.finished(ind)=-1;
           warning(['Run number ',num2str(ind),...
@@ -167,7 +173,7 @@ for hind=1:length(H)
           out.heatFlux_vm_psiN(ind,:)    =NaN*zeros(Nsp,1);
           out.momentumFlux_vm_psiN(ind,:)=NaN*zeros(Nsp,1);
           out.FSABFlow(ind,:)            =NaN*zeros(Nsp,1);
-          out.flow{ind}                  =NaN*zeros(Nsp,size(out.theta{ind}));
+          out.flow{ind}                  =NaN*zeros(Nsp,out.Ntheta{ind},out.Nzeta{ind});
         end
       else
         out.NTV(ind,:)                  =NaN*ones(out.Nspecies(ind),1);
@@ -175,16 +181,10 @@ for hind=1:length(H)
         out.heatFlux_vm_psiN(ind,:)     =NaN*ones(out.Nspecies(ind),1);
         out.momentumFlux_vm_psiN(ind,:) =NaN*ones(out.Nspecies(ind),1);
         out.FSABFlow(ind,:)             =NaN*ones(out.Nspecies(ind),1);
-        out.flow{ind}                   =NaN*zeros(Nsp,size(out.theta{ind}));
+        out.flow{ind}                   =NaN*zeros(Nsp,out.Ntheta{ind},out.Nzeta{ind});
       end
     end    
     
-    
-    out.NPeriods(ind)          =double(H{hind}.NPeriods);
-    out.Ntheta(ind)            =double(H{hind}.Ntheta);
-    out.Nzeta(ind)             =double(H{hind}.Nzeta);
-    out.Nxi(ind)               =double(H{hind}.Nxi);
-    out.NL(ind)                =double(H{hind}.NL);
     if out.RHSMode(ind)~=3
       out.Nx(ind)                =double(H{hind}.Nx);
       out.NxPotentialsPerVth(ind)=double(H{hind}.NxPotentialsPerVth);

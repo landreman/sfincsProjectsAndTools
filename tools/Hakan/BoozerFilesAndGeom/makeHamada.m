@@ -1,6 +1,8 @@
 function [Ham,Booz,Cyl]=makeHamada(Geom,rind,Ntheta,Nzeta)
 
-useFFT=1;
+% If Ntheta or Nzeta is odd, don't use my FFT routines. 
+% They only work for even numbers
+useFFT = not(mod(Ntheta,2) || mod(Nzeta,2));
 
 if isempty(rind)
   error('rind is empty!')
