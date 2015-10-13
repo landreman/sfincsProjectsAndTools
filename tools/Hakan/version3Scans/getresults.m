@@ -156,16 +156,18 @@ for hind=1:length(H)
           out.heatFlux_vm_psiN(ind,:)     =H{hind}.heatFlux_vm_psiN';
           out.momentumFlux_vm_psiN(ind,:) =H{hind}.momentumFlux_vm_psiN';
           out.FSABFlow(ind,:)             =H{hind}.FSABFlow';
+          out.flow{ind}                   =H{hind}.flow;
         else
           out.finished(ind)=-1;
           warning(['Run number ',num2str(ind),...
                    ' in the directory ',out.run(ind).dir ,...
                    ' says ''finished'' but output results are missing']);
-          out.NTV(ind,:)                  =NaN*zeros(Nsp,1);
-          out.particleFlux_vm_psiN(ind,:) =NaN*zeros(Nsp,1);
-          out.heatFlux_vm_psiN(ind,:)     =NaN*zeros(Nsp,1);
-          out.momentumFlux_vm_psiN(ind,:) =NaN*zeros(Nsp,1);
-          out.FSABFlow(ind,:)             =NaN*zeros(Nsp,1);
+          out.NTV(ind,:)                 =NaN*zeros(Nsp,1);
+          out.particleFlux_vm_psiN(ind,:)=NaN*zeros(Nsp,1);
+          out.heatFlux_vm_psiN(ind,:)    =NaN*zeros(Nsp,1);
+          out.momentumFlux_vm_psiN(ind,:)=NaN*zeros(Nsp,1);
+          out.FSABFlow(ind,:)            =NaN*zeros(Nsp,1);
+          out.flow{ind}                  =NaN*zeros(Nsp,size(out.theta{ind}));
         end
       else
         out.NTV(ind,:)                  =NaN*ones(out.Nspecies(ind),1);
@@ -173,6 +175,7 @@ for hind=1:length(H)
         out.heatFlux_vm_psiN(ind,:)     =NaN*ones(out.Nspecies(ind),1);
         out.momentumFlux_vm_psiN(ind,:) =NaN*ones(out.Nspecies(ind),1);
         out.FSABFlow(ind,:)             =NaN*ones(out.Nspecies(ind),1);
+        out.flow{ind}                   =NaN*zeros(Nsp,size(out.theta{ind}));
       end
     end    
     
