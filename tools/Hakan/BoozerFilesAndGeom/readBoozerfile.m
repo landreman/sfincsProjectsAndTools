@@ -220,13 +220,21 @@ if strcmp(filetype,'JG')
   Geom.Bfilter.max_m    = max_m;
   Geom.Bfilter.maxabs_n = maxabs_n;
   Geom.R00=R00;
+  %Geom.Z00=zeros(size(R00));
   Geom.R=modesr;
   Geom.Z=modesz;
   Geom.Dphi=modesp;
+  %for rind=1:Geom.nsurf
+  %  m0n0ind=find(Geom.m{rind}==0 & Geom.n{rind}==0);
+  %  Geom.Z00(rind)=Geom.Z{rind}(m0n0ind); %This is always zero (also in Erika's files)
+  %end
   if rthetazeta_righthanded==-1
     for tmpind=1:length(Geom.n)
-      Geom.n{tmpind}=-Geom.n{tmpind};
-      Geom.Dphi{tmpind}=-Geom.Dphi{tmpind};
+      Geom.n{tmpind}=-Geom.n{tmpind};        %This assumes the argument  
+                                             %(m theta - n N phi) in (r,theta,phi) left-handed 
+                                             %Correct the Boozerfile first if another
+                                             %convention was used there
+      Geom.Dphi{tmpind}=-Geom.Dphi{tmpind}; 
     end
   end
   if not(Geom.StelSym)

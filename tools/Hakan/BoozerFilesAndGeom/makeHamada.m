@@ -171,6 +171,11 @@ gradpsi.Y=B.^2./(G+iota*I).*(dZdtheta.*dXdzeta-dXdtheta.*dZdzeta);
 gradpsi.Z=B.^2./(G+iota*I).*(dXdtheta.*dYdzeta-dYdtheta.*dZdzeta);
 gpsipsi=gradpsi.X.^2+gradpsi.Y.^2+gradpsi.Z.^2;
 
+Booz.gradpsi_XYZ=zeros(3,Ntheta,Nzeta);
+Booz.gradpsi_XYZ(1,:,:)=gradpsi.X;
+Booz.gradpsi_XYZ(2,:,:)=gradpsi.Y;
+Booz.gradpsi_XYZ(3,:,:)=gradpsi.Z;
+
 if 0 %Double-check the FFT results against the slow method
   fig(1+useFFT*4)
   surf(dYdzeta);shading flat;view(0,90)
@@ -183,6 +188,30 @@ if 0 %Double-check the FFT results against the slow method
   error('stop stop!')
 end
 
+%%%%% Direction of B
+BR=(dRdzeta+iota*dRdtheta).*B.^2/(G+iota*I);
+BZ=(dZdzeta+iota*dZdtheta).*B.^2/(G+iota*I);
+Bgeomang=(R.*dgeomangdzeta+iota*R.*dgeomangdtheta).*B.^2/(G+iota*I);
+Booz.B_XYZ=zeros(3,Ntheta,Nzeta);
+Booz.B_XYZ(3,:,:)=BZ;
+Booz.B_XYZ(1,:,:)=BR.*cos(geomang)-Bgeomang.*sin(geomang);
+Booz.B_XYZ(2,:,:)=BR.*sin(geomang)+Bgeomang.*cos(geomang);
+
+%Approximating that dr/zeta is roughly in the geometrica toroidal direction I do this
+%to project on the two directions perpedicular to the toroidal direction
+BRmean=mean(BR')'*ones(1,size(dRdtheta,2));
+BZmean=mean(BZ')'*ones(1,size(dRdtheta,2));
+%Bgeomangmean=mean(Bgeomang')'*ones(1,size(dRdtheta,2));
+bRmean=BRmean./sqrt(BRmean.^2+BZmean.^2);
+bZmean=BZmean./sqrt(BRmean.^2+BZmean.^2);
+
+dBR=BR-BRmean;
+dBZ=BZ-BZmean;
+Booz.dBinsurf=dBR.*bRmean+dBZ.*bZmean;
+Booz.dBperp=dBR.*bZmean-dBZ.*bRmean;
+%sqrt((dBR-Booz.dBinsurf*bRmean).^2+(dBZ-Booz.dBinsurf*bZmean).^2);
+
+
 Booz.Dzetacylphi=Dzetacylphi;     %for later use
 Booz.dBdtheta=dBdtheta;
 Booz.dBdzeta=dBdzeta;
@@ -190,6 +219,9 @@ Booz.dRdtheta=dRdtheta;
 Booz.dRdzeta=dRdzeta;
 Booz.dZdtheta=dZdtheta;
 Booz.dZdzeta=dZdzeta;
+Booz.BR=(dRdzeta+iota*dRdtheta).*B.^2/(G+iota*I);
+Booz.BZ=(dZdzeta+iota*dZdtheta).*B.^2/(G+iota*I);
+Booz.Bgeomang=(R.*dgeomangdzeta+iota*R.*dgeomangdtheta).*B.^2/(G+iota*I);
 
 Rinboard=zeros(1,Nzeta);
 Routboard=zeros(1,Nzeta);
@@ -415,6 +447,8 @@ if cylPossible
   Booz.cylr=cylr;
   Booz.cylR00=cylR00;
 end
+Booz.X=X;
+Booz.Y=Y;
 Booz.iota=Geom.iota(rind);
 Booz.G=Geom.Bphi(rind);
 Booz.I=Geom.Btheta(rind);
@@ -473,20 +507,42 @@ phi3D   = zeta3D;     %Because Nphi=Nzeta;Nvthet=Ntheta;
 vthet3D0= theta3D0;   %Because Nphi=Nzeta;Nvthet=Ntheta;
 phi3D0  = zeta3D0;    %Because Nphi=Nzeta;Nvthet=Ntheta;
 
+if 1 %new method
+  Nleftadd=ceil(max(Booz.phi(:,1))/(2*pi/NPeriods));
+  Nrightadd=ceil(1-min(Booz.phi(:,end))/(2*pi/NPeriods));
+  BoozphiBig      =NaN*zeros(Ntheta*3,Nphi*(Nleftadd+1+Nrightadd));
+  BoozvthetBig    =NaN*zeros(Ntheta*3,Nphi*(Nleftadd+1+Nrightadd));
+  Booz.DzetaphiBig=NaN*zeros(Ntheta*3,Nphi*(Nleftadd+1+Nrightadd));
 
-BoozphiBig=[Booz.phi-2*pi/NPeriods, Booz.phi, Booz.phi+2*pi/NPeriods;
-            Booz.phi-2*pi/NPeriods, Booz.phi, Booz.phi+2*pi/NPeriods;
-            Booz.phi-2*pi/NPeriods, Booz.phi, Booz.phi+2*pi/NPeriods];
-            
-BoozvthetBig=[Booz.vthet-2*pi,Booz.vthet-2*pi,Booz.vthet-2*pi;
-              Booz.vthet,     Booz.vthet,     Booz.vthet;
-              Booz.vthet+2*pi,Booz.vthet+2*pi,Booz.vthet+2*pi];
-%BoozBBig=[Booz.B,Booz.B,Booz.B;
-%          Booz.B,Booz.B,Booz.B;
-%          Booz.B,Booz.B,Booz.B];
-Booz.DzetaphiBig=[Booz.Dzetaphi,Booz.Dzetaphi,Booz.Dzetaphi;
-                 Booz.Dzetaphi,Booz.Dzetaphi,Booz.Dzetaphi;
-                 Booz.Dzetaphi,Booz.Dzetaphi,Booz.Dzetaphi];
+  for addi=1:Nleftadd+1+Nrightadd
+    addci=addi-(Nleftadd+1);
+    toaddphi=2*pi/NPeriods*addci;
+    BoozphiBig(1:Ntheta*3,(addi-1)*Nphi+1:addi*Nphi)=...
+        [Booz.phi+toaddphi;
+         Booz.phi+toaddphi;
+         Booz.phi+toaddphi];
+    BoozvthetBig(1:Ntheta*3,(addi-1)*Nphi+1:addi*Nphi)=...
+        [Booz.vthet-2*pi;
+         Booz.vthet;
+         Booz.vthet+2*pi];
+    Booz.DzetaphiBig(1:Ntheta*3,(addi-1)*Nphi+1:addi*Nphi)=...
+        [Booz.Dzetaphi;
+         Booz.Dzetaphi;
+         Booz.Dzetaphi];
+  end
+else %old method
+  BoozphiBig=[Booz.phi-2*pi/NPeriods, Booz.phi, Booz.phi+2*pi/NPeriods;
+              Booz.phi-2*pi/NPeriods, Booz.phi, Booz.phi+2*pi/NPeriods;
+              Booz.phi-2*pi/NPeriods, Booz.phi, Booz.phi+2*pi/NPeriods];
+  
+  BoozvthetBig=[Booz.vthet-2*pi,Booz.vthet-2*pi,Booz.vthet-2*pi;
+                Booz.vthet,     Booz.vthet,     Booz.vthet;
+                Booz.vthet+2*pi,Booz.vthet+2*pi,Booz.vthet+2*pi];
+
+  Booz.DzetaphiBig=[Booz.Dzetaphi,Booz.Dzetaphi,Booz.Dzetaphi;
+                    Booz.Dzetaphi,Booz.Dzetaphi,Booz.Dzetaphi;
+                    Booz.Dzetaphi,Booz.Dzetaphi,Booz.Dzetaphi];
+end
 
 %The following is the most time consuming step
 %tic
@@ -537,6 +593,8 @@ if cylPossible
 
   Ham.cylR00=cylR00;
 end
+Ham.X=Ham.cylR.*cos(-Ham.cylphi);
+Ham.Y=Ham.cylR.*sin(-Ham.cylphi);
 
 Ham.iota=Booz.iota;
 Ham.G=Booz.G;
@@ -638,9 +696,45 @@ else
   Cyl.cylr=sqrt(Cyl.cylZ.^2+(Cyl.cylR-cylR00).^2);
   Cyl.cylR00=cylR00;
   
+  Cyl.X=Cyl.cylR.*cos(-Cyl.cylphi);
+  Cyl.Y=Cyl.cylR.*sin(-Cyl.cylphi);
   Cyl.B=interp2(Boozzetabig,Boozthetabig,BoozBbig,...
                 mod(Cyl.zeta,2*pi/NPeriods),mod(Cyl.theta,2*pi)); 
+  Cyl.B00=sum(sum(Cyl.B))/(Cyl.Ncylth*Cyl.Ncylphi);
+  
+  %B vector
+  BoozBRbig=[Booz.BR,Booz.BR(:,1)];
+  BoozBRbig=[BoozBRbig;BoozBRbig(1,:)];
+  BoozBZbig=[Booz.BZ,Booz.BZ(:,1)];
+  BoozBZbig=[BoozBZbig;BoozBZbig(1,:)];
+  BoozBgeomangbig=[Booz.Bgeomang,Booz.Bgeomang(:,1)];
+  BoozBgeomangbig=[BoozBgeomangbig;BoozBgeomangbig(1,:)];
+  Cyl.BR=interp2(Boozzetabig,Boozthetabig,BoozBRbig,...
+                mod(Cyl.zeta,2*pi/NPeriods),mod(Cyl.theta,2*pi)); 
+  Cyl.BZ=interp2(Boozzetabig,Boozthetabig,BoozBZbig,...
+                mod(Cyl.zeta,2*pi/NPeriods),mod(Cyl.theta,2*pi)); 
+  Cyl.Bgeomang=interp2(Boozzetabig,Boozthetabig,BoozBgeomangbig,...
+                mod(Cyl.zeta,2*pi/NPeriods),mod(Cyl.theta,2*pi)); 
+  BRmean=mean(Cyl.BR')'*ones(1,size(dRdtheta,2));
+  BZmean=mean(Cyl.BZ')'*ones(1,size(dRdtheta,2));
+  bRmean=BRmean./sqrt(BRmean.^2+BZmean.^2);
+  bZmean=BZmean./sqrt(BRmean.^2+BZmean.^2);
 
+  dBR=Cyl.BR-BRmean;
+  dBZ=Cyl.BZ-BZmean;
+  Cyl.dBinsurf=dBR.*bRmean+dBZ.*bZmean;
+  Cyl.dBperp=dBR.*bZmean-dBZ.*bRmean;
+  
+  
+  if 0
+    if useFFT %calculate Bmn in Cyl coordinates
+      precision=eps*1e3;
+      min_Bmn=max(Geom.Bfilter.min_Bmn*Booz.B00/Cyl.B00,precision);
+      CylBmn=mnlist(fftmn(Cyl.B),min_Bmn,'relative');
+      Cyl.parity=CylBmn.cosparity;
+      Cyl.Bmn=CylBmn.data;
+    end
+  end
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
