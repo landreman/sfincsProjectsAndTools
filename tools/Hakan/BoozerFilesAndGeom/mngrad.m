@@ -19,6 +19,9 @@ if isfield(Fmn,'cosparity')  %Fmn is of list form
                      -Fmn.n(sind)*Nperiods.*Fmn.data(sind)];  
   
 else %Fmn is of matrix form
+  Nu_even=isnan(Fmn.s(end,Fmn.n0ind));
+  Nv_even=not(mod(size(Fmn.c,2),2));
+
   dduFmn.s = -Fmn.c.*Fmn.m;
   dduFmn.c =  Fmn.s.*Fmn.m;
 
@@ -40,23 +43,34 @@ else %Fmn is of matrix form
   %if we want to transform back to real space.
   
   dduFmn.c(Fmn.m0ind,Fmn.n0ind)=0;
-  dduFmn.c(end,Fmn.n0ind)=0;
-  dduFmn.c(Fmn.m0ind,end)=0;
-  dduFmn.c(end,end)=0;
   dduFmn.s(Fmn.m0ind,Fmn.n0ind)=NaN;
-  dduFmn.s(end,Fmn.n0ind)=NaN;
-  dduFmn.s(Fmn.m0ind,end)=NaN;
-  dduFmn.s(end,end)=NaN;
+  if Nu_even
+    dduFmn.c(end,Fmn.n0ind)=0;
+    dduFmn.s(end,Fmn.n0ind)=NaN;
+    if Nv_even
+      dduFmn.c(end,end)=0;
+      dduFmn.s(end,end)=NaN;
+    end
+  end
+  if Nv_even
+    dduFmn.c(Fmn.m0ind,end)=0;
+    dduFmn.s(Fmn.m0ind,end)=NaN;
+  end
   
   ddvFmn.c(Fmn.m0ind,Fmn.n0ind)=0;
-  ddvFmn.c(end,Fmn.n0ind)=0;
-  ddvFmn.c(Fmn.m0ind,end)=0;
-  ddvFmn.c(end,end)=0;
   ddvFmn.s(Fmn.m0ind,Fmn.n0ind)=NaN;
-  ddvFmn.s(end,Fmn.n0ind)=NaN;
-  ddvFmn.s(Fmn.m0ind,end)=NaN;
-  ddvFmn.s(end,end)=NaN;
-  
+  if Nu_even
+    ddvFmn.c(end,Fmn.n0ind)=0;
+    ddvFmn.s(end,Fmn.n0ind)=NaN;
+    if Nv_even
+      ddvFmn.c(end,end)=0;
+      ddvFmn.s(end,end)=NaN;
+    end
+  end
+  if Nv_even
+    ddvFmn.c(Fmn.m0ind,end)=0;
+    ddvFmn.s(Fmn.m0ind,end)=NaN;
+  end
 end
 
 if nargout==2
