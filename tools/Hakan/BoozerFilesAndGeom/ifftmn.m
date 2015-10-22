@@ -1,5 +1,7 @@
 function varargout=ifftmn(Fmns,varargin)
-% if length(varargout)=length(Fmn)+2 then the two last output arguments are the
+% This routine can process more than one Fmn input by giving a vector as input:
+% Fmns=[Fmn1,Fmn2,Fmn3...]
+% if length(varargout)=length(Fmns)+2 then the two last output arguments are the
 % poloidal and toroidal dicretisation matrices u and v.
 
 % The input Nperiods=varargin{1} is required if the output
@@ -26,69 +28,102 @@ end
 for inputind=1:Ninput
   Fmn=Fmns(inputind);
     
-  Nv=size(Fmn.c,2);
-  Nu=(size(Fmn.c,1)-1)*2;
-  if Nv~=size(Fmn.s,2) || Nu~=(size(Fmn.s,1)-1)*2;
+  if any(size(Fmn.c)~=size(Fmn.s))
     error('Sizes of Fmn.c and Fmn.s are inconsistent!')
   end
+  Nv=size(Fmn.c,2);
+  % The boolean isnan(Fmn.s(end,Fmn.n0ind)) marks whether Nu is even
+  Nu=(size(Fmn.c,1)-1)*2+not(isnan(Fmn.s(end,Fmn.n0ind)));
 
   if nargin==4
     Nu_in=Nu;
     Nv_in=Nv;
     Nu=varargin{2};
     Nv=varargin{3};
-    if (Nu/2-floor(Nu/2)~=0) || (Nv/2-floor(Nv/2)~=0)
-    error('The size must be an even number!')
+    if mod(Nu-Nu_in,2)~=0 || mod(Nv-Nv_in,2)~=0
+      error('The new M must have the same even/odd parity as the old M. The same goes for N!')
     end
 
-    nrange=-Nv/2+1:Nv/2;
-    mrange=0:Nu/2;
+    mmax=floor(Nu/2);
+    nmax=floor(Nv/2);
+    Nu_even=not(mod(Nu,2));
+    Nv_even=not(mod(Nv,2));
+    nrange=-nmax+Nv_even:nmax;
+    mrange=0:mmax;
+    %nrange=-Nv/2+1:Nv/2;
+    %mrange=0:Nu/2;
     [m,n]=ndgrid(mrange,nrange);
     m0ind=1;
-    n0ind=Nv/2;
+    n0ind=ceil(Nv/2);
     
     Fmn_in=Fmn;
     if Nu>Nu_in && Nv>Nv_in
       du=(Nu-Nu_in)/2;
       dv=(Nv-Nv_in)/2;
-      Fmn.c=zeros(Nu/2+1,Nv);
-      Fmn.s=zeros(Nu/2+1,Nv);
-      Fmn_in.c(end,1:Nv_in/2-1)=0; %remove these NaNs before enlarging
-      Fmn_in.s(end,1:Nv_in/2)=0; %remove these NaNs before enlarging
-      Fmn_in.s(1,end)=0; %remove this NaN before enlarging
-      Fmn_in.s(end,end)=0; %remove this NaN before enlarging
+      m0ind_in=1;
+      n0ind_in=ceil(Nv_in/2);
+      Fmn.c=zeros(mmax+1,Nv);
+      Fmn.s=zeros(mmax+1,Nv);
+      if Nu_even
+        Fmn_in.c(end,1:n0ind_in-1)=0; %remove these NaNs before enlarging
+        Fmn_in.s(end,1:n0ind_in)=0; %remove these NaNs before enlarging
+        if Nv_even
+          Fmn_in.s(end,end)=0; %remove this NaN before enlarging
+        end
+      end
+      if Nv_even
+        Fmn_in.s(1,end)=0; %remove this NaN before enlarging
+      end
       
       Fmn.c(1:end-du,1+dv:end-dv)=Fmn_in.c;
       Fmn.s(1:end-du,1+dv:end-dv)=Fmn_in.s;
       
       Fmn.c(1,1:n0ind-1)=NaN;
-      Fmn.c(end,1:n0ind-1)=NaN;
       Fmn.s(1,1:n0ind)=NaN;
-      Fmn.s(end,1:n0ind)=NaN;
-      Fmn.s(1,end)=NaN;
-      Fmn.s(end,end)=NaN;
-      
-    elseif Nu<Nu_in && Nv<Nv_in
-      disp('Warning: Requested spatial discretisation may not resolve all modes!')
+      if Nu_even
+        Fmn.c(end,1:n0ind-1)=NaN;
+        Fmn.s(end,1:n0ind)=NaN;
+        if Nv_even
+          Fmn.s(end,end)=NaN;
+        end
+      end
+      if Nv_even
+        Fmn.s(1,end)=NaN;
+      end     
+    elseif Nu<=Nu_in && Nv<=Nv_in
+      if Nu<Nu_in || Nv<Nv_in
+        disp(['ifftmn.m: Warning: Requested spatial discretisation ',...
+              'may not resolve all modes!'])
+      end
       du=(Nu_in-Nu)/2;
       dv=(Nv_in-Nv)/2;
       Fmn.c=Fmn_in.c(1:end-du,1+dv:end-dv);
       Fmn.s=Fmn_in.s(1:end-du,1+dv:end-dv);
-      Fmn.c(end,1:n0ind-1)=NaN;
-      Fmn.s(end,1:n0ind)=NaN;
-      Fmn.s(1,end)=NaN;
-      Fmn.s(end,end)=NaN;
-    elseif Nu==Nu_in && Nv==Nv_in
+      if Nu_even
+        Fmn.c(end,1:n0ind-1)=NaN;
+        Fmn.s(end,1:n0ind)=NaN;
+        if Nv_even
+          Fmn.s(end,end)=NaN;
+        end
+      end
+      if Nv_even
+        Fmn.s(1,end)=NaN;
+      end
+    elseif Nu==Nu_in && Nv==Nv_in %(already covered by the previous case)
       Fmn=Fmn_in;
     else
       error('The case where Nu is increased and Nv decreased is not implemented yet!')
     end
   else
-    nrange=-Nv/2+1:Nv/2;
-    mrange=0:Nu/2;
+    mmax=floor(Nu/2);
+    nmax=floor(Nv/2);
+    Nu_even=not(mod(Nu,2));
+    Nv_even=not(mod(Nv,2));
+    nrange=-nmax+Nv_even:nmax;
+    mrange=0:mmax;
     [m,n]=ndgrid(mrange,nrange);
     m0ind=1;
-    n0ind=Nv/2;
+    n0ind=ceil(Nv/2);
   end
   
   uvec=(0:Nu-1)/Nu*2*pi;
@@ -97,57 +132,69 @@ for inputind=1:Ninput
 
   %Normal assembly, is very slow
   if 0
-    f=zeros(Nu);
-    for m=1:Nu/2-1
-      %disp([num2str(m),' / ',num2str(Nu/2-1)])
-      for n= -Nv/2+1:Nv/2
-        f=f+Fmn.c(m+1,n+Nv/2)*cos(m*u-n*v)+Fmn.s(m+1,n+Nv/2)*sin(m*u-n*v);
+    f=zeros(Nu,Nv);
+    for m=1:mmax-Nu_even
+      %disp([num2str(m),' / ',num2str(mmaxNu-Nu_even)])
+      for n= -nmax+Nv_even:nmax
+        f=f+Fmn.c(m+1,n+n0ind)*cos(m*u-n*v)+Fmn.s(m+1,n+n0ind)*sin(m*u-n*v);
       end
     end
     
-    for n=0:Nv/2
-      f=f+Fmn.c(1,n+Nv/2)*cos(-n*v)+Fmn.c(end,n+Nv/2)*cos(Nu/2*u-n*v);
+    for n=0:nmax
+      f=f+Fmn.c(1,n+n0ind)*cos(-n*v)+...
+        Nu_even*Fmn.c(end,n+n0ind)*cos(Nu/2*u-n*v);
     end
     
-    for n=1:Nv/2-1
-      f=f+Fmn.s(1,n+Nv/2)*sin(-n*v)+Fmn.s(end,n+Nv/2)*sin(Nu/2*u-n*v);
+    for n=1:nmax-Nv_even
+      f=f+Fmn.s(1,n+n0ind)*sin(-n*v)+...
+        Nu_even*Fmn.s(end,n+n0ind)*sin(Nu/2*u-n*v);
     end
   else %ifft assembly, is much faster
     
     Fmn.c(m0ind,n0ind)=Fmn.c(m0ind,n0ind)*2;
-    Fmn.c(end,n0ind)=Fmn.c(end,n0ind)*2;
-    Fmn.c(m0ind,end)=Fmn.c(m0ind,end)*2;
-    Fmn.c(end,end)=Fmn.c(end,end)*2;
-    
-    Fmn.c(m0ind,1:n0ind-1)=fliplr(Fmn.c(m0ind,n0ind+1:end-1));
+    Fmn.c(m0ind,1:n0ind-1)=fliplr(Fmn.c(m0ind,n0ind+1:end-Nv_even));
     Fmn.s(m0ind,n0ind)=0;
-    Fmn.s(m0ind,end)=0;
-    Fmn.s(m0ind,1:n0ind-1)=-fliplr(Fmn.s(m0ind,n0ind+1:end-1));
+    Fmn.s(m0ind,1:n0ind-1)=-fliplr(Fmn.s(m0ind,n0ind+1:end-Nv_even));
+    if Nv_even
+      Fmn.c(m0ind,end)=Fmn.c(m0ind,end)*2;    
+      Fmn.s(m0ind,end)=0;
+    end
     
-    Fmn.c(end,1:n0ind-1)=fliplr(Fmn.c(end,n0ind+1:end-1));
-    Fmn.s(end,n0ind)=0;
-    Fmn.s(end,end)=0;
-    Fmn.s(end,1:n0ind-1)=-fliplr(Fmn.s(end,n0ind+1:end-1));
-
+    if Nu_even
+      Fmn.c(end,n0ind)=Fmn.c(end,n0ind)*2;
+      Fmn.c(end,1:n0ind-1)=fliplr(Fmn.c(end,n0ind+1:end-Nv_even));
+      Fmn.s(end,n0ind)=0;
+      Fmn.s(end,1:n0ind-1)=-fliplr(Fmn.s(end,n0ind+1:end-Nv_even));
+      if Nv_even
+        Fmn.c(end,end)=Fmn.c(end,end)*2;
+        Fmn.s(end,end)=0;
+      end
+    end
+    
     Fmncos=zeros(Nu,Nv);
     Fmnsin=zeros(Nu,Nv);
-    Fmncos(1:Nu/2+1,:)=Fmn.c;
-    Fmnsin(1:Nu/2+1,:)=Fmn.s;
+    Fmncos(1:mmax+1,:)=Fmn.c;
+    Fmnsin(1:mmax+1,:)=Fmn.s;
     
-    Fmncos(Nu/2+2:end,n0ind)=flipud(Fmncos(2:Nu/2,n0ind));
-    Fmncos(Nu/2+2:end,end)  =flipud(Fmncos(2:Nu/2,end));
-    Fmnsin(Nu/2+2:end,n0ind)=-flipud(Fmnsin(2:Nu/2,n0ind));
-    Fmnsin(Nu/2+2:end,end)  =-flipud(Fmnsin(2:Nu/2,end));
-
+    Fmncos(mmax+2:end,n0ind)=flipud(Fmncos(2:mmax+1-Nu_even,n0ind));
+    Fmnsin(mmax+2:end,n0ind)=-flipud(Fmnsin(2:mmax+1-Nu_even,n0ind));
     
-    Fmncos(Nu/2+2:end,1:Nv/2-1)     =fliplr(flipud(Fmncos(2:Nu/2,Nv/2+1:end-1)));
-    Fmncos(Nu/2+2:end,Nv/2+1:end-1) =fliplr(flipud(Fmncos(2:Nu/2,1:Nv/2-1)));
-    Fmnsin(Nu/2+2:end,1:Nv/2-1)     =-fliplr(flipud(Fmnsin(2:Nu/2,Nv/2+1:end-1)));
-    Fmnsin(Nu/2+2:end,Nv/2+1:end-1) =-fliplr(flipud(Fmnsin(2:Nu/2,1:Nv/2-1)));
+    if Nv_even
+      Fmncos(mmax+2:end,end)  =flipud(Fmncos(2:mmax+1-Nu_even,end));
+      Fmnsin(mmax+2:end,end)  =-flipud(Fmnsin(2:mmax+1-Nu_even,end));
+    end
+    
+    Fmncos(mmax+2:end,1:n0ind-1)           ...
+        =fliplr(flipud(Fmncos(2:mmax+1-Nu_even,n0ind+1:end-Nv_even)));
+    Fmncos(mmax+2:end,n0ind+1:end-Nv_even) ...
+        =fliplr(flipud(Fmncos(2:mmax+1-Nu_even,1:n0ind-1)));
+    Fmnsin(mmax+2:end,1:n0ind-1)     ...
+        =-fliplr(flipud(Fmnsin(2:mmax+1-Nu_even,n0ind+1:end-Nv_even)));
+    Fmnsin(mmax+2:end,n0ind+1:end-Nv_even)       ...
+        =-fliplr(flipud(Fmnsin(2:mmax+1-Nu_even,1:n0ind-1)));
     
     F=Nu*Nv/2*(Fmncos-i*Fmnsin);
-    
-    f=real(ifft2(fftshift(fliplr(F),2)));
+    f=real(ifft2(ifftshift(fliplr(F),2)));
   end
 
   varargout{inputind}=f;

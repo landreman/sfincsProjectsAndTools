@@ -15,15 +15,22 @@ end
 for inputind=1:length(Fmns)
   Fmn=Fmns(inputind);
 
+  Nu_even=isnan(Fmn.s(end,Fmn.n0ind));
+  Nv_even=not(mod(size(Fmn.c,2),2));
+  
   securityLevel=1;
   if not(isnan(Fmn.s(Fmn.m0ind,Fmn.n0ind)))
     error('A m=n=0 sine term is present!')
   end
-  if not(isnan(Fmn.s(Fmn.m0ind,end)))
-    error('Unresolvable sine information included!')
-  end
-  if not(isnan(Fmn.s(end,end)))
-    error('Unresolvable sine information included!')
+  if Nv_even
+    if not(isnan(Fmn.s(Fmn.m0ind,end)))
+      error('Unresolvable sine information included!')
+    end
+    if Nu_even
+      if not(isnan(Fmn.s(end,end)))
+        error('Unresolvable sine information included!')
+      end
+    end
   end
   if not(all(isnan(Fmn.s(Fmn.m0ind,1:Fmn.n0ind-1))))
     if securityLevel<=0
@@ -49,27 +56,28 @@ for inputind=1:length(Fmns)
       error('Negative n values for m=0 cos terms found!')
     end
   end
-  if not(all(isnan(Fmn.s(end,1:Fmn.n0ind-1))))
-    if securityLevel==0
-      warning(['Negative n values for m=mmax sine terms found! Subtracting these components ', ...
-               'from the corresponding positive n data'])
-      Fmn.s(end,Fmn.n0ind+1:end-1)=Fmn.s(end,Fmn.n0ind+1:end-1) ...
-          -fliplr(Fmn.s(end,2:Fmn.n0ind-1));
-    else % securityLevel==1
-      error('Negative n values for m=mmax sine terms found!')
+  if Nu_even
+    if not(all(isnan(Fmn.s(end,1:Fmn.n0ind-1))))
+      if securityLevel==0
+        warning(['Negative n values for m=mmax sine terms found! Subtracting these components ', ...
+                 'from the corresponding positive n data'])
+        Fmn.s(end,Fmn.n0ind+1:end-1)=Fmn.s(end,Fmn.n0ind+1:end-1) ...
+            -fliplr(Fmn.s(end,2:Fmn.n0ind-1));
+      else % securityLevel==1
+        error('Negative n values for m=mmax sine terms found!')
+      end
+    end
+    if not(all(isnan(Fmn.c(end,1:Fmn.n0ind-1))))
+      if securityLevel==0
+        warning(['Negative n values for m=mmax cos terms found! Adding these components ', ...
+                 'to the corresponding positive n data'])
+        Fmn.c(end,Fmn.n0ind+1:end-1)=Fmn.c(end,Fmn.n0ind+1:end-1) ...
+            +fliplr(Fmn.c(end,2:Fmn.n0ind-1));
+      else % securityLevel==1
+        error('Negative n values for m=mmax cos terms found!')
+      end
     end
   end
-  if not(all(isnan(Fmn.c(end,1:Fmn.n0ind-1))))
-    if securityLevel==0
-      warning(['Negative n values for m=mmax cos terms found! Adding these components ', ...
-               'to the corresponding positive n data'])
-      Fmn.c(end,Fmn.n0ind+1:end-1)=Fmn.c(end,Fmn.n0ind+1:end-1) ...
-          +fliplr(Fmn.c(end,2:Fmn.n0ind-1));
-    else % securityLevel==1
-      error('Negative n values for m=mmax cos terms found!')
-    end
-  end
-
 
   if strcmp(thresholdType,'relative')
     threshold=threshold*Fmn.c(Fmn.m0ind,Fmn.n0ind);
