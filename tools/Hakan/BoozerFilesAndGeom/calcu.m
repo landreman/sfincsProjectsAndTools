@@ -11,6 +11,9 @@ if length(iotas)==1
     umn.c=iota*(G*hmn.m + I*hmn.n * NPeriod)./(hmn.n * NPeriod - iota*hmn.m).*hmn.c;
     umn.s=iota*(G*hmn.m + I*hmn.n * NPeriod)./(hmn.n * NPeriod - iota*hmn.m).*hmn.s;
     
+    umn.c(hmn.m0ind,hmn.n0ind)=0;
+    umn.s(hmn.m0ind,hmn.n0ind)=0;
+    
     umn.m=hmn.m;
     umn.n=hmn.n;
     umn.m0ind=hmn.m0ind;
@@ -29,6 +32,9 @@ else %inputs were given in vectors
     umn.c=iota*(G*hmn.m + I*hmn.n * NPeriod)./(hmn.n * NPeriod - iota*hmn.m).*hmn.c;
     umn.s=iota*(G*hmn.m + I*hmn.n * NPeriod)./(hmn.n * NPeriod - iota*hmn.m).*hmn.s;
     
+    umn.c(hmn.m0ind,hmn.n0ind)=0;
+    umn.s(hmn.m0ind,hmn.n0ind)=0;
+
     umn.m=hmn.m;
     umn.n=hmn.n;
     umn.m0ind=hmn.m0ind;
