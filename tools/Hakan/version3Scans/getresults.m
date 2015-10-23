@@ -93,6 +93,11 @@ for hind=1:length(H)
     out.alpha(ind)         =H{hind}.alpha;
     out.Delta(ind)         =H{hind}.Delta;
 
+    %out.BDotCurlB{ind}     =H{hind}.BDotCurlB; %Only saved for VMEC input ????
+    out.BHat{ind}          =H{hind}.BHat;
+    out.dBHatdtheta{ind}   =H{hind}.dBHatdtheta;
+    out.dBHatdzeta{ind}    =H{hind}.dBHatdzeta;
+    
     doCorrection=1;
     if doCorrection
       if out.psiAHat(ind)*out.GHat(ind)<0
@@ -173,7 +178,7 @@ for hind=1:length(H)
           out.heatFlux_vm_psiN(ind,:)    =NaN*zeros(Nsp,1);
           out.momentumFlux_vm_psiN(ind,:)=NaN*zeros(Nsp,1);
           out.FSABFlow(ind,:)            =NaN*zeros(Nsp,1);
-          out.flow{ind}                  =NaN*zeros(Nsp,out.Ntheta{ind},out.Nzeta{ind});
+          out.flow{ind}                  =NaN*zeros(Nsp,out.Ntheta(ind),out.Nzeta(ind));
         end
       else
         out.NTV(ind,:)                  =NaN*ones(out.Nspecies(ind),1);
@@ -181,7 +186,7 @@ for hind=1:length(H)
         out.heatFlux_vm_psiN(ind,:)     =NaN*ones(out.Nspecies(ind),1);
         out.momentumFlux_vm_psiN(ind,:) =NaN*ones(out.Nspecies(ind),1);
         out.FSABFlow(ind,:)             =NaN*ones(out.Nspecies(ind),1);
-        out.flow{ind}                   =NaN*zeros(Nsp,out.Ntheta{ind},out.Nzeta{ind});
+        out.flow{ind}                   =NaN*zeros(Nsp,out.Ntheta(ind),out.Nzeta(ind));
       end
     end    
     

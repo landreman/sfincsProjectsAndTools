@@ -43,7 +43,7 @@ psiAHat=runs.psiAHat(1);
 
 Nspec=size(runs.NTV,2);
 
-tauE=calcAlltauE(runs,mndPhidpsi)
+tauE=calcAlltauE(runs)
 
 fig(1)
 if Nspec==2
