@@ -54,29 +54,49 @@ for inputind=1:length(lsts)
     end
   end
 
-
+  if nargin==3 %We know if the user wants even/odd Nu and Nv
+    Nu_even=not(mod(varargin{1},2));
+    Nv_even=not(mod(varargin{2},2));
+  else
+    Nu_even=1;%Default
+    Nv_even=1;%Default
+  end
+  
   mmax=max(lst.m)+1; %add 1 not to loose sign information on the highest m components
   nmax=max(abs(lst.n))+1; %same for n
-
+  
+  nmax=nmax + (not(mod(nmax,2))~=Nv_even);
+  Nv=2*nmax+not(Nv_even);
+  Nu=2*mmax+not(Nu_even);
+  
   %Nu=2^(ceil(log(max(mmax,nmax))/log(2))+1); %If we want powers of 2
-  Nu=ceil(max(mmax,nmax))*2;
-  Nv=Nu;
+  %Nu=ceil(max(mmax,nmax))*2;
+  %Nv=Nu; %If we want square
 
   if nargin==3
     Nu=max(varargin{1},Nu);
     Nv=max(varargin{2},Nv);
   end
   
-  inds=find(lst.n==-Nv/2);
-  if not(isempty(inds))
-    lst.n(inds)=-lst.n(inds);
+  if Nv_even
+    inds=find(lst.n==-Nv/2);
+    if not(isempty(inds))
+      lst.n(inds)=-lst.n(inds);
+    end
   end
 
   problem=0;
-  ind1=find(lst.m==0 & lst.n==Nv/2);
-  ind2=find(lst.m==Nu/2 & lst.n==Nv/2);
-  ind3=find(lst.m==Nu/2 & lst.n==0);
-  inds4=find(lst.m==Nu/2 & lst.n<0);
+  ind1=[];ind2=[];ind3=[];inds4=[];
+  if Nv_even
+    ind1=find(lst.m==0 & lst.n==Nv/2);
+    if Nu_even
+      ind2=find(lst.m==Nu/2 & lst.n==Nv/2);
+    end
+  end
+  if Nu_even
+    ind3=find(lst.m==Nu/2 & lst.n==0);
+    inds4=find(lst.m==Nu/2 & lst.n<0);
+  end
   if not(isempty(ind1))
     if lst.cosparity(ind1)==0
       problem=1;
@@ -84,35 +104,43 @@ for inputind=1:length(lsts)
   end
   if not(isempty(ind2))
     if lst.cosparity(ind2)==0
-      problem=1;
+      problem=2;
     end
   end
   if not(isempty(ind3))
     if lst.cosparity(ind3)==0
-      problem=1;
+      problem=3;
     end
   end
   if not(isempty(inds4))
-    problem=1;
+    problem=3;
   end
 
-  if problem
+  switch problem
+   case 1
     Nv=Nv+2;
+   case 2
+    Nv=Nv+2;
+    Nu=Nu+2;
+   case 3
     Nu=Nu+2;
   end
 
-  nrange=-Nv/2+1:Nv/2;
-  mrange=0:Nu/2;
+  mmax=floor(Nu/2);
+  nmax=floor(Nv/2);
+  nrange=-nmax+Nv_even:nmax;
+  mrange=0:mmax;
+
   [m,n]=ndgrid(mrange,nrange);
   Fmn.c=zeros(size(m));
   Fmn.s=zeros(size(m));
   Fmn.m=m;
   Fmn.n=n;
   Fmn.m0ind=1;
-  Fmn.n0ind=Nv/2;
+  Fmn.n0ind=ceil(Nv/2);
 
   mind=lst.m+1;
-  nind=lst.n+Nv/2;
+  nind=lst.n+Fmn.n0ind;
 
   for li=1:length(lst.m)
     if lst.cosparity(li)
@@ -124,10 +152,16 @@ for inputind=1:length(lsts)
 
   Fmn.c(Fmn.m0ind,1:Fmn.n0ind-1)=NaN;
   Fmn.s(Fmn.m0ind,1:Fmn.n0ind)=NaN;
-  Fmn.c(end,1:Fmn.n0ind-1)=NaN;
-  Fmn.s(end,1:Fmn.n0ind)=NaN;
-  Fmn.s(Fmn.m0ind,end)=NaN;
-  Fmn.s(end,end)=NaN;
+  if Nu_even
+    Fmn.c(end,1:Fmn.n0ind-1)=NaN;
+    Fmn.s(end,1:Fmn.n0ind)=NaN;
+    if Nv_even
+      Fmn.s(end,end)=NaN;
+    end
+  end
+  if Nv_even
+    Fmn.s(Fmn.m0ind,end)=NaN;
+  end
 
   %Store the output
   Fmns(inputind)=Fmn;
