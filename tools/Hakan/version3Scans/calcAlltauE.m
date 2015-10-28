@@ -18,7 +18,7 @@ for spec=1:runs.Nspecies(1)
         runs.nHats(ind,spec)*nbar*...
         runs.dPhiHatdpsiN(ind)*Phibar/runs.psiAHat(ind);
     
-    vpar=squeeze(runs.flow{ind})'/runs.nHats(ind,spec)*vbar;
+    vpar=squeeze(runs.flow{ind})/runs.nHats(ind,spec)*vbar;
     
     
     BHat=runs.BHat{ind};
@@ -46,7 +46,6 @@ for spec=1:runs.Nspecies(1)
         (G.*dBdtheta-I.*dBdzeta);
     
     tauE(ind,spec) = -mndPhidpsi(ind)*sum(sum(integrand.*h))/sum(sum(h));
-  error
   end
 end
 

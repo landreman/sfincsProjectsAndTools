@@ -319,6 +319,7 @@ if useFFT
     Dzetaphi_mn.c(end,hmn.n0ind)=0; %info was lost here
     Dzetaphi_mn.s(end,hmn.n0ind)=NaN; %info was lost here
   end
+
   [u,Dzetaphi]=ifftmn([umn,Dzetaphi_mn]);
   %toc
 else %not(useFFT)

@@ -94,9 +94,12 @@ for hind=1:length(H)
     out.Delta(ind)         =H{hind}.Delta;
 
     %out.BDotCurlB{ind}     =H{hind}.BDotCurlB; %Only saved for VMEC input ????
-    out.BHat{ind}          =H{hind}.BHat;
-    out.dBHatdtheta{ind}   =H{hind}.dBHatdtheta;
-    out.dBHatdzeta{ind}    =H{hind}.dBHatdzeta;
+    out.BHat{ind}          =H{hind}.BHat';
+    out.dBHatdtheta{ind}   =H{hind}.dBHatdtheta';
+    out.dBHatdzeta{ind}    =H{hind}.dBHatdzeta';
+    if isfield(H{hind},'uHat')
+      out.uHat{ind}         =H{hind}.uHat';
+    end
     
     doCorrection=1;
     if doCorrection
@@ -168,6 +171,9 @@ for hind=1:length(H)
           out.momentumFlux_vm_psiN(ind,:) =H{hind}.momentumFlux_vm_psiN';
           out.FSABFlow(ind,:)             =H{hind}.FSABFlow';
           out.flow{ind}                   =H{hind}.flow';
+          out.pressurePerturbation{ind}   =H{hind}.pressurePerturbation';
+          out.pressureAnisotropy{ind}     =H{hind}.pressureAnisotropy';
+          out.NTVBeforeSurfaceIntegral{ind}=H{hind}.NTVBeforeSurfaceIntegral';
         else
           out.finished(ind)=-1;
           warning(['Run number ',num2str(ind),...
@@ -179,6 +185,9 @@ for hind=1:length(H)
           out.momentumFlux_vm_psiN(ind,:)=NaN*zeros(Nsp,1);
           out.FSABFlow(ind,:)            =NaN*zeros(Nsp,1);
           out.flow{ind}                  =NaN*zeros(Nsp,out.Ntheta(ind),out.Nzeta(ind));
+          out.pressurePerturbation{ind}  =NaN*zeros(Nsp,out.Ntheta(ind),out.Nzeta(ind));
+          out.pressureAnisotropy{ind}    =NaN*zeros(Nsp,out.Ntheta(ind),out.Nzeta(ind));
+          out.NTVBeforeSurfaceIntegral{ind}=NaN*zeros(Nsp,out.Ntheta(ind),out.Nzeta(ind));
         end
       else
         out.NTV(ind,:)                  =NaN*ones(out.Nspecies(ind),1);
@@ -187,6 +196,9 @@ for hind=1:length(H)
         out.momentumFlux_vm_psiN(ind,:) =NaN*ones(out.Nspecies(ind),1);
         out.FSABFlow(ind,:)             =NaN*ones(out.Nspecies(ind),1);
         out.flow{ind}                   =NaN*zeros(Nsp,out.Ntheta(ind),out.Nzeta(ind));
+        out.pressurePerturbation{ind}   =NaN*zeros(Nsp,out.Ntheta(ind),out.Nzeta(ind));
+        out.pressureAnisotropy{ind}     =NaN*zeros(Nsp,out.Ntheta(ind),out.Nzeta(ind));
+        out.NTVBeforeSurfaceIntegral{ind}=NaN*zeros(Nsp,out.Ntheta(ind),out.Nzeta(ind));
       end
     end    
     
