@@ -39,11 +39,21 @@ psiAHat=runs.psiAHat(1);
 vbar=sqrt(1e3*e*2/mp);
 iota=runs.iota';
 G=runs.GHat'*Bbar*Rbar;
+I=runs.IHat'*Bbar*Rbar;
+iota=runs.iota';
+B00=runs.B0OverBBar'*Bbar;
 psiAHat=runs.psiAHat(1);
-
 Nspec=size(runs.NTV,2);
+ion=find(runs.Zs(1,:)~=-1);
+TikeV=runs.THats(:,ion);
+vTi=sqrt(TikeV*e*1e3*2/mp./runs.mHats(:,ion));
+ni20=runs.nHats(:,ion);
+Z=runs.Zs(:,ion);
+mi=runs.mHats(:,ion)*mp;
 
-tauE=calcAlltauE(runs,mndPhidpsi)
+[tauP,tauE]=calcAlltau(runs);
+
+the_first_two_should_be_equal=[tauP,-pbar*runs.NTV(:,1),tauE]
 
 fig(1)
 if Nspec==2
@@ -104,7 +114,6 @@ end
 
 NTV_Nm=trapz(s,integr)
 
-ion=find(runs.Zs(1,:)~=-1);
 A1=(runs.dnHatdpsiN(:,ion)./runs.nHats(:,ion)...
     +runs.dPhiHatdpsiN'.*runs.Zs(:,ion).*e./(runs.THats(:,ion)*Tbar)...
     -3/2*runs.dTHatdpsiN(:,ion)./runs.THats(:,ion))/psiAHat;
@@ -116,6 +125,53 @@ FSAomegai=1./(runs.GHat'+runs.iota'.*runs.IHat').*...
     (vbar*Bbar*runs.FSABFlow(:,ion)./runs.nHats(:,ion)...
      -runs.THats(:,ion)*Tbar.*runs.IHat'./runs.Zs(:,ion)/e.*...
      (A1+5/2*A2));
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Approximate analytical calculations in the ripple plateau
+% for the AUG equilibrium rip_n16
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+nameliststr=runs.run.input_namelist;
+nameliststr=nameliststr(find(nameliststr~=char(10))); %remove eol.
+eind=findstr(nameliststr,'equilibriumFile');
+startind=eind+15;
+while nameliststr(startind)~='"';
+  startind=startind+1;
+end
+startind=startind+1;
+stopind=startind;
+while nameliststr(stopind)~='"';
+  stopind=stopind+1;
+end
+stopind=stopind-1;
+Geom=readBoozerfile(nameliststr(startind:stopind));
+
+
+FSAB2=zeros(length(runs.rN),1);
+FSAg_phiphi=zeros(length(runs.rN),1);
+integr=zeros(length(runs.rN),1);
+FSAdelta2overB=zeros(length(runs.rN),1);
+
+for ind=1:length(runs.rN)
+  fprintf(1,'\b\b\b\b\b\b\b\b\b\b\b%3i/%3i',ind,length(runs.rN))
+  rnorm=runs.rN(ind);
+  rind=findnearest(Geom.rnorm,rnorm);
+  Ntheta=85;
+  Nzeta=35;%Ntheta;
+  [Ham,Booz]=makeHamada(Geom,rind,Ntheta,Nzeta);
+  FSAg_phiphi(ind)=Booz.FSAg_phiphi;
+  FSAB2(ind)=Booz.FSAB2;
+  Btormean=mean(Booz.B,2)*ones(1,Nzeta);
+  deltatw=(Booz.B-Btormean)./Btormean;
+  %integr(ind)=4*pi^2/(Ntheta*Nzeta)*sum(sum(deltatw.^2./Btormean.^3))*2;
+  FSAdelta2overB(ind)=2*sum(sum(deltatw.^2./Btormean.^3))/sum(sum(1./Booz.B.^2));
+end
+fprintf(1,'\n')
+
+plat.tau2=Geom.Nperiods*mi.^2.*vTi.^3.*(ni20*1e20)./(Z*e)./iota*...
+          sqrt(pi)/4.*(G+iota.*I).*FSAdelta2overB.*(A1+A2*3);
+
+
 
 
 %%%%%%%%%% This is for step 1 %%%%%%%%%%
@@ -134,3 +190,12 @@ plot(runs.rN,kappaiFSAB2)
 title('\kappa_i <B^2>')
 xlabel('r / a')
 
+fig(7)
+plot(runs.rN,-NTVtot,runs.rN,plat.tau2)%testing*sqrt(2))
+%figure(1)
+%hold on
+%plot(runs.rN,plat.tau2)
+%hold off
+title('\tau')
+legend('calc','anal')
+xlabel('r / a')

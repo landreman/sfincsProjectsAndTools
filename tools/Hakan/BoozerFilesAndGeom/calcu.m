@@ -1,15 +1,22 @@
 function us=calcu(Bs,Gs,Is,iotas,NPeriod)
 
+if length(NPeriod)==1
+  NPeriods=NPeriod*ones(size(iotas));
+else
+  NPeriods=NPeriod;
+end
+
 if length(iotas)==1
     B=Bs;
     G=Gs;
     I=Is;
     iota=iotas;
-     
+    N=NPeriods;
+    
     hmn=fftmn(1./B.^2);
     
-    umn.c=iota*(G*hmn.m + I*hmn.n * NPeriod)./(hmn.n * NPeriod - iota*hmn.m).*hmn.c;
-    umn.s=iota*(G*hmn.m + I*hmn.n * NPeriod)./(hmn.n * NPeriod - iota*hmn.m).*hmn.s;
+    umn.c=iota*(G*hmn.m + I*hmn.n * N)./(hmn.n * N - iota*hmn.m).*hmn.c;
+    umn.s=iota*(G*hmn.m + I*hmn.n * N)./(hmn.n * N - iota*hmn.m).*hmn.s;
     
     umn.c(hmn.m0ind,hmn.n0ind)=0;
     umn.s(hmn.m0ind,hmn.n0ind)=NaN;
@@ -26,11 +33,12 @@ else %inputs were given in vectors
     G=Gs(ind);
     I=Is(ind);
     iota=iotas(ind);
+    N=NPeriods(ind);
     
     hmn=fftmn(1./B.^2);
     
-    umn.c=iota*(G*hmn.m + I*hmn.n * NPeriod)./(hmn.n * NPeriod - iota*hmn.m).*hmn.c;
-    umn.s=iota*(G*hmn.m + I*hmn.n * NPeriod)./(hmn.n * NPeriod - iota*hmn.m).*hmn.s;
+    umn.c=iota*(G*hmn.m + I*hmn.n * N)./(hmn.n * N - iota*hmn.m).*hmn.c;
+    umn.s=iota*(G*hmn.m + I*hmn.n * N)./(hmn.n * N - iota*hmn.m).*hmn.s;
     
     umn.c(hmn.m0ind,hmn.n0ind)=0;
     umn.s(hmn.m0ind,hmn.n0ind)=NaN;

@@ -1,4 +1,4 @@
-function plot_radscanresults_step23_1spec(step2dir,step3dir)
+function [runs2,runs3]=plot_radscanresults_step23_1spec(step2dir,step3dir)
 
 if step2dir(end-3:end)=='.dat'
   dirlist={};
@@ -47,9 +47,9 @@ if step3dir(end-3:end)=='.dat'
 else
   [runs3,miss3]=getresults(step3dir);
 end
-runs2
-runs3
 
+[tauP2,tauE2]=calcAlltau(runs2);
+[tauP3,tauE3]=calcAlltau(runs3);
 
 e=1.6022e-19;
 mp=1.6726e-27;
@@ -60,6 +60,11 @@ Bbar=1;
 pbar=nbar*Tbar;
 ion=1;
 mi=runs2.mHats(:,ion)*mp;
+if any(diff(runs2.mHats(:,ion)))
+  error('Different masses')
+else
+  mi=mi(1);
+end
 miHat=runs2.mHats(:,ion);
 ni=runs2.nHats(:,ion)*nbar;
 ni20=runs2.nHats(:,ion);
@@ -76,6 +81,7 @@ G=runs2.GHat';
 I=runs2.IHat';
 B00=runs2.B0OverBBar';
 
+
 %runs2.FSABFlow(:,ion)
 %runs3.FSABFlow(:,ion)
 
@@ -88,8 +94,8 @@ tauinDirect=-runs3.NTV*pbar;
 tau1FromFlux=-runs2.NTVfromFlux*pbar;
 tauinFromFlux=-runs3.NTVfromFlux*pbar;
 
-tau1FromFlux_over_tau1Direct=(tau1FromFlux./tau1Direct)'
-tauinFromFlux_over_tauinDirect=(tauinFromFlux./tauinDirect)'
+tau1FromFlux_over_tau1Direct=(tau1FromFlux./tau1Direct)';
+tauinFromFlux_over_tauinDirect=(tauinFromFlux./tauinDirect)';
 
 if runs2.NumElements~=runs3.NumElements
   error('The number of finished runs in step 2 and 3 are different!')
@@ -216,7 +222,7 @@ end
 stopind=stopind-1;
 Geom=readBoozerfile(nameliststr(startind:stopind));
 
-if 1 %approximately
+if 0 %approximately
   FSAg_phiphi=(runs2.GHat./runs2.B0OverBBar)'.^2; 
 else %calculated
   
@@ -226,13 +232,11 @@ else %calculated
     fprintf(1,'\b\b\b\b\b\b\b\b\b\b\b%3i/%3i',ind,length(runs2.rN))
     rnorm=runs2.rN(ind);
     rind=findnearest(Geom.rnorm,rnorm);
-    [Ham,Booz]=makeHamada(Geom,rind,128,128);
+    [Ham,Booz]=makeHamada(Geom,rind,85,35);
     FSAg_phiphi(ind)=Booz.FSAg_phiphi;
   end
   fprintf(1,'\n')
 end
-%calcu=FSAg_phiphi
-%appr=(runs2.GHat./runs2.B0OverBBar)'.^2
 
 nutDirect = -tau1Direct(:,ion)./mi./ni./FSAg_phiphi./omega_torrot;
 omegainDirect = -tauinDirect(:,ion)./tau1Direct(:,ion).*omega_torrot;
@@ -250,6 +254,8 @@ tauiDirect=(tau1Direct(:,ion)+tauinDirect(:,ion))';
 tauiFromFlux=(tau1FromFlux(:,ion)+tauinFromFlux(:,ion))';
 tau_totDirect=tauiDirect;
 tau_totFromFlux=tauiFromFlux;
+
+tau_fromPresAnis=tauP2+tauP3
 
 integrDirect=tau_totDirect...
     .*4*pi^2./runs2.FSABHat2.*(runs2.GHat+runs2.iota.*runs2.IHat)*...
@@ -270,21 +276,21 @@ tau_NmFromFlux=trapz(s,integrFromFlux)
 FSAB2=zeros(length(runs2.rN),1);
 FSAg_phiphi=zeros(length(runs2.rN),1);
 integr=zeros(length(runs2.rN),1);
+FSAdelta2overB=zeros(length(runs2.rN),1);
 
 for ind=1:length(runs2.rN)
   fprintf(1,'\b\b\b\b\b\b\b\b\b\b\b%3i/%3i',ind,length(runs2.rN))
   rnorm=runs2.rN(ind);
   rind=findnearest(Geom.rnorm,rnorm);
-  Ntheta=64;
-  Nzeta=Ntheta;
+  Ntheta=85;
+  Nzeta=35;%Ntheta;
   [Ham,Booz]=makeHamada(Geom,rind,Ntheta,Nzeta);
   FSAg_phiphi(ind)=Booz.FSAg_phiphi;
   FSAB2(ind)=Booz.FSAB2;
   Btormean=mean(Booz.B,2)*ones(1,Nzeta);
-  Bmin=min(mean(Booz.B,2));
-  delta=(Booz.B-Btormean)/Bmin;
-  integr(ind)=4*pi^2/(Ntheta*Nzeta)*sum(sum(delta.^2./Booz.B.^3));
-  %integr(ind)=4*pi^2/(Ntheta*Nzeta)*sum(sum(delta.^2./Booz.B.^2))/B00(ind);
+  deltatw=(Booz.B-Btormean)./Btormean;
+  integr(ind)=4*pi^2/(Ntheta*Nzeta)*sum(sum(deltatw.^2./Btormean.^3))*2;
+  FSAdelta2overB(ind)=2*sum(sum(deltatw.^2./Btormean.^3))/sum(sum(1./Booz.B.^2));
 end
 fprintf(1,'\n')
 
@@ -294,12 +300,15 @@ plat.L11=Geom.Nperiods*FSAB2.*integr/4/pi^2.*B00*sqrt(pi)...
 plat.L12=plat.L11*3;
 %FSAg_phiphi_appr=R00.^2;
 %ripple plateau predictions
-plat.nut=Ti.*G.^2.*plat.L11/(mp)./FSAg_phiphi./vTi./B00./(G+iota.*I);
+plat.nut=Ti.*G.^2.*plat.L11/(mi)./FSAg_phiphi./vTi./B00./(G+iota.*I);
 plat.omegain=omega_torrot +Ti./(Z*e.*iota).*(A1i+A2i.*plat.L12./plat.L11);
 %omegain=Ti./(Z*e.*iota).*(A1istep3+A2i.*L12./L11); %equal to the one above
-plat.tauhat=plat.nut*(mp).*FSAg_phiphi./(Z*e.*iota).*(A1i+A2i.*plat.L12./plat.L11);
+plat.tauhat=plat.nut*(mi).*FSAg_phiphi./(Z*e.*iota).*(A1i+A2i.*plat.L12./plat.L11);
 plat.tau=(TikeV*1e3*e).*(ni20*1e20).*plat.tauhat;
 
+
+plat.tau2=Geom.Nperiods*mi^2.*vTi.^3.*(ni20*1e20)./(Z*e)./iota*...
+          sqrt(pi)/4.*(G+iota.*I).*FSAdelta2overB.*(A1i+A2i*3);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % PLOTS
@@ -335,12 +344,13 @@ title('braking time')
 fig(3)
 plot(rNplot,tauiDirect,'r--+',...
      rNplot,tauiFromFlux,'b--d',...
-     rNplot,plat.tau,'g--o')
+     rNplot,plat.tau2,'g--o')%,...
+     %rNplot,tau_fromPresAnis,'m-.x')
 set(gca,'FontSize',fz)
 title('torque')
 xlabel('\rho_{tor}')
 ylabel('Nm / m^3')
-legend('i from anisotropy','i from flux','analytic approx.',4)
+legend('i from anisotropy','i from flux','analytic approx.',2)
 ax=axis;
 ax(3)=0;
 axis(ax);

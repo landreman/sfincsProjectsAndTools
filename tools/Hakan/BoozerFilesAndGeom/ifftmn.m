@@ -144,6 +144,10 @@ for inputind=1:Ninput
     elseif Nu==Nu_in && Nv==Nv_in %(already covered by the previous case)
       Fmn=Fmn_in;
     else
+      Nu
+      Nu_in
+      Nv
+      Nv_in
       error('The case where Nu is increased and Nv decreased is not implemented yet!')
     end
   else
