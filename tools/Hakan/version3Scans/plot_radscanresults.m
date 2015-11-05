@@ -34,6 +34,7 @@ Tbar=e*1e3;
 Rbar=1;
 Bbar=1;
 Tbar=1.6022e-19*1e3;
+Phibar=1e3;
 pbar=nbar*Tbar;
 psiAHat=runs.psiAHat(1);
 vbar=sqrt(1e3*e*2/mp);
@@ -51,9 +52,12 @@ ni20=runs.nHats(:,ion);
 Z=runs.Zs(:,ion);
 mi=runs.mHats(:,ion)*mp;
 
-[tauP,tauE]=calcAlltau(runs);
+%runs
 
-the_first_two_should_be_equal=[tauP,-pbar*runs.NTV(:,1),tauE]
+[tauP,tauE]=calcAlltau(runs,151,35);
+
+
+%the_first_two_should_be_equal=[tauP,-pbar*runs.NTV(:,1),tauE]
 
 fig(1)
 if Nspec==2
@@ -94,11 +98,12 @@ integr=NTVtot'.*abs(4*pi^2./runs.FSABHat2.*(runs.GHat+runs.iota.*runs.IHat)*...
        psiAHat*Rbar^3);
 %abs is taken because previously psiAHat had the wrong sign!
 
-fig(3)
-plot(s,integr)
-title('integrand for total NTV')
-xlabel('s')
-
+if 0
+  fig(3)
+  plot(s,integr)
+  title('integrand for total NTV')
+  xlabel('s')
+end
 
 %NTVtot0=NTVtot(1)-s(1)*(NTVtot(2)-NTVtot(1))/(s(2)-s(1));
 %NTVtot1=NTVtot(end)+(1-s(end))*(NTVtot(end)-NTVtot(end-1))/(s(end)-s(end-1));
@@ -115,7 +120,7 @@ end
 NTV_Nm=trapz(s,integr)
 
 A1=(runs.dnHatdpsiN(:,ion)./runs.nHats(:,ion)...
-    +runs.dPhiHatdpsiN'.*runs.Zs(:,ion).*e./(runs.THats(:,ion)*Tbar)...
+    +(runs.dPhiHatdpsiN'*Phibar).*runs.Zs(:,ion).*e./(runs.THats(:,ion)*Tbar)...
     -3/2*runs.dTHatdpsiN(:,ion)./runs.THats(:,ion))/psiAHat;
 A2=runs.dTHatdpsiN(:,ion)./runs.THats(:,ion)/psiAHat;
 kappaiFSAB2=vbar*Bbar*runs.FSABFlow(:,ion)./runs.nHats(:,ion)+...
@@ -156,8 +161,8 @@ for ind=1:length(runs.rN)
   fprintf(1,'\b\b\b\b\b\b\b\b\b\b\b%3i/%3i',ind,length(runs.rN))
   rnorm=runs.rN(ind);
   rind=findnearest(Geom.rnorm,rnorm);
-  Ntheta=85;
-  Nzeta=35;%Ntheta;
+  Ntheta=151;
+  Nzeta=55;%Ntheta;
   [Ham,Booz]=makeHamada(Geom,rind,Ntheta,Nzeta);
   FSAg_phiphi(ind)=Booz.FSAg_phiphi;
   FSAB2(ind)=Booz.FSAB2;
@@ -168,7 +173,7 @@ for ind=1:length(runs.rN)
 end
 fprintf(1,'\n')
 
-plat.tau2=Geom.Nperiods*mi.^2.*vTi.^3.*(ni20*1e20)./(Z*e)./iota*...
+plat.tau=Geom.Nperiods*mi.^2.*vTi.^3.*(ni20*1e20)./(Z*e)./iota*...
           sqrt(pi)/4.*(G+iota.*I).*FSAdelta2overB.*(A1+A2*3);
 
 
@@ -190,8 +195,9 @@ plot(runs.rN,kappaiFSAB2)
 title('\kappa_i <B^2>')
 xlabel('r / a')
 
+tau_anal_over_tau_calc=(-plat.tau./-NTVtot)'
 fig(7)
-plot(runs.rN,-NTVtot,runs.rN,plat.tau2)%testing*sqrt(2))
+plot(runs.rN,-NTVtot,runs.rN,plat.tau)%,runs.rN,tauP)%*sqrt(2))%testing
 %figure(1)
 %hold on
 %plot(runs.rN,plat.tau2)

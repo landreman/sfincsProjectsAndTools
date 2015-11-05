@@ -24,19 +24,29 @@ listinput=0;
 if isfield(Fmns,'cosparity')
   %list input was given!
   listinput=1;
-  if nargin==4
+  if nargin==3
+    error(['ifftmn.m can take the input alternatives (Fmns), ',...
+           '(Fmns,Nperiods), (Fmns,Nperiods,Nu,Nv), (Fmns,Nperiods,Nu,Nv,''forceSize'')'])
+  elseif nargin==4
     Fmns=mnmatrix(Fmns,varargin{2},varargin{3});
+  elseif nargin==5
+    Fmns=mnmatrix(Fmns,varargin{2},varargin{3},varargin{4});
   else
     Fmns=mnmatrix(Fmns);
   end
 end
-
+forceSize=0;
+if nargin==5
+  forceSize=strcmp(varargin{4},'forceSize');
+end
 
 for inputind=1:Ninput
   Fmn=Fmns(inputind);
   make_normal_assembly=0; %0 is default. Only special cases will switch to 1 later
     
   if any(size(Fmn.c)~=size(Fmn.s))
+    size(Fmn.c)
+    size(Fmn.s)
     error('Sizes of Fmn.c and Fmn.s are inconsistent!')
   end
   Nv=size(Fmn.c,2);
@@ -46,7 +56,7 @@ for inputind=1:Ninput
   Nudiscr=Nu; %used for the assembly below
   Nvdiscr=Nv;  %used for the assembly below
   
-  if nargin==4
+  if nargin>=4
     Nu_in=Nu;
     Nv_in=Nv;
     Nu=varargin{2};
@@ -54,6 +64,10 @@ for inputind=1:Ninput
     Nudiscr=Nu;
     Nvdiscr=Nv;
     if mod(Nu-Nu_in,2)~=0 || mod(Nv-Nv_in,2)~=0
+      Nu
+      Nu_in
+      Nv
+      Nv_in
       error('The new M must have the same even/odd parity as the old M. The same goes for N!')
     end
 
@@ -104,7 +118,7 @@ for inputind=1:Ninput
         Fmn.s(1,end)=NaN;
       end     
     elseif Nu<=Nu_in && Nv<=Nv_in
-      if (Nu<Nu_in || Nv<Nv_in) && not(listinput)
+      if (Nu<Nu_in || Nv<Nv_in) && not(listinput) && not(forceSize)
         disp(['ifftmn.m: Warning: Requested spatial discretisation ',...
               'may not resolve all modes!'])
       end
@@ -126,6 +140,7 @@ for inputind=1:Ninput
         m0ind=1;
         n0ind=ceil(Nv/2);        
       else
+        %disp('here')
         du=(Nu_in-Nu)/2;
         dv=(Nv_in-Nv)/2;
         Fmn.c=Fmn_in.c(1:end-du,1+dv:end-dv);

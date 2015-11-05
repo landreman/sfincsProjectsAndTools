@@ -171,6 +171,7 @@ for hind=1:length(H)
           out.momentumFlux_vm_psiN(ind,:) =H{hind}.momentumFlux_vm_psiN';
           out.FSABFlow(ind,:)             =H{hind}.FSABFlow';
           out.flow{ind}                   =H{hind}.flow';
+          out.densityPerturbation{ind}    =H{hind}.densityPerturbation';
           out.pressurePerturbation{ind}   =H{hind}.pressurePerturbation';
           out.pressureAnisotropy{ind}     =H{hind}.pressureAnisotropy';
           out.NTVBeforeSurfaceIntegral{ind}=H{hind}.NTVBeforeSurfaceIntegral';
@@ -185,6 +186,7 @@ for hind=1:length(H)
           out.momentumFlux_vm_psiN(ind,:)=NaN*zeros(Nsp,1);
           out.FSABFlow(ind,:)            =NaN*zeros(Nsp,1);
           out.flow{ind}                  =NaN*zeros(Nsp,out.Ntheta(ind),out.Nzeta(ind));
+          out.densityPerturbation{ind}   =NaN*zeros(Nsp,out.Ntheta(ind),out.Nzeta(ind));
           out.pressurePerturbation{ind}  =NaN*zeros(Nsp,out.Ntheta(ind),out.Nzeta(ind));
           out.pressureAnisotropy{ind}    =NaN*zeros(Nsp,out.Ntheta(ind),out.Nzeta(ind));
           out.NTVBeforeSurfaceIntegral{ind}=NaN*zeros(Nsp,out.Ntheta(ind),out.Nzeta(ind));
@@ -196,6 +198,7 @@ for hind=1:length(H)
         out.momentumFlux_vm_psiN(ind,:) =NaN*ones(out.Nspecies(ind),1);
         out.FSABFlow(ind,:)             =NaN*ones(out.Nspecies(ind),1);
         out.flow{ind}                   =NaN*zeros(Nsp,out.Ntheta(ind),out.Nzeta(ind));
+        out.densityPerturbation{ind}    =NaN*zeros(Nsp,out.Ntheta(ind),out.Nzeta(ind));
         out.pressurePerturbation{ind}   =NaN*zeros(Nsp,out.Ntheta(ind),out.Nzeta(ind));
         out.pressureAnisotropy{ind}     =NaN*zeros(Nsp,out.Ntheta(ind),out.Nzeta(ind));
         out.NTVBeforeSurfaceIntegral{ind}=NaN*zeros(Nsp,out.Ntheta(ind),out.Nzeta(ind));
@@ -237,151 +240,3 @@ out.NumElements=ind;
     
     
     
-    
-    
-    
-    
-%{    
-    
-    
-    
-    %find out if it is single or multi species version
-    multi=isfield(H{hind},'Nspecies');
-      
-    % The following is sadly not stored as output other than in 
-    % H{hind}.input_namelist'
-    %out.geometryScheme(ind) =H{hind}.geometryScheme;
-    %if out.geometryScheme(ind)==11
-    %  out.JGboozer_file{ind} = H{hind}.JGboozer_file;
-    %elseif out.geometryScheme(ind)==12
-    %  out.JGboozer_file_NonStelSym{ind}=H{hind}.JGboozer_file_NonStelSym;
-    %end
-    if not(multi) %only in single species version
-      out.RHSMode(ind)      =H{hind}.RHSMode;
-      out.normradius(ind)   =H{hind}.normradius;
-      out.nuN(ind)          =H{hind}.nuN;
-      out.nuPrime(ind)      =H{hind}.nuPrime;
-      out.EStar(ind)        =H{hind}.EStar;
-      out.dPhiHatdpsi(ind)  =H{hind}.dPhiHatdpsi;
-      out.EHat(ind)         =H{hind}.EHat;
-      out.nHat(ind)         =H{hind}.nHat;
-      out.THat(ind)         =H{hind}.THat;
-      if all(out.RHSMode==1)
-        if isfield(H{hind},'NTV') %Only for backward compability
-          out.tauhat_s(ind)     =H{hind}.NTV;
-        else
-          out.tauhat_s(ind)     =H{hind}.NTVsingle;
-          out.tauhat_m(ind)     =H{hind}.NTVmulti;
-        end  
-        out.particleFlux(ind) =H{hind}.particleFlux;
-        out.heatFlux(ind)     =H{hind}.heatFlux;
-        out.momentumFlux(ind) =H{hind}.momentumFlux;
-        out.FSAFlow(ind)      =H{hind}.FSAFlow;
-
-        out.particleFluxBeforeSurfaceIntegral(ind,:,:)=...
-            H{hind}.particleFluxBeforeSurfaceIntegral;
-        if xoutputexists %for backward compatibility
-          if isfield(H{hind},'fNormIsotropicBeforeSurfaceIntegral')  %for backward compatibility
-            out.x{ind}                 =H{hind}.x;
-            out.fNormIsotropic{ind}    =H{hind}.fNormIsotropic;
-            out.fNormIsotropicBeforeSurfaceIntegral{ind}=H{hind}.fNormIsotropicBeforeSurfaceIntegral;
-          else
-            out.x{ind}              =NaN*ones(1,out.Nx(ind));
-            out.fNormIsotropic{ind} =NaN*ones(1,out.Nx(ind));
-            out.fNormIsotropicBeforeSurfaceIntegral{ind}=NaN*ones(out.Ntheta(ind),out.Nzeta(ind),out.Nx(ind));
-          end
-        end
-      end
-    else
-      out.nu_n(ind)          =H{hind}.nu_n;
-      out.dPhiHatdpsi_N(ind) =H{hind}.dPhiHatdpsi_N;
-      out.nHats(ind,:)       =H{hind}.nHats;
-      out.THats(ind,:)       =H{hind}.THats;
-      if all(out.RHSMode==1)
-        out.tauhat_m(ind,:)    =H{hind}.NTV;
-        out.particleFlux(ind,:) =H{hind}.particleFlux;
-        out.heatFlux(ind,:)     =H{hind}.heatFlux;
-        out.momentumFlux(ind,:) =H{hind}.momentumFlux;
-        out.FSABFlow(ind,:)      =H{hind}.FSABFlow;
-      end    
-    end    
-    
-    out.NPeriods(ind)          =double(H{hind}.NPeriods);
-    out.Ntheta(ind)            =double(H{hind}.Ntheta);
-    out.Nzeta(ind)             =double(H{hind}.Nzeta);
-    out.Nxi(ind)               =double(H{hind}.Nxi);
-    out.NL(ind)                =double(H{hind}.NL);
-    out.Nx(ind)                =double(H{hind}.Nx);
-    out.NxPotentialsPerVth(ind)=double(H{hind}.NxPotentialsPerVth);
-    out.xMax(ind)              =H{hind}.xMax;
-    out.solverTolerance(ind)   =H{hind}.solverTolerance;
-    out.theta{ind}             =H{hind}.theta;
-    out.theta{ind}             =H{hind}.theta;
-    out.zeta{ind}              =H{hind}.zeta;
-    out.GHat(ind)          =H{hind}.GHat;
-    out.IHat(ind)          =H{hind}.IHat;
-    out.iota(ind)          =H{hind}.iota;
-    out.B0OverBBar(ind)    =H{hind}.B0OverBBar;
-    out.FSABHat2(ind)      =H{hind}.FSABHat2;
-    out.didItConverge(ind) =H{hind}.didItConverge;
-  end
-end
-out.NumElements=ind;
-
-if out.NumElements>0
-  if not(multi)
-      if all((out.RHSMode==2)|(out.RHSMode==0)); %The 0 is for a certain type of error
-        out.transportMatrix=zeros(out.NumElements,3,3);
-        for ind=1:out.NumElements
-          out.transportMatrix(ind,:,:)=H{goodhinds(ind)}.transportMatrix;
-        end
-        if isfield(H{goodhinds(1)},'NTVMatrix') %For backward compability
-          out.NTVMatrix=zeros(out.NumElements,3);
-          for ind=1:out.NumElements
-            out.NTVMatrix(ind,:)=H{goodhinds(ind)}.NTVMatrix;
-          end
-        end
-      elseif all(out.RHSMode==3)
-        out.transportCoeffs=zeros(out.NumElements,2,2);        
-        for ind=1:out.NumElements
-          out.transportCoeffs(ind,:,:)=H{goodhinds(ind)}.transportCoeffs;
-        end
-      end
-  end
-
-  if out.NumElements>1
-    if nargin>1 %sort the results
-      [dummy,orderedInds]=sort(getfield(out,sortafter));
-      fnames=fieldnames(out);
-      for find=1:length(fnames)
-        if strcmp(fnames{find},'transportMatrix')
-          out.transportMatrix=out.transportMatrix(orderedInds,:,:);
-        elseif strcmp(fnames{find},'NTVMatrix')
-          out.NTVMatrix=out.NTVMatrix(orderedInds,:);
-        elseif strcmp(fnames{find},'transportCoeffs')
-          out.transportCoeffs=out.transportCoeffs(orderedInds,:,:);
-        elseif strcmp(fnames{find},'theta')
-          out.theta={out.theta{orderedInds}};
-        elseif strcmp(fnames{find},'zeta')
-          out.zeta={out.zeta{orderedInds}};
-        elseif strcmp(fnames{find},'x')
-          out.x={out.x{orderedInds}};
-        elseif strcmp(fnames{find},'fNormIsotropic')
-          out.fNormIsotropic={out.fNormIsotropic{orderedInds}};
-        elseif strcmp(fnames{find},'fNormIsotropic')
-          out.fNormIsotropicBeforeSurfaceIntegral={out.fNormIsotropicBeforeSurfaceIntegral{orderedInds}};
-        elseif not(strcmp(fnames{find},'NumElements'))
-          tmp=getfield(out,fnames{find});
-          if size(tmp,1)>1 && size(tmp,2)>1
-            out=setfield(out,fnames{find},tmp(orderedInds,:));
-          else
-            out=setfield(out,fnames{find},tmp(orderedInds));
-          end
-        end
-      end
-    end
-  end
-end
-
-
-%}

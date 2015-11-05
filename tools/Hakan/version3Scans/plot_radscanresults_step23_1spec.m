@@ -50,6 +50,13 @@ end
 
 [tauP2,tauE2]=calcAlltau(runs2);
 [tauP3,tauE3]=calcAlltau(runs3);
+%[tauP2,tauE2]=calcAlltau(runs2,151,35);
+%[tauP3,tauE3]=calcAlltau(runs3,151,35);
+
+tauE=tauE2'+tauE3'
+%tauE2
+%tauE3
+tauP=tauP2'+tauP3'
 
 e=1.6022e-19;
 mp=1.6726e-27;
@@ -232,7 +239,7 @@ else %calculated
     fprintf(1,'\b\b\b\b\b\b\b\b\b\b\b%3i/%3i',ind,length(runs2.rN))
     rnorm=runs2.rN(ind);
     rind=findnearest(Geom.rnorm,rnorm);
-    [Ham,Booz]=makeHamada(Geom,rind,85,35);
+    [Ham,Booz]=makeHamada(Geom,rind,85,35,'forceSize');
     FSAg_phiphi(ind)=Booz.FSAg_phiphi;
   end
   fprintf(1,'\n')
@@ -272,44 +279,46 @@ tau_NmFromFlux=trapz(s,integrFromFlux)
 % Approximate analytical calculations in the ripple plateau
 % for the AUG equilibrium rip_n16
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-FSAB2=zeros(length(runs2.rN),1);
-FSAg_phiphi=zeros(length(runs2.rN),1);
-integr=zeros(length(runs2.rN),1);
-FSAdelta2overB=zeros(length(runs2.rN),1);
-
-for ind=1:length(runs2.rN)
-  fprintf(1,'\b\b\b\b\b\b\b\b\b\b\b%3i/%3i',ind,length(runs2.rN))
-  rnorm=runs2.rN(ind);
-  rind=findnearest(Geom.rnorm,rnorm);
-  Ntheta=85;
-  Nzeta=35;%Ntheta;
-  [Ham,Booz]=makeHamada(Geom,rind,Ntheta,Nzeta);
-  FSAg_phiphi(ind)=Booz.FSAg_phiphi;
-  FSAB2(ind)=Booz.FSAB2;
-  Btormean=mean(Booz.B,2)*ones(1,Nzeta);
-  deltatw=(Booz.B-Btormean)./Btormean;
-  integr(ind)=4*pi^2/(Ntheta*Nzeta)*sum(sum(deltatw.^2./Btormean.^3))*2;
-  FSAdelta2overB(ind)=2*sum(sum(deltatw.^2./Btormean.^3))/sum(sum(1./Booz.B.^2));
+make_rippleplateau=1;
+if make_rippleplateau
+  
+  FSAB2=zeros(length(runs2.rN),1);
+  FSAg_phiphi=zeros(length(runs2.rN),1);
+  integr=zeros(length(runs2.rN),1);
+  FSAdelta2overB=zeros(length(runs2.rN),1);
+  
+  for ind=1:length(runs2.rN)
+    fprintf(1,'\b\b\b\b\b\b\b\b\b\b\b%3i/%3i',ind,length(runs2.rN))
+    rnorm=runs2.rN(ind);
+    rind=findnearest(Geom.rnorm,rnorm);
+    Ntheta=85;
+    Nzeta=35;%Ntheta;
+    [Ham,Booz]=makeHamada(Geom,rind,Ntheta,Nzeta,'forceSize');
+    FSAg_phiphi(ind)=Booz.FSAg_phiphi;
+    FSAB2(ind)=Booz.FSAB2;
+    Btormean=mean(Booz.B,2)*ones(1,Nzeta);
+    deltatw=(Booz.B-Btormean)./Btormean;
+    integr(ind)=4*pi^2/(Ntheta*Nzeta)*sum(sum(deltatw.^2./Btormean.^3))*2;
+    FSAdelta2overB(ind)=2*sum(sum(deltatw.^2./Btormean.^3))/sum(sum(1./Booz.B.^2));
+  end
+  fprintf(1,'\n')
+  
+  
+  plat.L11=Geom.Nperiods*FSAB2.*integr/4/pi^2.*B00*sqrt(pi)...
+           .*(G+iota.*I).^2./G.^2;
+  plat.L12=plat.L11*3;
+  %FSAg_phiphi_appr=R00.^2;
+  %ripple plateau predictions
+  plat.nut=Ti.*G.^2.*plat.L11/(mi)./FSAg_phiphi./vTi./B00./(G+iota.*I);
+  plat.omegain=omega_torrot +Ti./(Z*e.*iota).*(A1i+A2i.*plat.L12./plat.L11);
+  %omegain=Ti./(Z*e.*iota).*(A1istep3+A2i.*L12./L11); %equal to the one above
+  plat.tauhat=plat.nut*(mi).*FSAg_phiphi./(Z*e.*iota).*(A1i+A2i.*plat.L12./plat.L11);
+  plat.tau=(TikeV*1e3*e).*(ni20*1e20).*plat.tauhat;
+  
+  
+  plat.tau2=Geom.Nperiods*mi^2.*vTi.^3.*(ni20*1e20)./(Z*e)./iota*...
+            sqrt(pi)/4.*(G+iota.*I).*FSAdelta2overB.*(A1i+A2i*3);
 end
-fprintf(1,'\n')
-
-
-plat.L11=Geom.Nperiods*FSAB2.*integr/4/pi^2.*B00*sqrt(pi)...
-         .*(G+iota.*I).^2./G.^2;
-plat.L12=plat.L11*3;
-%FSAg_phiphi_appr=R00.^2;
-%ripple plateau predictions
-plat.nut=Ti.*G.^2.*plat.L11/(mi)./FSAg_phiphi./vTi./B00./(G+iota.*I);
-plat.omegain=omega_torrot +Ti./(Z*e.*iota).*(A1i+A2i.*plat.L12./plat.L11);
-%omegain=Ti./(Z*e.*iota).*(A1istep3+A2i.*L12./L11); %equal to the one above
-plat.tauhat=plat.nut*(mi).*FSAg_phiphi./(Z*e.*iota).*(A1i+A2i.*plat.L12./plat.L11);
-plat.tau=(TikeV*1e3*e).*(ni20*1e20).*plat.tauhat;
-
-
-plat.tau2=Geom.Nperiods*mi^2.*vTi.^3.*(ni20*1e20)./(Z*e)./iota*...
-          sqrt(pi)/4.*(G+iota.*I).*FSAdelta2overB.*(A1i+A2i*3);
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % PLOTS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -318,11 +327,16 @@ rNplot(end)=NaN;
 fz=14;
 
 fig(1)
-plot(rNplot,omega_torrot,'k-',...
-     rNplot,omegainDirect,'r--+',...
-     rNplot,omegainFromFlux,'b--d',...
-     rNplot,plat.omegain,'g--o')
-    %,rNplot,omegainFromL,'r-.')
+if make_rippleplateau
+  plot(rNplot,omega_torrot,'k-',...
+       rNplot,omegainDirect,'r--+',...
+       rNplot,omegainFromFlux,'b--d',...
+       rNplot,plat.omegain,'g--o')
+else
+    plot(rNplot,omega_torrot,'k-',...
+       rNplot,omegainDirect,'r--+',...
+       rNplot,omegainFromFlux,'b--d')
+end
 set(gca,'FontSize',fz)
 xlabel('\rho_{tor}')
 ylabel('\omega   [ rad / s ]')
@@ -330,10 +344,14 @@ legend('\omega_{meas}','\omega_{in} from anisotropy','\omega_{in} from flux','an
 title('rotation frequency')
 
 fig(2)
+if make_rippleplateau
 plot(rNplot,1./nutDirect,'r--+',...
      rNplot,1./nutFromFlux,'b--d',...
      rNplot,1./plat.nut,'g--o')
-     %,rNplot,1./nutFromL,'r-.')
+else
+  plot(rNplot,1./nutDirect,'r--+',...
+     rNplot,1./nutFromFlux,'b--d')
+end  
 set(gca,'FontSize',fz)
 xlabel('\rho_{tor}')
 ylabel('1 / \nu_t  [s]')
@@ -342,18 +360,26 @@ legend('from anisotropy','from flux','analytic approx.')
 title('braking time')
 
 fig(3)
-plot(rNplot,tauiDirect,'r--+',...
-     rNplot,tauiFromFlux,'b--d',...
-     rNplot,plat.tau2,'g--o')%,...
-     %rNplot,tau_fromPresAnis,'m-.x')
+if make_rippleplateau
+  plot(rNplot,tauiDirect,'r--+',...
+       rNplot,tauiDirect+tauE,'r--o',...
+       rNplot,tauiFromFlux,'b--d',...
+       rNplot,plat.tau2,'g--o')%,...
+else
+    plot(rNplot,tauiDirect,'r--+',...
+         rNplot,tauiDirect+tauE,'r--o',...
+         rNplot,tauiFromFlux,'b--d')
+end
 set(gca,'FontSize',fz)
 title('torque')
 xlabel('\rho_{tor}')
 ylabel('Nm / m^3')
-legend('i from anisotropy','i from flux','analytic approx.',2)
+legend('from anisotropy','from anisotropy and Er','from flux','analytic approx.',2)
 ax=axis;
 ax(3)=0;
 axis(ax);
+
+
 
 fig(4)
 plot(rNplot,-dPotentialkVdPsiN_step23,...
@@ -397,14 +423,17 @@ legend('step 2','step 3','2 + 3','input')
 %figure(2);print -depsc 30835_rmp90_nut.eps
 %figure(3);print -depsc 30835_rmp90_torque.eps
 
-fig(9)
-plot(rNplot,omega_torrot,...
-     rNplot,-A1istep2.*(TikeV*1e3)./Z./iota)
-set(gca,'FontSize',fz)
+if 0
+  fig(9)
+  plot(rNplot,omega_torrot,...
+       rNplot,-A1istep2.*(TikeV*1e3)./Z./iota)
+  set(gca,'FontSize',fz)
+end
 
-
-fig(10)
-plot(rNplot,L11,rNplot,-plat.L11)
-set(gca,'FontSize',fz)
-xlabel('\rho_{tor}')
-title('L_{11}')
+if make_rippleplateau
+  fig(10)
+  plot(rNplot,L11,rNplot,-plat.L11)
+  set(gca,'FontSize',fz)
+  xlabel('\rho_{tor}')
+  title('L_{11}')
+end

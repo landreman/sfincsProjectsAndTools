@@ -8,7 +8,8 @@ module load petsc-real/3.5.2
 # We must load the hdf5-serial module to set some environment variables:
 module load hdf5-serial netcdf-serial
 
-setenv HDF5_HOME /hydra/u/system/SLES11/soft/hdf5/1.8.11/intel13.1/mpi.intel-4.1.0
+#The next line is not necessary according to Albert
+#setenv HDF5_HOME /hydra/u/system/SLES11/soft/hdf5/1.8.11/intel13.1/mpi.intel-4.1.0
 
 setenv PATH ${PATH}:${HDF5_HOME}/bin
 

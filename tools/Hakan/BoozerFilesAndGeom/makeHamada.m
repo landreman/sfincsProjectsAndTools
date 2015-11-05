@@ -1,13 +1,14 @@
-function [Ham,Booz,Cyl]=makeHamada(Geom,rind,Ntheta,Nzeta)
+function [Ham,Booz,Cyl]=makeHamada(Geom,rind,Ntheta,Nzeta,varargin)
 
-% If Ntheta or Nzeta is odd, one could previously
-% not  use my FFT routines. 
-%useFFT = not(mod(Ntheta,2) || mod(Nzeta,2));
-% but now it works
-useFFT = 1;
+
+useFFT = 1; %to compare results of 0 and 1 here, one cannot use the ifftOpt='forceSize' option
 
 if isempty(rind)
   error('rind is empty!')
+end
+ifftOpt='';
+if nargin==5
+  ifftOpt=varargin{1};
 end
 
 NPeriods=Geom.Nperiods;
@@ -79,11 +80,12 @@ if useFFT
   Dzetacylphilist.n=Geom.n{rind};
   Dzetacylphilist.data=2*pi/NPeriods*Geom.Dphi{rind};
   tmp=mnmatrix(Blist);
-  [B,R,Z,Dzetacylphi]=ifftmn([Blist,Rlist,Zlist,Dzetacylphilist],NPeriods,Ntheta,Nzeta);
+  [B,R,Z,Dzetacylphi]=ifftmn([Blist,Rlist,Zlist,Dzetacylphilist],NPeriods,Ntheta,Nzeta,ifftOpt);
   [dBdtheta,dBdzeta,dRdtheta,dRdzeta,dZdtheta,dZdzeta,...
    dDzetacylphi_dtheta,dDzetacylphi_dzeta]=...
       ifftmn([mngrad(Blist,NPeriods),mngrad(Rlist,NPeriods),...
-              mngrad(Zlist,NPeriods),mngrad(Dzetacylphilist,NPeriods)],NPeriods,Ntheta,Nzeta);
+              mngrad(Zlist,NPeriods),mngrad(Dzetacylphilist,NPeriods)],...
+              NPeriods,Ntheta,Nzeta,ifftOpt);
   %toc
 else %not(useFFT)
   %tic
@@ -151,17 +153,6 @@ else %not(useFFT)
   end
   %toc
 end
-
-%Double-check the FFT results against the slow method
-%fig(1+useFFT*4)
-%surf(B);shading flat;view(0,90)
-%fig(2+useFFT*4)
-%surf(R);shading flat;view(0,90)
-%fig(3+useFFT*4)
-%surf(Z);shading flat;view(0,90)
-%fig(4+useFFT*4)
-%surf(Dzetacylphi);shading flat;view(0,90)
-%error('stop stop!')
 
 cylphi=zeta-Dzetacylphi;     %cylphi is minus the geometrical toroidal angle.
 geomang=-cylphi;             %(R,Z,cylphi) and (R,geomang,Z) are right handed systems. 

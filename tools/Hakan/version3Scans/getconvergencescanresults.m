@@ -51,19 +51,27 @@ for pind=1:length(convParams)
     end
   end
 end
-NParam=length(isScanned);
+NParam=length(isScanned)
 Nruns=size(vals,2);
 convParams={convParams{isScanned}};
-baseVals=baseVals(isScanned);
-scanVals={scanVals{isScanned}};
-scanRuns={scanRuns{isScanned}};
-vals=vals(isScanned,:);
-baseRun=find(prod(double(vals==(baseVals'*ones(1,Nruns)))));
+baseVals=baseVals(isScanned)
+scanVals={scanVals{isScanned}}
+scanRuns={scanRuns{isScanned}}
+vals=vals(isScanned,:)
+
+vals==(baseVals'*ones(1,Nruns))
+if NParam==1
+  baseRun=find(vals==baseVals);
+else
+  baseRun=find(prod(double(vals==(baseVals'*ones(1,Nruns)))))
+end
 if length(baseRun)>1
   baseRun=baseRun(1);
   warning('More than one base case runs were found!');
 end
-
+if isempty(baseRun)
+  warning('No baseRun detected!')
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Plots
