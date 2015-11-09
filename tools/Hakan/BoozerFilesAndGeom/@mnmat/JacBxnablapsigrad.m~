@@ -1,5 +1,0 @@
-function out=JacBxnablapsigrad(arg,G,I)
-
-gr=grad(arg);
-
-out=G*gr(1)-I*gr(2);

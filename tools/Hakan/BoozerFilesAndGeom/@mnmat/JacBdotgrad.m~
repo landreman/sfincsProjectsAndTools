@@ -1,8 +1,0 @@
-function out=JacBdotgrad(arg,iota)
-
-gr=grad(arg);
-
-out=iota*gr(1)+gr(2);
-
-
-
