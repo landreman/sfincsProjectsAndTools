@@ -1,9 +1,8 @@
-function Fmns=mnmatrix(lsts,varargin)
+function Fmn=mnmat(lst,varargin)
 securityLevel=-1; %-1: no security, 0: warnings, 1:errors
 
-for inputind=1:length(lsts)
-  
-  lst=lsts(inputind);
+%for inputind=1:length(lsts)
+%  lst=lsts(inputind);
 
   if any(lst.m<0)
     error('Negative m values found!')
@@ -171,6 +170,9 @@ for inputind=1:length(lsts)
     Fmn.s(Fmn.m0ind,end)=NaN;
   end
 
-  %Store the output
-  Fmns(inputind)=Fmn;
-end
+  
+  Fmn=class(Fmn,'mnmat');
+  
+%Store the output
+%  Fmns(inputind)=Fmn;
+%end

@@ -51,13 +51,13 @@ for pind=1:length(convParams)
     end
   end
 end
-NParam=length(isScanned)
+NParam=length(isScanned);
 Nruns=size(vals,2);
 convParams={convParams{isScanned}};
-baseVals=baseVals(isScanned)
-scanVals={scanVals{isScanned}}
-scanRuns={scanRuns{isScanned}}
-vals=vals(isScanned,:)
+baseVals=baseVals(isScanned);
+scanVals={scanVals{isScanned}};
+scanRuns={scanRuns{isScanned}};
+vals=vals(isScanned,:);
 
 vals==(baseVals'*ones(1,Nruns))
 if NParam==1

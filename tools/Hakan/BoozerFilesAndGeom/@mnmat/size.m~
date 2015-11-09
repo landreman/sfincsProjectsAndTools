@@ -1,0 +1,5 @@
+function sz=size(A)
+
+mmax=size(A.m,1);
+Miseven=isnan(A.s(A.m0ind,end));
+Niseven=not(mod(size(A.m,2),2));

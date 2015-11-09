@@ -63,29 +63,40 @@ end
 
 if useFFT 
   %tic
-  Blist.cosparity=parity;
-  Blist.m=Geom.m{rind};
-  Blist.n=Geom.n{rind};
-  Blist.data=Bmn;
-  Rlist.cosparity=parity;
-  Rlist.m=Geom.m{rind};
-  Rlist.n=Geom.n{rind};
-  Rlist.data=Geom.R{rind};
-  Zlist.cosparity=not(parity);
-  Zlist.m=Geom.m{rind};
-  Zlist.n=Geom.n{rind};
-  Zlist.data=Geom.Z{rind};
-  Dzetacylphilist.cosparity=not(parity);
-  Dzetacylphilist.m=Geom.m{rind};
-  Dzetacylphilist.n=Geom.n{rind};
-  Dzetacylphilist.data=2*pi/NPeriods*Geom.Dphi{rind};
-  tmp=mnmatrix(Blist);
-  [B,R,Z,Dzetacylphi]=ifftmn([Blist,Rlist,Zlist,Dzetacylphilist],NPeriods,Ntheta,Nzeta,ifftOpt);
-  [dBdtheta,dBdzeta,dRdtheta,dRdzeta,dZdtheta,dZdzeta,...
-   dDzetacylphi_dtheta,dDzetacylphi_dzeta]=...
-      ifftmn([mngrad(Blist,NPeriods),mngrad(Rlist,NPeriods),...
-              mngrad(Zlist,NPeriods),mngrad(Dzetacylphilist,NPeriods)],...
-              NPeriods,Ntheta,Nzeta,ifftOpt);
+  if 0
+    Blist.cosparity=parity;
+    Blist.m=Geom.m{rind};
+    Blist.n=Geom.n{rind};
+    Blist.data=Bmn;
+    Rlist.cosparity=parity;
+    Rlist.m=Geom.m{rind};
+    Rlist.n=Geom.n{rind};
+    Rlist.data=Geom.R{rind};
+    Zlist.cosparity=not(parity);
+    Zlist.m=Geom.m{rind};
+    Zlist.n=Geom.n{rind};
+    Zlist.data=Geom.Z{rind};
+    Dzetacylphilist.cosparity=not(parity);
+    Dzetacylphilist.m=Geom.m{rind};
+    Dzetacylphilist.n=Geom.n{rind};
+    Dzetacylphilist.data=2*pi/NPeriods*Geom.Dphi{rind};
+    %[B,R,Z,Dzetacylphi]=ifftmn(mnmat([Blist,Rlist,Zlist,Dzetacylphilist],Ntheta,Nzeta,ifftOpt),NPeriods,Ntheta,Nzeta,ifftOpt);
+    [B,R,Z,Dzetacylphi]=ifftmn(mnmat([Blist,Rlist,Zlist,Dzetacylphilist],Ntheta,Nzeta,ifftOpt),NPeriods);
+    [dBdtheta,dBdzeta,dRdtheta,dRdzeta,dZdtheta,dZdzeta,...
+     dDzetacylphi_dtheta,dDzetacylphi_dzeta]=...
+        ifftmn(mnmat([mnlistgrad(Blist,NPeriods),mnlistgrad(Rlist,NPeriods),...
+                      mnlistgrad(Zlist,NPeriods),mnlistgrad(Dzetacylphilist,NPeriods)],...
+                     Ntheta,Nzeta,ifftOpt),NPeriods);
+  else
+    Bmnmat=mnmat(Geom,rind,'B',Ntheta,Nzeta,ifftOpt);
+    Rmnmat=mnmat(Geom,rind,'R',Ntheta,Nzeta,ifftOpt);
+    Zmnmat=mnmat(Geom,rind,'Z',Ntheta,Nzeta,ifftOpt);
+    Dzetacylphi_mnmat=mnmat(Geom,rind,'Dzetacylphi',Ntheta,Nzeta,ifftOpt);
+    [B,R,Z,Dzetacylphi]=ifftmn([Bmnmat,Rmnmat,Zmnmat,Dzetacylphi_mnmat]);
+    [dBdtheta,dBdzeta,dRdtheta,dRdzeta,dZdtheta,dZdzeta,...
+     dDzetacylphi_dtheta,dDzetacylphi_dzeta]=...
+        ifftmn([grad(Bmnmat,NPeriods),grad(Rmnmat,NPeriods),grad(Zmnmat,NPeriods),grad(Dzetacylphi_mnmat,NPeriods)]);
+  end
   %toc
 else %not(useFFT)
   %tic
@@ -160,6 +171,7 @@ dgeomangdtheta=dDzetacylphi_dtheta;
 dgeomangdzeta =dDzetacylphi_dzeta - 1;
 X=R.*cos(geomang);
 Y=R.*sin(geomang);
+
 dXdtheta=dRdtheta.*cos(geomang)-R.*dgeomangdtheta.*sin(geomang);
 dXdzeta =dRdzeta .*cos(geomang)-R.*dgeomangdzeta .*sin(geomang);
 dYdtheta=dRdtheta.*sin(geomang)+R.*dgeomangdtheta.*cos(geomang);
@@ -199,7 +211,7 @@ Booz.B_XYZ(3,:,:)=BZ;
 Booz.B_XYZ(1,:,:)=BR.*cos(geomang)-Bgeomang.*sin(geomang);
 Booz.B_XYZ(2,:,:)=BR.*sin(geomang)+Bgeomang.*cos(geomang);
 
-%Approximating that dr/zeta is roughly in the geometrica toroidal direction I do this
+%Approximating that dr/zeta is roughly in the geometrical toroidal direction I do this
 %to project on the two directions perpedicular to the toroidal direction
 BRmean=mean(BR')'*ones(1,size(dRdtheta,2));
 BZmean=mean(BZ')'*ones(1,size(dRdtheta,2));
@@ -284,34 +296,51 @@ FSAB2=4*pi^2/VPrimeHat;
 %h00=VPrimeHat/(4*pi^2);
 if useFFT
   %tic
-  hmn=fftmn(h);
-  umn.c=iota*(G*hmn.m + I*hmn.n * NPeriods)./(hmn.n * NPeriods - iota*hmn.m) .* hmn.c;
-  umn.c(hmn.m0ind,hmn.n0ind)=0;
-  umn.s=iota*(G*hmn.m + I*hmn.n * NPeriods)./(hmn.n * NPeriods - iota*hmn.m) .* hmn.s;
-  umn.s(hmn.m0ind,hmn.n0ind)=NaN; %Important to set. Indicates M odd/even
-  Dzetaphi_mn.s  =  FSAB2/(G+iota*I)./hmn.m.*(umn.c/iota-I*hmn.c);     %for m~=0
-  Dzetaphi_mn.c  = -FSAB2/(G+iota*I)./hmn.m.*(umn.s/iota-I*hmn.s);    %for m~=0
-  Dzetaphi2_mn.s =  FSAB2/(G+iota*I)./hmn.n/NPeriods.*(umn.c+G*hmn.c); %for n~=0
-  Dzetaphi2_mn.c = -FSAB2/(G+iota*I)./hmn.n/NPeriods.*(umn.s+G*hmn.s); %for n~=0
-  Dzetaphi_mn.s(hmn.m0ind,:)=Dzetaphi2_mn.s(hmn.m0ind,:);
-  Dzetaphi_mn.c(hmn.m0ind,:)=Dzetaphi2_mn.c(hmn.m0ind,:);
+  if 1
+    u=calcu(fftmn(h),G,I,iota,NPeriods);
+  else
+    hmn=unmnmat(fftmn(h));
+    umn.c=iota*(G*hmn.m + I*hmn.n * NPeriods)./(hmn.n * NPeriods - iota*hmn.m) .* hmn.c;
+    umn.c(hmn.m0ind,hmn.n0ind)=0;
+    umn.s=iota*(G*hmn.m + I*hmn.n * NPeriods)./(hmn.n * NPeriods - iota*hmn.m) .* hmn.s;
+    umn.s(hmn.m0ind,hmn.n0ind)=NaN; %Important to set. Indicates M odd/even
+    umn.m=hmn.m;umn.n=hmn.n;
+    umn.m0ind=hmn.m0ind;umn.n0ind=hmn.n0ind;
+    u=ifftmn(mnmat(umn));
+  end
   
-  Dzetaphi_mn.s(hmn.m0ind,hmn.n0ind)=NaN;
-  Dzetaphi_mn.c(hmn.m0ind,hmn.n0ind)=0;
-  if not(mod(Nzeta,2))
-    Dzetaphi_mn.c(hmn.m0ind,end)=0; %info was lost here
-    Dzetaphi_mn.s(hmn.m0ind,end)=NaN; %Important to set. Indicates M odd/even
-    if not(mod(Ntheta,2))
-      Dzetaphi_mn.c(end,end)=0;       %info was lost here
-      Dzetaphi_mn.s(end,end)=NaN;       %info was lost here
+  if 0
+    Dzetaphi_mn=invJacBdotgrad(fftmn(1-h*FSAB2),iota,NPeriods);
+    Dzetaphi=ifftmn(Dzetaphi_mn);
+  else
+    hmn=unmnmat(fftmn(h));
+    umn=unmnmat(fftmn(u));
+    Dzetaphi_mn.s  =  FSAB2/(G+iota*I)./hmn.m.*(umn.c/iota-I*hmn.c);     %for m~=0
+    Dzetaphi_mn.c  = -FSAB2/(G+iota*I)./hmn.m.*(umn.s/iota-I*hmn.s);    %for m~=0
+    Dzetaphi2_mn.s =  FSAB2/(G+iota*I)./hmn.n/NPeriods.*(umn.c+G*hmn.c); %for n~=0
+    Dzetaphi2_mn.c = -FSAB2/(G+iota*I)./hmn.n/NPeriods.*(umn.s+G*hmn.s); %for n~=0
+    Dzetaphi_mn.s(hmn.m0ind,:)=Dzetaphi2_mn.s(hmn.m0ind,:);
+    Dzetaphi_mn.c(hmn.m0ind,:)=Dzetaphi2_mn.c(hmn.m0ind,:);
+    
+    Dzetaphi_mn.s(hmn.m0ind,hmn.n0ind)=NaN;
+    Dzetaphi_mn.c(hmn.m0ind,hmn.n0ind)=0;
+    if not(mod(Nzeta,2))
+      Dzetaphi_mn.c(hmn.m0ind,end)=0; %info was lost here
+      Dzetaphi_mn.s(hmn.m0ind,end)=NaN; %Important to set. Indicates M odd/even
+      if not(mod(Ntheta,2))
+        Dzetaphi_mn.c(end,end)=0;       %info was lost here
+        Dzetaphi_mn.s(end,end)=NaN;       %info was lost here
+      end
     end
+    if not(mod(Ntheta,2))
+      Dzetaphi_mn.c(end,hmn.n0ind)=0; %info was lost here
+      Dzetaphi_mn.s(end,hmn.n0ind)=NaN; %info was lost here
+    end
+    Dzetaphi_mn.m=hmn.m;Dzetaphi_mn.n=hmn.n;
+    Dzetaphi_mn.m0ind=hmn.m0ind;Dzetaphi_mn.n0ind=hmn.n0ind;
+    Dzetaphi_mn=mnmat(Dzetaphi_mn);
+    Dzetaphi=ifftmn(Dzetaphi_mn);
   end
-  if not(mod(Ntheta,2))
-    Dzetaphi_mn.c(end,hmn.n0ind)=0; %info was lost here
-    Dzetaphi_mn.s(end,hmn.n0ind)=NaN; %info was lost here
-  end
-
-  [u,Dzetaphi]=ifftmn([umn,Dzetaphi_mn]);
   %toc
 else %not(useFFT)
   %tic
@@ -435,9 +464,12 @@ else %not(useFFT)
   %toc
 end
 
-
-dDzetaphi_dtheta= FSAB2/(G+iota*I)/iota*(u-iota*I*(h-1/FSAB2));
-dDzetaphi_dzeta =-FSAB2/(G+iota*I) *    (u +    G*(h-1/FSAB2));
+[dDzetaphi_dtheta,dDzetaphi_dzeta]=ifftmn(grad(Dzetaphi_mn,NPeriods));
+%old way:
+%dDzetaphi_dtheta_old= FSAB2/(G+iota*I)/iota*(u-iota*I*(h-1/FSAB2));
+%dDzetaphi_dzeta_old =-FSAB2/(G+iota*I) *    (u +    G*(h-1/FSAB2));
+%dDzetaphi_dtheta-dDzetaphi_dtheta_old
+%dDzetaphi_dzeta-dDzetaphi_dzeta_old
 
 XtozmXzot=dXdtheta.*dDzetaphi_dzeta-dXdzeta.*dDzetaphi_dtheta;
 YtozmYzot=dYdtheta.*dDzetaphi_dzeta-dYdzeta.*dDzetaphi_dtheta;
@@ -667,7 +699,7 @@ end
 
 %Ham.FSAB2=(Nvthet*Nphi)/sum(sum(Ham.h)); %Wrong, only holds for Boozer
 Ham.FSAB2=Booz.FSAB2;
-Ham.Jacob=1/Ham.FSAB2;
+Ham.Jacob=(G+iota*I)/Ham.FSAB2;
 Ham.FSAg_phiphi=Booz.FSAg_phiphi;
 Ham.FSAgpsipsi =Booz.FSAgpsipsi;
 Ham.FSAu2B2=Booz.FSAu2B2;

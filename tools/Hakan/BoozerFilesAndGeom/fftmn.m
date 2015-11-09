@@ -89,3 +89,5 @@ Fmn.m=m;
 Fmn.n=n;
 Fmn.m0ind=m0ind;
 Fmn.n0ind=n0ind;
+
+Fmn=mnmat(Fmn);
