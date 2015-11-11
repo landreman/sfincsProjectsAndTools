@@ -60,7 +60,7 @@ for inputind=1:length(lsts)
     if lst.StelSym
       parity=ones(size(lista.m));
     else
-      parity=Geom.parity{rind};
+      parity=lst.parity{rind};
     end
     if strcmp(fieldtoextract,'Z') || strcmp(fieldtoextract,'Dphi')
       lista.cosparity=not(parity); %only sin for StelSym 

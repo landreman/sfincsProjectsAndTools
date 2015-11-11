@@ -59,11 +59,10 @@ scanVals={scanVals{isScanned}};
 scanRuns={scanRuns{isScanned}};
 vals=vals(isScanned,:);
 
-vals==(baseVals'*ones(1,Nruns))
 if NParam==1
   baseRun=find(vals==baseVals);
 else
-  baseRun=find(prod(double(vals==(baseVals'*ones(1,Nruns)))))
+  baseRun=find(prod(double(vals==(baseVals'*ones(1,Nruns)))));
 end
 if length(baseRun)>1
   baseRun=baseRun(1);
@@ -449,8 +448,8 @@ if makeplots
           showthis=runs.particleFlux_vm_psiN*a/2/runs.rN(1)*vbar*1e20; str='particleFlux /m^2/s';
         end
         
-        showthis=runs.NTVfromFlux; str='NTVfromFlux';
-        %showthis=runs.particleFlux_vm_psiN; str='particleFlux';
+        %showthis=runs.NTVfromFlux; str='NTVfromFlux';
+        showthis=runs.particleFlux_vm_psiN; str='particleFlux';
         
         if makeplots==1
           if not(isempty(baseRun))

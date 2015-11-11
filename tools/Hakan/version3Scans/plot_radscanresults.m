@@ -54,10 +54,21 @@ mi=runs.mHats(:,ion)*mp;
 
 %runs
 
+
+%[tauP,tauE]=calcAlltau(runs);
 [tauP,tauE]=calcAlltau(runs,151,35);
 
+tauDirect=-runs.NTV*pbar; %tau is defined as -NTV.
+tauiDirect=tauDirect(:,ion)';
+tauFromFlux=-runs.NTVfromFlux*pbar;
+tauiFromFlux=tauFromFlux(:,ion)';
 
 %the_first_two_should_be_equal=[tauP,-pbar*runs.NTV(:,1),tauE]
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Plots
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+fz=14;
 
 fig(1)
 if Nspec==2
@@ -98,12 +109,18 @@ integr=NTVtot'.*abs(4*pi^2./runs.FSABHat2.*(runs.GHat+runs.iota.*runs.IHat)*...
        psiAHat*Rbar^3);
 %abs is taken because previously psiAHat had the wrong sign!
 
-if 0
-  fig(3)
-  plot(s,integr)
-  title('integrand for total NTV')
-  xlabel('s')
-end
+fig(3)
+plot(runs.rN,tauiDirect,'r--+',...
+     runs.rN,tauiDirect+tauE','r--o',...
+     runs.rN,tauiFromFlux,'b--d')
+set(gca,'FontSize',fz)
+title('torque')
+xlabel('\rho_{tor}')
+ylabel('Nm / m^3')
+legend('from anisotropy','from anisotropy and Er','from flux','analytic approx.',2)
+ax=axis;
+ax(3)=0;
+axis(ax);  
 
 %NTVtot0=NTVtot(1)-s(1)*(NTVtot(2)-NTVtot(1))/(s(2)-s(1));
 %NTVtot1=NTVtot(end)+(1-s(end))*(NTVtot(end)-NTVtot(end-1))/(s(end)-s(end-1));

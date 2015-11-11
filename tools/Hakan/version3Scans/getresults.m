@@ -92,6 +92,7 @@ for hind=1:length(H)
     out.FSABHat2(ind)      =H{hind}.FSABHat2;
     out.alpha(ind)         =H{hind}.alpha;
     out.Delta(ind)         =H{hind}.Delta;
+    out.nu_n(ind)          =H{hind}.nu_n;
 
     %out.BDotCurlB{ind}     =H{hind}.BDotCurlB; %Only saved for VMEC input ????
     out.BHat{ind}          =H{hind}.BHat';
