@@ -4,8 +4,11 @@ function [out,missing]=getresults(directory,sortafter)
 % Only succesful runs are loaded. The output struct "out"
 % is sorted after the vaiable with the name in the input "sortafter"
 %directory
-H=loadallh5(directory);
-
+if nargin==2
+  H=loadallh5(directory,sortafter);
+else
+  H=loadallh5(directory);
+end
 ind=0;  %Index for successful runs
 mind=0; %index for missing runs
 missing=[];

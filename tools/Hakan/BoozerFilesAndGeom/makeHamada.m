@@ -17,6 +17,8 @@ G=Geom.Bphi(rind);
 iota=Geom.iota(rind);
 Bmn=Geom.Bmn{rind}; %NOTE: Not normalised to B00
 NHarmonics=Geom.nmodes(rind);
+mu0=1.256637061e-06;
+mu0dpdpsi=Geom.dpds(rind)/Geom.psi_a*mu0; %[T/m^2]
 
 %Boozer discretisation
 Dzeta=2*pi/Nzeta/Geom.Nperiods;
@@ -206,10 +208,12 @@ end
 BR=(dRdzeta+iota*dRdtheta).*B.^2/(G+iota*I);
 BZ=(dZdzeta+iota*dZdtheta).*B.^2/(G+iota*I);
 Bgeomang=(R.*dgeomangdzeta+iota*R.*dgeomangdtheta).*B.^2/(G+iota*I);
+BX=BR.*cos(geomang)-Bgeomang.*sin(geomang);
+BY=BR.*sin(geomang)+Bgeomang.*cos(geomang);
 Booz.B_XYZ=zeros(3,Ntheta,Nzeta);
 Booz.B_XYZ(3,:,:)=BZ;
-Booz.B_XYZ(1,:,:)=BR.*cos(geomang)-Bgeomang.*sin(geomang);
-Booz.B_XYZ(2,:,:)=BR.*sin(geomang)+Bgeomang.*cos(geomang);
+Booz.B_XYZ(1,:,:)=BX;
+Booz.B_XYZ(2,:,:)=BY;
 
 %Approximating that dr/zeta is roughly in the geometrical toroidal direction I do this
 %to project on the two directions perpedicular to the toroidal direction
@@ -309,7 +313,7 @@ if useFFT
     u=ifftmn(mnmat(umn));
   end
   
-  if 0
+  if 1
     Dzetaphi_mn=invJacBdotgrad(fftmn(1-h*FSAB2),iota,NPeriods);
     Dzetaphi=ifftmn(Dzetaphi_mn);
   else
@@ -471,6 +475,11 @@ end
 %dDzetaphi_dtheta-dDzetaphi_dtheta_old
 %dDzetaphi_dzeta-dDzetaphi_dzeta_old
 
+%B_psi=B_psi_00+B_psi_tilde
+B_psi_tilde=-mu0dpdpsi/FSAB2*(G+iota*I)*Dzetaphi;
+B_psi_tilde_mn=-mu0dpdpsi/FSAB2*(G+iota*I)*Dzetaphi_mn;
+
+
 XtozmXzot=dXdtheta.*dDzetaphi_dzeta-dXdzeta.*dDzetaphi_dtheta;
 YtozmYzot=dYdtheta.*dDzetaphi_dzeta-dYdzeta.*dDzetaphi_dtheta;
 ZtozmZzot=dZdtheta.*dDzetaphi_dzeta-dZdzeta.*dDzetaphi_dtheta;
@@ -487,17 +496,57 @@ g_phiphi    =dXdphi.^2  +dYdphi.^2  +dZdphi.^2;
 g_vthetvthet=dXdvthet.^2+dYdvthet.^2+dZdvthet.^2;
 g_vthetphi  =dXdphi.*dXdvthet+dYdphi.*dYdvthet+dZdphi.*dZdvthet;
 
+%%%%%%%%%%%%%%%%% calculate B_psi_00, grad(theta) and grad(zeta) %%%%%%%%%%%%%%%%%%%%%
+% Is not possible, don't do it!
 
-if 0 %Double-check the FFT results against the slow method
-  fig(1+useFFT*4)
-  surf(g_phiphi);shading flat;view(0,90)
-  fig(2+useFFT*4)
-  surf(dXdphi);shading flat;view(0,90)
-  fig(3+useFFT*4)
-  surf(dYdphi);shading flat;view(0,90)
-  fig(4+useFFT*4)
-  surf(dZdphi);shading flat;view(0,90)
+if 0
+d1=1./(dXdtheta.*dYdzeta-dXdzeta.*dYdtheta)
+
+atheta_Y0=-dXdzeta.*d1;
+atheta_YZ=-(dXdtheta.*dZdzeta-dXdzeta.*dZdtheta).*d1;
+atheta_X0=dYdzeta.*d1;
+atheta_XZ=(dYdtheta.*dZdzeta-dYdzeta.*dZdtheta).*d1;
+
+azeta_Y0=dXdtheta.*d1;
+azeta_YZ=-(dXdtheta.*dZdzeta-dXdzeta.*dZdtheta).*d1;
+azeta_X0=-dYdtheta.*d1;
+azeta_XZ=(dYdtheta.*dZdzeta-dYdzeta.*dZdtheta).*d1;
+
+DX=BX-B_psi_tilde.*gradpsi.X
+DY=BY-B_psi_tilde.*gradpsi.Y
+DZ=BZ-B_psi_tilde.*gradpsi.Z
+
+atheta_YZ_c = atheta_YZ - gradpsi.Y./gradpsi.Z
+azeta_YZ_c  = azeta_YZ  - gradpsi.Y./gradpsi.Z
+atheta_XZ_c = atheta_XZ - gradpsi.X./gradpsi.Z
+azeta_XZ_c  = azeta_XZ  - gradpsi.X./gradpsi.Z
+
+azeta_XZ_c .* atheta_YZ_c 
+azeta_YZ_c .* atheta_XZ_c
+
+d2=1/G/I./(azeta_XZ_c .* atheta_YZ_c - azeta_YZ_c .* atheta_XZ_c);
+
+EX=DX-DZ.*gradpsi.X./gradpsi.Z-G*azeta_X0-I*atheta_X0;
+EY=DY-DZ.*gradpsi.Y./gradpsi.Z-G*azeta_Y0-I*atheta_Y0;
+
+EX./atheta_XZ_c
+EY./atheta_YZ_c
+
+gradzeta.Z =I*d2.*( EX.*atheta_YZ_c -EY.*atheta_XZ_c);
+gradtheta.Z=G*d2.*(-EX.*azeta_YZ_c  +EY.*azeta_XZ_c );
+
+gradzeta.X = azeta_X0 + azeta_XZ.*gradzeta.Z;
+gradzeta.Y = azeta_Y0 + azeta_YZ.*gradzeta.Z;
+
+gradtheta.X = atheta_X0 + atheta_XZ.*gradtheta.Z;
+gradtheta.Y = atheta_Y0 + atheta_YZ.*gradtheta.Z;
+
+B_psi_00 = (DZ-G*gradzeta.Z-I*gradtheta.Z)./gradpsi.Z;
+error('stoppppp')
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
 Booz.Nperiods=Geom.Nperiods;
 Booz.Nzeta=Nzeta;

@@ -235,12 +235,14 @@ else %calculated
   
   disp('Calculating Hamada coordinates')
   FSAg_phiphi=zeros(size(runs2.rN))';
+  FSAgpsipsi=zeros(size(runs2.rN))';
   for ind=1:length(runs2.rN)
     fprintf(1,'\b\b\b\b\b\b\b\b\b\b\b%3i/%3i',ind,length(runs2.rN))
     rnorm=runs2.rN(ind);
     rind=findnearest(Geom.rnorm,rnorm);
     [Ham,Booz]=makeHamada(Geom,rind,85,35,'forceSize');
     FSAg_phiphi(ind)=Booz.FSAg_phiphi;
+    FSAgpsipsi(ind)=Booz.FSAgpsipsi;
   end
   fprintf(1,'\n')
 end
@@ -319,6 +321,14 @@ if make_rippleplateau
   plat.tau2=Geom.Nperiods*mi^2.*vTi.^3.*(ni20*1e20)./(Z*e)./iota*...
             sqrt(pi)/4.*(G+iota.*I).*FSAdelta2overB.*(A1i+A2i*3);
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%Calculate Andreas type values for D11  
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Flux_psi=runs2.particleFlux_vm_psiN(:,ion)*nbar*vbar/Rbar*psiAHat;
+D11=-Flux_psi./FSAgpsipsi./(ni20*1e20)./A1istep2;
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % PLOTS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -361,7 +371,7 @@ title('braking time')
 
 fig(3)
 if make_rippleplateau
-  plot(rNplot,tauiDirect,'r--+',...
+    plot(rNplot,tauiDirect,'r--+',...
        rNplot,tauiDirect+tauE,'r--o',...
        rNplot,tauiFromFlux,'b--d',...
        rNplot,plat.tau2,'g--o')%,...
@@ -378,7 +388,7 @@ legend('from anisotropy','from anisotropy and Er','from flux','analytic approx.'
 ax=axis;
 ax(3)=0;
 axis(ax);
-
+%plat.tau2./tauiFromFlux'
 
 
 fig(4)
@@ -429,6 +439,11 @@ if 0
        rNplot,-A1istep2.*(TikeV*1e3)./Z./iota)
   set(gca,'FontSize',fz)
 end
+
+fig(20)
+semilogy(rNplot,D11)
+xlabel('\rho_{tor}')
+ylabel('D_{11} [m^2/s]')
 
 if make_rippleplateau
   fig(10)

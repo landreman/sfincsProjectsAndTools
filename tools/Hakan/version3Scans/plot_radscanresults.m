@@ -124,7 +124,7 @@ axis(ax);
 
 %NTVtot0=NTVtot(1)-s(1)*(NTVtot(2)-NTVtot(1))/(s(2)-s(1));
 %NTVtot1=NTVtot(end)+(1-s(end))*(NTVtot(end)-NTVtot(end-1))/(s(end)-s(end-1));
-
+tauiFromFlux
 
 
 if 0 %EXTRAPOLATE
@@ -212,7 +212,7 @@ plot(runs.rN,kappaiFSAB2)
 title('\kappa_i <B^2>')
 xlabel('r / a')
 
-tau_anal_over_tau_calc=(-plat.tau./-NTVtot)'
+tau_anal_over_tau_calc=(plat.tau./-NTVtot)'
 fig(7)
 plot(runs.rN,-NTVtot,runs.rN,plat.tau)%,runs.rN,tauP)%*sqrt(2))%testing
 %figure(1)

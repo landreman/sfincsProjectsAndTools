@@ -24,6 +24,8 @@ elseif isa(B,'double')
       prod=A.*B;
     end
   end
+elseif isa(A,'double') && isa(B,'mnmat')
+  prod=mtimes(B,A); %The above case
 else
   error('not implemented case')
 end
