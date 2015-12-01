@@ -95,9 +95,23 @@ if useFFT
     Zmnmat=mnmat(Geom,rind,'Z',Ntheta,Nzeta,ifftOpt);
     Dzetacylphi_mnmat=mnmat(Geom,rind,'Dzetacylphi',Ntheta,Nzeta,ifftOpt);
     [B,R,Z,Dzetacylphi]=ifftmn([Bmnmat,Rmnmat,Zmnmat,Dzetacylphi_mnmat]);
-    [dBdtheta,dBdzeta,dRdtheta,dRdzeta,dZdtheta,dZdzeta,...
-     dDzetacylphi_dtheta,dDzetacylphi_dzeta]=...
-        ifftmn([grad(Bmnmat,NPeriods),grad(Rmnmat,NPeriods),grad(Zmnmat,NPeriods),grad(Dzetacylphi_mnmat,NPeriods)]);
+    [dBdtheta_mnmat,dBdzeta_mnmat]=grad(Bmnmat,NPeriods);
+    [dRdtheta_mnmat,dRdzeta_mnmat]=grad(Rmnmat,NPeriods);
+    [dZdtheta_mnmat,dZdzeta_mnmat]=grad(Zmnmat,NPeriods);
+    [dDzetacylphidtheta_mnmat,dDzetacylphidzeta_mnmat]=grad(Dzetacylphi_mnmat, ...
+                                                      NPeriods);
+    [dBdtheta,dBdzeta]=ifftmn([dBdtheta_mnmat,dBdzeta_mnmat]);
+    [dRdtheta,dRdzeta]=ifftmn([dRdtheta_mnmat,dRdzeta_mnmat]);
+    [dZdtheta,dZdzeta]=ifftmn([dZdtheta_mnmat,dZdzeta_mnmat]);
+    [dDzetacylphi_dtheta,dDzetacylphi_dzeta]=...
+        ifftmn([dDzetacylphidtheta_mnmat,dDzetacylphidzeta_mnmat]);
+
+    [d2Rdtheta2,d2Rdthetadzeta]=ifftmn(grad(dRdtheta_mnmat,NPeriods));
+    [d2Rdthetadzeta,d2Rdzeta2] =ifftmn(grad(dRdzeta_mnmat,NPeriods));
+    [d2Zdtheta2,d2Zdthetadzeta]=ifftmn(grad(dZdtheta_mnmat,NPeriods));
+    [d2Zdthetadzeta,d2Zdzeta2] =ifftmn(grad(dZdzeta_mnmat,NPeriods));
+    [d2Dzetacylphi_dtheta2,d2Dzetacylphi_dthetadzeta]=ifftmn(grad(dDzetacylphidtheta_mnmat,NPeriods));
+    [d2Dzetacylphi_dthetadzeta,d2Dzetacylphi_dzeta2] =ifftmn(grad(dDzetacylphidzeta_mnmat,NPeriods));
   end
   %toc
 else %not(useFFT)
@@ -115,6 +129,16 @@ else %not(useFFT)
   dDzetacylphi_dtheta = zeros(Ntheta,Nzeta);
   dDzetacylphi_dzeta  = zeros(Ntheta,Nzeta);
 
+  d2Rdtheta2     = zeros(Ntheta,Nzeta);
+  d2Rdzeta2      = zeros(Ntheta,Nzeta);
+  d2Rdthetadzeta = zeros(Ntheta,Nzeta);
+  d2Zdtheta2     = zeros(Ntheta,Nzeta);
+  d2Zdzeta2      = zeros(Ntheta,Nzeta);
+  d2Zdthetadzeta = zeros(Ntheta,Nzeta);
+  d2Dzetacylphi_dtheta2     = zeros(Ntheta,Nzeta);
+  d2Dzetacylphi_dzeta2      = zeros(Ntheta,Nzeta);
+  d2Dzetacylphi_dthetadzeta = zeros(Ntheta,Nzeta);
+  
   for i=1:NHarmonics
     m=Geom.m{rind}(i);
     n=Geom.n{rind}(i);
@@ -136,14 +160,23 @@ else %not(useFFT)
       R    = R + Geom.R{rind}(i) * c;
       dRdtheta = dRdtheta - Geom.R{rind}(i) * m * s;
       dRdzeta  = dRdzeta  + Geom.R{rind}(i) * n * NPeriods * s;
+      d2Rdtheta2 = d2Rdtheta2 - Geom.R{rind}(i) * m^2 * c;
+      d2Rdzeta2  = d2Rdzeta2 - Geom.R{rind}(i) * (n * NPeriods)^2 * c;
+      d2Rdthetadzeta=d2Rdthetadzeta + Geom.R{rind}(i) * m * n * NPeriods * c;
       
       Z    = Z + Geom.Z{rind}(i) * s;
       dZdtheta = dZdtheta + Geom.Z{rind}(i) * m * c;
       dZdzeta  = dZdzeta  - Geom.Z{rind}(i) * n * NPeriods * c;
+      d2Zdtheta2 = d2Zdtheta2 - Geom.Z{rind}(i) * m^2 * s;
+      d2Zdzeta2  = d2Zdzeta2 - Geom.Z{rind}(i) * (n * NPeriods)^2 * s;
+      d2Zdthetadzeta=d2Zdthetadzeta + Geom.Z{rind}(i) * m * n * NPeriods * s;
       
       Dzetacylphi = Dzetacylphi + 2*pi/NPeriods*Geom.Dphi{rind}(i) * s;
       dDzetacylphi_dtheta = dDzetacylphi_dtheta + 2*pi/NPeriods*Geom.Dphi{rind}(i) * m * c;
       dDzetacylphi_dzeta  = dDzetacylphi_dzeta - 2*pi/NPeriods*Geom.Dphi{rind}(i) * n * NPeriods * c;
+      d2Dzetacylphi_dtheta2 = d2Dzetacylphi_dtheta2 - 2*pi/NPeriods*Geom.Dphi{rind}(i) * m^2 * s;
+      d2Dzetacylphi_dzeta2  = d2Dzetacylphi_dzeta2 - 2*pi/NPeriods*Geom.Dphi{rind}(i) * (n * NPeriods)^2 * s;
+      d2Dzetacylphi_dthetadzeta=d2Dzetacylphi_dthetadzeta + 2*pi/NPeriods*Geom.Dphi{rind}(i) * m * n * NPeriods * s;
       
     else  %The sine components of B
       B = B + Bmn(i) * s;
@@ -153,14 +186,23 @@ else %not(useFFT)
       R    = R + Geom.R{rind}(i) * s;
       dRdtheta = dRdtheta + Geom.R{rind}(i) * m * c;
       dRdzeta  = dRdzeta  - Geom.R{rind}(i) * n * NPeriods * c; 
+      d2Rdtheta2 = d2Rdtheta2 - Geom.R{rind}(i) * m^2 * s;
+      d2Rdzeta2  = d2Rdzeta2 - Geom.R{rind}(i) * (n * NPeriods)^2 * s;
+      d2Rdthetadzeta=d2Rdthetadzeta + Geom.R{rind}(i) * m * n * NPeriods * s;      
       
       Z    = Z + Geom.Z{rind}(i) * c;
       dZdtheta = dZdtheta - Geom.Z{rind}(i) * m * s;
       dZdzeta  = dZdzeta  + Geom.Z{rind}(i) * n * NPeriods * s;
+      d2Zdtheta2 = d2Zdtheta2 - Geom.Z{rind}(i) * m^2 * c;
+      d2Zdzeta2  = d2Zdzeta2 - Geom.Z{rind}(i) * (n * NPeriods)^2 * c;
+      d2Zdthetadzeta=d2Zdthetadzeta + Geom.Z{rind}(i) * m * n * NPeriods * c;
       
       Dzetacylphi = Dzetacylphi + 2*pi/NPeriods*Geom.Dphi{rind}(i) * c;
       dDzetacylphi_dtheta = dDzetacylphi_dtheta - 2*pi/NPeriods*Geom.Dphi{rind}(i) * m * s;
       dDzetacylphi_dzeta  = dDzetacylphi_dzeta + 2*pi/NPeriods*Geom.Dphi{rind}(i) * n * NPeriods * s;
+      d2Dzetacylphi_dtheta2 = d2Dzetacylphi_dtheta2 - 2*pi/NPeriods*Geom.Dphi{rind}(i) * m^2 * c;
+      d2Dzetacylphi_dzeta2  = d2Dzetacylphi_dzeta2 - 2*pi/NPeriods*Geom.Dphi{rind}(i) * (n * NPeriods)^2 * c;
+      d2Dzetacylphi_dthetadzeta=d2Dzetacylphi_dthetadzeta + 2*pi/NPeriods*Geom.Dphi{rind}(i) * m * n * NPeriods * c;
       
     end
   end
@@ -171,6 +213,9 @@ cylphi=zeta-Dzetacylphi;     %cylphi is minus the geometrical toroidal angle.
 geomang=-cylphi;             %(R,Z,cylphi) and (R,geomang,Z) are right handed systems. 
 dgeomangdtheta=dDzetacylphi_dtheta;
 dgeomangdzeta =dDzetacylphi_dzeta - 1;
+d2geomangdtheta2=d2Dzetacylphi_dtheta2;
+d2geomangdzeta2=d2Dzetacylphi_dzeta2;
+d2geomangdthetadzeta=d2Dzetacylphi_dthetadzeta;
 X=R.*cos(geomang);
 Y=R.*sin(geomang);
 
@@ -178,6 +223,33 @@ dXdtheta=dRdtheta.*cos(geomang)-R.*dgeomangdtheta.*sin(geomang);
 dXdzeta =dRdzeta .*cos(geomang)-R.*dgeomangdzeta .*sin(geomang);
 dYdtheta=dRdtheta.*sin(geomang)+R.*dgeomangdtheta.*cos(geomang);
 dYdzeta =dRdzeta .*sin(geomang)+R.*dgeomangdzeta .*cos(geomang);
+
+d2Xdtheta2=d2Rdtheta2.*cos(geomang) ...
+    -2*dRdtheta.*dgeomangdtheta.*sin(geomang)...
+    -R.*d2geomangdtheta2.*sin(geomang) ...
+    -R.*dgeomangdtheta.^2.*cos(geomang);
+d2Xdthetadzeta=d2Rdthetadzeta.*cos(geomang) ...
+    -(dRdtheta.*dgeomangdzeta+dRdzeta.*dgeomangdtheta).*sin(geomang) ...
+    -R.*d2geomangdthetadzeta.*sin(geomang) ...
+    -R.*dgeomangdtheta.*dgeomangdzeta.*cos(geomang);
+d2Xdzeta2=d2Rdzeta2.*cos(geomang) ...
+    -2*dRdzeta.*dgeomangdzeta.*sin(geomang)...
+    -R.*d2geomangdzeta2.*sin(geomang) ...
+    -R.*dgeomangdzeta.^2.*cos(geomang);
+
+d2Ydtheta2=d2Rdtheta2.*sin(geomang) ...
+    +2*dRdtheta.*dgeomangdtheta.*cos(geomang)...
+    +R.*d2geomangdtheta2.*cos(geomang) ...
+    -R.*dgeomangdtheta.^2.*sin(geomang);
+d2Ydthetadzeta=d2Rdthetadzeta.*sin(geomang) ...
+    +(dRdtheta.*dgeomangdzeta+dRdzeta.*dgeomangdtheta).*cos(geomang) ...
+    +R.*d2geomangdthetadzeta.*cos(geomang) ...
+    -R.*dgeomangdtheta.*dgeomangdzeta.*sin(geomang);
+d2Ydzeta2=d2Rdzeta2.*sin(geomang) ...
+    +2*dRdzeta.*dgeomangdzeta.*cos(geomang)...
+    +R.*d2geomangdzeta2.*cos(geomang) ...
+    -R.*dgeomangdzeta.^2.*sin(geomang);
+
 g_thetatheta=dXdtheta.^2+dYdtheta.^2+dZdtheta.^2;
 g_zetazeta  =dXdzeta.^2 +dYdzeta.^2 +dZdzeta.^2;
 g_thetazeta =dXdtheta.*dXdzeta+dYdtheta.*dYdzeta+dZdtheta.*dZdzeta;
@@ -191,6 +263,38 @@ Booz.gradpsi_XYZ=zeros(3,Ntheta,Nzeta);
 Booz.gradpsi_XYZ(1,:,:)=gradpsi.X;
 Booz.gradpsi_XYZ(2,:,:)=gradpsi.Y;
 Booz.gradpsi_XYZ(3,:,:)=gradpsi.Z;
+
+Booz.e_theta_XYZ=zeros(3,Ntheta,Nzeta);
+Booz.e_theta_XYZ(1,:,:)=dXdtheta;
+Booz.e_theta_XYZ(2,:,:)=dYdtheta;
+Booz.e_theta_XYZ(3,:,:)=dZdtheta;
+
+Booz.e_zeta_XYZ=zeros(3,Ntheta,Nzeta);
+Booz.e_zeta_XYZ(1,:,:)=dXdzeta;
+Booz.e_zeta_XYZ(2,:,:)=dYdzeta;
+Booz.e_zeta_XYZ(3,:,:)=dZdzeta;
+
+Booz.d2rdtheta2_XYZ=zeros(3,Ntheta,Nzeta);
+Booz.d2rdtheta2_XYZ(1,:,:)=d2Xdtheta2;
+Booz.d2rdtheta2_XYZ(2,:,:)=d2Ydtheta2;
+Booz.d2rdtheta2_XYZ(3,:,:)=d2Zdtheta2;
+
+Booz.d2rdzeta2_XYZ=zeros(3,Ntheta,Nzeta);
+Booz.d2rdzeta2_XYZ(1,:,:)=d2Xdzeta2;
+Booz.d2rdzeta2_XYZ(2,:,:)=d2Ydzeta2;
+Booz.d2rdzeta2_XYZ(3,:,:)=d2Zdzeta2;
+
+Booz.d2rdthetadzeta_XYZ=zeros(3,Ntheta,Nzeta);
+Booz.d2rdthetadzeta_XYZ(1,:,:)=d2Xdthetadzeta;
+Booz.d2rdthetadzeta_XYZ(2,:,:)=d2Ydthetadzeta;
+Booz.d2rdthetadzeta_XYZ(3,:,:)=d2Zdthetadzeta;
+
+CX=(d2Xdzeta2+2*iota*d2Xdthetadzeta+iota^2*d2Xdtheta2).*(B.^2/(G+iota*I)).^2;
+CY=(d2Ydzeta2+2*iota*d2Ydthetadzeta+iota^2*d2Ydtheta2).*(B.^2/(G+iota*I)).^2;
+CZ=(d2Zdzeta2+2*iota*d2Zdthetadzeta+iota^2*d2Zdtheta2).*(B.^2/(G+iota*I)).^2;
+
+BdotgradabsB=B.^2/(G+iota*I).*(iota*dBdtheta+dBdzeta);
+BxgradpsidotgradabsB=B.^2/(G+iota*I).*(G.*dBdtheta-I.*dBdzeta);
 
 if 0 %Double-check the FFT results against the slow method
   fig(1+useFFT*4)
@@ -214,6 +318,16 @@ Booz.B_XYZ=zeros(3,Ntheta,Nzeta);
 Booz.B_XYZ(3,:,:)=BZ;
 Booz.B_XYZ(1,:,:)=BX;
 Booz.B_XYZ(2,:,:)=BY;
+
+%% Calculate the curvature
+Booz.curv_XYZ=zeros(3,Ntheta,Nzeta);
+Booz.curv_XYZ(1,:,:)=(CX+BX./B.*BdotgradabsB)./B.^2;
+Booz.curv_XYZ(2,:,:)=(CY+BY./B.*BdotgradabsB)./B.^2;
+Booz.curv_XYZ(3,:,:)=(CZ+BZ./B.*BdotgradabsB)./B.^2;
+
+Booz.curv_normal=squeeze(dot(Booz.gradpsi_XYZ,Booz.curv_XYZ))./sqrt(gpsipsi);
+Booz.curv_geodes1=BxgradpsidotgradabsB./sqrt(gpsipsi)./B.^2;
+Booz.curv_geodes2=squeeze(dot(cross(Booz.B_XYZ,Booz.gradpsi_XYZ),Booz.curv_XYZ))./sqrt(gpsipsi)./B;
 
 %Approximating that dr/zeta is roughly in the geometrical toroidal direction I do this
 %to project on the two directions perpedicular to the toroidal direction
@@ -292,6 +406,8 @@ end
 % ---------------------------------------------------------------------------------------
 u = zeros(Ntheta,Nzeta); 
 Dzetaphi        =zeros(Ntheta,Nzeta); %difference between zeta and phi (tor Hamada coord) 
+dDzetaphi_dtheta=zeros(Ntheta,Nzeta);
+dDzetaphi_dzeta =zeros(Ntheta,Nzeta);
 %dudtheta = zeros(Ntheta,Nzeta);
 %dudzeta = zeros(Ntheta,Nzeta);
 h=1./(B.^2);
@@ -345,6 +461,7 @@ if useFFT
     Dzetaphi_mn=mnmat(Dzetaphi_mn);
     Dzetaphi=ifftmn(Dzetaphi_mn);
   end
+  [dDzetaphi_dtheta,dDzetaphi_dzeta]=ifftmn(grad(Dzetaphi_mn,NPeriods));
   %toc
 else %not(useFFT)
   %tic
@@ -404,9 +521,12 @@ else %not(useFFT)
           %assemble
           u = u + umnc * c + umns * s;
           if m>0
-            Dzetaphi = Dzetaphi + Dzetaphi1_mnc * c + Dzetaphi1_mns * s;    
+            Dzetaphi = Dzetaphi + Dzetaphi1_mnc * c + Dzetaphi1_mns * s; 
+            dDzetaphi_dtheta = dDzetaphi_dtheta + m*(-Dzetaphi1_mnc*s+Dzetaphi1_mns*c);
+            dDzetaphi_dzeta  = dDzetaphi_dzeta  - n*NPeriods*(-Dzetaphi1_mnc*s+Dzetaphi1_mns*c);
           else
             Dzetaphi = Dzetaphi + Dzetaphi2_mnc * c + Dzetaphi2_mns * s; 
+            dDzetaphi_dzeta  = dDzetaphi_dzeta  - n*NPeriods*(-Dzetaphi2_mnc*s+Dzetaphi2_mns*c);            
           end
           %dudtheta = dudtheta ...
           %    + umns * m * c - umnc * m * s;
@@ -455,8 +575,11 @@ else %not(useFFT)
           u = u + umnc * c;
           if m>0
             Dzetaphi = Dzetaphi + Dzetaphi1_mns * s;    
+            dDzetaphi_dtheta = dDzetaphi_dtheta + m*Dzetaphi1_mns*c;
+            dDzetaphi_dzeta  = dDzetaphi_dzeta  - n*NPeriods*Dzetaphi1_mns*c;
           else
             Dzetaphi = Dzetaphi + Dzetaphi2_mns * s; 
+            dDzetaphi_dzeta  = dDzetaphi_dzeta  - n*NPeriods*Dzetaphi2_mns*c;            
           end
           %dudtheta = dudtheta ...
           %    - umnc * m * s;
@@ -468,7 +591,7 @@ else %not(useFFT)
   %toc
 end
 
-[dDzetaphi_dtheta,dDzetaphi_dzeta]=ifftmn(grad(Dzetaphi_mn,NPeriods));
+%[dDzetaphi_dtheta,dDzetaphi_dzeta]=ifftmn(grad(Dzetaphi_mn,NPeriods));
 %old way:
 %dDzetaphi_dtheta_old= FSAB2/(G+iota*I)/iota*(u-iota*I*(h-1/FSAB2));
 %dDzetaphi_dzeta_old =-FSAB2/(G+iota*I) *    (u +    G*(h-1/FSAB2));
@@ -477,7 +600,7 @@ end
 
 %B_psi=B_psi_00+B_psi_tilde
 B_psi_tilde=-mu0dpdpsi/FSAB2*(G+iota*I)*Dzetaphi;
-B_psi_tilde_mn=-mu0dpdpsi/FSAB2*(G+iota*I)*Dzetaphi_mn;
+%B_psi_tilde_mn=-mu0dpdpsi/FSAB2*(G+iota*I)*Dzetaphi_mn;
 
 
 XtozmXzot=dXdtheta.*dDzetaphi_dzeta-dXdzeta.*dDzetaphi_dtheta;
