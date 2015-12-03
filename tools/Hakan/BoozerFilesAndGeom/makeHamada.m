@@ -90,28 +90,29 @@ if useFFT
                       mnlistgrad(Zlist,NPeriods),mnlistgrad(Dzetacylphilist,NPeriods)],...
                      Ntheta,Nzeta,ifftOpt),NPeriods);
   else
-    Bmnmat=mnmat(Geom,rind,'B',Ntheta,Nzeta,ifftOpt);
-    Rmnmat=mnmat(Geom,rind,'R',Ntheta,Nzeta,ifftOpt);
-    Zmnmat=mnmat(Geom,rind,'Z',Ntheta,Nzeta,ifftOpt);
-    Dzetacylphi_mnmat=mnmat(Geom,rind,'Dzetacylphi',Ntheta,Nzeta,ifftOpt);
-    [B,R,Z,Dzetacylphi]=ifftmn([Bmnmat,Rmnmat,Zmnmat,Dzetacylphi_mnmat]);
-    [dBdtheta_mnmat,dBdzeta_mnmat]=grad(Bmnmat,NPeriods);
-    [dRdtheta_mnmat,dRdzeta_mnmat]=grad(Rmnmat,NPeriods);
-    [dZdtheta_mnmat,dZdzeta_mnmat]=grad(Zmnmat,NPeriods);
-    [dDzetacylphidtheta_mnmat,dDzetacylphidzeta_mnmat]=grad(Dzetacylphi_mnmat, ...
-                                                      NPeriods);
-    [dBdtheta,dBdzeta]=ifftmn([dBdtheta_mnmat,dBdzeta_mnmat]);
-    [dRdtheta,dRdzeta]=ifftmn([dRdtheta_mnmat,dRdzeta_mnmat]);
-    [dZdtheta,dZdzeta]=ifftmn([dZdtheta_mnmat,dZdzeta_mnmat]);
+    mnmats.B=mnmat(Geom,rind,'B',Ntheta,Nzeta,ifftOpt);
+    mnmats.R=mnmat(Geom,rind,'R',Ntheta,Nzeta,ifftOpt);
+    mnmats.Z=mnmat(Geom,rind,'Z',Ntheta,Nzeta,ifftOpt);
+    mnmats.Dzetacylphi=mnmat(Geom,rind,'Dzetacylphi',Ntheta,Nzeta,ifftOpt);
+    [B,R,Z,Dzetacylphi]=ifftmn([mnmats.B,mnmats.R,mnmats.Z,mnmats.Dzetacylphi]);
+    [mnmats.dBdtheta,mnmats.dBdzeta]=grad(mnmats.B,NPeriods);
+    [mnmats.dRdtheta,mnmats.dRdzeta]=grad(mnmats.R,NPeriods);
+    [mnmats.dZdtheta,mnmats.dZdzeta]=grad(mnmats.Z,NPeriods);
+    [mnmats.dDzetacylphidtheta,mnmats.dDzetacylphidzeta]=...
+        grad(mnmats.Dzetacylphi,NPeriods);
+    [dBdtheta,dBdzeta]=ifftmn([mnmats.dBdtheta,mnmats.dBdzeta]);
+    [dRdtheta,dRdzeta]=ifftmn([mnmats.dRdtheta,mnmats.dRdzeta]);
+    [dZdtheta,dZdzeta]=ifftmn([mnmats.dZdtheta,mnmats.dZdzeta]);
     [dDzetacylphi_dtheta,dDzetacylphi_dzeta]=...
-        ifftmn([dDzetacylphidtheta_mnmat,dDzetacylphidzeta_mnmat]);
+        ifftmn([mnmats.dDzetacylphidtheta,mnmats.dDzetacylphidzeta]);
 
-    [d2Rdtheta2,d2Rdthetadzeta]=ifftmn(grad(dRdtheta_mnmat,NPeriods));
-    [d2Rdthetadzeta,d2Rdzeta2] =ifftmn(grad(dRdzeta_mnmat,NPeriods));
-    [d2Zdtheta2,d2Zdthetadzeta]=ifftmn(grad(dZdtheta_mnmat,NPeriods));
-    [d2Zdthetadzeta,d2Zdzeta2] =ifftmn(grad(dZdzeta_mnmat,NPeriods));
-    [d2Dzetacylphi_dtheta2,d2Dzetacylphi_dthetadzeta]=ifftmn(grad(dDzetacylphidtheta_mnmat,NPeriods));
-    [d2Dzetacylphi_dthetadzeta,d2Dzetacylphi_dzeta2] =ifftmn(grad(dDzetacylphidzeta_mnmat,NPeriods));
+    [d2Rdtheta2,d2Rdthetadzeta]=ifftmn(grad(mnmats.dRdtheta,NPeriods));
+    [d2Rdthetadzeta,d2Rdzeta2] =ifftmn(grad(mnmats.dRdzeta,NPeriods));
+    [d2Zdtheta2,d2Zdthetadzeta]=ifftmn(grad(mnmats.dZdtheta,NPeriods));
+    [d2Zdthetadzeta,d2Zdzeta2] =ifftmn(grad(mnmats.dZdzeta,NPeriods));
+    [d2Dzetacylphi_dtheta2,d2Dzetacylphi_dthetadzeta]=ifftmn(grad(mnmats.dDzetacylphidtheta,NPeriods));
+    [d2Dzetacylphi_dthetadzeta,d2Dzetacylphi_dzeta2] = ...
+        ifftmn(grad(mnmats.dDzetacylphidzeta,NPeriods));
   end
   %toc
 else %not(useFFT)
@@ -259,35 +260,35 @@ gradpsi.Y=B.^2./(G+iota*I).*(dZdtheta.*dXdzeta-dXdtheta.*dZdzeta);
 gradpsi.Z=B.^2./(G+iota*I).*(dXdtheta.*dYdzeta-dYdtheta.*dZdzeta);
 gpsipsi=gradpsi.X.^2+gradpsi.Y.^2+gradpsi.Z.^2;
 
-Booz.gradpsi_XYZ=zeros(3,Ntheta,Nzeta);
-Booz.gradpsi_XYZ(1,:,:)=gradpsi.X;
-Booz.gradpsi_XYZ(2,:,:)=gradpsi.Y;
-Booz.gradpsi_XYZ(3,:,:)=gradpsi.Z;
+Booz.XYZ.gradpsi=zeros(3,Ntheta,Nzeta);
+Booz.XYZ.gradpsi(1,:,:)=gradpsi.X;
+Booz.XYZ.gradpsi(2,:,:)=gradpsi.Y;
+Booz.XYZ.gradpsi(3,:,:)=gradpsi.Z;
 
-Booz.e_theta_XYZ=zeros(3,Ntheta,Nzeta);
-Booz.e_theta_XYZ(1,:,:)=dXdtheta;
-Booz.e_theta_XYZ(2,:,:)=dYdtheta;
-Booz.e_theta_XYZ(3,:,:)=dZdtheta;
+Booz.XYZ.e_theta=zeros(3,Ntheta,Nzeta);
+Booz.XYZ.e_theta(1,:,:)=dXdtheta;
+Booz.XYZ.e_theta(2,:,:)=dYdtheta;
+Booz.XYZ.e_theta(3,:,:)=dZdtheta;
 
-Booz.e_zeta_XYZ=zeros(3,Ntheta,Nzeta);
-Booz.e_zeta_XYZ(1,:,:)=dXdzeta;
-Booz.e_zeta_XYZ(2,:,:)=dYdzeta;
-Booz.e_zeta_XYZ(3,:,:)=dZdzeta;
+Booz.XYZ.e_zeta=zeros(3,Ntheta,Nzeta);
+Booz.XYZ.e_zeta(1,:,:)=dXdzeta;
+Booz.XYZ.e_zeta(2,:,:)=dYdzeta;
+Booz.XYZ.e_zeta(3,:,:)=dZdzeta;
 
-Booz.d2rdtheta2_XYZ=zeros(3,Ntheta,Nzeta);
-Booz.d2rdtheta2_XYZ(1,:,:)=d2Xdtheta2;
-Booz.d2rdtheta2_XYZ(2,:,:)=d2Ydtheta2;
-Booz.d2rdtheta2_XYZ(3,:,:)=d2Zdtheta2;
+Booz.XYZ.d2rdtheta2=zeros(3,Ntheta,Nzeta);
+Booz.XYZ.d2rdtheta2(1,:,:)=d2Xdtheta2;
+Booz.XYZ.d2rdtheta2(2,:,:)=d2Ydtheta2;
+Booz.XYZ.d2rdtheta2(3,:,:)=d2Zdtheta2;
 
-Booz.d2rdzeta2_XYZ=zeros(3,Ntheta,Nzeta);
-Booz.d2rdzeta2_XYZ(1,:,:)=d2Xdzeta2;
-Booz.d2rdzeta2_XYZ(2,:,:)=d2Ydzeta2;
-Booz.d2rdzeta2_XYZ(3,:,:)=d2Zdzeta2;
+Booz.XYZ.d2rdzeta2=zeros(3,Ntheta,Nzeta);
+Booz.XYZ.d2rdzeta2(1,:,:)=d2Xdzeta2;
+Booz.XYZ.d2rdzeta2(2,:,:)=d2Ydzeta2;
+Booz.XYZ.d2rdzeta2(3,:,:)=d2Zdzeta2;
 
-Booz.d2rdthetadzeta_XYZ=zeros(3,Ntheta,Nzeta);
-Booz.d2rdthetadzeta_XYZ(1,:,:)=d2Xdthetadzeta;
-Booz.d2rdthetadzeta_XYZ(2,:,:)=d2Ydthetadzeta;
-Booz.d2rdthetadzeta_XYZ(3,:,:)=d2Zdthetadzeta;
+Booz.XYZ.d2rdthetadzeta=zeros(3,Ntheta,Nzeta);
+Booz.XYZ.d2rdthetadzeta(1,:,:)=d2Xdthetadzeta;
+Booz.XYZ.d2rdthetadzeta(2,:,:)=d2Ydthetadzeta;
+Booz.XYZ.d2rdthetadzeta(3,:,:)=d2Zdthetadzeta;
 
 CX=(d2Xdzeta2+2*iota*d2Xdthetadzeta+iota^2*d2Xdtheta2).*(B.^2/(G+iota*I)).^2;
 CY=(d2Ydzeta2+2*iota*d2Ydthetadzeta+iota^2*d2Ydtheta2).*(B.^2/(G+iota*I)).^2;
@@ -314,21 +315,21 @@ BZ=(dZdzeta+iota*dZdtheta).*B.^2/(G+iota*I);
 Bgeomang=(R.*dgeomangdzeta+iota*R.*dgeomangdtheta).*B.^2/(G+iota*I);
 BX=BR.*cos(geomang)-Bgeomang.*sin(geomang);
 BY=BR.*sin(geomang)+Bgeomang.*cos(geomang);
-Booz.B_XYZ=zeros(3,Ntheta,Nzeta);
-Booz.B_XYZ(3,:,:)=BZ;
-Booz.B_XYZ(1,:,:)=BX;
-Booz.B_XYZ(2,:,:)=BY;
+Booz.XYZ.B=zeros(3,Ntheta,Nzeta);
+Booz.XYZ.B(3,:,:)=BZ;
+Booz.XYZ.B(1,:,:)=BX;
+Booz.XYZ.B(2,:,:)=BY;
 
 %% Calculate the curvature
-Booz.curv_XYZ=zeros(3,Ntheta,Nzeta);
-Booz.curv_XYZ(1,:,:)=(CX+BX./B.*BdotgradabsB)./B.^2;
-Booz.curv_XYZ(2,:,:)=(CY+BY./B.*BdotgradabsB)./B.^2;
-Booz.curv_XYZ(3,:,:)=(CZ+BZ./B.*BdotgradabsB)./B.^2;
+Booz.XYZ.curv=zeros(3,Ntheta,Nzeta);
+Booz.XYZ.curv(1,:,:)=(CX+BX./B.*BdotgradabsB)./B.^2;
+Booz.XYZ.curv(2,:,:)=(CY+BY./B.*BdotgradabsB)./B.^2;
+Booz.XYZ.curv(3,:,:)=(CZ+BZ./B.*BdotgradabsB)./B.^2;
 
-Booz.curv_normal=squeeze(dot(Booz.gradpsi_XYZ,Booz.curv_XYZ))./sqrt(gpsipsi);
+Booz.curv_normal=squeeze(dot(Booz.XYZ.gradpsi,Booz.XYZ.curv))./sqrt(gpsipsi);
 Booz.curv_geodes1=BxgradpsidotgradabsB./sqrt(gpsipsi)./B.^2;
-Booz.curv_geodes2=squeeze(dot(cross(Booz.B_XYZ,Booz.gradpsi_XYZ),Booz.curv_XYZ))./sqrt(gpsipsi)./B;
-
+Booz.curv_geodes2=squeeze(dot(cross(Booz.XYZ.B,Booz.XYZ.gradpsi),Booz.XYZ.curv))./sqrt(gpsipsi)./B;
+Booz.gradpsidotgradB=Booz.curv_normal.*sqrt(gpsipsi).*B.^2-mu0dpdpsi.*gpsipsi;
 %Approximating that dr/zeta is roughly in the geometrical toroidal direction I do this
 %to project on the two directions perpedicular to the toroidal direction
 BRmean=mean(BR')'*ones(1,size(dRdtheta,2));
@@ -355,6 +356,9 @@ Booz.BR=(dRdzeta+iota*dRdtheta).*B.^2/(G+iota*I);
 Booz.BZ=(dZdzeta+iota*dZdtheta).*B.^2/(G+iota*I);
 Booz.Bgeomang=(R.*dgeomangdzeta+iota*R.*dgeomangdtheta).*B.^2/(G+iota*I);
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Check if cylindrical coordinates are possible
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Rinboard=zeros(1,Nzeta);
 Routboard=zeros(1,Nzeta);
 cylPossible=1;
@@ -417,7 +421,7 @@ FSAB2=4*pi^2/VPrimeHat;
 if useFFT
   %tic
   if 1
-    u=calcu(fftmn(h),G,I,iota,NPeriods);
+    [u,mnmats.u]=calcu(fftmn(h),G,I,iota,NPeriods);
   else
     hmn=unmnmat(fftmn(h));
     umn.c=iota*(G*hmn.m + I*hmn.n * NPeriods)./(hmn.n * NPeriods - iota*hmn.m) .* hmn.c;
@@ -426,12 +430,13 @@ if useFFT
     umn.s(hmn.m0ind,hmn.n0ind)=NaN; %Important to set. Indicates M odd/even
     umn.m=hmn.m;umn.n=hmn.n;
     umn.m0ind=hmn.m0ind;umn.n0ind=hmn.n0ind;
-    u=ifftmn(mnmat(umn));
+    mnmats.u=mnmat(umn);
+    u=ifftmn(mnmats.u);
   end
   
   if 1
-    Dzetaphi_mn=invJacBdotgrad(fftmn(1-h*FSAB2),iota,NPeriods);
-    Dzetaphi=ifftmn(Dzetaphi_mn);
+    mnmats.Dzetaphi=invJacBdotgrad(fftmn(1-h*FSAB2),iota,NPeriods);
+    Dzetaphi=ifftmn(mnmats.Dzetaphi);
   else
     hmn=unmnmat(fftmn(h));
     umn=unmnmat(fftmn(u));
@@ -461,7 +466,7 @@ if useFFT
     Dzetaphi_mn=mnmat(Dzetaphi_mn);
     Dzetaphi=ifftmn(Dzetaphi_mn);
   end
-  [dDzetaphi_dtheta,dDzetaphi_dzeta]=ifftmn(grad(Dzetaphi_mn,NPeriods));
+  [dDzetaphi_dtheta,dDzetaphi_dzeta]=ifftmn(grad(mnmats.Dzetaphi,NPeriods));
   %toc
 else %not(useFFT)
   %tic
@@ -669,7 +674,8 @@ error('stoppppp')
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+% Store variables in the Booz struct
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Booz.Nperiods=Geom.Nperiods;
 Booz.Nzeta=Nzeta;
@@ -695,9 +701,12 @@ Booz.Y=Y;
 Booz.iota=Geom.iota(rind);
 Booz.G=Geom.Bphi(rind);
 Booz.I=Geom.Btheta(rind);
+Booz.mu0dpdpsi=mu0dpdpsi;
 Booz.B=B;
 Booz.u=u;
 Booz.h=h;
+Booz.dBpsidtheta=-Booz.mu0dpdpsi/iota.*(u-iota*I./B.^2);
+Booz.dBpsidzeta = Booz.mu0dpdpsi/iota.*(u+G./B.^2);
 Booz.FSAB2=FSAB2;
 Booz.FSAu2B2=sum(sum(u.^2.*B.^2.*h))/sum(sum(h));
 Booz.Jacob=Booz.h*(G+iota*I);
@@ -710,6 +719,7 @@ Booz.g_vthetphi=g_vthetphi;
 Booz.gpsipsi=gpsipsi;
 Booz.FSAg_phiphi=sum(sum(g_phiphi.*h))/sum(sum(h));
 Booz.FSAgpsipsi=sum(sum(gpsipsi.*h))/sum(sum(h));
+
 
 Booz.dpsidr_eff=sqrt(Booz.FSAgpsipsi);
 Booz.r_eff=sqrt(Booz.FSAg_phiphi*Booz.FSAgpsipsi)/abs(Booz.G);
@@ -728,6 +738,14 @@ if Geom.StelSym %sine components exist
 else
   Booz.parity=Geom.parity{rind};
 end
+
+if useFFT
+  mnmats.gradpsidotgradB=fftmn(Booz.gradpsidotgradB);
+  mnmats.dBpsidtheta=fftmn(Booz.dBpsidtheta);
+  mnmats.dBpsidzeta=fftmn(Booz.dBpsidzeta);
+  Booz.mnmat=mnmats;
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Interpolate to a phi vthet grid 
 % Here, phi is the Hamada tor. coord. and vthet (\vartheta) is the Hamada poloidal coordinate.

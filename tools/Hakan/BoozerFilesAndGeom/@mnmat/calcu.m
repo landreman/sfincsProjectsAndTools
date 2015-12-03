@@ -1,4 +1,4 @@
-function us=calcu(hs,Gs,Is,iotas,NPeriod)
+function [us,umnmats]=calcu(hs,Gs,Is,iotas,NPeriod)
 
 if length(NPeriod)==1
   NPeriods=NPeriod*ones(size(iotas));
@@ -27,7 +27,8 @@ if length(iotas)==1
     umn.m0ind=hmn.m0ind;
     umn.n0ind=hmn.n0ind;
 
-    us=ifftmn(mnmat(umn));
+    umnmats=mnmat(umn);
+    us=ifftmn(umnmats);
 else %inputs were given in vectors
   for ind=1:length(iotas)
     %B=Bs{ind};
@@ -50,6 +51,7 @@ else %inputs were given in vectors
     umn.m0ind=hmn.m0ind;
     umn.n0ind=hmn.n0ind;
 
-    us{ind}=ifftmn(mnmat(umn));
+    umnmats{ind}=mnmat(umn);
+    us{ind}=ifftmn(umnmats{ind});
   end
 end
