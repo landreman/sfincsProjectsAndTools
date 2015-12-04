@@ -1,0 +1,7 @@
+error: could not lock config file /u/almo/.gitconfig: File exists
+load HDF5 Library 1.8.14
+load netCDF Library 4.3.3.1
+
+real	7m12.272s
+user	108m4.145s
+sys	5m1.839s
