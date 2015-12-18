@@ -1,0 +1,3986 @@
+ ****************************************************************************
+ SFINCS: Stellarator Fokker-Plank Iterative Neoclassical Conservative Solver
+ Version 3
+ Using double precision.
+ Parallel job ( 160 processes) detected.
+ Successfully read parameters from general namelist in input.namelist.
+ Successfully read parameters from geometryParameters namelist in input.namelist
+ .
+ Successfully read parameters from speciesParameters namelist in input.namelist.
+ Successfully read parameters from physicsParameters namelist in input.namelist.
+ Successfully read parameters from resolutionParameters namelist in 
+ input.namelist.
+ Successfully read parameters from otherNumericalParameters namelist in 
+ input.namelist.
+ Successfully read parameters from preconditionerOptions namelist in 
+ input.namelist.
+ Successfully read parameters from export_f namelist in input.namelist.
+ mumps detected
+ superlu_dist detected
+ ---- Physics parameters: ----
+ Number of particle species =            2
+ Delta (rho* at reference parameters)          =   4.569400000000000E-003
+ alpha (e Phi / T at reference parameters)     =    1.00000000000000     
+ nu_n (collisionality at reference parameters) =   8.315650000000001E-003
+ Linear run
+ Successfully opened magnetic equilibrium file 
+ /hydra/u/almo/Multispecies_benchmark/VMEC_data/W7X_ECRH_benchmark/w7x_ecrh_benc
+ hmark.bc.  Nperiods =            5
+ ---- Numerical parameters: ----
+ Ntheta             =           29
+ Nzeta              =          101
+ Nxi                =          180
+ NL                 =            4
+ Nx                 =            8
+ solverTolerance    =   1.000000000000000E-006
+ Theta derivative: centered finite differences, 5-point stencil
+ Zeta derivative: centered finite differences, 5-point stencil
+ For solving large linear systems, an iterative Krylov solver will be used.
+ The matrix is      8435524 x     8435524  elements.
+ Processor    0 owns theta indices   1 to  29 and zeta indices   1 to   1
+ Processor    1 owns theta indices   1 to  29 and zeta indices   2 to   2
+ Processor    2 owns theta indices   1 to  29 and zeta indices   3 to   3
+ Processor    3 owns theta indices   1 to  29 and zeta indices   4 to   4
+ Processor    4 owns theta indices   1 to  29 and zeta indices   5 to   5
+ Processor    5 owns theta indices   1 to  29 and zeta indices   6 to   6
+ Processor    6 owns theta indices   1 to  29 and zeta indices   7 to   7
+ Processor    7 owns theta indices   1 to  29 and zeta indices   8 to   8
+ Processor    8 owns theta indices   1 to  29 and zeta indices   9 to   9
+ Processor    9 owns theta indices   1 to  29 and zeta indices  10 to  10
+ Processor   10 owns theta indices   1 to  29 and zeta indices  11 to  11
+ Processor   11 owns theta indices   1 to  29 and zeta indices  12 to  12
+ Processor   12 owns theta indices   1 to  29 and zeta indices  13 to  13
+ Processor   13 owns theta indices   1 to  29 and zeta indices  14 to  14
+ Processor   14 owns theta indices   1 to  29 and zeta indices  15 to  15
+ Processor   15 owns theta indices   1 to  29 and zeta indices  16 to  16
+ Processor   16 owns theta indices   1 to  29 and zeta indices  17 to  17
+ Processor   17 owns theta indices   1 to  29 and zeta indices  18 to  18
+ Processor   18 owns theta indices   1 to  29 and zeta indices  19 to  19
+ Processor   19 owns theta indices   1 to  29 and zeta indices  20 to  20
+ Processor   20 owns theta indices   1 to  29 and zeta indices  21 to  21
+ Processor   21 owns theta indices   1 to  29 and zeta indices  22 to  22
+ Processor   22 owns theta indices   1 to  29 and zeta indices  23 to  23
+ Processor   23 owns theta indices   1 to  29 and zeta indices  24 to  24
+ Processor   24 owns theta indices   1 to  29 and zeta indices  25 to  25
+ Processor   25 owns theta indices   1 to  29 and zeta indices  26 to  26
+ Processor   26 owns theta indices   1 to  29 and zeta indices  27 to  27
+ Processor   27 owns theta indices   1 to  29 and zeta indices  28 to  28
+ Processor   28 owns theta indices   1 to  29 and zeta indices  29 to  29
+ Processor   29 owns theta indices   1 to  29 and zeta indices  30 to  30
+ Processor   30 owns theta indices   1 to  29 and zeta indices  31 to  31
+ Processor   31 owns theta indices   1 to  29 and zeta indices  32 to  32
+ Processor   32 owns theta indices   1 to  29 and zeta indices  33 to  33
+ Processor   33 owns theta indices   1 to  29 and zeta indices  34 to  34
+ Processor   34 owns theta indices   1 to  29 and zeta indices  35 to  35
+ Processor   35 owns theta indices   1 to  29 and zeta indices  36 to  36
+ Processor   36 owns theta indices   1 to  29 and zeta indices  37 to  37
+ Processor   37 owns theta indices   1 to  29 and zeta indices  38 to  38
+ Processor   38 owns theta indices   1 to  29 and zeta indices  39 to  39
+ Processor   39 owns theta indices   1 to  29 and zeta indices  40 to  40
+ Processor   40 owns theta indices   1 to  29 and zeta indices  41 to  41
+ Processor   41 owns theta indices   1 to  29 and zeta indices  42 to  42
+ Processor   42 owns theta indices   1 to  29 and zeta indices  43 to  43
+ Processor   43 owns theta indices   1 to  29 and zeta indices  44 to  44
+ Processor   44 owns theta indices   1 to  29 and zeta indices  45 to  45
+ Processor   45 owns theta indices   1 to  29 and zeta indices  46 to  46
+ Processor   46 owns theta indices   1 to  29 and zeta indices  47 to  47
+ Processor   47 owns theta indices   1 to  29 and zeta indices  48 to  48
+ Processor   48 owns theta indices   1 to  29 and zeta indices  49 to  49
+ Processor   49 owns theta indices   1 to  29 and zeta indices  50 to  50
+ Processor   50 owns theta indices   1 to  29 and zeta indices  51 to  51
+ Processor   51 owns theta indices   1 to  29 and zeta indices  52 to  52
+ Processor   52 owns theta indices   1 to  29 and zeta indices  53 to  53
+ Processor   53 owns theta indices   1 to  29 and zeta indices  54 to  54
+ Processor   54 owns theta indices   1 to  29 and zeta indices  55 to  55
+ Processor   55 owns theta indices   1 to  29 and zeta indices  56 to  56
+ Processor   56 owns theta indices   1 to  29 and zeta indices  57 to  57
+ Processor   57 owns theta indices   1 to  29 and zeta indices  58 to  58
+ Processor   58 owns theta indices   1 to  29 and zeta indices  59 to  59
+ Processor   59 owns theta indices   1 to  29 and zeta indices  60 to  60
+ Processor   60 owns theta indices   1 to  29 and zeta indices  61 to  61
+ Processor   61 owns theta indices   1 to  29 and zeta indices  62 to  62
+ Processor   62 owns theta indices   1 to  29 and zeta indices  63 to  63
+ Processor   63 owns theta indices   1 to  29 and zeta indices  64 to  64
+ Processor   64 owns theta indices   1 to  29 and zeta indices  65 to  65
+ Processor   65 owns theta indices   1 to  29 and zeta indices  66 to  66
+ Processor   66 owns theta indices   1 to  29 and zeta indices  67 to  67
+ Processor   67 owns theta indices   1 to  29 and zeta indices  68 to  68
+ Processor   68 owns theta indices   1 to  29 and zeta indices  69 to  69
+ Processor   69 owns theta indices   1 to  29 and zeta indices  70 to  70
+ Processor   70 owns theta indices   1 to  29 and zeta indices  71 to  71
+ Processor   71 owns theta indices   1 to  29 and zeta indices  72 to  72
+ Processor   72 owns theta indices   1 to  29 and zeta indices  73 to  73
+ Processor   73 owns theta indices   1 to  29 and zeta indices  74 to  74
+ Processor   74 owns theta indices   1 to  29 and zeta indices  75 to  75
+ Processor   75 owns theta indices   1 to  29 and zeta indices  76 to  76
+ Processor   76 owns theta indices   1 to  29 and zeta indices  77 to  77
+ Processor   77 owns theta indices   1 to  29 and zeta indices  78 to  78
+ Processor   78 owns theta indices   1 to  29 and zeta indices  79 to  79
+ Processor   79 owns theta indices   1 to  29 and zeta indices  80 to  80
+ Processor   80 owns theta indices   1 to  29 and zeta indices  81 to  81
+ Processor   81 owns theta indices   1 to  29 and zeta indices  82 to  82
+ Processor   82 owns theta indices   1 to  29 and zeta indices  83 to  83
+ Processor   83 owns theta indices   1 to  29 and zeta indices  84 to  84
+ Processor   84 owns theta indices   1 to  29 and zeta indices  85 to  85
+ Processor   85 owns theta indices   1 to  29 and zeta indices  86 to  86
+ Processor   86 owns theta indices   1 to  29 and zeta indices  87 to  87
+ Processor   87 owns theta indices   1 to  29 and zeta indices  88 to  88
+ Processor   88 owns theta indices   1 to  29 and zeta indices  89 to  89
+ Processor   89 owns theta indices   1 to  29 and zeta indices  90 to  90
+ Processor   90 owns theta indices   1 to  29 and zeta indices  91 to  91
+ Processor   91 owns theta indices   1 to  29 and zeta indices  92 to  92
+ Processor   92 owns theta indices   1 to  29 and zeta indices  93 to  93
+ Processor   93 owns theta indices   1 to  29 and zeta indices  94 to  94
+ Processor   94 owns theta indices   1 to  29 and zeta indices  95 to  95
+ Processor   95 owns theta indices   1 to  29 and zeta indices  96 to  96
+ Processor   96 owns theta indices   1 to  29 and zeta indices  97 to  97
+ Processor   97 owns theta indices   1 to  29 and zeta indices  98 to  98
+ Processor   98 owns theta indices   1 to  29 and zeta indices  99 to  99
+ Processor   99 owns theta indices   1 to  29 and zeta indices 100 to 100
+ Processor  100 owns theta indices   1 to  29 and zeta indices 101 to 101
+ Processor  101 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  102 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  103 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  104 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  105 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  106 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  107 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  108 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  109 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  110 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  111 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  112 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  113 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  114 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  115 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  116 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  117 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  118 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  119 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  120 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  121 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  122 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  123 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  124 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  125 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  126 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  127 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  128 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  129 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  130 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  131 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  132 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  133 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  134 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  135 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  136 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  137 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  138 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  139 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  140 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  141 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  142 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  143 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  144 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  145 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  146 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  147 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  148 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  149 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  150 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  151 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  152 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  153 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  154 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  155 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  156 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  157 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  158 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Processor  159 owns theta indices   1 to  29 and zeta indices 102 to 101
+ Selecting the flux surface to use based on rN_wish =   0.500000000000000     
+ Successfully read magnetic equilibrium from file 
+ /hydra/u/almo/Multispecies_benchmark/VMEC_data/W7X_ECRH_benchmark/w7x_ecrh_benc
+ hmark.bc
+ ---- Geometry parameters: ----
+ Geometry scheme =           11
+ psiAHat (Normalized toroidal flux at the last closed flux surface) = 
+ -0.348667577493968     
+ aHat (Radius of the last closed flux surface in units of RHat) = 
+  0.510920000000000     
+ GHat (Boozer component multiplying grad zeta) =   -16.2000000000000     
+ IHat (Boozer component multiplying grad theta) =   2.119000000000000E-007
+ iota (Rotational transform) =  -0.870000000000000     
+ ------------------------------------------------------
+ Done creating grids.
+ Requested/actual flux surface for this calculation, in various radial coordinat
+ es:
+   psiHat =  -8.716689437349211E-002 / -8.716689437349211E-002
+   psiN   =   0.250000000000000      /  0.250000000000000     
+   rHat   =   0.255460000000000      /  0.255460000000000     
+   rN     =   0.500000000000000      /  0.500000000000000     
+ Selecting the input gradients (of n, T, & Phi) from the specified ddrN values.
+ Entering main solver loop.
+ Initializing f0
+ Beginning preallocation for whichMatrix =            1
+ Beginning preallocation for whichMatrix =            0
+ We will use mumps to factorize the preconditioner.
+ Since this is a linear run, we will only take a single step, and not iterate Ne
+ wton's method.
+ ------------------------------------------------------
+ Finished initialization.
+ Beginning the main solve.  This could take a while ...
+ evaluateResidual called.
+ State vector is 0 so I will skip building the first matrix when evaluating the 
+ residual.
+--------- Residual function norm:  1.0394205E-01 -----------------------------
+ evaluateJacobian called.
+ Running populateMatrix with whichMatrix =            0
+ Time to pre-assemble Jacobian preconditioner matrix:    1.59966707229614      
+  seconds.
+ Time to assemble Jacobian preconditioner matrix:    1.91892099380493      
+  seconds.
+ # of nonzeros in Jacobian preconditioner matrix:   227050372 , allocated:
+  1383612744 , mallocs:           0  (should be 0)
+ Running populateMatrix with whichMatrix =            1
+ Time to pre-assemble Jacobian matrix:    1.73536586761475       seconds.
+ Time to assemble Jacobian matrix:    1.37119698524475       seconds.
+ # of nonzeros in Jacobian matrix:   457947667 , allocated:  1383612744 
+ , mallocs:           0  (should be 0)
+Entering DMUMPS driver with JOB, N, NZ =   1     8435524              0
+
+ DMUMPS 4.10.0        
+L U Solver for unsymmetric matrices
+Type of parallelism: Working host
+
+ ****** ANALYSIS STEP ********
+
+ ** Max-trans not allowed because matrix is distributed
+ ... Structural symmetry (in percent)=  100
+ Density: NBdense, Average, Median   =    4   26   26
+ Ordering based on METIS 
+ A root of estimated size         8642  has been selected for Scalapack.
+
+Leaving analysis phase with  ...
+INFOG(1)                                       =               0
+INFOG(2)                                       =               0
+ -- (20) Number of entries in factors (estim.) =     24467587862
+ --  (3) Storage of factors  (REAL, estimated) =     25570360409
+ --  (4) Storage of factors  (INT , estimated) =       230242582
+ --  (5) Maximum frontal size      (estimated) =            8874
+ --  (6) Number of nodes in the tree           =          500126
+ -- (32) Type of analysis effectively used     =               1
+ --  (7) Ordering option effectively used      =               5
+ICNTL(6) Maximum transversal option            =               0
+ICNTL(7) Pivot order option                    =               7
+Percentage of memory relaxation (effective)    =              55
+Number of level 2 nodes                        =             540
+Number of split nodes                          =             346
+RINFOG(1) Operations during elimination (estim)=   9.785D+13
+Distributed matrix entry format (ICNTL(18))    =               3
+ ** Rank of proc needing largest memory in IC facto        :         9
+ ** Estimated corresponding MBYTES for IC facto            :      4860
+ ** Estimated avg. MBYTES per work. proc at facto (IC)     :      2783
+ ** TOTAL     space in MBYTES for IC factorization         :    445425
+ ** Rank of proc needing largest memory for OOC facto      :        46
+ ** Estimated corresponding MBYTES for OOC facto           :      1758
+ ** Estimated avg. MBYTES per work. proc at facto (OOC)    :      1378
+ ** TOTAL     space in MBYTES for OOC factorization        :    220636
+Entering DMUMPS driver with JOB, N, NZ =   2     8435524      227050372
+
+ ****** FACTORIZATION STEP ********
+
+
+ GLOBAL STATISTICS PRIOR NUMERICAL FACTORIZATION ...
+ NUMBER OF WORKING PROCESSES              =         160
+ OUT-OF-CORE OPTION (ICNTL(22))           =           0
+ REAL SPACE FOR FACTORS                   = 25570360409
+ INTEGER SPACE FOR FACTORS                =   230242582
+ MAXIMUM FRONTAL SIZE (ESTIMATED)         =        8874
+ NUMBER OF NODES IN THE TREE              =      500126
+ Convergence error after scaling for ONE-NORM (option 7/8)   = 0.74D+01
+ Maximum effective relaxed size of S              =   542149513
+ Average effective relaxed size of S              =   288267447
+
+ REDISTRIB: TOTAL DATA LOCAL/SENT         =     2809665   663010747
+ GLOBAL TIME FOR MATRIX DISTRIBUTION       =      0.7057
+ ** Memory relaxation parameter ( ICNTL(14)  )            :        55
+ ** Rank of processor needing largest memory in facto     :         9
+ ** Space in MBYTES used by this processor for facto      :      4860
+ ** Avg. Space in MBYTES per working proc during facto    :      2783
+
+ ELAPSED TIME FOR FACTORIZATION           =    136.4816
+ Maximum effective space used in S   (KEEP8(67)   =   374512557
+ Average effective space used in S   (KEEP8(67)   =   181952594
+ ** EFF Min: Rank of processor needing largest memory :         9
+ ** EFF Min: Space in MBYTES used by this processor   :      3503
+ ** EFF Min: Avg. Space in MBYTES per working proc    :      1926
+
+ GLOBAL STATISTICS 
+ RINFOG(2)  OPERATIONS IN NODE ASSEMBLY   = 7.166D+10
+ ------(3)  OPERATIONS IN NODE ELIMINATION= 9.785D+13
+ INFOG (9)  REAL SPACE FOR FACTORS        = 24467124036
+ INFOG(10)  INTEGER SPACE FOR FACTORS     =   208144057
+ INFOG(11)  MAXIMUM FRONT SIZE            =        8874
+ INFOG(29)  NUMBER OF ENTRIES IN FACTORS  = 24392439872
+ INFOG(12) NB OF OFF DIAGONAL PIVOTS      =           0
+ INFOG(13)  NUMBER OF DELAYED PIVOTS      =           0
+ INFOG(14)  NUMBER OF MEMORY COMPRESS     =          17
+ KEEP8(108) Extra copies IP stacking      =           0
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+    0 KSP Residual norm 1.165358661555e-01 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+    1 KSP Residual norm 1.061894297349e-01 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+    2 KSP Residual norm 9.642936827973e-02 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+    3 KSP Residual norm 8.854638594746e-02 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+    4 KSP Residual norm 7.959727285557e-02 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+    5 KSP Residual norm 6.305338448401e-02 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+    6 KSP Residual norm 5.716771082165e-02 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+    7 KSP Residual norm 5.323277278166e-02 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+    8 KSP Residual norm 4.221158180502e-02 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+    9 KSP Residual norm 2.762759574195e-02 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   10 KSP Residual norm 1.691976258368e-02 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   11 KSP Residual norm 1.219610579750e-02 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   12 KSP Residual norm 8.904587187402e-03 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   13 KSP Residual norm 6.186296360744e-03 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   14 KSP Residual norm 5.011845857650e-03 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   15 KSP Residual norm 4.678938600958e-03 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   16 KSP Residual norm 4.574979437117e-03 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   17 KSP Residual norm 4.123163717456e-03 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   18 KSP Residual norm 3.494654225262e-03 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   19 KSP Residual norm 2.855756723439e-03 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   20 KSP Residual norm 2.357504906832e-03 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   21 KSP Residual norm 1.962483161186e-03 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   22 KSP Residual norm 1.756213938659e-03 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   23 KSP Residual norm 1.632596485257e-03 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   24 KSP Residual norm 1.573789621346e-03 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   25 KSP Residual norm 1.476203755729e-03 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   26 KSP Residual norm 1.382500392618e-03 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   27 KSP Residual norm 1.248758557014e-03 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   28 KSP Residual norm 1.195767394779e-03 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   29 KSP Residual norm 1.153614845721e-03 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   30 KSP Residual norm 1.074747319066e-03 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   31 KSP Residual norm 9.406925979447e-04 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   32 KSP Residual norm 8.198910919565e-04 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   33 KSP Residual norm 7.317533974192e-04 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   34 KSP Residual norm 6.714290912175e-04 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   35 KSP Residual norm 6.214427886314e-04 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   36 KSP Residual norm 6.013226038182e-04 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   37 KSP Residual norm 5.773018954923e-04 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   38 KSP Residual norm 5.736237650193e-04 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   39 KSP Residual norm 5.705215202939e-04 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   40 KSP Residual norm 5.680822160804e-04 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   41 KSP Residual norm 5.573220080796e-04 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   42 KSP Residual norm 5.344628710987e-04 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   43 KSP Residual norm 5.077795541147e-04 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   44 KSP Residual norm 4.706224044163e-04 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   45 KSP Residual norm 4.410405766056e-04 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   46 KSP Residual norm 4.145807409989e-04 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   47 KSP Residual norm 3.987980656229e-04 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   48 KSP Residual norm 3.909975083183e-04 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   49 KSP Residual norm 3.837456280547e-04 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   50 KSP Residual norm 3.767778177078e-04 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   51 KSP Residual norm 3.653083842797e-04 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   52 KSP Residual norm 3.475642298392e-04 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   53 KSP Residual norm 3.352771840563e-04 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   54 KSP Residual norm 3.206049290357e-04 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   55 KSP Residual norm 3.093431211845e-04 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   56 KSP Residual norm 2.945528051385e-04 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   57 KSP Residual norm 2.852426126484e-04 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   58 KSP Residual norm 2.718328723765e-04 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   59 KSP Residual norm 2.592792489533e-04 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   60 KSP Residual norm 2.374370961238e-04 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   61 KSP Residual norm 2.192656240453e-04 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   62 KSP Residual norm 2.023028221046e-04 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   63 KSP Residual norm 1.893419848681e-04 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   64 KSP Residual norm 1.721748185533e-04 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   65 KSP Residual norm 1.672180856737e-04 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   66 KSP Residual norm 1.540804787141e-04 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   67 KSP Residual norm 1.497179162274e-04 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   68 KSP Residual norm 1.357556552443e-04 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   69 KSP Residual norm 1.271606063205e-04 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   70 KSP Residual norm 1.141665667652e-04 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   71 KSP Residual norm 1.027756049772e-04 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   72 KSP Residual norm 9.428307043271e-05 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   73 KSP Residual norm 8.515224707065e-05 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   74 KSP Residual norm 7.710165776008e-05 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   75 KSP Residual norm 7.195035707576e-05 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   76 KSP Residual norm 6.182247892030e-05 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   77 KSP Residual norm 5.331140188867e-05 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   78 KSP Residual norm 4.455161704828e-05 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   79 KSP Residual norm 3.807306636279e-05 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   80 KSP Residual norm 3.371831391444e-05 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   81 KSP Residual norm 3.162638309947e-05 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   82 KSP Residual norm 3.017006035139e-05 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   83 KSP Residual norm 2.908855010539e-05 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   84 KSP Residual norm 2.649816332896e-05 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   85 KSP Residual norm 2.449153149859e-05 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   86 KSP Residual norm 2.015016742397e-05 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   87 KSP Residual norm 1.763794030935e-05 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   88 KSP Residual norm 1.424583986858e-05 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   89 KSP Residual norm 1.282446151035e-05 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   90 KSP Residual norm 1.080140944239e-05 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   91 KSP Residual norm 9.985226516942e-06 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   92 KSP Residual norm 9.223286078777e-06 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   93 KSP Residual norm 8.652425721761e-06 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   94 KSP Residual norm 7.917922763024e-06 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   95 KSP Residual norm 7.285776427162e-06 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   96 KSP Residual norm 6.588189158725e-06 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   97 KSP Residual norm 5.601824255666e-06 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   98 KSP Residual norm 5.179913842550e-06 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+   99 KSP Residual norm 4.398098425187e-06 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+  100 KSP Residual norm 3.844267519829e-06 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+  101 KSP Residual norm 3.371564394646e-06 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+  102 KSP Residual norm 2.902636404592e-06 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+  103 KSP Residual norm 2.537484054328e-06 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+  104 KSP Residual norm 2.186976898111e-06 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+  105 KSP Residual norm 1.802375071546e-06 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+  106 KSP Residual norm 1.525133417075e-06 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+  107 KSP Residual norm 1.281410331913e-06 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+  108 KSP Residual norm 1.159959674224e-06 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+  109 KSP Residual norm 1.077767025479e-06 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+  110 KSP Residual norm 9.801070255836e-07 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+  111 KSP Residual norm 8.835115770823e-07 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+  112 KSP Residual norm 8.234522542608e-07 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+  113 KSP Residual norm 7.369360601022e-07 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+  114 KSP Residual norm 6.922035249948e-07 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+  115 KSP Residual norm 6.207586772551e-07 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+  116 KSP Residual norm 5.772969128672e-07 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+  117 KSP Residual norm 5.384812970007e-07 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+  118 KSP Residual norm 4.934230246450e-07 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+  119 KSP Residual norm 4.531102955294e-07 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+  120 KSP Residual norm 3.937519187262e-07 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+  121 KSP Residual norm 3.445036289874e-07 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+  122 KSP Residual norm 3.114178205096e-07 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+  123 KSP Residual norm 2.859270930798e-07 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+  124 KSP Residual norm 2.685922926031e-07 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+  125 KSP Residual norm 2.457688983440e-07 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+  126 KSP Residual norm 2.150207031366e-07 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+  127 KSP Residual norm 1.833517981915e-07 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+  128 KSP Residual norm 1.552946183747e-07 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+  129 KSP Residual norm 1.356705121724e-07 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+  130 KSP Residual norm 1.238138891260e-07 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+  131 KSP Residual norm 1.173173988226e-07 
+Entering DMUMPS driver with JOB, N, NZ =   3     8435524      227050372
+
+
+ ****** SOLVE & CHECK STEP ********
+
+
+ STATISTICS PRIOR SOLVE PHASE     ...........
+ NUMBER OF RIGHT-HAND-SIDES                    =           1
+ BLOCKING FACTOR FOR MULTIPLE RHS              =           1
+ ICNTL (9)                                     =           1
+  --- (10)                                     =           0
+  --- (11)                                     =           0
+  --- (20)                                     =           0
+  --- (21)                                     =           1
+  --- (30)                                     =           0
+ ** Rank of processor needing largest memory in solve     :         9
+ ** Space in MBYTES used by this processor for solve      :      4692
+ ** Avg. Space in MBYTES per working proc during solve    :      2632
+  132 KSP Residual norm 1.070185410821e-07 
+KSP Object: 160 MPI processes
+  type: gmres
+    GMRES: restart=2000, using Classical (unmodified) Gram-Schmidt Orthogonalization with no iterative refinement
+    GMRES: happy breakdown tolerance 1e-30
+  maximum iterations=10000, initial guess is zero
+  tolerances:  relative=1e-06, absolute=1e-50, divergence=10000
+  left preconditioning
+  using PRECONDITIONED norm type for convergence test
+PC Object: 160 MPI processes
+  type: lu
+    LU: out-of-place factorization
+    tolerance for zero pivot 2.22045e-14
+    matrix ordering: natural
+    factor fill ratio given 0, needed 0
+      Factored matrix follows:
+        Mat Object:         160 MPI processes
+          type: mpiaij
+          rows=8435524, cols=8435524
+          package used to perform factorization: mumps
+          total: nonzeros=-24467, allocated nonzeros=-24467
+          total number of mallocs used during MatSetValues calls =0
+            MUMPS run parameters:
+              SYM (matrix type):                   0 
+              PAR (host participation):            1 
+              ICNTL(1) (output for error):         6 
+              ICNTL(2) (output of diagnostic msg): 0 
+              ICNTL(3) (output for global info):   6 
+              ICNTL(4) (level of printing):        2 
+              ICNTL(5) (input mat struct):         0 
+              ICNTL(6) (matrix prescaling):        7 
+              ICNTL(7) (sequentia matrix ordering):7 
+              ICNTL(8) (scalling strategy):        77 
+              ICNTL(10) (max num of refinements):  0 
+              ICNTL(11) (error analysis):          0 
+              ICNTL(12) (efficiency control):                         1 
+              ICNTL(13) (efficiency control):                         0 
+              ICNTL(14) (percentage of estimated workspace increase): 50 
+              ICNTL(18) (input mat struct):                           3 
+              ICNTL(19) (Shur complement info):                       0 
+              ICNTL(20) (rhs sparse pattern):                         0 
+              ICNTL(21) (somumpstion struct):                            1 
+              ICNTL(22) (in-core/out-of-core facility):               0 
+              ICNTL(23) (max size of memory can be allocated locally):0 
+              ICNTL(24) (detection of null pivot rows):               0 
+              ICNTL(25) (computation of a null space basis):          0 
+              ICNTL(26) (Schur options for rhs or solution):          0 
+              ICNTL(27) (experimental parameter):                     -8 
+              ICNTL(28) (use parallel or sequential ordering):        1 
+              ICNTL(29) (parallel ordering):                          0 
+              ICNTL(30) (user-specified set of entries in inv(A)):    0 
+              ICNTL(31) (factors is discarded in the solve phase):    0 
+              ICNTL(33) (compute determinant):                        0 
+              CNTL(1) (relative pivoting threshold):      1e-06 
+              CNTL(2) (stopping criterion of refinement): 1.49012e-08 
+              CNTL(3) (absomumpste pivoting threshold):      0 
+              CNTL(4) (vamumpse of static pivoting):         -1 
+              CNTL(5) (fixation for null pivots):         0 
+              RINFO(1) (local estimated flops for the elimination after analysis): 
+                [0] 5.53741e+11 
+                [1] 6.92871e+11 
+                [2] 5.75124e+11 
+                [3] 5.7132e+11 
+                [4] 6.18093e+11 
+                [5] 7.47117e+11 
+                [6] 6.21832e+11 
+                [7] 5.98157e+11 
+                [8] 5.54304e+11 
+                [9] 9.71037e+11 
+                [10] 5.54477e+11 
+                [11] 8.02118e+11 
+                [12] 7.33081e+11 
+                [13] 5.46792e+11 
+                [14] 6.79998e+11 
+                [15] 5.78935e+11 
+                [16] 5.72928e+11 
+                [17] 5.70033e+11 
+                [18] 6.47002e+11 
+                [19] 6.24257e+11 
+                [20] 6.01461e+11 
+                [21] 5.80735e+11 
+                [22] 5.86672e+11 
+                [23] 5.74055e+11 
+                [24] 5.86461e+11 
+                [25] 5.83247e+11 
+                [26] 5.78941e+11 
+                [27] 5.74094e+11 
+                [28] 5.61377e+11 
+                [29] 5.71694e+11 
+                [30] 5.57716e+11 
+                [31] 5.9549e+11 
+                [32] 5.69088e+11 
+                [33] 6.7715e+11 
+                [34] 5.87567e+11 
+                [35] 5.62698e+11 
+                [36] 5.88938e+11 
+                [37] 5.61887e+11 
+                [38] 5.62135e+11 
+                [39] 5.57322e+11 
+                [40] 5.6174e+11 
+                [41] 5.91832e+11 
+                [42] 5.60679e+11 
+                [43] 6.70358e+11 
+                [44] 5.80736e+11 
+                [45] 5.70265e+11 
+                [46] 5.60741e+11 
+                [47] 5.77237e+11 
+                [48] 6.03825e+11 
+                [49] 5.71591e+11 
+                [50] 6.0294e+11 
+                [51] 5.85941e+11 
+                [52] 5.82313e+11 
+                [53] 5.89653e+11 
+                [54] 6.87525e+11 
+                [55] 6.1128e+11 
+                [56] 7.06956e+11 
+                [57] 6.35588e+11 
+                [58] 6.70071e+11 
+                [59] 6.30314e+11 
+                [60] 6.25088e+11 
+                [61] 6.24177e+11 
+                [62] 6.25248e+11 
+                [63] 6.01479e+11 
+                [64] 5.97216e+11 
+                [65] 8.41531e+11 
+                [66] 5.70647e+11 
+                [67] 5.76213e+11 
+                [68] 8.15254e+11 
+                [69] 6.38361e+11 
+                [70] 5.99803e+11 
+                [71] 5.89238e+11 
+                [72] 6.11765e+11 
+                [73] 5.70438e+11 
+                [74] 6.79806e+11 
+                [75] 6.35666e+11 
+                [76] 6.49821e+11 
+                [77] 6.57415e+11 
+                [78] 6.20574e+11 
+                [79] 6.24777e+11 
+                [80] 6.03152e+11 
+                [81] 6.16908e+11 
+                [82] 6.70511e+11 
+                [83] 6.38239e+11 
+                [84] 6.15537e+11 
+                [85] 6.19272e+11 
+                [86] 6.02562e+11 
+                [87] 6.10064e+11 
+                [88] 6.03763e+11 
+                [89] 6.14887e+11 
+                [90] 6.11628e+11 
+                [91] 8.87811e+11 
+                [92] 6.08524e+11 
+                [93] 5.84046e+11 
+                [94] 5.22568e+11 
+                [95] 5.97325e+11 
+                [96] 5.789e+11 
+                [97] 5.62781e+11 
+                [98] 5.76712e+11 
+                [99] 5.92615e+11 
+                [100] 5.86855e+11 
+                [101] 5.95677e+11 
+                [102] 5.89137e+11 
+                [103] 5.71284e+11 
+                [104] 5.80756e+11 
+                [105] 5.75666e+11 
+                [106] 5.80667e+11 
+                [107] 5.91911e+11 
+                [108] 5.78065e+11 
+                [109] 5.81951e+11 
+                [110] 6.03553e+11 
+                [111] 5.75645e+11 
+                [112] 6.37402e+11 
+                [113] 6.22982e+11 
+                [114] 5.72599e+11 
+                [115] 6.20159e+11 
+                [116] 6.31889e+11 
+                [117] 6.70139e+11 
+                [118] 6.5443e+11 
+                [119] 6.76372e+11 
+                [120] 6.13379e+11 
+                [121] 6.15398e+11 
+                [122] 6.54011e+11 
+                [123] 6.11553e+11 
+                [124] 5.90356e+11 
+                [125] 5.91651e+11 
+                [126] 5.94732e+11 
+                [127] 6.03515e+11 
+                [128] 5.95504e+11 
+                [129] 5.94154e+11 
+                [130] 5.95245e+11 
+                [131] 5.85372e+11 
+                [132] 6.13685e+11 
+                [133] 5.86335e+11 
+                [134] 5.939e+11 
+                [135] 6.26321e+11 
+                [136] 6.83124e+11 
+                [137] 6.52029e+11 
+                [138] 5.88698e+11 
+                [139] 5.89098e+11 
+                [140] 5.82509e+11 
+                [141] 5.87465e+11 
+                [142] 5.83012e+11 
+                [143] 6.64613e+11 
+                [144] 6.4258e+11 
+                [145] 5.72628e+11 
+                [146] 6.06743e+11 
+                [147] 6.17764e+11 
+                [148] 6.08287e+11 
+                [149] 5.72559e+11 
+                [150] 6.06326e+11 
+                [151] 5.91723e+11 
+                [152] 5.88588e+11 
+                [153] 6.10035e+11 
+                [154] 5.83954e+11 
+                [155] 5.95216e+11 
+                [156] 5.9151e+11 
+                [157] 5.7762e+11 
+                [158] 5.71418e+11 
+                [159] 5.69156e+11 
+              RINFO(2) (local estimated flops for the assembly after factorization): 
+                [0]  5.07509e+08 
+                [1]  6.29226e+08 
+                [2]  3.31816e+08 
+                [3]  3.84617e+08 
+                [4]  3.5041e+08 
+                [5]  6.76405e+08 
+                [6]  6.0568e+08 
+                [7]  3.52478e+08 
+                [8]  4.09732e+08 
+                [9]  9.26758e+08 
+                [10]  4.8813e+08 
+                [11]  6.8787e+08 
+                [12]  6.23214e+08 
+                [13]  4.14823e+08 
+                [14]  6.00376e+08 
+                [15]  6.32277e+08 
+                [16]  5.41268e+08 
+                [17]  3.93665e+08 
+                [18]  2.09003e+08 
+                [19]  3.3918e+08 
+                [20]  3.58633e+08 
+                [21]  3.82231e+08 
+                [22]  4.17523e+08 
+                [23]  4.8197e+08 
+                [24]  5.32557e+08 
+                [25]  4.86495e+08 
+                [26]  5.2311e+08 
+                [27]  5.26451e+08 
+                [28]  5.02513e+08 
+                [29]  5.75937e+08 
+                [30]  3.64071e+08 
+                [31]  4.95995e+08 
+                [32]  4.95741e+08 
+                [33]  6.0409e+08 
+                [34]  3.40247e+08 
+                [35]  4.70986e+08 
+                [36]  3.49247e+08 
+                [37]  5.66389e+08 
+                [38]  5.3007e+08 
+                [39]  4.37492e+08 
+                [40]  5.20142e+08 
+                [41]  3.62954e+08 
+                [42]  3.51892e+08 
+                [43]  3.71805e+08 
+                [44]  4.06407e+08 
+                [45]  3.89019e+08 
+                [46]  4.96467e+08 
+                [47]  3.41726e+08 
+                [48]  3.45656e+08 
+                [49]  5.81566e+08 
+                [50]  4.23621e+08 
+                [51]  4.72084e+08 
+                [52]  4.69658e+08 
+                [53]  3.63936e+08 
+                [54]  6.3358e+08 
+                [55]  3.16312e+08 
+                [56]  3.63276e+08 
+                [57]  4.07913e+08 
+                [58]  3.91456e+08 
+                [59]  3.31458e+08 
+                [60]  3.13757e+08 
+                [61]  3.59011e+08 
+                [62]  3.64906e+08 
+                [63]  4.71621e+08 
+                [64]  4.79544e+08 
+                [65]  6.91311e+08 
+                [66]  5.09954e+08 
+                [67]  5.53153e+08 
+                [68]  7.76553e+08 
+                [69]  3.83039e+08 
+                [70]  3.21033e+08 
+                [71]  3.28818e+08 
+                [72]  3.63016e+08 
+                [73]  4.59712e+08 
+                [74]  6.12434e+08 
+                [75]  3.2733e+08 
+                [76]  3.89831e+08 
+                [77]  3.58506e+08 
+                [78]  3.268e+08 
+                [79]  4.43353e+08 
+                [80]  4.7735e+08 
+                [81]  3.68202e+08 
+                [82]  4.39178e+08 
+                [83]  4.27945e+08 
+                [84]  3.55431e+08 
+                [85]  3.61308e+08 
+                [86]  4.87436e+08 
+                [87]  4.81657e+08 
+                [88]  4.75047e+08 
+                [89]  3.61622e+08 
+                [90]  4.20383e+08 
+                [91]  7.32225e+08 
+                [92]  4.14957e+08 
+                [93]  5.81427e+08 
+                [94]  3.94953e+08 
+                [95]  3.6809e+08 
+                [96]  4.73383e+08 
+                [97]  4.56519e+08 
+                [98]  4.92266e+08 
+                [99]  4.97986e+08 
+                [100]  3.90311e+08 
+                [101]  3.91497e+08 
+                [102]  4.81045e+08 
+                [103]  3.67287e+08 
+                [104]  3.70317e+08 
+                [105]  5.16649e+08 
+                [106]  3.70157e+08 
+                [107]  3.70112e+08 
+                [108]  4.71735e+08 
+                [109]  4.56852e+08 
+                [110]  3.82127e+08 
+                [111]  3.0572e+08 
+                [112]  3.57984e+08 
+                [113]  5.68883e+08 
+                [114]  4.7976e+08 
+                [115]  3.84654e+08 
+                [116]  3.56623e+08 
+                [117]  4.63092e+08 
+                [118]  4.05483e+08 
+                [119]  3.96321e+08 
+                [120]  3.03509e+08 
+                [121]  3.78514e+08 
+                [122]  4.11422e+08 
+                [123]  4.89636e+08 
+                [124]  4.79663e+08 
+                [125]  3.63624e+08 
+                [126]  4.59256e+08 
+                [127]  5.13313e+08 
+                [128]  3.76845e+08 
+                [129]  3.99274e+08 
+                [130]  4.88075e+08 
+                [131]  5.03222e+08 
+                [132]  5.13653e+08 
+                [133]  3.42439e+08 
+                [134]  6.29654e+08 
+                [135]  3.12669e+08 
+                [136]  4.14523e+08 
+                [137]  4.82249e+08 
+                [138]  4.61809e+08 
+                [139]  4.75074e+08 
+                [140]  4.469e+08 
+                [141]  4.60317e+08 
+                [142]  4.85222e+08 
+                [143]  4.24069e+08 
+                [144]  4.27723e+08 
+                [145]  4.76073e+08 
+                [146]  3.87043e+08 
+                [147]  3.75868e+08 
+                [148]  3.85047e+08 
+                [149]  3.32344e+08 
+                [150]  3.80286e+08 
+                [151]  3.39972e+08 
+                [152]  5.38509e+08 
+                [153]  3.74335e+08 
+                [154]  4.79324e+08 
+                [155]  3.64631e+08 
+                [156]  5.43087e+08 
+                [157]  6.01509e+08 
+                [158]  4.91513e+08 
+                [159]  4.74666e+08 
+              RINFO(3) (local estimated flops for the elimination after factorization): 
+                [0]  6.12259e+11 
+                [1]  6.77005e+11 
+                [2]  5.01638e+11 
+                [3]  5.80822e+11 
+                [4]  5.28158e+11 
+                [5]  7.66686e+11 
+                [6]  6.6309e+11 
+                [7]  5.40343e+11 
+                [8]  5.98106e+11 
+                [9]  9.03524e+11 
+                [10]  6.03973e+11 
+                [11]  8.1776e+11 
+                [12]  7.68771e+11 
+                [13]  6.67533e+11 
+                [14]  7.00184e+11 
+                [15]  7.31122e+11 
+                [16]  7.01743e+11 
+                [17]  6.46367e+11 
+                [18]  4.40746e+11 
+                [19]  5.75417e+11 
+                [20]  5.91947e+11 
+                [21]  6.12026e+11 
+                [22]  6.44397e+11 
+                [23]  6.93564e+11 
+                [24]  7.222e+11 
+                [25]  6.7789e+11 
+                [26]  7.08812e+11 
+                [27]  6.96921e+11 
+                [28]  6.28667e+11 
+                [29]  6.36798e+11 
+                [30]  5.74188e+11 
+                [31]  6.28079e+11 
+                [32]  6.29419e+11 
+                [33]  7.06405e+11 
+                [34]  5.1524e+11 
+                [35]  5.41945e+11 
+                [36]  5.59374e+11 
+                [37]  7.71633e+11 
+                [38]  6.93843e+11 
+                [39]  5.62947e+11 
+                [40]  6.60641e+11 
+                [41]  5.0044e+11 
+                [42]  5.35329e+11 
+                [43]  6.45904e+11 
+                [44]  5.42758e+11 
+                [45]  5.41874e+11 
+                [46]  6.3382e+11 
+                [47]  5.03514e+11 
+                [48]  5.24009e+11 
+                [49]  6.23865e+11 
+                [50]  5.94931e+11 
+                [51]  6.35755e+11 
+                [52]  6.12535e+11 
+                [53]  5.26331e+11 
+                [54]  7.47978e+11 
+                [55]  5.1179e+11 
+                [56]  5.82903e+11 
+                [57]  5.91177e+11 
+                [58]  6.06736e+11 
+                [59]  5.40461e+11 
+                [60]  4.9969e+11 
+                [61]  5.9913e+11 
+                [62]  5.53186e+11 
+                [63]  5.76772e+11 
+                [64]  5.78585e+11 
+                [65]  8.19495e+11 
+                [66]  6.45763e+11 
+                [67]  7.13778e+11 
+                [68]  8.12283e+11 
+                [69]  6.01724e+11 
+                [70]  5.48245e+11 
+                [71]  5.42473e+11 
+                [72]  5.81366e+11 
+                [73]  5.99089e+11 
+                [74]  7.20723e+11 
+                [75]  5.23592e+11 
+                [76]  6.02754e+11 
+                [77]  5.67673e+11 
+                [78]  5.16908e+11 
+                [79]  6.28267e+11 
+                [80]  6.55126e+11 
+                [81]  5.86315e+11 
+                [82]  6.56209e+11 
+                [83]  6.6328e+11 
+                [84]  5.35616e+11 
+                [85]  5.46407e+11 
+                [86]  6.37131e+11 
+                [87]  6.12155e+11 
+                [88]  5.84598e+11 
+                [89]  5.84341e+11 
+                [90]  6.37294e+11 
+                [91]  8.8087e+11 
+                [92]  6.02758e+11 
+                [93]  6.29269e+11 
+                [94]  5.89905e+11 
+                [95]  5.64208e+11 
+                [96]  6.25717e+11 
+                [97]  6.77838e+11 
+                [98]  6.26282e+11 
+                [99]  6.36426e+11 
+                [100]  5.82935e+11 
+                [101]  6.28732e+11 
+                [102]  6.28746e+11 
+                [103]  5.05122e+11 
+                [104]  5.35555e+11 
+                [105]  6.50047e+11 
+                [106]  5.81308e+11 
+                [107]  5.42392e+11 
+                [108]  6.1247e+11 
+                [109]  5.88229e+11 
+                [110]  5.21673e+11 
+                [111]  5.02661e+11 
+                [112]  5.06898e+11 
+                [113]  6.20649e+11 
+                [114]  6.11816e+11 
+                [115]  5.62426e+11 
+                [116]  5.34555e+11 
+                [117]  6.66228e+11 
+                [118]  6.37409e+11 
+                [119]  5.82944e+11 
+                [120]  4.82731e+11 
+                [121]  5.53566e+11 
+                [122]  5.89956e+11 
+                [123]  6.07311e+11 
+                [124]  6.03418e+11 
+                [125]  5.58669e+11 
+                [126]  6.08204e+11 
+                [127]  6.55397e+11 
+                [128]  5.57617e+11 
+                [129]  5.85057e+11 
+                [130]  6.37291e+11 
+                [131]  5.9707e+11 
+                [132]  6.82323e+11 
+                [133]  5.61874e+11 
+                [134]  7.01649e+11 
+                [135]  5.20693e+11 
+                [136]  6.3416e+11 
+                [137]  6.54371e+11 
+                [138]  5.93708e+11 
+                [139]  6.27361e+11 
+                [140]  5.81818e+11 
+                [141]  5.95134e+11 
+                [142]  6.13251e+11 
+                [143]  6.33721e+11 
+                [144]  5.9683e+11 
+                [145]  6.04295e+11 
+                [146]  5.57186e+11 
+                [147]  5.52163e+11 
+                [148]  6.0701e+11 
+                [149]  5.36816e+11 
+                [150]  5.42519e+11 
+                [151]  5.16375e+11 
+                [152]  6.91193e+11 
+                [153]  5.46776e+11 
+                [154]  6.17951e+11 
+                [155]  5.36025e+11 
+                [156]  7.51956e+11 
+                [157]  7.28397e+11 
+                [158]  5.98786e+11 
+                [159]  5.7963e+11 
+              INFO(15) (estimated size of (in MB) MUMPS internal data for running numerical factorization): 
+              [0] 2885 
+              [1] 3525 
+              [2] 2810 
+              [3] 2873 
+              [4] 3005 
+              [5] 3694 
+              [6] 3313 
+              [7] 2803 
+              [8] 3029 
+              [9] 4860 
+              [10] 2880 
+              [11] 4233 
+              [12] 3765 
+              [13] 2607 
+              [14] 3352 
+              [15] 3273 
+              [16] 2946 
+              [17] 2503 
+              [18] 2367 
+              [19] 2643 
+              [20] 2729 
+              [21] 2413 
+              [22] 2491 
+              [23] 2652 
+              [24] 3049 
+              [25] 2962 
+              [26] 2995 
+              [27] 2960 
+              [28] 2955 
+              [29] 3011 
+              [30] 2468 
+              [31] 3091 
+              [32] 3024 
+              [33] 3401 
+              [34] 2416 
+              [35] 2955 
+              [36] 2786 
+              [37] 2815 
+              [38] 2807 
+              [39] 2557 
+              [40] 2991 
+              [41] 2606 
+              [42] 2766 
+              [43] 2831 
+              [44] 2389 
+              [45] 2784 
+              [46] 3265 
+              [47] 2689 
+              [48] 2530 
+              [49] 2996 
+              [50] 2354 
+              [51] 2811 
+              [52] 2758 
+              [53] 2647 
+              [54] 3385 
+              [55] 2503 
+              [56] 2730 
+              [57] 2593 
+              [58] 2786 
+              [59] 2311 
+              [60] 2423 
+              [61] 2814 
+              [62] 2610 
+              [63] 2993 
+              [64] 3020 
+              [65] 4159 
+              [66] 2802 
+              [67] 2821 
+              [68] 3996 
+              [69] 2383 
+              [70] 2200 
+              [71] 2410 
+              [72] 2245 
+              [73] 2755 
+              [74] 3292 
+              [75] 2387 
+              [76] 2337 
+              [77] 2424 
+              [78] 2339 
+              [79] 2560 
+              [80] 2811 
+              [81] 2528 
+              [82] 2698 
+              [83] 2958 
+              [84] 2591 
+              [85] 2709 
+              [86] 3157 
+              [87] 3070 
+              [88] 3047 
+              [89] 2260 
+              [90] 2630 
+              [91] 4006 
+              [92] 2517 
+              [93] 3592 
+              [94] 2176 
+              [95] 2193 
+              [96] 2807 
+              [97] 2619 
+              [98] 2570 
+              [99] 2852 
+              [100] 2396 
+              [101] 2430 
+              [102] 3019 
+              [103] 2342 
+              [104] 2161 
+              [105] 2810 
+              [106] 2389 
+              [107] 2538 
+              [108] 2687 
+              [109] 2788 
+              [110] 2497 
+              [111] 2168 
+              [112] 2384 
+              [113] 3341 
+              [114] 2846 
+              [115] 2497 
+              [116] 2474 
+              [117] 2424 
+              [118] 2511 
+              [119] 2829 
+              [120] 2406 
+              [121] 2453 
+              [122] 2467 
+              [123] 3058 
+              [124] 2869 
+              [125] 2490 
+              [126] 2629 
+              [127] 3176 
+              [128] 2361 
+              [129] 2362 
+              [130] 2778 
+              [131] 3050 
+              [132] 3055 
+              [133] 2583 
+              [134] 2539 
+              [135] 2827 
+              [136] 2731 
+              [137] 3043 
+              [138] 2871 
+              [139] 2867 
+              [140] 2674 
+              [141] 3260 
+              [142] 2901 
+              [143] 2582 
+              [144] 2444 
+              [145] 3308 
+              [146] 2325 
+              [147] 2436 
+              [148] 2269 
+              [149] 2533 
+              [150] 2592 
+              [151] 2329 
+              [152] 2902 
+              [153] 2300 
+              [154] 2862 
+              [155] 2825 
+              [156] 2698 
+              [157] 2973 
+              [158] 2708 
+              [159] 2969 
+              INFO(16) (size of (in MB) MUMPS internal data used during numerical factorization): 
+                [0] 2885 
+                [1] 3525 
+                [2] 2810 
+                [3] 2873 
+                [4] 3005 
+                [5] 3694 
+                [6] 3313 
+                [7] 2803 
+                [8] 3029 
+                [9] 4860 
+                [10] 2880 
+                [11] 4233 
+                [12] 3765 
+                [13] 2607 
+                [14] 3352 
+                [15] 3273 
+                [16] 2946 
+                [17] 2503 
+                [18] 2367 
+                [19] 2643 
+                [20] 2729 
+                [21] 2413 
+                [22] 2491 
+                [23] 2652 
+                [24] 3049 
+                [25] 2962 
+                [26] 2995 
+                [27] 2960 
+                [28] 2955 
+                [29] 3011 
+                [30] 2468 
+                [31] 3091 
+                [32] 3024 
+                [33] 3401 
+                [34] 2416 
+                [35] 2955 
+                [36] 2786 
+                [37] 2815 
+                [38] 2807 
+                [39] 2557 
+                [40] 2991 
+                [41] 2606 
+                [42] 2766 
+                [43] 2831 
+                [44] 2389 
+                [45] 2784 
+                [46] 3265 
+                [47] 2689 
+                [48] 2530 
+                [49] 2996 
+                [50] 2354 
+                [51] 2811 
+                [52] 2758 
+                [53] 2647 
+                [54] 3385 
+                [55] 2503 
+                [56] 2730 
+                [57] 2593 
+                [58] 2786 
+                [59] 2311 
+                [60] 2423 
+                [61] 2814 
+                [62] 2610 
+                [63] 2993 
+                [64] 3020 
+                [65] 4159 
+                [66] 2802 
+                [67] 2821 
+                [68] 3996 
+                [69] 2383 
+                [70] 2200 
+                [71] 2410 
+                [72] 2245 
+                [73] 2755 
+                [74] 3292 
+                [75] 2387 
+                [76] 2337 
+                [77] 2424 
+                [78] 2339 
+                [79] 2560 
+                [80] 2811 
+                [81] 2528 
+                [82] 2698 
+                [83] 2958 
+                [84] 2591 
+                [85] 2709 
+                [86] 3157 
+                [87] 3070 
+                [88] 3047 
+                [89] 2260 
+                [90] 2630 
+                [91] 4006 
+                [92] 2517 
+                [93] 3592 
+                [94] 2176 
+                [95] 2193 
+                [96] 2807 
+                [97] 2619 
+                [98] 2570 
+                [99] 2852 
+                [100] 2396 
+                [101] 2430 
+                [102] 3019 
+                [103] 2342 
+                [104] 2161 
+                [105] 2810 
+                [106] 2389 
+                [107] 2538 
+                [108] 2687 
+                [109] 2788 
+                [110] 2497 
+                [111] 2168 
+                [112] 2384 
+                [113] 3341 
+                [114] 2846 
+                [115] 2497 
+                [116] 2474 
+                [117] 2424 
+                [118] 2511 
+                [119] 2829 
+                [120] 2406 
+                [121] 2453 
+                [122] 2467 
+                [123] 3058 
+                [124] 2869 
+                [125] 2490 
+                [126] 2629 
+                [127] 3176 
+                [128] 2361 
+                [129] 2362 
+                [130] 2778 
+                [131] 3050 
+                [132] 3055 
+                [133] 2583 
+                [134] 2539 
+                [135] 2827 
+                [136] 2731 
+                [137] 3043 
+                [138] 2871 
+                [139] 2867 
+                [140] 2674 
+                [141] 3260 
+                [142] 2901 
+                [143] 2582 
+                [144] 2444 
+                [145] 3308 
+                [146] 2325 
+                [147] 2436 
+                [148] 2269 
+                [149] 2533 
+                [150] 2592 
+                [151] 2329 
+                [152] 2902 
+                [153] 2300 
+                [154] 2862 
+                [155] 2825 
+                [156] 2698 
+                [157] 2973 
+                [158] 2708 
+                [159] 2969 
+              INFO(23) (num of pivots eliminated on this processor after factorization): 
+                [0] 75168 
+                [1] 91434 
+                [2] 38380 
+                [3] 38482 
+                [4] 39158 
+                [5] 90023 
+                [6] 81568 
+                [7] 36082 
+                [8] 40288 
+                [9] 143200 
+                [10] 60501 
+                [11] 92823 
+                [12] 92463 
+                [13] 43155 
+                [14] 92324 
+                [15] 85781 
+                [16] 64817 
+                [17] 36494 
+                [18] 13164 
+                [19] 37909 
+                [20] 35106 
+                [21] 37595 
+                [22] 38258 
+                [23] 64438 
+                [24] 60840 
+                [25] 60860 
+                [26] 61908 
+                [27] 63352 
+                [28] 61908 
+                [29] 85622 
+                [30] 37863 
+                [31] 64698 
+                [32] 63315 
+                [33] 91035 
+                [34] 40229 
+                [35] 63883 
+                [36] 38488 
+                [37] 59734 
+                [38] 60218 
+                [39] 59740 
+                [40] 58973 
+                [41] 36727 
+                [42] 36408 
+                [43] 41047 
+                [44] 37196 
+                [45] 39163 
+                [46] 61886 
+                [47] 38799 
+                [48] 40320 
+                [49] 85950 
+                [50] 38857 
+                [51] 57782 
+                [52] 59735 
+                [53] 44205 
+                [54] 96125 
+                [55] 33668 
+                [56] 37354 
+                [57] 36115 
+                [58] 37166 
+                [59] 36917 
+                [60] 34639 
+                [61] 37298 
+                [62] 36740 
+                [63] 61886 
+                [64] 61886 
+                [65] 101228 
+                [66] 58827 
+                [67] 57666 
+                [68] 121651 
+                [69] 35869 
+                [70] 36088 
+                [71] 36795 
+                [72] 35703 
+                [73] 60480 
+                [74] 92145 
+                [75] 33379 
+                [76] 34607 
+                [77] 34666 
+                [78] 34124 
+                [79] 61509 
+                [80] 54549 
+                [81] 37449 
+                [82] 39257 
+                [83] 49793 
+                [84] 36972 
+                [85] 35595 
+                [86] 60900 
+                [87] 63765 
+                [88] 62306 
+                [89] 36921 
+                [90] 37393 
+                [91] 105446 
+                [92] 41203 
+                [93] 85407 
+                [94] 35732 
+                [95] 38630 
+                [96] 45516 
+                [97] 41594 
+                [98] 63706 
+                [99] 59177 
+                [100] 39152 
+                [101] 39823 
+                [102] 61038 
+                [103] 37991 
+                [104] 35580 
+                [105] 61069 
+                [106] 37479 
+                [107] 36998 
+                [108] 60970 
+                [109] 56240 
+                [110] 36196 
+                [111] 32113 
+                [112] 38191 
+                [113] 87148 
+                [114] 60458 
+                [115] 36845 
+                [116] 36828 
+                [117] 38497 
+                [118] 36274 
+                [119] 37639 
+                [120] 33451 
+                [121] 39032 
+                [122] 38587 
+                [123] 59668 
+                [124] 60575 
+                [125] 38027 
+                [126] 63461 
+                [127] 63652 
+                [128] 39148 
+                [129] 41757 
+                [130] 56280 
+                [131] 71833 
+                [132] 63549 
+                [133] 39895 
+                [134] 55960 
+                [135] 38365 
+                [136] 41535 
+                [137] 70296 
+                [138] 59072 
+                [139] 59074 
+                [140] 63562 
+                [141] 60369 
+                [142] 58713 
+                [143] 40283 
+                [144] 37957 
+                [145] 59088 
+                [146] 36411 
+                [147] 36983 
+                [148] 37067 
+                [149] 36436 
+                [150] 40592 
+                [151] 36015 
+                [152] 58440 
+                [153] 36720 
+                [154] 67463 
+                [155] 37734 
+                [156] 67375 
+                [157] 61885 
+                [158] 65605 
+                [159] 61886 
+              RINFOG(1) (global estimated flops for the elimination after analysis): 9.78548e+13 
+              RINFOG(2) (global estimated flops for the assembly after factorization): 7.16616e+10 
+              RINFOG(3) (global estimated flops for the elimination after factorization): 9.78506e+13 
+              (RINFOG(12) RINFOG(13))*2^INFOG(34) (determinant): (0,0)*(2^0)
+              INFOG(3) (estimated real workspace for factors on all processors after analysis): -25570 
+              INFOG(4) (estimated integer workspace for factors on all processors after analysis): 230242582 
+              INFOG(5) (estimated maximum front size in the complete tree): 8874 
+              INFOG(6) (number of nodes in the complete tree): 500126 
+              INFOG(7) (ordering option effectively use after analysis): 5 
+              INFOG(8) (structural symmetry in percent of the permuted matrix after analysis): 100 
+              INFOG(9) (total real/complex workspace to store the matrix factors after factorization): -24467 
+              INFOG(10) (total integer space store the matrix factors after factorization): 208144057 
+              INFOG(11) (order of largest frontal matrix after factorization): 8874 
+              INFOG(12) (number of off-diagonal pivots): 0 
+              INFOG(13) (number of delayed pivots after factorization): 0 
+              INFOG(14) (number of memory compress after factorization): 17 
+              INFOG(15) (number of steps of iterative refinement after solution): 0 
+              INFOG(16) (estimated size (in MB) of all MUMPS internal data for factorization after analysis: value on the most memory consuming processor): 4860 
+              INFOG(17) (estimated size of all MUMPS internal data for factorization after analysis: sum over all processors): 445425 
+              INFOG(18) (size of all MUMPS internal data allocated during factorization: value on the most memory consuming processor): 4860 
+              INFOG(19) (size of all MUMPS internal data allocated during factorization: sum over all processors): 445425 
+              INFOG(20) (estimated number of entries in the factors): -24467 
+              INFOG(21) (size in MB of memory effectively used during factorization - value on the most memory consuming processor): 3503 
+              INFOG(22) (size in MB of memory effectively used during factorization - sum over all processors): 308307 
+              INFOG(23) (after analysis: value of ICNTL(6) effectively used): 0 
+              INFOG(24) (after analysis: value of ICNTL(12) effectively used): 1 
+              INFOG(25) (after factorization: number of pivots modified by static pivoting): 0 
+              INFOG(28) (after factorization: number of null pivots encountered): 0
+              INFOG(29) (after factorization: effective number of entries in the factors (sum over all processors)): -24392
+              INFOG(30, 31) (after solution: size in Mbytes of memory used during solution phase): 4692, 421189
+              INFOG(32) (after analysis: type of analysis done): 1
+              INFOG(33) (value used for ICNTL(8)): 7
+              INFOG(34) (exponent of the determinant if determinant is requested): 0
+  linear system matrix followed by preconditioner matrix:
+  Mat Object:   160 MPI processes
+    type: mpiaij
+    rows=8435524, cols=8435524
+    total: nonzeros=4.57948e+08, allocated nonzeros=1.38361e+09
+    total number of mallocs used during MatSetValues calls =0
+      not using I-node (on process 0) routines
+  Mat Object:   160 MPI processes
+    type: mpiaij
+    rows=8435524, cols=8435524
+    total: nonzeros=2.2705e+08, allocated nonzeros=1.38361e+09
+    total number of mallocs used during MatSetValues calls =0
+      not using I-node (on process 0) routines
+ evaluateResidual called.
+ Beginning preallocation for whichMatrix =            3
+ Running populateMatrix with whichMatrix =            3
+ Time to pre-assemble residual f1 matrix:    1.75435590744019       seconds.
+ Time to assemble residual f1 matrix:    1.37639307975769       seconds.
+ # of nonzeros in residual f1 matrix:   457947667 , allocated:  1383612744 
+ , mallocs:           0  (should be 0)
+--------- Completed iteration    1 of SNES -----------------------------------
+--------- Residual function norm:  3.1465701E-06 -----------------------------
+ Linear iteration (KSP) converged.  KSPConvergedReason =            2
+   KSP_CONVERGED_RTOL: Norm decreased by rtol.
+ Computing diagnostics.
+ Time for exporting f:    24.0089380741119       seconds.
+ Results for species            1 :
+    FSADensityPerturbation:   -7.353591438190484E-017
+    FSABFlow:                  0.299154344881436     
+    max and min Mach #:        7.742744901398162E-004 -2.598109944672193E-004
+    FSAPressurePerturbation:   1.641137446194906E-015
+    NTV:                       1.561939585434357E-002
+    particleFlux_vm0_psiHat   -8.949275319017332E-018
+    particleFlux_vm_psiHat    -3.038448376109699E-005
+    momentumFlux_vm0_psiHat    0.000000000000000E+000
+    momentumFlux_vm_psiHat    -1.619537117208414E-006
+    heatFlux_vm0_psiHat       -3.951357082871088E-017
+    heatFlux_vm_psiHat        -5.577945714603141E-004
+    particle source           -5.587353027643032E-010
+    heat source               -1.141142254061916E-006
+ Results for species            2 :
+    FSADensityPerturbation:   -1.614939724590279E-015
+    FSABFlow:                 -0.456632429964325     
+    max and min Mach #:        2.131947239590347E-004 -2.070488067483373E-004
+    FSAPressurePerturbation:  -1.541216596807098E-014
+    NTV:                      -6.813407124171276E-003
+    particleFlux_vm0_psiHat    9.227016098933037E-018
+    particleFlux_vm_psiHat    -7.268916449681129E-006
+    momentumFlux_vm0_psiHat    0.000000000000000E+000
+    momentumFlux_vm_psiHat    -1.529939140831357E-011
+    heatFlux_vm0_psiHat        4.970724177200196E-017
+    heatFlux_vm_psiHat        -6.321374250613212E-005
+    particle source            7.016447735437613E-012
+    heat source                2.678933887561828E-012
+ FSABjHat (bootstrap current):   0.755786774845761     
+ Saving diagnostics to h5 file for iteration            1
+ Done with the main solve.  Time to solve:    554.320837974548       seconds.
+Entering DMUMPS driver with JOB, N, NZ =  -2     8435524      227050372
+ Goodbye!
+
+
+------------------------------------------------------
+Statistics for LoadLeveler job ll1-ib0.2240564.0:
+
+number of nodes: 10
+number of MPI tasks: 160
+number of OpenMP threads per task: 1
+
+memory consumption (high water mark): 442.29 GB
+maximum memory per node: 48.89 GB
+minimum memory per node: 41.59 GB
+average memory per node: 44.23 GB
+
+average CPU usage: 98.2 %
+
