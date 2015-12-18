@@ -89,8 +89,8 @@ for hind=1:length(H)
     out.rN(ind)            =H{hind}.rN;
     out.GHat(ind)          =H{hind}.GHat;
     out.IHat(ind)          =H{hind}.IHat;
-    out.iota(ind)          =H{hind}.iota;
     out.B0OverBBar(ind)    =H{hind}.B0OverBBar;
+    out.iota(ind)          =H{hind}.iota;
     out.VPrimeHat(ind)     =H{hind}.VPrimeHat;
     out.FSABHat2(ind)      =H{hind}.FSABHat2;
     out.alpha(ind)         =H{hind}.alpha;
@@ -101,6 +101,19 @@ for hind=1:length(H)
     out.BHat{ind}          =H{hind}.BHat';
     out.dBHatdtheta{ind}   =H{hind}.dBHatdtheta';
     out.dBHatdzeta{ind}    =H{hind}.dBHatdzeta';
+    out.BHat_sub_psi{ind}   =H{hind}.BHat_sub_psi';
+    out.BHat_sup_theta{ind}   =H{hind}.BHat_sup_theta';
+    out.BHat_sup_zeta{ind}   =H{hind}.BHat_sup_zeta';
+    out.dBHat_sub_psi_dtheta{ind}   =H{hind}.dBHat_sub_psi_dtheta';
+    out.dBHat_sub_psi_dzeta{ind}   =H{hind}.dBHat_sub_psi_dzeta';
+    out.dIHat_dpsiHat{ind}   =H{hind}.dBHat_sub_theta_dpsiHat';
+    out.dGHat_dpsiHat{ind}   =H{hind}.dBHat_sub_zeta_dpsiHat';
+    out.dBHat_sup_theta_dpsiHat{ind}   =H{hind}.dBHat_sup_theta_dpsiHat';
+    out.dBHat_sup_theta_dzeta{ind}   =H{hind}.dBHat_sup_theta_dzeta';
+    out.dBHat_sup_zeta_dpsiHat{ind}   =H{hind}.dBHat_sup_zeta_dpsiHat';
+    out.dBHat_sup_zeta_dtheta{ind}   =H{hind}.dBHat_sup_zeta_dtheta';
+    out.dBHatdpsiHat{ind}   =H{hind}.dBHatdpsiHat';    
+    
     if isfield(H{hind},'uHat')
       out.uHat{ind}         =H{hind}.uHat';
     end

@@ -55,6 +55,7 @@ mi=runs.mHats(:,ion)*mp;
 nu_n=runs.nu_n';
 
 
+[tauP,tauE]=calcAlltau(runs,151,55);
 
 nu_bar=nu_n*vbar/Rbar;
 nu_ii=nu_bar.*ni20./sqrt(runs.mHats(:,ion).*TikeV.^3);
@@ -128,24 +129,42 @@ ylim([1e-4,1])
 xlabel('\nu''')
 
 fig(2)
-loglog(nuStarAM,D11_AM./Diip_AM,'b--+',nuStarAM(ind),D11_AM(ind)./Diip_AM(ind),'bo')
+pos=get(gcf,'Position');
+pos(4)=150;
+set(gcf,'Position',pos);
+loglog(nuStarAM,D11_AM./Diip_AM,'r--+',nuStarAM(ind),D11_AM(ind)./Diip_AM(ind),'ro')
+set(gca,'FontSize',14)
 %ylim([1e-4,1])
-axis([1e-5 4e-1 1e-4 1])
-set(gca,'XTick',[1e-5,1e-4,1e-3,1e-2,1e-1])
+%axis([1e-5 4e-1 1e-4 1])
+axis([1e-4 4e-1 1e-4 1e-3])
+set(gca,'XTick',[1e-5,1e-4,1e-3,1e-2,1e-1,1e0])
 xlabel('\nu^*')
 ylabel('D_{11} / D_p')
-%figure(2);print -depsc D11overDp_rhopol=0.5.eps
+%figure(2);print -depsc D11overDp_rhopol=0.5_rip.eps
+%figure(2);print -depsc D11overDp_rhopol=0.5_rmp90.eps
 
 
 fig(3)
-loglog(nuStarAM,D11,'b--+',nuStarAM(ind),D11(ind),'bo')%,...
-      %nuStarAM,D11(1)*(nuStarAM/nuStarAM(1)).^0.5,'g:' )
+loglog(nuStarAM,D11,'b--+',nuStarAM(ind),D11(ind),'bo',...
+      nuStarAM,D11(ind)*(nuStarAM/nuStarAM(ind)).^0.5,'k:'),...
+      %nuStarAM,D11(ind)*(nuStarAM/nuStarAM(ind)).^1,'g:' )
 xlim([1e-5,4e-1])
 %axis([1e-5 4e-1 1e-4 1])
 set(gca,'XTick',[1e-5,1e-4,1e-3,1e-2,1e-1])
 xlabel('\nu^*')
 ylabel('D_{11} [m^2/s]')
-%figure(2);print -depsc D11overDp_rhopol=0.5.eps
+%legend('D_{11}','\nu^{1/2}')
+%figure(3);print -depsc D11_rhotor=0.9.eps
+
+fig(4)
+loglog(nuStarAM,abs(tauP),'r-',nuStarAM,abs(tauE),'b-',nuStarAM,abs(tauE+tauP),'k--')
+xlim([1e-5,4e-1])
+set(gca,'XTick',[1e-5,1e-4,1e-3,1e-2,1e-1])
+xlabel('\nu^*')
+ylabel('torque [Nm/m^3]')
+legend('\tau_P','\tau_E','\tau_E+\tau_P')
+
+
 
 if 0
   for rind=1:25
