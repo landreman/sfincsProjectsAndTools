@@ -1,0 +1,6 @@
+load HDF5 Library 1.8.14
+load netCDF Library 4.3.3.1
+
+real	7m25.146s
+user	110m22.862s
+sys	5m26.200s

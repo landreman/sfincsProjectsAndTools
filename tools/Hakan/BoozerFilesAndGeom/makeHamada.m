@@ -260,6 +260,11 @@ gradpsi.Y=B.^2./(G+iota*I).*(dZdtheta.*dXdzeta-dXdtheta.*dZdzeta);
 gradpsi.Z=B.^2./(G+iota*I).*(dXdtheta.*dYdzeta-dYdtheta.*dZdzeta);
 gpsipsi=gradpsi.X.^2+gradpsi.Y.^2+gradpsi.Z.^2;
 
+Booz.XYZ.r=zeros(3,Ntheta,Nzeta);
+Booz.XYZ.r(1,:,:)=X;
+Booz.XYZ.r(2,:,:)=Y;
+Booz.XYZ.r(3,:,:)=Z;
+
 Booz.XYZ.gradpsi=zeros(3,Ntheta,Nzeta);
 Booz.XYZ.gradpsi(1,:,:)=gradpsi.X;
 Booz.XYZ.gradpsi(2,:,:)=gradpsi.Y;
@@ -704,8 +709,9 @@ Booz.mu0dpdpsi=mu0dpdpsi;
 Booz.B=B;
 Booz.u=u;
 Booz.h=h;
-Booz.dBpsidtheta=-Booz.mu0dpdpsi/iota.*(u-iota*I./B.^2);
-Booz.dBpsidzeta = Booz.mu0dpdpsi/iota.*(u+G./B.^2);
+Booz.Bpsitilde=B_psi_tilde;
+Booz.dBpsidtheta=-Booz.mu0dpdpsi/iota.*(u-iota*I*(B.^-2 - 1/FSAB2));
+Booz.dBpsidzeta = Booz.mu0dpdpsi/iota.*(u+G*(B.^-2 - 1/FSAB2));
 Booz.FSAB2=FSAB2;
 Booz.FSAu2B2=sum(sum(u.^2.*B.^2.*h))/sum(sum(h));
 Booz.Jacob=Booz.h*(G+iota*I);

@@ -84,11 +84,11 @@ title('\tau ( = -NTV )')
 xlabel('r / a')
 
 
-fig(2)
 
 s=runs.rN.^2;
 
 if Nspec==2
+  fig(2)
   NTVtot=pbar*(runs.NTV(:,1)+runs.NTV(:,2));
   NTVfromFluxtot=pbar*(runs.NTVfromFlux(:,1)+runs.NTVfromFlux(:,2));
   plot(runs.rN,-NTVtot,'g',...
@@ -98,10 +98,11 @@ if Nspec==2
 elseif Nspec==1
   NTVtot=pbar*runs.NTV(:,1);
   NTVfromFluxtot=pbar*runs.NTVfromFlux(:,1);
-  plot(runs.rN,-NTVtot,'g',...
-       runs.rN,-NTVfromFluxtot,'g--')
-  title('\tau total')
-  xlabel('r /a')
+  %fig(2)
+  %plot(runs.rN,-NTVtot,'g',...
+  %     runs.rN,-NTVfromFluxtot,'g--')
+  %title('\tau total')
+  %xlabel('r /a')
 end
 
 
@@ -124,7 +125,8 @@ axis(ax);
 
 %NTVtot0=NTVtot(1)-s(1)*(NTVtot(2)-NTVtot(1))/(s(2)-s(1));
 %NTVtot1=NTVtot(end)+(1-s(end))*(NTVtot(end)-NTVtot(end-1))/(s(end)-s(end-1));
-tauiFromFlux
+%tauiFromFlux
+%tauiFromFlux*1e3
 
 
 if 0 %EXTRAPOLATE
@@ -134,7 +136,9 @@ if 0 %EXTRAPOLATE
   integr=[integr0,integr,integr1];
 end
 
-NTV_Nm=trapz(s,integr)
+if length(s)>1
+  NTV_Nm=trapz(s,integr)
+end
 
 A1=(runs.dnHatdpsiN(:,ion)./runs.nHats(:,ion)...
     +(runs.dPhiHatdpsiN'*Phibar).*runs.Zs(:,ion).*e./(runs.THats(:,ion)*Tbar)...
@@ -149,6 +153,8 @@ FSAomegai=1./(runs.GHat'+runs.iota'.*runs.IHat').*...
      (A1+5/2*A2));
 
 
+make_anal=0;
+if make_anal
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Approximate analytical calculations in the ripple plateau
 % for the AUG equilibrium rip_n16
@@ -174,25 +180,29 @@ FSAg_phiphi=zeros(length(runs.rN),1);
 integr=zeros(length(runs.rN),1);
 FSAdelta2overB=zeros(length(runs.rN),1);
 
-for ind=1:length(runs.rN)
-  fprintf(1,'\b\b\b\b\b\b\b\b\b\b\b%3i/%3i',ind,length(runs.rN))
-  rnorm=runs.rN(ind);
-  rind=findnearest(Geom.rnorm,rnorm);
-  Ntheta=151;
-  Nzeta=55;%Ntheta;
-  [Ham,Booz]=makeHamada(Geom,rind,Ntheta,Nzeta);
-  FSAg_phiphi(ind)=Booz.FSAg_phiphi;
-  FSAB2(ind)=Booz.FSAB2;
-  Btormean=mean(Booz.B,2)*ones(1,Nzeta);
-  deltatw=(Booz.B-Btormean)./Btormean;
-  %integr(ind)=4*pi^2/(Ntheta*Nzeta)*sum(sum(deltatw.^2./Btormean.^3))*2;
-  FSAdelta2overB(ind)=2*sum(sum(deltatw.^2./Btormean.^3))/sum(sum(1./Booz.B.^2));
+
+  for ind=1:length(runs.rN)
+    fprintf(1,'\b\b\b\b\b\b\b\b\b\b\b%3i/%3i',ind,length(runs.rN))
+    rnorm=runs.rN(ind);
+    rind=findnearest(Geom.rnorm,rnorm);
+    Ntheta=151;
+    Nzeta=55;%Ntheta;
+    [Ham,Booz]=makeHamada(Geom,rind,Ntheta,Nzeta);
+    FSAg_phiphi(ind)=Booz.FSAg_phiphi;
+    FSAB2(ind)=Booz.FSAB2;
+    Btormean=mean(Booz.B,2)*ones(1,Nzeta);
+    deltatw=(Booz.B-Btormean)./Btormean;
+    %integr(ind)=4*pi^2/(Ntheta*Nzeta)*sum(sum(deltatw.^2./Btormean.^3))*2;
+    FSAdelta2overB(ind)=2*sum(sum(deltatw.^2./Btormean.^3))/sum(sum(1./Booz.B.^2));
+  end
+  fprintf(1,'\n')
+  
+  plat.tau=Geom.Nperiods*mi.^2.*vTi.^3.*(ni20*1e20)./(Z*e)./iota*...
+           sqrt(pi)/4.*(G+iota.*I).*FSAdelta2overB.*(A1+A2*3);
+else
+  plat.tau=NaN*zeros(size(runs.rN))';
+  %FSAg_phiphi=Geom.R00.^2;
 end
-fprintf(1,'\n')
-
-plat.tau=Geom.Nperiods*mi.^2.*vTi.^3.*(ni20*1e20)./(Z*e)./iota*...
-          sqrt(pi)/4.*(G+iota.*I).*FSAdelta2overB.*(A1+A2*3);
-
 
 
 
@@ -207,18 +217,28 @@ end
 title('FSABFlow')
 xlabel('r / a')
 
-fig(6)
-plot(runs.rN,kappaiFSAB2)
-title('\kappa_i <B^2>')
-xlabel('r / a')
+%fig(6)
+%plot(runs.rN,kappaiFSAB2)
+%title('\kappa_i <B^2>')
+%xlabel('r / a')
 
-tau_anal_over_tau_calc=(plat.tau./-NTVtot)'
-fig(7)
-plot(runs.rN,-NTVtot,runs.rN,plat.tau)%,runs.rN,tauP)%*sqrt(2))%testing
-%figure(1)
-%hold on
-%plot(runs.rN,plat.tau2)
-%hold off
+if make_anal
+  tau_anal_over_tau_calc=(plat.tau./-NTVtot)'
+  fig(7)
+  plot(runs.rN,-NTVtot,runs.rN,plat.tau)%,runs.rN,tauP)%*sqrt(2))%testing
+  title('\tau')
+  legend('calc','anal')
+  xlabel('r / a')
+end
+
+rN_and_tauiFromFlux=[runs.rN',tauiFromFlux']
+%rN_and_tauiFromFluxe3=[runs.rN',tauiFromFlux'*1e3]
+
+
+
+fig(8)
+semilogy(runs.rN,tauiFromFlux,'bs:',runs.rN,abs(tauiDirect+tauE'),'r--o')
 title('\tau')
-legend('calc','anal')
-xlabel('r / a')
+xlabel('\rho_{tor}')
+ylabel('Nm / m^3')
+legend('from flux','press. anisotropy + Er terms')

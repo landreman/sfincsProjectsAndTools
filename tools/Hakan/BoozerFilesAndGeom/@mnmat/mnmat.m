@@ -227,7 +227,7 @@ for inputind=1:length(lsts)
         Nu=Nu+2;
       end
     end
-    
+
     mmax=floor(Nu/2);
     nmax=floor(Nv/2);
     nrange=-nmax+Nv_even:nmax;
@@ -246,7 +246,8 @@ for inputind=1:length(lsts)
     
     
     for li=1:length(lst.m)
-      if lst.m(li)<=mmax && lst.n(li)<=nmax && lst.n(li)>=-nmax+Nv_even
+      if lst.m(li)<=mmax && lst.m(li)>=0 ...
+            && lst.n(li)<=nmax && lst.n(li)>=-nmax+Nv_even
         if lst.cosparity(li)
           Fmn.c(mind(li),nind(li))=lst.data(li);
         else
