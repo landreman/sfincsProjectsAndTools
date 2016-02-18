@@ -46,8 +46,11 @@ if strcmp(filetype,'JG')
   Geom.headertext.maincomment=concat_str;
   Geom.headertext.globalvars=tmp_str;
   header_d=fscanf(fid,'%d',4);
-  header_f=fscanf(fid,'%f',3);
-  fgetl(fid); %just skip the return character
+  %header_f=fscanf(fid,'%f',3);
+  tmpstr=fgetl(fid);
+  header_f=sscanf(tmpstr,'%f');
+  %header_f=fscanf(fid,'%f',3);
+  %fgetl(fid); %just skip the return character
   Geom.headertext.surfvars=fgetl(fid);  %Variable name line
 
   Geom.m0b        = header_d(1);
@@ -56,9 +59,18 @@ if strcmp(filetype,'JG')
   Geom.Nperiods   = header_d(4);
   Geom.psi_a=NaN; %Insert psi_a at this place in the list, but set it later.
   Geom.torfluxtot = header_f(1); %Note that this is not per pol. angle
-  Geom.minorradius= header_f(2);
-  Geom.majorradius= header_f(3);
-
+  Geom.minorradiusW7AS        = header_f(2); 
+  Geom.majorradiusLastbcR00 = header_f(3);
+  if length(header_f)>3
+    Geom.minorradiusVMEC=header_f(4);
+    if length(header_f)>4
+      Geom.majorradiusVMEC=header_f(5);
+      if length(header_f)>5
+        Geom.VolumeVMEC=header_f(6);
+      end
+    end
+  end
+  
   eof=0;
   rind=0;
   
@@ -209,6 +221,9 @@ if strcmp(filetype,'JG')
   Geom.Btheta=Btheta*rthetazeta_righthanded;%amperes law minus sign
   Geom.iota=iota*rthetazeta_righthanded;
   Geom.dpds=dpds;
+  if Geom.dpds(end)==0 %Joachim sets the last point to zero for some reason
+    Geom.dpds(end)=2*Geom.dpds(end-1)-Geom.dpds(end-2); %Extrapolate!
+  end
   Geom.dVdsoverNper=dVdsoverNper*rthetazeta_righthanded;
   Geom.nmodes=no_of_modes;
   Geom.m=modesm;
@@ -241,6 +256,17 @@ if strcmp(filetype,'JG')
     Geom.parity=modespar;
   end
   Geom.psi_a=Geom.torfluxtot/2/pi;
+  
+  if not(Geom.StelSym)
+    %If non-stellarator symmetric, then assume that it is from Erika.
+    %Then the minor and major radii are VMEC and not Joachims definitions
+    Geom.minorradiusVMEC=Geom.minorradiusW7AS;
+    Geom.majorradiusVMEC=Geom.majorradiusLastbcR00;
+    Geom.VolumeVMEC=pi*Geom.minorradiusVMEC^2*2*pi*Geom.majorradiusVMEC;
+    Geom.minorradiusW7AS=NaN;
+    Geom.majorradiusLastbcR00=NaN;
+  end
+  
   %fprintf(1,'\b\b\b\b\b\b\b\b\b\b\b')
   fprintf(1,'\n')
   
@@ -265,8 +291,8 @@ elseif strcmp(filetype,'HM')
     radii(rind) = surfheader1(1)/100; %(cm)
     iota(rind)  = surfheader1(2);
     Nperiods=surfheader1(3);
-    minorradius = surfheader1(4)/100; %(cm)
-    majorradius = surfheader1(5)/100; %(cm)
+    minorradiusW7AS = surfheader1(4)/100; %(cm)
+    majorradiusLastbcR00  = surfheader1(5)/100; %(cm)
     if length(surfheader1)>5
       torfluxnorm(rind) = surfheader1(6);
       R00(rind)   = surfheader1(8)/100;
@@ -326,9 +352,9 @@ elseif strcmp(filetype,'HM')
   
   Geom.nsurf=length(radii);
   Geom.Nperiods=Nperiods;
-  Geom.minorradius=minorradius;
-  Geom.majorradius=majorradius;
-  Geom.rnorm=radii/Geom.minorradius;
+  Geom.minorradiusW7AS=minorradiusW7AS;
+  Geom.majorradiusLastbcR00=majorradiusLastbcR00;
+  Geom.rnorm=radii/Geom.minorradiusW7AS;
   Geom.s=torfluxnorm;
   Geom.iota=iota*rthetazeta_righthanded;
   Geom.Bphi=Bphi;

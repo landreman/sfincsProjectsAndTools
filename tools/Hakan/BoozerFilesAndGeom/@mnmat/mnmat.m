@@ -23,8 +23,6 @@ for inputind=1:length(lsts)
 
     Fmn=class(Fmn,'mnmat');
   elseif isfield(lst,'headertext')&&...
-        isfield(lst,'minorradius')&&...
-        isfield(lst,'majorradius')&&...
         isfield(lst,'StelSym')&&...
         isfield(lst,'Nperiods')&&...
         isfield(lst,'Bmn')&&...
@@ -36,6 +34,8 @@ for inputind=1:length(lsts)
         isfield(lst,'rnorm')&&...
         isfield(lst,'s')&&...
         isfield(lst,'psi_a')
+    
+    %disp('mnmat input from a Geom struct.')
     %This is a Geometry struct
     %I require the input (Geom,rind,fieldtoextract)
     %or (Geom,rind,fieldtoextract,Nu,Nv,forceSize_option)
@@ -50,9 +50,12 @@ for inputind=1:length(lsts)
       fieldtoextract='R';
     elseif strcmp(objecttoextract,'Z')
       fieldtoextract='Z';
-    elseif strcmp(objecttoextract,'Dzetacylphi')
+    elseif strcmp(objecttoextract,'Dzetacylphi') || ...
+          strcmp(objecttoextract,'Dphi')
       %Dzetacylphi=2*pi/Nperiods*Dphi
       fieldtoextract='Dphi';
+    else
+      fieldtoextract=objecttoextract;
     end    
     clear lista
     lista.m=lst.m{rind};
@@ -84,6 +87,19 @@ for inputind=1:length(lsts)
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   else %Default case: list input
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if size(lst.m,1)>size(lst.n,2)
+      lst.m=lst.m';
+    end
+    if size(lst.n,1)>size(lst.n,2)
+      lst.n=lst.n';
+    end
+    if size(lst.data,1)>size(lst.data,2)
+      lst.data=lst.data';
+    end
+    if size(lst.cosparity,1)>size(lst.cosparity,2)
+      lst.cosparity=lst.cosparity';
+    end
+    
     if any(lst.m<0)
       error('Negative m values found!')
     end
@@ -95,7 +111,8 @@ for inputind=1:length(lsts)
         end
         m0inds=find(lst.m==0);
         problems=m0inds(lst.n(m0inds)<0);
-        for pind=problems
+        for pindi=1:length(problems)
+          pind=problems(pindi);
           par=lst.cosparity(pind);
           n  =lst.n(pind);   
           dat=lst.data(pind);
@@ -227,8 +244,9 @@ for inputind=1:length(lsts)
     mind=lst.m+1;
     nind=lst.n+Fmn.n0ind;
     
+    
     for li=1:length(lst.m)
-      if lst.m(li)<=mmax && abs(lst.n(li))<=mmax
+      if lst.m(li)<=mmax && lst.n(li)<=nmax && lst.n(li)>=-nmax+Nv_even
         if lst.cosparity(li)
           Fmn.c(mind(li),nind(li))=lst.data(li);
         else
