@@ -40,7 +40,7 @@ outputs = []
 ##INPUTS##
 e = 1.6021766208*10**(-19) #Electron charge
 mbar = 1.672621777*10**(-27) #Proton mass
-nbar = 1.0 # in 10^20
+nbar = 10.0**20 # in 10^20
 Tbar = 1000*e 
 Rbar = 1.0
 Bbar = 1.0
@@ -48,17 +48,35 @@ vbar = np.sqrt(2.0 * Tbar / mbar)
 
 
 xVariableName = "nHats_1"
-yVariableNames = ["particleFlux_vm_psiHat", "heatFlux_vm_psiHat", "FSABjHat"] ##For vectors plot all in same plot 
 
-yVariableFactors = [nbar*vbar*Rbar*Bbar, 1.0, 1.0]
+##TEMPORARY COMMENT##
+yVariableNames = ["particleFlux_vm_rHat", "heatFlux_vm_rHat", "FSABjHat"] ##For vectors plot all in same plot 
+
+##TEMPORARY COMMENT##
+yVariableFactors = [nbar*vbar / 10.0**20, 10.0**17*nbar*mbar*vbar**3 / 10.0**20, 10.0**14*e*nbar*vbar*Bbar / 10.0**20]
+
+##SOME TESTS##
+#aHat = 0.51092
+#psiN = 0.25
+#psiAHat = -0.348668
+
+##TEST1##
+#yVariableNames = ["particleFlux_vm_psiHat", "particleFlux_vm_rHat", "FSABjHat"]
+#yVariableFactors = [nbar*vbar*Rbar*Bbar / 10.0**20, nbar*vbar*Rbar*Bbar*2.0*psiAHat*np.sqrt(psiN)/aHat / 10.0**20, 10.0**14*e*nbar*vbar*Bbar / 10.0**20]
+
+##TEST2##
+#yVariableNames = ["heatFlux_vm_psiHat", "heatFlux_vm_rHat", "FSABjHat"]
+#yVariableFactors = [10.0**17*Rbar*Bbar*nbar*mbar*vbar**3 / 10.0**20, 10.0**17*Rbar*Bbar*nbar*mbar*vbar**3*2.0*psiAHat*np.sqrt(psiN)/aHat / 10.0**20, 10.0**14*e*nbar*vbar*Bbar / 10.0**20]
+
+##############
 
 xAxisLabel = r'$\nu_{i}^{\prime}$'
-yAxisLabels = [r'$<\mathbf{\Gamma}_s \cdot \nabla \psi>$ $[10^{20} \mathrm{T} \mathrm{m}^{-1} \mathrm{s}^{-1}]$', r'$<\mathbf{Q}_s \cdot \nabla \psi>$', r'$<\mathbf{j} \cdot \mathbf{B}>$']
+yAxisLabels = [r'$<\mathbf{\Gamma}_s \cdot \nabla r>$ $[10^{20} \mathrm{m}^{-2} \mathrm{s}^{-1}]$', r'$<\mathbf{Q}_s \cdot \nabla r>$ $[\mathrm{kW} \mathrm{m}^{-2}]$', r'$<\mathbf{j} \cdot \mathbf{B}>$ $[\mathrm{T} \mathrm{MA}  \mathrm{m}^{-2}]$']
 
 logXaxis = True
-logYaxis = [True, True, False]
+logYaxis = [True, True, True]
 
-FigSize = (20,10)
+FigSize = (30,15)
 
 font = {'size':15}
 matplotlib.rc('font', **font)
@@ -66,16 +84,28 @@ matplotlib.rc('lines',markeredgewidth=0,markersize=3,linewidth=2.5)
 matplotlib.rc('axes',linewidth=1.5)
 #matplotlib.rc('text', usetex=True)
 
-PlotLinespecs = ['rD-', 'bo-', 'gx-', 'ys-', 'm--', 'cx--']
-PlotLineColors = ['r', 'b', 'g', 'y', 'm', 'c']
-PlotMarkerEdgeWidth = [0, 0, 3, 0, 0, 3]
-PlotLegendLabels = [r'H ions', r'electrons', r'', r'', r'',r'']
+PlotLinespecs = ['rD-', 'bo-', 'gx-', 'ys-', 'cx--', 'm+--']
+PlotLineColors = ['r', 'b', 'g', 'y', 'c', 'm']
+PlotMarkerEdgeWidth = [0, 0, 3, 0, 3, 3]
+PlotLegendLabels = [r'SFINCS Fokker-Planck, H ions', r'SFINCS Fokker-Planck, electrons', r'DKES pitch-angle scattering, H ions', r'DKES pitch-angle scattering, electrons', r'SFINCS Fokker-Planck',r'DKES pitch-angle scattering']
 
 PlotMarkerSize = 8
 
-InfoText = 'INFO: Collisionality has been varied by varying the densities' + r' ($n_i = n_e$)' + '.\nThe density gradients have been varied accordingly to keep the\ndensity gradient scale length fixed.\n\n\n' + r'$\nu_{i}^{\prime} = \frac{(G + \iota I) \nu_{ii}}{v_i B_0}$' + '\n' + r'$\nu_{ii} = \frac{4 \sqrt{2 \pi} n_i e^4 \ln \Lambda}{3 m_i^{1/2} T_i^{3/2}}$' + '\n' + 'See Moll' + u'é' + 'n et al. PoP ' + r'$\mathbf{22}$' + r' $112508$' + r' $(2015)$' + ' for definitions.' 
+#InfoText = 'INFO: Collisionality has been varied by varying the densities' + r' ($n_i = n_e$)' + '.\nThe density gradients have been varied accordingly to keep the\ndensity gradient scale length fixed.\n'+ r'$r/a = 0.50$, $E_r = -5.93 \mathrm{kV/m}.$' +'\n\n' + r'$\nu_{i}^{\prime} = \frac{(G + \iota I) \nu_{ii}}{v_i B_0}$' + '\n' + r'$\nu_{ii} = \frac{4 \sqrt{2 \pi} n_i e^4 \ln \Lambda}{3 m_i^{1/2} T_i^{3/2}}$' + '\n' + 'See Moll' + u'é' + 'n et al. PoP ' + r'$\mathbf{22}$' + r' $112508$' + r' $(2015)$' + ' for definitions.' 
+
+##Er=-5.93##
+#InfoText = 'INFO: Collisionality has been varied by varying the densities' + r' ($n_i = n_e$)' + '.\nThe density gradients have been varied accordingly to keep the\ndensity gradient scale length fixed.\n'+ 'Base case: '+ r'$r/a = 0.50$, $a = 0.51092 \mathrm{m}$, $E_r = -5.93 \mathrm{kV/m}$,' + '\n' + r'$n_e = n_i = 0.93 \cdot 10^{20} \mathrm{m}^{-3}$,' + r'$T_e = 4.13\mathrm{keV}$, $T_i = 3.77\mathrm{keV}$,' + '\n' + r'$\frac{dn}{d(r/a)} = -0.33$, $\frac{dT_e}{d(r/a)} = -4.31\mathrm{keV}$, $\frac{dT_i}{d(r/a)} = -2.12\mathrm{keV}$.' +'\n\n' + r'$\nu_{i}^{\prime} = \frac{(G + \iota I) \nu_{ii}}{v_i B_0}$' + '\n' + r'$\nu_{ii} = \frac{4 \sqrt{2 \pi} n_i e^4 \ln \Lambda}{3 m_i^{1/2} T_i^{3/2}}$' + '\n' + 'See Moll' + u'é' + 'n et al. PoP ' + r'$\mathbf{22}$' + r' $112508$' + r' $(2015)$' + ' for definitions.' 
+
+##Er=0##
+InfoText = 'INFO: Collisionality has been varied by varying the densities' + r' ($n_i = n_e$)' + '.\nThe density gradients have been varied accordingly to keep the\ndensity gradient scale length fixed.\n'+ 'Base case: '+ r'$r/a = 0.50$, $a = 0.51092 \mathrm{m}$, $E_r = 0.0 \mathrm{kV/m}$,' + '\n' + r'$n_e = n_i = 0.93 \cdot 10^{20} \mathrm{m}^{-3}$,' + r'$T_e = 4.13\mathrm{keV}$, $T_i = 3.77\mathrm{keV}$,' + '\n' + r'$\frac{dn}{d(r/a)} = -0.33$, $\frac{dT_e}{d(r/a)} = -4.31\mathrm{keV}$, $\frac{dT_i}{d(r/a)} = -2.12\mathrm{keV}$.' +'\n\n' + r'$\nu_{i}^{\prime} = \frac{(G + \iota I) \nu_{ii}}{v_i B_0}$' + '\n' + r'$\nu_{ii} = \frac{4 \sqrt{2 \pi} n_i e^4 \ln \Lambda}{3 m_i^{1/2} T_i^{3/2}}$' + '\n' + 'See Moll' + u'é' + 'n et al. PoP ' + r'$\mathbf{22}$' + r' $112508$' + r' $(2015)$' + ' for definitions.'
 InfoTextPosX = 0.54
-InfoTextPosY = 0.26
+InfoTextPosY = 0.40
+
+#inputfiles = ['DKES_baseline_ra0p5_Er-5.93kVm-1_Fluxes_vs_density.pydat']
+inputfiles = ['DKES_baseline_ra0p5_Er0.0kVm-1_Fluxes_vs_density.pydat']
+
+##To plot vertical line for baseline case
+baselineDensity = 0.92589314
 
 ##END INPUTS##
 
@@ -359,7 +389,7 @@ for scanVariableValue in scanVariableValues_sorted:
 outputs_array = numpy.array(outputs_sorted)
 
 
-##Convert from density to normalized collisionality
+##CONVERT FROM DENSITY TO NORMALIZED COLLISIONALITY
 #print (GHat + iota*IHat)*nu_n / (B0OverBBar*THats[xArrayPosition - 1]**2)
 #print GHat
 #print IHat
@@ -367,8 +397,10 @@ outputs_array = numpy.array(outputs_sorted)
 #print B0OverBBar
 #print nu_n
 #print THats[xArrayPosition - 1]
+DensityToNuFactor = np.absolute((GHat + iota*IHat)*nu_n / (B0OverBBar*THats[xArrayPosition - 1]**2))
 
-scanVariableValues_sorted = np.absolute((GHat + iota*IHat)*nu_n / (B0OverBBar*THats[xArrayPosition - 1]**2)) * numpy.array(scanVariableValues_sorted)
+#scanVariableValues_sorted = np.absolute((GHat + iota*IHat)*nu_n / (B0OverBBar*THats[xArrayPosition - 1]**2)) * numpy.array(scanVariableValues_sorted)
+scanVariableValues_sorted = DensityToNuFactor * numpy.array(scanVariableValues_sorted)
 
 print str(scanVariableValues_sorted)
 print outputs_array
@@ -392,6 +424,8 @@ numQuantities = len(yVariableNames)
 #if inputYscale.lower() == "log":
 #    logYaxis = True
 
+
+baselineNu = DensityToNuFactor * baselineDensity
 
 # ***************************************************
 # Now make the plot
@@ -492,7 +526,40 @@ for iQuantity in range(numQuantities):
       if numToPlot > 1:
          plt.plot(xdata[-1],ydataToPlot[:,iPlot].flatten().tolist(),PlotLinespecs[iPlot], color=PlotLineColors[iPlot], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[iPlot], markeredgecolor=None, label=PlotLegendLabels[iPlot])
       else :
-         plt.plot(xdata[-1],ydataToPlot[:,iPlot].flatten().tolist(),PlotLinespecs[5], color=PlotLineColors[5], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[5], markeredgecolor=None)
+         plt.plot(xdata[-1],ydataToPlot[:,iPlot].flatten().tolist(),PlotLinespecs[4], color=PlotLineColors[4], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[4], markeredgecolor=None, label=PlotLegendLabels[4])
+
+
+   ##DATA FROM OTHER CODES THAN SFINCS##
+   for infile in inputfiles:
+      try:
+         inputParams = np.genfromtxt(infile, comments="#")
+      except Exception as exc:
+         print (exc.__class__.__name__, ": ", exc.message, "while reading %s" % infile)
+         sys.exit(0)
+      else:
+         ##print inputParams
+         nu_norm = DensityToNuFactor/nbar * inputParams[:,0] #Normalized collisionality
+         Gamma_e = 10**(-20) * inputParams[:,2] #Electron flux in 10^20 m^-2 s^-1
+         Gamma_i = 10**(-20) * inputParams[:,3] #Ion flux in 10^20 m^-2 s^-1
+
+         Q_e = inputParams[:,4] #Electron heat flux in kW m^-2
+         Q_i = inputParams[:,5] #Ion heat flux in kW m^-2
+
+         je_bsOverB0 = inputParams[:,6] #<J_e . B>/B0 in MA/m^2
+         ji_bsOverB0 = inputParams[:,7] #<J_i . B>/B0 in MA/m^2 
+         j_bs = - (je_bsOverB0 + ji_bsOverB0)*B0OverBBar*Bbar
+
+         if iQuantity == 0:
+            plt.plot(nu_norm.tolist(), Gamma_i.tolist(),PlotLinespecs[2], color=PlotLineColors[2], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[2], markeredgecolor=None, label=PlotLegendLabels[2])
+            plt.plot(nu_norm.tolist(), Gamma_e.tolist(),PlotLinespecs[3], color=PlotLineColors[3], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[3], markeredgecolor=None, label=PlotLegendLabels[3])
+         elif iQuantity == 1:
+            plt.plot(nu_norm.tolist(), Q_i.tolist(),PlotLinespecs[2], color=PlotLineColors[2], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[2], markeredgecolor=None, label=PlotLegendLabels[2])
+            plt.plot(nu_norm.tolist(), Q_e.tolist(),PlotLinespecs[3], color=PlotLineColors[3], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[3], markeredgecolor=None, label=PlotLegendLabels[3])
+         elif iQuantity == 2:
+            plt.plot(nu_norm.tolist(), j_bs.tolist(),PlotLinespecs[5], color=PlotLineColors[5], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[5], markeredgecolor=None, label=PlotLegendLabels[5])
+
+   #####################################      
+
 
    plt.xscale(xscales[-1])
    plt.yscale(yscales[-1])
@@ -500,13 +567,18 @@ for iQuantity in range(numQuantities):
    plt.ylabel(ylabels[-1])
    plt.grid(which='both')
 
-   if iQuantity == 1:
-      plt.legend(bbox_to_anchor=(0.1, -0.50, 1., .102), loc=3, ncol=1, mode=None, borderaxespad=0., fontsize=24)
-
-
    ymin,ymax = plt.ylim()
    ymins.append(ymin)
    ymaxs.append(ymax)
+
+   ##Add vertical line for baseline
+   plt.vlines(baselineNu, ymin, ymax, colors='k', linestyles='dashed', label='Base case')
+
+   ## bbox_to_anchor dimensions: x_coord, y_coord, ?, ? 
+   if iQuantity == 1:
+      plt.legend(bbox_to_anchor=(0.01, 0.60, 1., .102), loc=3, ncol=1, mode=None, borderaxespad=0., fontsize=16)
+   elif iQuantity == 2:
+      plt.legend(bbox_to_anchor=(0.02, 0.88, 0.10, .10), loc=2, ncol=1, mode=None, borderaxespad=0., fontsize=16)
 
    multipleSigns = False
    if np.sign(ymin) != np.sign(ymax):
