@@ -1,4 +1,4 @@
-function [Ham,Booz,Cyl]=makeHamada(Geom,rind,Ntheta,Nzeta,varargin)
+function [Ham,Booz,Cyl,Pest]=makeHamada(Geom,rind,Ntheta,Nzeta,varargin)
 
 
 useFFT = 1; %to compare results of 0 and 1 here, one cannot use the ifftOpt='forceSize' option
@@ -440,6 +440,7 @@ if cylPossible
 end
 Booz.cylPossible=cylPossible;
 Ham.cylPossible=cylPossible;
+Pest.cylPossible=cylPossible;
 
 if cylPossible
   cylR00=(maxRinboard+minRoutboard)/2;
@@ -735,12 +736,10 @@ Booz.Dtheta=Dtheta;
 Booz.zeta=zeta;
 Booz.theta=theta;
 
-Booz.Dzetaphi=Dzetaphi;
-Booz.phi=zeta-Booz.Dzetaphi;
-Booz.vthet=theta-iota*Booz.Dzetaphi;
 Booz.cylR=R;
 Booz.cylZ=Z;
 Booz.cylphi=cylphi;
+Booz.R00=mean(mean(R));
 if cylPossible
   Booz.cylth=cylth;
   Booz.cylr=cylr;
@@ -794,6 +793,7 @@ if useFFT
   mnmats.gradpsidotgradB=fftmn(Booz.gradpsidotgradB);
   mnmats.dBpsidtheta=fftmn(Booz.dBpsidtheta);
   mnmats.dBpsidzeta=fftmn(Booz.dBpsidzeta);
+  mnmats.h=fftmn(Booz.h);
   Booz.mnmat=mnmats;
 end
 
@@ -801,149 +801,151 @@ end
 % Interpolate to a phi vthet grid 
 % Here, phi is the Hamada tor. coord. and vthet (\vartheta) is the Hamada poloidal coordinate.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%Choose the same resolution. Do not change this. It means 3D tensors can be used again 
-Nphi=Nzeta;
-Nvthet=Ntheta;
-Ham.Nperiods=Geom.Nperiods;
-Ham.Nphi=Nphi;
-Ham.Nvthet=Nvthet;
+if 1
+  [Booz,Ham] =interp2straightfieldlinecoords(Booz,Ham,Dzetaphi,'vthet','phi');
+  [Booz,Pest]=interp2straightfieldlinecoords(Booz,Pest,Dzetacylphi,'ptheta','pzeta');
+else %This whole chunk has been moved to the above function
+  Booz.Dzetaphi=Dzetaphi;
+  Booz.phi=zeta-Booz.Dzetaphi;
+  Booz.vthet=theta-iota*Booz.Dzetaphi;
 
-%Hamada discretisation
-Ham.Dphi=2*pi/Nphi/NPeriods;
-Ham.Dvthet=2*pi/Nvthet;
-phivec=(0:Nphi-1)*Ham.Dphi;
-vthetvec=(0:Nvthet-1)'*Ham.Dvthet;
-[vthet, phi] = ndgrid(vthetvec,phivec);
-Ham.phi=phi;
-Ham.vthet=vthet;
+  %Choose the same resolution. Do not change this. It means 3D tensors can be used again 
+  Nphi=Nzeta;
+  Nvthet=Ntheta;
+  Ham.Nperiods=Geom.Nperiods;
+  Ham.Nphi=Nphi;
+  Ham.Nvthet=Nvthet;
 
-vthet3D  = theta3D;    %Because Nphi=Nzeta;Nvthet=Ntheta;
-phi3D    = zeta3D;     %Because Nphi=Nzeta;Nvthet=Ntheta;
-vthet3D0c= theta3D0c;   %Because Nphi=Nzeta;Nvthet=Ntheta;
-phi3D0c  = zeta3D0c;    %Because Nphi=Nzeta;Nvthet=Ntheta;
+  %Hamada discretisation
+  Ham.Dphi=2*pi/Nphi/NPeriods;
+  Ham.Dvthet=2*pi/Nvthet;
+  phivec=(0:Nphi-1)*Ham.Dphi;
+  vthetvec=(0:Nvthet-1)'*Ham.Dvthet;
+  [vthet, phi] = ndgrid(vthetvec,phivec);
+  Ham.phi=phi;
+  Ham.vthet=vthet;
 
-if 1 %new method
-  Nleftadd=ceil(max(Booz.phi(:,1))/(2*pi/NPeriods));
-  Nrightadd=ceil(1-min(Booz.phi(:,end))/(2*pi/NPeriods));
-  BoozphiBig      =NaN*zeros(Ntheta*3,Nphi*(Nleftadd+1+Nrightadd));
-  BoozvthetBig    =NaN*zeros(Ntheta*3,Nphi*(Nleftadd+1+Nrightadd));
-  Booz.DzetaphiBig=NaN*zeros(Ntheta*3,Nphi*(Nleftadd+1+Nrightadd));
+  if 1 %new method
+    Nleftadd=ceil(max(Booz.phi(:,1))/(2*pi/NPeriods));
+    Nrightadd=ceil(1-min(Booz.phi(:,end))/(2*pi/NPeriods));
+    BoozphiBig      =NaN*zeros(Ntheta*3,Nphi*(Nleftadd+1+Nrightadd));
+    BoozvthetBig    =NaN*zeros(Ntheta*3,Nphi*(Nleftadd+1+Nrightadd));
+    BoozDzetaphiBig=NaN*zeros(Ntheta*3,Nphi*(Nleftadd+1+Nrightadd));
 
-  for addi=1:Nleftadd+1+Nrightadd
-    addci=addi-(Nleftadd+1);
-    toaddphi=2*pi/NPeriods*addci;
-    BoozphiBig(1:Ntheta*3,(addi-1)*Nphi+1:addi*Nphi)=...
-        [Booz.phi+toaddphi;
-         Booz.phi+toaddphi;
-         Booz.phi+toaddphi];
-    BoozvthetBig(1:Ntheta*3,(addi-1)*Nphi+1:addi*Nphi)=...
-        [Booz.vthet-2*pi;
-         Booz.vthet;
-         Booz.vthet+2*pi];
-    Booz.DzetaphiBig(1:Ntheta*3,(addi-1)*Nphi+1:addi*Nphi)=...
-        [Booz.Dzetaphi;
-         Booz.Dzetaphi;
-         Booz.Dzetaphi];
+    for addi=1:Nleftadd+1+Nrightadd
+      addci=addi-(Nleftadd+1);
+      toaddphi=2*pi/NPeriods*addci;
+      BoozphiBig(1:Ntheta*3,(addi-1)*Nphi+1:addi*Nphi)=...
+          [Booz.phi+toaddphi;
+           Booz.phi+toaddphi;
+           Booz.phi+toaddphi];
+      BoozvthetBig(1:Ntheta*3,(addi-1)*Nphi+1:addi*Nphi)=...
+          [Booz.vthet-2*pi;
+           Booz.vthet;
+           Booz.vthet+2*pi];
+      BoozDzetaphiBig(1:Ntheta*3,(addi-1)*Nphi+1:addi*Nphi)=...
+          [Booz.Dzetaphi;
+           Booz.Dzetaphi;
+           Booz.Dzetaphi];
+    end
+  else %old method
+    BoozphiBig=[Booz.phi-2*pi/NPeriods, Booz.phi, Booz.phi+2*pi/NPeriods;
+                Booz.phi-2*pi/NPeriods, Booz.phi, Booz.phi+2*pi/NPeriods;
+                Booz.phi-2*pi/NPeriods, Booz.phi, Booz.phi+2*pi/NPeriods];
+    
+    BoozvthetBig=[Booz.vthet-2*pi,Booz.vthet-2*pi,Booz.vthet-2*pi;
+                  Booz.vthet,     Booz.vthet,     Booz.vthet;
+                  Booz.vthet+2*pi,Booz.vthet+2*pi,Booz.vthet+2*pi];
+
+    BoozDzetaphiBig=[Booz.Dzetaphi,Booz.Dzetaphi,Booz.Dzetaphi;
+                     Booz.Dzetaphi,Booz.Dzetaphi,Booz.Dzetaphi;
+                     Booz.Dzetaphi,Booz.Dzetaphi,Booz.Dzetaphi];
   end
-else %old method
-  BoozphiBig=[Booz.phi-2*pi/NPeriods, Booz.phi, Booz.phi+2*pi/NPeriods;
-              Booz.phi-2*pi/NPeriods, Booz.phi, Booz.phi+2*pi/NPeriods;
-              Booz.phi-2*pi/NPeriods, Booz.phi, Booz.phi+2*pi/NPeriods];
-  
-  BoozvthetBig=[Booz.vthet-2*pi,Booz.vthet-2*pi,Booz.vthet-2*pi;
-                Booz.vthet,     Booz.vthet,     Booz.vthet;
-                Booz.vthet+2*pi,Booz.vthet+2*pi,Booz.vthet+2*pi];
 
-  Booz.DzetaphiBig=[Booz.Dzetaphi,Booz.Dzetaphi,Booz.Dzetaphi;
-                    Booz.Dzetaphi,Booz.Dzetaphi,Booz.Dzetaphi;
-                    Booz.Dzetaphi,Booz.Dzetaphi,Booz.Dzetaphi];
-end
+  %The following is the most time consuming step
+  %tic
+  HamDzetaphi=griddata(BoozphiBig,BoozvthetBig,BoozDzetaphiBig,phi,vthet);
+  %toc 
 
-%The following is the most time consuming step
-%tic
-HamDzetaphi=griddata(BoozphiBig,BoozvthetBig,Booz.DzetaphiBig,phi,vthet);
-%toc 
+  Ham.zeta =Ham.phi+HamDzetaphi;
+  Ham.theta=Ham.vthet+iota*HamDzetaphi;
 
-Ham.zeta =Ham.phi+HamDzetaphi;
-Ham.theta=Ham.vthet+iota*HamDzetaphi;
+  zetaDirection=sign(Booz.zeta(1,end)-Booz.zeta(1,1));
+  thetaDirection=sign(Booz.theta(end,1)-Booz.theta(1,1));
 
-zetaDirection=sign(Booz.zeta(1,end)-Booz.zeta(1,1));
-thetaDirection=sign(Booz.theta(end,1)-Booz.theta(1,1));
+  Boozzetabig=[Booz.zeta,Booz.zeta(:,1)+zetaDirection*2*pi/NPeriods];
+  Boozzetabig=[Boozzetabig;Boozzetabig(1,:)];
+  Boozthetabig=[Booz.theta;Booz.theta(1,:)+thetaDirection*2*pi];
+  Boozthetabig=[Boozthetabig,Boozthetabig(:,1)];
+  BoozBbig=[Booz.B,Booz.B(:,1)];
+  BoozBbig=[BoozBbig;BoozBbig(1,:)];
 
-Boozzetabig=[Booz.zeta,Booz.zeta(:,1)+zetaDirection*2*pi/NPeriods];
-Boozzetabig=[Boozzetabig;Boozzetabig(1,:)];
-Boozthetabig=[Booz.theta;Booz.theta(1,:)+thetaDirection*2*pi];
-Boozthetabig=[Boozthetabig,Boozthetabig(:,1)];
-BoozBbig=[Booz.B,Booz.B(:,1)];
-BoozBbig=[BoozBbig;BoozBbig(1,:)];
+  %We have two options on how to interpolate. 
+  %We use interp2, because it is much faster than griddata
 
-%We have two options on how to interpolate. 
-%We use interp2, because it is much faster than griddata
+  % major radius R
+  BoozRbig=[Booz.cylR,Booz.cylR(:,1)];
+  BoozRbig=[BoozRbig;BoozRbig(1,:)];
+  Ham.cylR=interp2(Boozzetabig,Boozthetabig,BoozRbig,...
+                   mod(Ham.zeta,2*pi/NPeriods),mod(Ham.theta,2*pi)); 
+  % vertical coordinate Z
+  BoozZbig=[Booz.cylZ,Booz.cylZ(:,1)];
+  BoozZbig=[BoozZbig;BoozZbig(1,:)];
+  Ham.cylZ=interp2(Boozzetabig,Boozthetabig,BoozZbig,...
+                   mod(Ham.zeta,2*pi/NPeriods),mod(Ham.theta,2*pi)); 
+  % Geometrical toroidal angle (cylphi)
+  Boozcylphibig=[Booz.cylphi,Booz.cylphi(:,1)+zetaDirection*2*pi/NPeriods];
+  Boozcylphibig=[Boozcylphibig;Boozcylphibig(1,:)];
+  Ham.cylphi=interp2(Boozzetabig,Boozthetabig,Boozcylphibig,...
+                     mod(Ham.zeta,2*pi/NPeriods),mod(Ham.theta,2*pi))+...
+      Ham.zeta-mod(Ham.zeta,2*pi/NPeriods); 
+  Ham.R00=mean(mean(Ham.cylR));
+  if cylPossible
+    % Geometrical poloidal angle (cylth)
+    Boozcylthbig=[Booz.cylth;Booz.cylth(1,:)+thetaDirection*2*pi];
+    Boozcylthbig=[Boozcylthbig,Boozcylthbig(:,1)];
+    Ham.cylth=interp2(Boozzetabig,Boozthetabig,Boozcylthbig,...
+                      mod(Ham.zeta,2*pi/NPeriods),mod(Ham.theta,2*pi))+...
+              Ham.theta-mod(Ham.theta,2*pi); 
 
-% major radius R
-BoozRbig=[Booz.cylR,Booz.cylR(:,1)];
-BoozRbig=[BoozRbig;BoozRbig(1,:)];
-Ham.cylR=interp2(Boozzetabig,Boozthetabig,BoozRbig,...
-              mod(Ham.zeta,2*pi/NPeriods),mod(Ham.theta,2*pi)); 
-% vertical coordinate Z
-BoozZbig=[Booz.cylZ,Booz.cylZ(:,1)];
-BoozZbig=[BoozZbig;BoozZbig(1,:)];
-Ham.cylZ=interp2(Boozzetabig,Boozthetabig,BoozZbig,...
-              mod(Ham.zeta,2*pi/NPeriods),mod(Ham.theta,2*pi)); 
-% Geometrical toroidal angle (cylphi)
-Boozcylphibig=[Booz.cylphi,Booz.cylphi(:,1)+zetaDirection*2*pi/NPeriods];
-Boozcylphibig=[Boozcylphibig;Boozcylphibig(1,:)];
-Ham.cylphi=interp2(Boozzetabig,Boozthetabig,Boozcylphibig,...
-              mod(Ham.zeta,2*pi/NPeriods),mod(Ham.theta,2*pi))+...
-              Ham.zeta-mod(Ham.zeta,2*pi/NPeriods); 
-if cylPossible
-  % Geometrical poloidal angle (cylth)
-  Boozcylthbig=[Booz.cylth;Booz.cylth(1,:)+thetaDirection*2*pi];
-  Boozcylthbig=[Boozcylthbig,Boozcylthbig(:,1)];
-  Ham.cylth=interp2(Boozzetabig,Boozthetabig,Boozcylthbig,...
-                    mod(Ham.zeta,2*pi/NPeriods),mod(Ham.theta,2*pi))+...
-            Ham.theta-mod(Ham.theta,2*pi); 
+    Ham.cylr=sqrt(Ham.cylZ.^2+(Ham.cylR-cylR00).^2);
 
-  Ham.cylr=sqrt(Ham.cylZ.^2+(Ham.cylR-cylR00).^2);
+    Ham.cylR00=cylR00;
+  end
+  Ham.X=Ham.cylR.*cos(-Ham.cylphi);
+  Ham.Y=Ham.cylR.*sin(-Ham.cylphi);
 
-  Ham.cylR00=cylR00;
-end
-Ham.X=Ham.cylR.*cos(-Ham.cylphi);
-Ham.Y=Ham.cylR.*sin(-Ham.cylphi);
+  %Option 1:
+  %Ham.B=griddata(BoozphiBig,BoozvthetBig,BoozBBig,phi,vthet); %time=1 second
+  %Option 2:
+  Ham.B=interp2(Boozzetabig,Boozthetabig,BoozBbig,...
+                mod(Ham.zeta,2*pi/NPeriods),mod(Ham.theta,2*pi)); %time=3 milliseconds
 
-Ham.iota=Booz.iota;
-Ham.G=Booz.G;
-Ham.I=Booz.I;
-
-%Option 1:
-%Ham.B=griddata(BoozphiBig,BoozvthetBig,BoozBBig,phi,vthet); %time=1 second
-%Option 2:
-Ham.B=interp2(Boozzetabig,Boozthetabig,BoozBbig,...
-              mod(Ham.zeta,2*pi/NPeriods),mod(Ham.theta,2*pi)); %time=3 milliseconds
-
-% Interpolate the rest of the interesting stored data:
-% The parallel curent u:
-Boozubig=[Booz.u,Booz.u(:,1)];
-Boozubig=[Boozubig;Boozubig(1,:)];
-Ham.u=interp2(Boozzetabig,Boozthetabig,Boozubig,...
-              mod(Ham.zeta,2*pi/NPeriods),mod(Ham.theta,2*pi)); 
-
-% The quantity h=1/B^2:
-if 0 %interpolate
-  Boozhbig=[Booz.h,Booz.h(:,1)];
-  Boozhbig=[Boozhbig;Boozhbig(1,:)];
-  Ham.h=interp2(Boozzetabig,Boozthetabig,Boozhbig,...
+  % Interpolate the rest of the interesting stored data:
+  % The parallel curent u:
+  Boozubig=[Booz.u,Booz.u(:,1)];
+  Boozubig=[Boozubig;Boozubig(1,:)];
+  Ham.u=interp2(Boozzetabig,Boozthetabig,Boozubig,...
                 mod(Ham.zeta,2*pi/NPeriods),mod(Ham.theta,2*pi)); 
-else
-  Ham.h=1./Ham.B.^2;
-end
 
-%Ham.FSAB2=(Nvthet*Nphi)/sum(sum(Ham.h)); %Wrong, only holds for Boozer
-Ham.FSAB2=Booz.FSAB2;
+  % The quantity h=1/B^2:
+  if 0 %interpolate
+    Boozhbig=[Booz.h,Booz.h(:,1)];
+    Boozhbig=[Boozhbig;Boozhbig(1,:)];
+    Ham.h=interp2(Boozzetabig,Boozthetabig,Boozhbig,...
+                  mod(Ham.zeta,2*pi/NPeriods),mod(Ham.theta,2*pi)); 
+  else
+    Ham.h=1./Ham.B.^2;
+  end
+  Ham.iota=Booz.iota;
+  Ham.G=Booz.G;
+  Ham.I=Booz.I;
+  Ham.FSAB2=Booz.FSAB2;
+  Ham.FSAg_phiphi=Booz.FSAg_phiphi;
+  Ham.FSAgpsipsi =Booz.FSAgpsipsi;
+  Ham.FSAu2B2=Booz.FSAu2B2;
+end
 Ham.Jacob=(G+iota*I)/Ham.FSAB2;
-Ham.FSAg_phiphi=Booz.FSAg_phiphi;
-Ham.FSAgpsipsi =Booz.FSAgpsipsi;
-Ham.FSAu2B2=Booz.FSAu2B2;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % If possible, create a cylindrical discretization cylth,cylphi
@@ -991,21 +993,33 @@ else
   %Cyl.zeta =griddata(BoozcylphiBig,BoozcylthBig,BoozzetaBig,Cyl.cylphi,Cyl.cylth);
   %Cyl.theta=griddata(BoozcylphiBig,BoozcylthBig,BoozthetaBig,Cyl.cylphi,Cyl.cylth);
 
-  % Hamada toroidal angle
+  zetaDirection=sign(Booz.zeta(1,end)-Booz.zeta(1,1));
+  thetaDirection=sign(Booz.theta(end,1)-Booz.theta(1,1));
+  % Cyl toroidal angle
+  Boozzetabig=[Booz.zeta,Booz.zeta(:,1)+zetaDirection*2*pi/NPeriods];
+  Boozzetabig=[Boozzetabig;Boozzetabig(1,:)];
+  Boozthetabig=[Booz.theta;Booz.theta(1,:)+thetaDirection*2*pi];
+  Boozthetabig=[Boozthetabig,Boozthetabig(:,1)];
   Boozphibig=[Booz.phi,Booz.phi(:,1)+zetaDirection*2*pi/NPeriods];
   Boozphibig=[Boozphibig;Boozphibig(1,:)];
   Cyl.phi=interp2(Boozzetabig,Boozthetabig,Boozphibig,...
                   mod(Cyl.zeta,2*pi/NPeriods),mod(Cyl.theta,2*pi))+...
           Cyl.zeta-mod(Cyl.zeta,2*pi/NPeriods); 
-  % Hamada poloidal angle
+  % Cyl poloidal angle
   Boozvthetbig=[Booz.vthet;Booz.vthet(1,:)+thetaDirection*2*pi];
   Boozvthetbig=[Boozvthetbig,Boozvthetbig(:,1)];
   Cyl.vthet=interp2(Boozzetabig,Boozthetabig,Boozvthetbig,...
                     mod(Cyl.zeta,2*pi/NPeriods),mod(Cyl.theta,2*pi))+...
             Cyl.theta-mod(Cyl.theta,2*pi); 
 
+  % major radius R
+  BoozRbig=[Booz.cylR,Booz.cylR(:,1)];
+  BoozRbig=[BoozRbig;BoozRbig(1,:)];
   Cyl.cylR=interp2(Boozzetabig,Boozthetabig,BoozRbig,...
                    mod(Cyl.zeta,2*pi/NPeriods),mod(Cyl.theta,2*pi)); 
+  % vertical coordinate Z
+  BoozZbig=[Booz.cylZ,Booz.cylZ(:,1)];
+  BoozZbig=[BoozZbig;BoozZbig(1,:)];
   Cyl.cylZ=interp2(Boozzetabig,Boozthetabig,BoozZbig,...
                    mod(Cyl.zeta,2*pi/NPeriods),mod(Cyl.theta,2*pi)); 
   Cyl.cylr=sqrt(Cyl.cylZ.^2+(Cyl.cylR-cylR00).^2);
@@ -1013,6 +1027,9 @@ else
   
   Cyl.X=Cyl.cylR.*cos(-Cyl.cylphi);
   Cyl.Y=Cyl.cylR.*sin(-Cyl.cylphi);
+  
+  BoozBbig=[Booz.B,Booz.B(:,1)];
+  BoozBbig=[BoozBbig;BoozBbig(1,:)];
   Cyl.B=interp2(Boozzetabig,Boozthetabig,BoozBbig,...
                 mod(Cyl.zeta,2*pi/NPeriods),mod(Cyl.theta,2*pi)); 
   Cyl.B00=sum(sum(Cyl.B))/(Cyl.Ncylth*Cyl.Ncylphi);
@@ -1051,12 +1068,13 @@ else
     end
   end
 end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 % calculate Bmn in Hamada coordinates
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Ham.B00=sum(sum(Ham.B))/(Nvthet*Nphi);
+Ham.B00=sum(sum(Ham.B))/(Ham.Nvthet*Ham.Nphi);
 
 precision=eps*1e3;
 believedAccuracyLoss=1;
@@ -1065,6 +1083,8 @@ min_Bmn=max(Geom.Bfilter.min_Bmn*Booz.B00/Ham.B00*believedAccuracyLoss,precision
 if useFFT
   %tic
   HamBmn=mnlist(fftmn(Ham.B),min_Bmn,'relative');
+  HamRmn=mnlist(fftmn(Ham.cylR),min_Bmn,'relative');
+  HamZmn=mnlist(fftmn(Ham.cylZ),min_Bmn,'relative');
   Ham.m=HamBmn.m;
   Ham.n=HamBmn.n;
   if Geom.StelSym
@@ -1076,8 +1096,16 @@ if useFFT
     Ham.parity=HamBmn.cosparity;
   end  
   Ham.Bmn=HamBmn.data;
+  Ham.Rmn=HamRmn.data;
+  Ham.Zmn=HamZmn.data;
+  
   %toc
 else
+  vthet3D  = theta3D;    %Because Nphi=Nzeta;Nvthet=Ntheta;
+  phi3D    = zeta3D;     %Because Nphi=Nzeta;Nvthet=Ntheta;
+  vthet3D0c= theta3D0c;   %Because Nphi=Nzeta;Nvthet=Ntheta;
+  phi3D0c  = zeta3D0c;    %Because Nphi=Nzeta;Nvthet=Ntheta;
+
   maxvthet=floor(Nvthet/2)-1; %Nyquist max freq.
   maxphi=floor(Nphi/2)-1;
   Ham.m=0;
@@ -1171,7 +1199,36 @@ else
   %toc
 end
 Ham.StelSym=Geom.StelSym;
-  
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% calculate Bmn in Pest coordinates
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Pest.StelSym=Geom.StelSym;
+Pest.B00=sum(sum(Pest.B))/(Pest.Nptheta*Pest.Npzeta);
+
+precision=eps*1e3;
+believedAccuracyLoss=1;
+min_Bmn=max(Geom.Bfilter.min_Bmn*Booz.B00/Pest.B00*believedAccuracyLoss,precision);
+
+PestBmn=mnlist(fftmn(Pest.B),min_Bmn,'relative');
+%PestRmn=mnlist(fftmn(Pest.cylR),min_Bmn,'relative');
+%PestZmn=mnlist(fftmn(Pest.cylZ),min_Bmn,'relative');
+Pest.m=PestBmn.m;
+Pest.n=PestBmn.n;
+if Geom.StelSym
+  if any(PestBmn.cosparity~=1)
+    error(['Something has gone wrong. The calculated Pest Bmn is not stellarator ', ...
+           'symmetric!'])
+  end
+else
+  Pest.parity=PestBmn.cosparity;
+end  
+Pest.Bmn=PestBmn.data;
+Pest.StelSym=Geom.StelSym;
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 % Test if the Fourier decomposition was done correctly
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

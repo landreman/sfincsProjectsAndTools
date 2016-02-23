@@ -8,8 +8,17 @@ elseif nargin==2
   threshold=varargin{1};
   thresholdType='relative';
 elseif nargin==3
-  threshold=varargin{1};
-  thresholdType=varargin{2};
+  if ischar(varargin{1})
+    if not(strcmp(varargin{1},'same mn as'))
+      error('Non recognised input')
+    end
+    thresholdType='same mn as';
+    threshold=0;
+    mnBase=varargin{2};
+  else
+    threshold=varargin{1};
+    thresholdType=varargin{2};
+  end
 end
 
 for inputind=1:length(Fmns)
@@ -78,21 +87,49 @@ for inputind=1:length(Fmns)
       end
     end
   end
-
-  if strcmp(thresholdType,'relative')
-    threshold=threshold*Fmn.c(Fmn.m0ind,Fmn.n0ind);
-  elseif not(strcmp(thresholdType,'absolute'))
-    error('thresholdType not recognized!')
+  
+  if strcmp(thresholdType,'same mn as')
+    for mni=1:length(mnBase.m)
+      thism=mnBase.m(mni);
+      thisn=mnBase.n(mni);
+      ind=find(Fmn.m==thism & Fmn.n==thisn);
+      if isempty(ind)
+        Fmnlist.data((mni-1)*2+1)=0;
+        Fmnlist.m((mni-1)*2+1)=thism;
+        Fmnlist.n((mni-1)*2+1)=thisn;
+        Fmnlist.cosparity((mni-1)*2+1)=1;
+        Fmnlist.data((mni-1)*2+2)=0;
+        Fmnlist.m((mni-1)*2+2)=thism;
+        Fmnlist.n((mni-1)*2+2)=thisn;
+        Fmnlist.cosparity((mni-1)*2+2)=0;
+      else
+        Fmnlist.data((mni-1)*2+1)=Fmn.c(mni)
+        Fmnlist.m((mni-1)*2+1)=thism;
+        Fmnlist.n((mni-1)*2+1)=thisn;
+        Fmnlist.cosparity((mni-1)*2+1)=1;
+        Fmnlist.data((mni-1)*2+1)=Fmn.s(mni)
+        Fmnlist.m((mni-1)*2+1)=thism;
+        Fmnlist.n((mni-1)*2+1)=thisn;
+        Fmnlist.cosparity((mni-1)*2+1)=0;        
+      end
+    end
+  else
+    if strcmp(thresholdType,'relative')
+      threshold=threshold*Fmn.c(Fmn.m0ind,Fmn.n0ind);
+    elseif not(strcmp(thresholdType,'absolute'))
+      error('thresholdType not recognized!')
+    end
+  
+    
+    cinds=find(abs(Fmn.c)>threshold)';
+    sinds=find(abs(Fmn.s)>threshold)';
+    
+    Fmnlist.data=[Fmn.c(cinds),Fmn.s(sinds)];
+    Fmnlist.m=[Fmn.m(cinds),Fmn.m(sinds)];
+    Fmnlist.n=[Fmn.n(cinds),Fmn.n(sinds)];
+    Fmnlist.cosparity=[ones(1,length(cinds)),zeros(1,length(sinds))];
+    
   end
-
-  cinds=find(abs(Fmn.c)>threshold)';
-  sinds=find(abs(Fmn.s)>threshold)';
-
-  Fmnlist.data=[Fmn.c(cinds),Fmn.s(sinds)];
-  Fmnlist.m=[Fmn.m(cinds),Fmn.m(sinds)];
-  Fmnlist.n=[Fmn.n(cinds),Fmn.n(sinds)];
-  Fmnlist.cosparity=[ones(1,length(cinds)),zeros(1,length(sinds))];
-
   %Store the output
   Fmnlists(inputind)=Fmnlist;
 end

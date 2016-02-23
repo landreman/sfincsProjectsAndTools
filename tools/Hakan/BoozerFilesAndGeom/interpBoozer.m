@@ -5,6 +5,9 @@ function out=interpBoozer(Geom,invarname,invar,interptype)
 % given by the string invarname ('s', 'r', 'rnorm') are interpolated.
 % The interptype can be 'linear' or 'nearest', default is 'linear'.
 
+% invarname can also be 'index', in which case no interpolation takes place,
+% the output is just Geom at the indices given in invar.
+
 if nargin<4
   interptype='linear';
 end
@@ -17,10 +20,13 @@ elseif strcmp(invarname,'rnorm')
     error('Chosen rnorm out of range!')
   end
 elseif strcmp(invarname,'r')
-  s=interp1(Geom.rnorm*Geom.minorradius,Geom.s,invar,'pchip');
+  s=interp1(Geom.rnorm*Geom.minorradiusW7AS,Geom.s,invar,'pchip');
   if any(isnan(s))
     error('Chosen r out of range!')
   end  
+elseif strcmp(invarname,'index')
+  s=Geom.s(invar);
+  interptype='nearest';
 else
   error('not implemented')
 end
@@ -28,6 +34,9 @@ end
 %if Geom.StelSym==0
 %  error('not implemented')
 %end
+if size(s,1)>size(s,2)
+  s=s';
+end
 
 out.StelSym=Geom.StelSym;
 out.headertext=Geom.headertext;
@@ -35,9 +44,19 @@ out.m0b=Geom.m0b;
 out.n0b=Geom.n0b;
 out.nsurf=length(s);
 out.Nperiods=Geom.Nperiods;
+out.psi_a=Geom.psi_a;
 out.torfluxtot=Geom.torfluxtot;
-out.minorradius=Geom.minorradius;
-out.majorradius=Geom.majorradius;
+out.minorradiusW7AS=Geom.minorradiusW7AS;
+out.majorradiusLastbcR00=Geom.majorradiusLastbcR00;
+if isfield(Geom,'minorradiusVMEC')
+  out.minorradiusVMEC=Geom.minorradiusVMEC;
+end
+if isfield(Geom,'majorradiusVMEC')
+  out.majorradiusVMEC=Geom.majorradiusVMEC;
+end
+if isfield(Geom,'VolumeVMEC')
+  out.VolumeVMEC=Geom.VolumeVMEC;
+end
 out.Bfilter=Geom.Bfilter;
 
 
@@ -250,8 +269,15 @@ if strcmp(interptype,'linear') %This is the default case
 elseif strcmp(interptype,'nearest')
   out.headertext.maincomment=sprintf([out.headertext.maincomment,'\n',...
             'CC This file has only a subset of the flux surfaces of the original file.']);
-
-  inds=interp1(Geom.s,1:length(Geom.s),s,'nearest');
+  
+  if strcmp(invarname,'index')
+    inds=invar;
+    if size(inds,1)>size(inds,2)
+      inds=inds';
+    end
+  else
+    inds=interp1(Geom.s,1:length(Geom.s),s,'nearest');
+  end
   
   out.rnorm=Geom.rnorm(inds);
   out.iota=Geom.iota(inds);
