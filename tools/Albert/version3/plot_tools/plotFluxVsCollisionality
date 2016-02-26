@@ -87,22 +87,24 @@ matplotlib.rc('axes',linewidth=1.5)
 PlotLinespecs = ['rD-', 'bo-', 'gx-', 'ys-', 'cx--', 'm+--']
 PlotLineColors = ['r', 'b', 'g', 'y', 'c', 'm']
 PlotMarkerEdgeWidth = [0, 0, 3, 0, 3, 3]
-PlotLegendLabels = [r'SFINCS Fokker-Planck, H ions', r'SFINCS Fokker-Planck, electrons', r'DKES pitch-angle scattering, H ions', r'DKES pitch-angle scattering, electrons', r'SFINCS Fokker-Planck',r'DKES pitch-angle scattering']
+PlotLegendLabels = [r'SFINCS Fokker-Planck, H ions', r'SFINCS Fokker-Planck, electrons', r'DKES pitch-angle scattering + mom corr., H ions', r'DKES pitch-angle scattering + mom corr., electrons', r'SFINCS Fokker-Planck',r'DKES pitch-angle scattering + mom corr.']
+
+LegendFontSize = 14
 
 PlotMarkerSize = 8
 
 #InfoText = 'INFO: Collisionality has been varied by varying the densities' + r' ($n_i = n_e$)' + '.\nThe density gradients have been varied accordingly to keep the\ndensity gradient scale length fixed.\n'+ r'$r/a = 0.50$, $E_r = -5.93 \mathrm{kV/m}.$' +'\n\n' + r'$\nu_{i}^{\prime} = \frac{(G + \iota I) \nu_{ii}}{v_i B_0}$' + '\n' + r'$\nu_{ii} = \frac{4 \sqrt{2 \pi} n_i e^4 \ln \Lambda}{3 m_i^{1/2} T_i^{3/2}}$' + '\n' + 'See Moll' + u'é' + 'n et al. PoP ' + r'$\mathbf{22}$' + r' $112508$' + r' $(2015)$' + ' for definitions.' 
 
 ##Er=-5.93##
-#InfoText = 'INFO: Collisionality has been varied by varying the densities' + r' ($n_i = n_e$)' + '.\nThe density gradients have been varied accordingly to keep the\ndensity gradient scale length fixed.\n'+ 'Base case: '+ r'$r/a = 0.50$, $a = 0.51092 \mathrm{m}$, $E_r = -5.93 \mathrm{kV/m}$,' + '\n' + r'$n_e = n_i = 0.93 \cdot 10^{20} \mathrm{m}^{-3}$,' + r'$T_e = 4.13\mathrm{keV}$, $T_i = 3.77\mathrm{keV}$,' + '\n' + r'$\frac{dn}{d(r/a)} = -0.33$, $\frac{dT_e}{d(r/a)} = -4.31\mathrm{keV}$, $\frac{dT_i}{d(r/a)} = -2.12\mathrm{keV}$.' +'\n\n' + r'$\nu_{i}^{\prime} = \frac{(G + \iota I) \nu_{ii}}{v_i B_0}$' + '\n' + r'$\nu_{ii} = \frac{4 \sqrt{2 \pi} n_i e^4 \ln \Lambda}{3 m_i^{1/2} T_i^{3/2}}$' + '\n' + 'See Moll' + u'é' + 'n et al. PoP ' + r'$\mathbf{22}$' + r' $112508$' + r' $(2015)$' + ' for definitions.' 
+InfoText = 'INFO: Collisionality has been varied by varying the densities' + r' ($n_i = n_e$)' + '.\nThe density gradients have been varied accordingly to keep the\ndensity gradient scale length fixed.\n'+ 'Base case: '+ r'$r/a = 0.50$, $a = 0.51092 \mathrm{m}$, $E_r = -5.93 \mathrm{kV/m}$,' + '\n' + r'$n_e = n_i = 0.93 \cdot 10^{20} \mathrm{m}^{-3}$,' + r'$T_e = 4.13\mathrm{keV}$, $T_i = 3.77\mathrm{keV}$,' + '\n' + r'$\frac{dn}{d(r/a)} = -0.33$, $\frac{dT_e}{d(r/a)} = -4.31\mathrm{keV}$, $\frac{dT_i}{d(r/a)} = -2.12\mathrm{keV}$.' +'\n\n' + r'$\nu_{i}^{\prime} = \frac{(G + \iota I) \nu_{ii}}{v_i B_0}$' + '\n' + r'$\nu_{ii} = \frac{4 \sqrt{2 \pi} n_i e^4 \ln \Lambda}{3 m_i^{1/2} T_i^{3/2}}$' + '\n' + 'See Moll' + u'é' + 'n et al. PoP ' + r'$\mathbf{22}$' + r' $112508$' + r' $(2015)$' + ' for definitions.' 
 
 ##Er=0##
-InfoText = 'INFO: Collisionality has been varied by varying the densities' + r' ($n_i = n_e$)' + '.\nThe density gradients have been varied accordingly to keep the\ndensity gradient scale length fixed.\n'+ 'Base case: '+ r'$r/a = 0.50$, $a = 0.51092 \mathrm{m}$, $E_r = 0.0 \mathrm{kV/m}$,' + '\n' + r'$n_e = n_i = 0.93 \cdot 10^{20} \mathrm{m}^{-3}$,' + r'$T_e = 4.13\mathrm{keV}$, $T_i = 3.77\mathrm{keV}$,' + '\n' + r'$\frac{dn}{d(r/a)} = -0.33$, $\frac{dT_e}{d(r/a)} = -4.31\mathrm{keV}$, $\frac{dT_i}{d(r/a)} = -2.12\mathrm{keV}$.' +'\n\n' + r'$\nu_{i}^{\prime} = \frac{(G + \iota I) \nu_{ii}}{v_i B_0}$' + '\n' + r'$\nu_{ii} = \frac{4 \sqrt{2 \pi} n_i e^4 \ln \Lambda}{3 m_i^{1/2} T_i^{3/2}}$' + '\n' + 'See Moll' + u'é' + 'n et al. PoP ' + r'$\mathbf{22}$' + r' $112508$' + r' $(2015)$' + ' for definitions.'
+#InfoText = 'INFO: Collisionality has been varied by varying the densities' + r' ($n_i = n_e$)' + '.\nThe density gradients have been varied accordingly to keep the\ndensity gradient scale length fixed.\n'+ 'Base case: '+ r'$r/a = 0.50$, $a = 0.51092 \mathrm{m}$, $E_r = 0.0 \mathrm{kV/m}$,' + '\n' + r'$n_e = n_i = 0.93 \cdot 10^{20} \mathrm{m}^{-3}$,' + r'$T_e = 4.13\mathrm{keV}$, $T_i = 3.77\mathrm{keV}$,' + '\n' + r'$\frac{dn}{d(r/a)} = -0.33$, $\frac{dT_e}{d(r/a)} = -4.31\mathrm{keV}$, $\frac{dT_i}{d(r/a)} = -2.12\mathrm{keV}$.' +'\n\n' + r'$\nu_{i}^{\prime} = \frac{(G + \iota I) \nu_{ii}}{v_i B_0}$' + '\n' + r'$\nu_{ii} = \frac{4 \sqrt{2 \pi} n_i e^4 \ln \Lambda}{3 m_i^{1/2} T_i^{3/2}}$' + '\n' + 'See Moll' + u'é' + 'n et al. PoP ' + r'$\mathbf{22}$' + r' $112508$' + r' $(2015)$' + ' for definitions.'
 InfoTextPosX = 0.54
 InfoTextPosY = 0.40
 
-#inputfiles = ['DKES_baseline_ra0p5_Er-5.93kVm-1_Fluxes_vs_density.pydat']
-inputfiles = ['DKES_baseline_ra0p5_Er0.0kVm-1_Fluxes_vs_density.pydat']
+inputfiles = ['DKES_baseline_ra0p5_Er-5.93kVm-1_Fluxes_vs_density.pydat']
+#inputfiles = ['DKES_baseline_ra0p5_Er0.0kVm-1_Fluxes_vs_density.pydat']
 
 ##To plot vertical line for baseline case
 baselineDensity = 0.92589314
@@ -571,14 +573,16 @@ for iQuantity in range(numQuantities):
    ymins.append(ymin)
    ymaxs.append(ymax)
 
+   xmin,xmax = plt.xlim()
+
    ##Add vertical line for baseline
    plt.vlines(baselineNu, ymin, ymax, colors='k', linestyles='dashed', label='Base case')
 
    ## bbox_to_anchor dimensions: x_coord, y_coord, ?, ? 
    if iQuantity == 1:
-      plt.legend(bbox_to_anchor=(0.01, 0.60, 1., .102), loc=3, ncol=1, mode=None, borderaxespad=0., fontsize=16)
+      plt.legend(bbox_to_anchor=(0.01, 0.70, 1., .102), loc=3, ncol=1, mode=None, borderaxespad=0., fontsize=LegendFontSize)
    elif iQuantity == 2:
-      plt.legend(bbox_to_anchor=(0.02, 0.88, 0.10, .10), loc=2, ncol=1, mode=None, borderaxespad=0., fontsize=16)
+      plt.legend(bbox_to_anchor=(0.02, 0.88, 0.10, .10), loc=2, ncol=1, mode=None, borderaxespad=0., fontsize=LegendFontSize)
 
    multipleSigns = False
    if np.sign(ymin) != np.sign(ymax):
@@ -589,15 +593,20 @@ for iQuantity in range(numQuantities):
       if multipleSigns:
          space_lin = 1
          linlog_limit = np.power(10, np.floor(np.log10(plotAbsMin)))
-      else :
-         space_lin = MinFloat
-         linlog_limit = MinFloat
-      linlog_limit_array = np.empty(ydataToPlot.shape[0]); linlog_limit_array.fill(linlog_limit)
 
-      plt.yscale('symlog', linthreshy = linlog_limit, linscaley = space_lin)
-      if multipleSigns:
-         plt.fill_between(xdata[-1], linlog_limit_array, -linlog_limit_array, facecolor='green', alpha=0.12, hatch='/')
+         linlog_limit_array = np.empty(ydataToPlot.shape[0]); linlog_limit_array.fill(linlog_limit)
+
+         plt.yscale('symlog', linthreshy = linlog_limit, linscaley = space_lin)
+##      if multipleSigns:
+##         plt.fill_between(xdata[-1], linlog_limit_array, -linlog_limit_array, facecolor='green', alpha=0.12, hatch='/')
+         fill_array = np.empty(xdata[-1].shape[0]); fill_array.fill(xmax)
+         fill_array[0] = xmin
+         plt.fill_between(fill_array, linlog_limit_array, -linlog_limit_array, facecolor='green', alpha=0.12, hatch='/')
          plt.text(0.85, 0.5, r'Linear y-axis region', color='#005544', horizontalalignment='center',verticalalignment='center', transform=ax.transAxes)
+      else :
+         ##space_lin = MinFloat
+         ##linlog_limit = MinFloat
+         plt.yscale('log')
 
 #plt.legend(bbox_to_anchor=(-0.66, 1.04, 1., .102), loc=2, ncol=2, mode=None, borderaxespad=0., fontsize=24)
 
