@@ -9,6 +9,8 @@ import numpy
 import os, sys, inspect
 import warnings
 
+from scipy import interpolate
+
 #show_rN = True
 show_rN = False
 
@@ -46,6 +48,9 @@ numCols = 1
 numContours = 100
 ContourLevels = [-3.0, -1.5, 0.0, 1.5, 3.0, 4.5, 6.0]
 
+PlotGridTheta = 128
+PlotGridZeta = 128
+
 #for i in range(6):
 print "Processing file ",filename
 f = h5py.File(filename,'r')
@@ -55,10 +60,33 @@ Phi1Hat = f[quantityToPlot][()]
 iteration = f["NIterations"][()] - 1 #Results from last iteration
 rN = f["rN"][()]
 f.close()
+
+##Interpolate and generate new grid
+#print numpy.array(Phi1Hat[1,:,iteration])
+Phi1HatInterpolation = interpolate.interp2d(zeta, theta, Phi1Hat[:,:,iteration].transpose(), kind='cubic')
+print "Old grid in zeta:"
+print zeta
+#print numpy.amax(zeta)
+#print (numpy.amax(zeta) - numpy.amin(zeta)) / (PlotGridZeta - 1)
+deltaZeta = (numpy.amax(zeta) - numpy.amin(zeta)) / (PlotGridZeta - 1)
+zetaToPlot = numpy.arange(numpy.amin(zeta), numpy.amax(zeta) + deltaZeta/2.0, deltaZeta)
+print "New grid in zeta:"
+print zetaToPlot
+
+print "Old grid in theta:"
+print theta
+deltaTheta = (numpy.amax(theta) - numpy.amin(theta)) / (PlotGridTheta - 1)
+thetaToPlot = numpy.arange(numpy.amin(theta), numpy.amax(theta) + deltaTheta/2.0, deltaTheta)
+print "New grid in theta:"
+print thetaToPlot
+
+#sys.exit()
+
+Phi1ToPlot = Phi1HatInterpolation(zetaToPlot, thetaToPlot)
     
 plt.subplot(numRows,numCols,1)
     #plt.contourf(zeta,theta,1000*numpy.fliplr(Phi1Hat[:,:,iteration].transpose()),numContours)
-Phi1Plot = plt.contourf(zeta,theta,zFactor*Phi1Hat[:,:,iteration].transpose(),numContours)
+Phi1Plot = plt.contourf(zetaToPlot,thetaToPlot,zFactor*Phi1ToPlot, numContours)
 Phi1Plot2 = plt.contour(Phi1Plot,levels=ContourLevels, colors='k', hold='on')
 #Phi1Plot2 = plt.contour(Phi1Plot,levels=Phi1Plot.levels[::2], colors='k', hold='on')
 plt.xlabel(r'$\zeta$' + ' [rad]')
@@ -86,7 +114,7 @@ plt.clabel(Phi1Plot2, fmt='%2.1f', colors='k', fontsize=14)
 
 #plt.subplots_adjust(wspace=0.27)
 
-print Phi1Hat.shape
+print Phi1ToPlot.shape
 
 if makePDF:
     print "Saving PDF"
