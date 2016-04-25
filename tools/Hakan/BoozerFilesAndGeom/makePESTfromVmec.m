@@ -1,8 +1,15 @@
-function [Pest,Vmecrh]=makePESTfromVmec(woutin,s_wish,Nu,Nw)
-%Both sets of coordinates are left handed.
+function [Pest,Vmec]=makePESTfromVmec(woutin,s_wish,Nu,Nw,handedness)
 
-%woutin is the wout file name or just the netcdf variables from the wout file
-%(Too old matlab versions do not have the necessary netcdf routines.)
+% woutin is the wout file name or just the netcdf variables from the wout file
+% (Too old matlab versions do not have the necessary netcdf routines.)
+%
+% s_wish is the wanted flux surface
+%
+% (Nu, Nw) is the (poloidal, toroidal) resolution
+%
+% handedness = 1  => right-handed output structs
+% handedness =-1  => left-handed output structs
+
 
 if not(isstruct(woutin))%if not already loaded, assume woutin is a string with the file name
   wout=struct();
@@ -13,15 +20,16 @@ if not(isstruct(woutin))%if not already loaded, assume woutin is a string with t
                          ncread(woutin,tmp.Variables(vi).Name));
     end
   else
-    error('Unknown input. wout must be a file name or the netcdf variables from the wout file!')
+    error('Unknown input! woutin must be a file name or the netcdf variables from the wout file!')
   end
 end
 
 
+% if handedness=1 (right handed) let w = -v!
+% else if handedness=-1 (left handed) let w = v!
 
-% let w = -v!
 
-signchange=double(wout.signgs); % is -1, because vmec is left handed
+signchange=handedness*double(wout.signgs); % is handedness*(-1), because vmec is left handed
 
 Geom.headertext.input_extension = ...
     wout.input_extension; %!<  suffix of the vmec-input file: input.<input_extension>
@@ -33,6 +41,7 @@ Geom.Nperiods = double(wout.nfp);        %!< number of field periods
 if not(isfield(wout,'iasym'))
   wout.iasym=isfield(wout,'bmns');
 end
+Geom.handedness=handedness;
 Geom.StelSym  = not(wout.iasym); %!<  defines stellarator symmetry for iasym=0, otherwise =
 Geom.torfluxtot = ...
    wout.phi(wout.ns)*signchange;%!<  total toroidal flux within the boundary (s=1)
@@ -69,6 +78,7 @@ Geom.iota = Geom.iota(skip+1:end);
 [dummy,rindh]=min(abs(Geom.s-s_wish));
 s=Geom.s(rindh);
 
+Pest.handedness=handedness;
 Pest.s=Geom.s(rindh);
 Pest.rnorm=Geom.rnorm(rindh);
 Pest.iota=Geom.iota(rindh);
@@ -88,86 +98,89 @@ if not(Geom.StelSym)
   error('Non-stelllarator symmmetric case not implemented!')
 end
 
-Vmecrh.Nu=Nu;
-Vmecrh.Nw=Nw;
+Vmec.handedness=handedness;
+Vmec.Nvmecu=Nu;
+Vmec.Nvmecw=Nw;
 
-Vmecrh.Rmnlist.m=double(wout.xm);
-Vmecrh.Rmnlist.n=signchange*double(wout.xn)/Geom.Nperiods;
-Vmecrh.Rmnlist.cosparity=ones(size(Vmecrh.Rmnlist.m));
-Vmecrh.Rmnlist.data=(wout.rmnc(:,rindf_minus)+wout.rmnc(:,rindf_plus))/2;
-Vmecrh.Rmn=mnmat(Vmecrh.Rmnlist,Vmecrh.Nu,Vmecrh.Nw,'forceSize');
-Vmecrh.R=ifftmn(Vmecrh.Rmn,Geom.Nperiods,Vmecrh.Nu,Vmecrh.Nw,'forceSize');
+Vmec.Rmnlist.m=double(wout.xm);
+Vmec.Rmnlist.n=signchange*double(wout.xn)/Geom.Nperiods;
+Vmec.Rmnlist.cosparity=ones(size(Vmec.Rmnlist.m));
+Vmec.Rmnlist.data=(wout.rmnc(:,rindf_minus)+wout.rmnc(:,rindf_plus))/2;
+Vmec.Rmn=mnmat(Vmec.Rmnlist,Vmec.Nvmecu,Vmec.Nvmecw,'forceSize');
+Vmec.R=ifftmn(Vmec.Rmn,Geom.Nperiods,Vmec.Nvmecu,Vmec.Nvmecw,'forceSize');
 
-Vmecrh.Zmnlist.m=double(wout.xm);
-Vmecrh.Zmnlist.n=signchange*double(wout.xn)/Geom.Nperiods;
-Vmecrh.Zmnlist.cosparity = 0*ones(size(Vmecrh.Zmnlist.m));
-Vmecrh.Zmnlist.data=(wout.zmns(:,rindf_minus)+wout.zmns(:,rindf_plus))/2;
-Vmecrh.Zmn=mnmat(Vmecrh.Zmnlist,Vmecrh.Nu,Vmecrh.Nw,'forceSize');
-Vmecrh.Z=ifftmn(Vmecrh.Zmn,Geom.Nperiods,Vmecrh.Nu,Vmecrh.Nw,'forceSize');
+Vmec.Zmnlist.m=double(wout.xm);
+Vmec.Zmnlist.n=signchange*double(wout.xn)/Geom.Nperiods;
+Vmec.Zmnlist.cosparity = 0*ones(size(Vmec.Zmnlist.m));
+Vmec.Zmnlist.data=(wout.zmns(:,rindf_minus)+wout.zmns(:,rindf_plus))/2;
+Vmec.Zmn=mnmat(Vmec.Zmnlist,Vmec.Nvmecu,Vmec.Nvmecw,'forceSize');
+Vmec.Z=ifftmn(Vmec.Zmn,Geom.Nperiods,Vmec.Nvmecu,Vmec.Nvmecw,'forceSize');
 
-Vmecrh.Bmnlist.m=double(wout.xm_nyq);
-Vmecrh.Bmnlist.n=signchange*double(wout.xn_nyq)/Geom.Nperiods;
-Vmecrh.Bmnlist.cosparity=ones(size(Vmecrh.Bmnlist.m));
-Vmecrh.Bmnlist.data=wout.bmnc(:,skrindh);
-Vmecrh.Bmn=mnmat(Vmecrh.Bmnlist,Vmecrh.Nu,Vmecrh.Nw,'forceSize');
-Vmecrh.B=ifftmn(Vmecrh.Bmn,Geom.Nperiods,Vmecrh.Nu,Vmecrh.Nw,'forceSize');
+Vmec.Bmnlist.m=double(wout.xm_nyq);
+Vmec.Bmnlist.n=signchange*double(wout.xn_nyq)/Geom.Nperiods;
+Vmec.Bmnlist.cosparity=ones(size(Vmec.Bmnlist.m));
+Vmec.Bmnlist.data=wout.bmnc(:,skrindh);
+Vmec.Bmn=mnmat(Vmec.Bmnlist,Vmec.Nvmecu,Vmec.Nvmecw,'forceSize');
+Vmec.B=ifftmn(Vmec.Bmn,Geom.Nperiods,Vmec.Nvmecu,Vmec.Nvmecw,'forceSize');
 
-Vmecrh.Jmnlist.m=double(wout.xm_nyq);
-Vmecrh.Jmnlist.n=signchange*double(wout.xn_nyq)/Geom.Nperiods;
-Vmecrh.Jmnlist.cosparity=ones(size(Vmecrh.Jmnlist.m));
-Vmecrh.Jmnlist.data=wout.gmnc(:,skrindh) * signchange;
-Vmecrh.Jmn=mnmat(Vmecrh.Jmnlist,Vmecrh.Nu,Vmecrh.Nw,'forceSize');
-Vmecrh.J=ifftmn(Vmecrh.Jmn,Geom.Nperiods,Vmecrh.Nu,Vmecrh.Nw,'forceSize');
+Vmec.Jmnlist.m=double(wout.xm_nyq);
+Vmec.Jmnlist.n=signchange*double(wout.xn_nyq)/Geom.Nperiods;
+Vmec.Jmnlist.cosparity=ones(size(Vmec.Jmnlist.m));
+Vmec.Jmnlist.data=wout.gmnc(:,skrindh) * signchange;
+Vmec.Jmn=mnmat(Vmec.Jmnlist,Vmec.Nvmecu,Vmec.Nvmecw,'forceSize');
+Vmec.J=ifftmn(Vmec.Jmn,Geom.Nperiods,Vmec.Nvmecu,Vmec.Nvmecw,'forceSize');
 
-Vmecrh.B_ulist.m=double(wout.xm_nyq);
-Vmecrh.B_ulist.n=signchange*double(wout.xn_nyq)/Geom.Nperiods;
-Vmecrh.B_ulist.cosparity=ones(size(Vmecrh.B_ulist.m));
-Vmecrh.B_ulist.data=wout.bsubumnc(:,skrindh);
-Vmecrh.B_umn=mnmat(Vmecrh.B_ulist,Vmecrh.Nu,Vmecrh.Nw,'forceSize');
-Vmecrh.B_umntilde=remove00(Vmecrh.B_umn);
+Vmec.B_ulist.m=double(wout.xm_nyq);
+Vmec.B_ulist.n=signchange*double(wout.xn_nyq)/Geom.Nperiods;
+Vmec.B_ulist.cosparity=ones(size(Vmec.B_ulist.m));
+Vmec.B_ulist.data=wout.bsubumnc(:,skrindh);
+Vmec.B_umn=mnmat(Vmec.B_ulist,Vmec.Nvmecu,Vmec.Nvmecw,'forceSize');
+Vmec.B_umntilde=remove00(Vmec.B_umn);
 
-Vmecrh.B_wlist.m=double(wout.xm_nyq);
-Vmecrh.B_wlist.n=signchange*double(wout.xn_nyq)/Geom.Nperiods;
-Vmecrh.B_wlist.cosparity=ones(size(Vmecrh.B_wlist.m)); 
-Vmecrh.B_wlist.data=wout.bsubvmnc(:,skrindh) * signchange;
-Vmecrh.B_wmn=mnmat(Vmecrh.B_wlist,Vmecrh.Nu,Vmecrh.Nw,'forceSize');
-Vmecrh.B_wmntilde=remove00(Vmecrh.B_wmn);
+Vmec.B_wlist.m=double(wout.xm_nyq);
+Vmec.B_wlist.n=signchange*double(wout.xn_nyq)/Geom.Nperiods;
+Vmec.B_wlist.cosparity=ones(size(Vmec.B_wlist.m)); 
+Vmec.B_wlist.data=wout.bsubvmnc(:,skrindh) * signchange;
+Vmec.B_wmn=mnmat(Vmec.B_wlist,Vmec.Nvmecu,Vmec.Nvmecw,'forceSize');
+Vmec.B_wmntilde=remove00(Vmec.B_wmn);
 
-Vmecrh.llist.m=double(wout.xm);
-Vmecrh.llist.n=signchange*double(wout.xn)/Geom.Nperiods;
-Vmecrh.llist.cosparity = 0*ones(size(Vmecrh.llist.m));
-Vmecrh.llist.data=wout.lmns(:,skrindh);
-Vmecrh.lmn=mnmat(Vmecrh.llist,Vmecrh.Nu,Vmecrh.Nw,'forceSize');
-Vmecrh.l=ifftmn(Vmecrh.lmn,Geom.Nperiods,Vmecrh.Nu,Vmecrh.Nw,'forceSize');
+Vmec.llist.m=double(wout.xm);
+Vmec.llist.n=signchange*double(wout.xn)/Geom.Nperiods;
+Vmec.llist.cosparity = 0*ones(size(Vmec.llist.m));
+Vmec.llist.data=wout.lmns(:,skrindh);
+Vmec.lmn=mnmat(Vmec.llist,Vmec.Nvmecu,Vmec.Nvmecw,'forceSize');
+Vmec.l=ifftmn(Vmec.lmn,Geom.Nperiods,Vmec.Nvmecu,Vmec.Nvmecw,'forceSize');
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Make the Pest coordinates
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Vmecrh.Dw=2*pi/Vmecrh.Nw/Geom.Nperiods;
-Vmecrh.Du=2*pi/Vmecrh.Nu;
-Vmecrh.uvec=(0:Vmecrh.Nu-1)*Vmecrh.Du;
-Vmecrh.wvec=(0:Vmecrh.Nw-1)'*Vmecrh.Dw;
-[Vmecrh.u,Vmecrh.w] = ndgrid(Vmecrh.uvec,Vmecrh.wvec);
+Vmec.Dvmecw=2*pi/Vmec.Nvmecw/Geom.Nperiods;
+Vmec.Dvmecu=2*pi/Vmec.Nvmecu;
+Vmec.vmecuvec=(0:Vmec.Nvmecu-1)*Vmec.Dvmecu;
+Vmec.vmecwvec=(0:Vmec.Nvmecw-1)'*Vmec.Dvmecw;
+[Vmec.vmecu,Vmec.vmecw] = ndgrid(Vmec.vmecuvec,Vmec.vmecwvec);
 
-Vmecrh.Dpthetau=ifftmn(Vmecrh.lmn,Geom.Nperiods,Vmecrh.Nu,Vmecrh.Nw,'forceSize');
-Vmecrh.ptheta=Vmecrh.Dpthetau+Vmecrh.u; %This is the "transformation"
-Vmecrh.pzeta=Vmecrh.w;
+Vmec.Dpthetavmecu=ifftmn(Vmec.lmn,Geom.Nperiods,Vmec.Nvmecu,Vmec.Nvmecw,'forceSize');
+Vmec.ptheta=Vmec.Dpthetavmecu+Vmec.vmecu; %This is the "transformation"
+Vmec.pzeta=Vmec.vmecw;
 
-Pest.Nptheta=Vmecrh.Nu;
-Pest.Npzeta=Vmecrh.Nw;
-Pest.Dptheta=Vmecrh.Du;
-Pest.Dpzeta=Vmecrh.Dw;
-Pest.pzeta=Vmecrh.w;
-Pest.ptheta=Vmecrh.u;
+Pest.Nptheta=Vmec.Nvmecu;
+Pest.Npzeta=Vmec.Nvmecw;
+Pest.Dptheta=Vmec.Dvmecu;
+Pest.Dpzeta=Vmec.Dvmecw;
+Pest.pzeta=Vmec.vmecw;
+Pest.ptheta=Vmec.vmecu;
 
-Pest.Dpthetau=griddatacyclic(Vmecrh.ptheta,Vmecrh.pzeta,Vmecrh.Dpthetau,Geom.Nperiods);
-Pest.vmecu=Pest.ptheta-Pest.Dpthetau; %This is the "transformation"
+Pest.Dpthetavmecu=griddatacyclic(Vmec.ptheta,Vmec.pzeta,Vmec.Dpthetavmecu,Geom.Nperiods);
+Pest.vmecu=Pest.ptheta-Pest.Dpthetavmecu; %This is the "transformation"
 Pest.vmecw=Pest.pzeta;
 
-Pest.B=interp2_cyclic(Vmecrh.u,Vmecrh.w,Vmecrh.B,Pest.vmecu,Pest.vmecw,Geom.Nperiods);
-Pest.R=interp2_cyclic(Vmecrh.u,Vmecrh.w,Vmecrh.R,Pest.vmecu,Pest.vmecw,Geom.Nperiods);
-Pest.Z=interp2_cyclic(Vmecrh.u,Vmecrh.w,Vmecrh.Z,Pest.vmecu,Pest.vmecw,Geom.Nperiods);
+Pest.B=interp2_cyclic(Vmec.vmecu,Vmec.vmecw,Vmec.B,Pest.vmecu,Pest.vmecw,Geom.Nperiods);
+Pest.R=interp2_cyclic(Vmec.vmecu,Vmec.vmecw,Vmec.R,Pest.vmecu,Pest.vmecw,Geom.Nperiods);
+Pest.Z=interp2_cyclic(Vmec.vmecu,Vmec.vmecw,Vmec.Z,Pest.vmecu,Pest.vmecw,Geom.Nperiods);
+%The routine interp2_cyclic can also be used to interpolate other quantities from
+%vmec to pest or vice versa.
 
 Pest.mnmat.B=fftmn(Pest.B);
 Pest.mnmat.R=fftmn(Pest.R);
@@ -181,14 +194,14 @@ Pest.B00=mean(mean(Pest.B));
   
 if 0
   fig(1)
-  %surf(Vmecrh.u,Vmecrh.w,Vmecrh.Dzetaw);shading flat;view(0,90);colorbar;axis([-0.5,6.5,-0.2,1.4])
-  %surf(Vmecrh.u,Vmecrh.w,Vmecrh.zeta);shading flat;view(0,90);colorbar;axis([-0.5,6.5,-0.2,1.4])
-  surf(Vmecrh.u,Vmecrh.w,Vmecrh.B);shading flat;view(0,90);colorbar;axis([-0.5,6.5,-0.2,1.4])
+  %surf(Vmec.u,Vmec.w,Vmec.Dzetaw);shading flat;view(0,90);colorbar;axis([-0.5,6.5,-0.2,1.4])
+  %surf(Vmec.u,Vmec.w,Vmec.zeta);shading flat;view(0,90);colorbar;axis([-0.5,6.5,-0.2,1.4])
+  surf(Vmec.u,Vmec.w,Vmec.B);shading flat;view(0,90);colorbar;axis([-0.5,6.5,-0.2,1.4])
 
   fig(2)
-  %surf(Vmecrh.u,Vmecrh.w,Vmecrh.Dthetau);shading flat;view(0,90);colorbar;axis([-0.5,6.5,-0.2,1.4])
-  surf(Vmecrh.u,Vmecrh.w,Vmecrh.ptheta);shading flat;view(0,90);colorbar;axis([-0.5,6.5,-0.2,1.4])
-  %surf(Vmecrh.u,Vmecrh.w,Vmecrh.u);shading flat;view(0,90);colorbar;axis([-0.5,6.5,-0.2,1.4])
+  %surf(Vmec.u,Vmec.w,Vmec.Dthetau);shading flat;view(0,90);colorbar;axis([-0.5,6.5,-0.2,1.4])
+  surf(Vmec.u,Vmec.w,Vmec.ptheta);shading flat;view(0,90);colorbar;axis([-0.5,6.5,-0.2,1.4])
+  %surf(Vmec.u,Vmec.w,Vmec.u);shading flat;view(0,90);colorbar;axis([-0.5,6.5,-0.2,1.4])
 
   %fig(5)
   %surf(Booz_u,Booz_w,Pest.Dzetaw);shading flat;view(0,90);colorbar;axis([-0.5,6.5,-0.2,1.4])
@@ -197,7 +210,7 @@ if 0
 
 
   fig(3)
-  surf(Vmecrh.ptheta,Vmecrh.pzeta,Vmecrh.B);shading flat;view(0,90);colorbar;axis([-0.5,6.5,-0.2,1.4])
+  surf(Vmec.ptheta,Vmec.pzeta,Vmec.B);shading flat;view(0,90);colorbar;axis([-0.5,6.5,-0.2,1.4])
   fig(7)
   surf(Pest.ptheta,Pest.pzeta,Pest.B);shading flat;view(0,90);colorbar;axis([-0.5,6.5,-0.2,1.4])
 
