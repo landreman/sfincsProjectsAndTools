@@ -210,6 +210,10 @@ else %not(useFFT)
   %toc
 end
 
+if any(size(zeta)~=size(Dzetacylphi)) && not(strcmp(ifftOpt,'forceSize'))
+  error('Size mismatch! consider using the forceSize option.')
+end
+
 cylphi=zeta-Dzetacylphi;     %cylphi is minus the geometrical toroidal angle.
 geomang=-cylphi;             %(R,Z,cylphi) and (R,geomang,Z) are right handed systems. 
 dgeomangdtheta=dDzetacylphi_dtheta;
@@ -301,6 +305,8 @@ CZ=(d2Zdzeta2+2*iota*d2Zdthetadzeta+iota^2*d2Zdtheta2).*(B.^2/(G+iota*I)).^2;
 
 BdotgradabsB=B.^2/(G+iota*I).*(iota*dBdtheta+dBdzeta);
 BxgradpsidotgradabsB=B.^2/(G+iota*I).*(G.*dBdtheta-I.*dBdzeta);
+Booz.BdotgradabsB=BdotgradabsB;
+Booz.BxgradpsidotgradabsB=BxgradpsidotgradabsB;
 
 if 0 %Double-check the FFT results against the slow method
   fig(1+useFFT*4)
@@ -324,6 +330,8 @@ Booz.XYZ.B=zeros(3,Ntheta,Nzeta);
 Booz.XYZ.B(3,:,:)=BZ;
 Booz.XYZ.B(1,:,:)=BX;
 Booz.XYZ.B(2,:,:)=BY;
+
+Booz.XYZ.Bxgradpsi=cross(Booz.XYZ.B,Booz.XYZ.gradpsi);
 
 %% Calculate the curvature
 Booz.XYZ.curv=zeros(3,Ntheta,Nzeta);

@@ -1,9 +1,25 @@
-function Booz=makeBoozfromVmec(wout,s_wish,Nu,Nw,min_Bmn)
+function Booz=makeBoozfromVmec(woutin,s_wish,Nu,Nw,min_Bmn)
 
 %This routine has been tested and compared to jmc and/or booz2xform to find that B00
 %and R00 coincides.
 
-%wout is just the netcdf variables from the wout file
+%woutin is the wout file name or just the netcdf variables from the wout file
+%(Too old matlab versions do not have the necessary netcdf routines.)
+
+if not(isstruct(woutin))%if not already loaded, assume woutin is a string with the file name
+  wout=struct();
+  if isstr(woutin)
+    tmp=ncinfo(woutin);
+    for vi=1:length(tmp.Variables)
+      data=setfield(wout,tmp.Variables(vi).Name,...
+                         ncread(woutin,tmp.Variables(vi).Name));
+    end
+  else
+    error('Unknown input. wout must be a file name or the netcdf variables from the wout file!')
+  end
+end
+
+
 
 % let w = -v!
 
