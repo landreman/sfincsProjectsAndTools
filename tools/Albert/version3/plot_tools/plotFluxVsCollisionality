@@ -84,7 +84,7 @@ matplotlib.rc('lines',markeredgewidth=0,markersize=3,linewidth=2.5)
 matplotlib.rc('axes',linewidth=1.5)
 #matplotlib.rc('text', usetex=True)
 
-PlotLinespecs = ['rD-', 'bo-', 'gx-', 'ys-', 'cx--', 'm+--']
+PlotLinespecs = ['rD-', 'bo-', 'gx-.', 'ys-.', 'cx--', 'm+--']
 PlotLineColors = ['r', 'b', 'g', 'y', 'c', 'm']
 PlotMarkerEdgeWidth = [0, 0, 3, 0, 3, 3]
 PlotLegendLabels = [r'SFINCS Fokker-Planck, H ions', r'SFINCS Fokker-Planck, electrons', r'DKES pitch-angle scattering + mom corr., H ions', r'DKES pitch-angle scattering + mom corr., electrons', r'SFINCS Fokker-Planck',r'DKES pitch-angle scattering + mom corr.']
@@ -96,15 +96,15 @@ PlotMarkerSize = 8
 #InfoText = 'INFO: Collisionality has been varied by varying the densities' + r' ($n_i = n_e$)' + '.\nThe density gradients have been varied accordingly to keep the\ndensity gradient scale length fixed.\n'+ r'$r/a = 0.50$, $E_r = -5.93 \mathrm{kV/m}.$' +'\n\n' + r'$\nu_{i}^{\prime} = \frac{(G + \iota I) \nu_{ii}}{v_i B_0}$' + '\n' + r'$\nu_{ii} = \frac{4 \sqrt{2 \pi} n_i e^4 \ln \Lambda}{3 m_i^{1/2} T_i^{3/2}}$' + '\n' + 'See Moll' + u'é' + 'n et al. PoP ' + r'$\mathbf{22}$' + r' $112508$' + r' $(2015)$' + ' for definitions.' 
 
 ##Er=-5.93##
-InfoText = 'INFO: Collisionality has been varied by varying the densities' + r' ($n_i = n_e$)' + '.\nThe density gradients have been varied accordingly to keep the\ndensity gradient scale length fixed.\n'+ 'Base case: '+ r'$r/a = 0.50$, $a = 0.51092 \mathrm{m}$, $E_r = -5.93 \mathrm{kV/m}$,' + '\n' + r'$n_e = n_i = 0.93 \cdot 10^{20} \mathrm{m}^{-3}$,' + r'$T_e = 4.13\mathrm{keV}$, $T_i = 3.77\mathrm{keV}$,' + '\n' + r'$\frac{dn}{d(r/a)} = -0.33$, $\frac{dT_e}{d(r/a)} = -4.31\mathrm{keV}$, $\frac{dT_i}{d(r/a)} = -2.12\mathrm{keV}$.' +'\n\n' + r'$\nu_{i}^{\prime} = \frac{(G + \iota I) \nu_{ii}}{v_i B_0}$' + '\n' + r'$\nu_{ii} = \frac{4 \sqrt{2 \pi} n_i e^4 \ln \Lambda}{3 m_i^{1/2} T_i^{3/2}}$' + '\n' + 'See Moll' + u'é' + 'n et al. PoP ' + r'$\mathbf{22}$' + r' $112508$' + r' $(2015)$' + ' for definitions.' 
+#InfoText = 'INFO: Collisionality has been varied by varying the densities' + r' ($n_i = n_e$)' + '.\nThe density gradients have been varied accordingly to keep the\ndensity gradient scale length fixed.\n'+ 'Base case: '+ r'$r/a = 0.50$, $a = 0.51092 \mathrm{m}$, $E_r = -5.93 \mathrm{kV/m}$,' + '\n' + r'$n_e = n_i = 0.93 \cdot 10^{20} \mathrm{m}^{-3}$,' + r'$T_e = 4.13\mathrm{keV}$, $T_i = 3.77\mathrm{keV}$,' + '\n' + r'$\frac{dn}{d(r/a)} = -0.33$, $\frac{dT_e}{d(r/a)} = -4.31\mathrm{keV}$, $\frac{dT_i}{d(r/a)} = -2.12\mathrm{keV}$.' +'\n\n' + r'$\nu_{i}^{\prime} = \frac{(G + \iota I) \nu_{ii}}{v_i B_0}$' + '\n' + r'$\nu_{ii} = \frac{4 \sqrt{2 \pi} n_i e^4 \ln \Lambda}{3 m_i^{1/2} T_i^{3/2}}$' + '\n' + 'See Moll' + u'é' + 'n et al. PoP ' + r'$\mathbf{22}$' + r' $112508$' + r' $(2015)$' + ' for definitions.' 
 
 ##Er=0##
-#InfoText = 'INFO: Collisionality has been varied by varying the densities' + r' ($n_i = n_e$)' + '.\nThe density gradients have been varied accordingly to keep the\ndensity gradient scale length fixed.\n'+ 'Base case: '+ r'$r/a = 0.50$, $a = 0.51092 \mathrm{m}$, $E_r = 0.0 \mathrm{kV/m}$,' + '\n' + r'$n_e = n_i = 0.93 \cdot 10^{20} \mathrm{m}^{-3}$,' + r'$T_e = 4.13\mathrm{keV}$, $T_i = 3.77\mathrm{keV}$,' + '\n' + r'$\frac{dn}{d(r/a)} = -0.33$, $\frac{dT_e}{d(r/a)} = -4.31\mathrm{keV}$, $\frac{dT_i}{d(r/a)} = -2.12\mathrm{keV}$.' +'\n\n' + r'$\nu_{i}^{\prime} = \frac{(G + \iota I) \nu_{ii}}{v_i B_0}$' + '\n' + r'$\nu_{ii} = \frac{4 \sqrt{2 \pi} n_i e^4 \ln \Lambda}{3 m_i^{1/2} T_i^{3/2}}$' + '\n' + 'See Moll' + u'é' + 'n et al. PoP ' + r'$\mathbf{22}$' + r' $112508$' + r' $(2015)$' + ' for definitions.'
+InfoText = 'INFO: Collisionality has been varied by varying the densities' + r' ($n_i = n_e$)' + '.\nThe density gradients have been varied accordingly to keep the\ndensity gradient scale length fixed.\n'+ 'Base case: '+ r'$r/a = 0.50$, $a = 0.51092 \mathrm{m}$, $E_r = 0.0 \mathrm{kV/m}$,' + '\n' + r'$n_e = n_i = 0.93 \cdot 10^{20} \mathrm{m}^{-3}$,' + r'$T_e = 4.13\mathrm{keV}$, $T_i = 3.77\mathrm{keV}$,' + '\n' + r'$\frac{dn}{d(r/a)} = -0.33$, $\frac{dT_e}{d(r/a)} = -4.31\mathrm{keV}$, $\frac{dT_i}{d(r/a)} = -2.12\mathrm{keV}$.' +'\n\n' + r'$\nu_{i}^{\prime} = \frac{(G + \iota I) \nu_{ii}}{v_i B_0}$' + '\n' + r'$\nu_{ii} = \frac{4 \sqrt{2 \pi} n_i e^4 \ln \Lambda}{3 m_i^{1/2} T_i^{3/2}}$' + '\n' + 'See Moll' + u'é' + 'n et al. PoP ' + r'$\mathbf{22}$' + r' $112508$' + r' $(2015)$' + ' for definitions.'
 InfoTextPosX = 0.54
 InfoTextPosY = 0.40
 
-inputfiles = ['DKES_baseline_ra0p5_Er-5.93kVm-1_Fluxes_vs_density.pydat']
-#inputfiles = ['DKES_baseline_ra0p5_Er0.0kVm-1_Fluxes_vs_density.pydat']
+#inputfiles = ['DKES_baseline_ra0p5_Er-5.93kVm-1_Fluxes_vs_density.pydat']
+inputfiles = ['DKES_baseline_ra0p5_Er0.0kVm-1_Fluxes_vs_density.pydat']
 
 ##To plot vertical line for baseline case
 baselineDensity = 0.92589314

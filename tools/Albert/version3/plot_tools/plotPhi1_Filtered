@@ -1,0 +1,180 @@
+#!/usr/bin/env python
+
+
+
+import matplotlib
+import matplotlib.pyplot as plt
+import h5py
+import numpy
+import os, sys, inspect
+import warnings
+
+from scipy import interpolate
+#from scipy.fftpack import rfft, irfft, fftfreq, rfft2, irfft2
+
+#show_rN = True
+show_rN = False
+
+#makePDF = True
+makePDF = False
+for arg in sys.argv:
+   if arg.lower()=='pdf':
+      makePDF = True
+
+if makePDF:
+   matplotlib.use('PDF')
+
+print "This is "+ inspect.getfile(inspect.currentframe())
+
+quantityToPlot = "Phi1Hat"
+
+filename = 'sfincsOutput.h5'
+
+FigSize = (9,7)
+
+font = {'size':25}
+matplotlib.rc('font', **font)
+matplotlib.rc('lines',markeredgewidth=0,markersize=3,linewidth=2.5)
+matplotlib.rc('axes',linewidth=1.5)
+
+zFactor = 1000 ##kV -> V
+xAxisTicks = [r'0', r'$\pi/10$', r'$2\pi/10$', r'$3\pi/10$', r'$4\pi/10$']
+yAxisTicks = [r'0', r'$\pi/2$', r'$\pi$', r'$3\pi/2$', r'$2\pi$']
+
+fig = plt.figure(figsize=FigSize)
+fig.patch.set_facecolor('white')
+numRows = 1
+numCols = 1
+#iteration = 0
+numContours = 100
+ContourLevels = [-3.0, -1.5, 0.0, 1.5, 3.0, 4.5, 6.0]
+
+PlotGridTheta = 128
+PlotGridZeta = 128
+
+poloidalModeNumberMin = -4 #-4
+poloidalModeNumberMax = 4 #4
+toroidalModeNumberMin = 0 #0
+toroidalModeNumberMax = 4 #4
+
+#for i in range(6):
+print "Processing file ",filename
+f = h5py.File(filename,'r')
+theta = f["theta"][()]
+zeta = f["zeta"][()]
+Phi1Hat = f[quantityToPlot][()]
+iteration = f["NIterations"][()] - 1 #Results from last iteration
+rN = f["rN"][()]
+f.close()
+
+##FOURIER FILTER SIGNAL##
+
+Phi1HatOriginal = Phi1Hat[:,:,iteration].transpose() #Phi1(zeta, theta) of last iteration
+Phi1HatFourier =  numpy.fft.rfft2(Phi1HatOriginal)
+
+print Phi1HatOriginal
+print Phi1HatOriginal.shape
+#print zeta
+#print zeta.size
+
+toroidalSampleFrequencies =  numpy.fft.rfftfreq(zeta.size, d = (zeta[1] - zeta[0]))
+#print toroidalSampleFrequencies
+#print toroidalSampleFrequencies.size
+
+#print theta
+#print theta.size
+
+poloidalSampleFrequencies =  numpy.fft.fftfreq(theta.size, d = (theta[1] - theta[0]))
+#print poloidalSampleFrequencies
+#print poloidalSampleFrequencies.size
+
+#print Phi1HatFourier
+#print Phi1HatFourier.shape
+
+Phi1HatFourierFiltered = Phi1HatFourier.copy()
+#Phi1HatFourierFiltered[(toroidalSampleFrequencies < toroidalModeNumberMin or toroidalSampleFrequencies > toroidalModeNumberMax),
+#(poloidalSampleFrequencies < poloidalModeNumberMin or poloidalSampleFrequencies > poloidalModeNumberMax)] = 0 
+
+for itor in range(toroidalSampleFrequencies.size):
+   for ipol in range(poloidalSampleFrequencies.size):
+      if (toroidalSampleFrequencies[itor] < toroidalModeNumberMin or toroidalSampleFrequencies[itor] > toroidalModeNumberMax
+          or poloidalSampleFrequencies[ipol] < poloidalModeNumberMin or poloidalSampleFrequencies[ipol] > poloidalModeNumberMax):
+         Phi1HatFourierFiltered[ipol, itor] = 0
+
+#print Phi1HatFourierFiltered
+#print Phi1HatFourierFiltered.shape
+
+Phi1HatFiltered = numpy.fft.irfft2(Phi1HatFourierFiltered, Phi1HatOriginal.shape)
+print Phi1HatFiltered
+print Phi1HatFiltered.shape
+
+#sys.exit()
+
+
+##INTERPOLATE AND GENERATE NEW GRID##
+#print numpy.array(Phi1Hat[1,:,iteration])
+Phi1HatInterpolation = interpolate.interp2d(zeta, theta, Phi1HatFiltered, kind='cubic')
+print "Old grid in zeta:"
+print zeta
+#print numpy.amax(zeta)
+#print (numpy.amax(zeta) - numpy.amin(zeta)) / (PlotGridZeta - 1)
+deltaZeta = (numpy.amax(zeta) - numpy.amin(zeta)) / (PlotGridZeta - 1)
+zetaToPlot = numpy.arange(numpy.amin(zeta), numpy.amax(zeta) + deltaZeta/2.0, deltaZeta)
+print "New grid in zeta:"
+print zetaToPlot
+
+print "Old grid in theta:"
+print theta
+deltaTheta = (numpy.amax(theta) - numpy.amin(theta)) / (PlotGridTheta - 1)
+thetaToPlot = numpy.arange(numpy.amin(theta), numpy.amax(theta) + deltaTheta/2.0, deltaTheta)
+print "New grid in theta:"
+print thetaToPlot
+
+#sys.exit()
+
+Phi1ToPlot = Phi1HatInterpolation(zetaToPlot, thetaToPlot)
+    
+plt.subplot(numRows,numCols,1)
+    #plt.contourf(zeta,theta,1000*numpy.fliplr(Phi1Hat[:,:,iteration].transpose()),numContours)
+Phi1Plot = plt.contourf(zetaToPlot,thetaToPlot,zFactor*Phi1ToPlot, numContours)
+Phi1Plot2 = plt.contour(Phi1Plot,levels=ContourLevels, colors='k', hold='on')
+#Phi1Plot2 = plt.contour(Phi1Plot,levels=Phi1Plot.levels[::2], colors='k', hold='on')
+plt.xlabel(r'$\zeta$' + ' [rad]')
+plt.ylabel(r'$\theta$'+ ' [rad]')
+#plt.zlabel(r'$\Phi_1$'+ ' [V]')
+plt.xticks([0,max(zeta)/4,max(zeta)/2,3*max(zeta)/4,max(zeta)])
+plt.yticks([0,max(theta)/4,max(theta)/2,3*max(theta)/4,max(theta)])
+plt.gca().axes.xaxis.set_ticklabels(xAxisTicks)
+plt.gca().axes.yaxis.set_ticklabels(yAxisTicks)
+plt.gca().axes.xaxis.set_label_coords(0.5,-0.09)
+plt.gca().axes.yaxis.set_label_coords(-0.09,0.5)
+
+plt.tight_layout(pad=0.4, w_pad=0.5, h_pad=1.0)
+
+if show_rN:
+    plt.title('rN = '+str(rN))
+
+cbar = plt.colorbar(Phi1Plot, label=r'$\Phi_1$'+ ' [V]', ticks=ContourLevels)
+#cbar = plt.colorbar(Phi1Plot, label=r'$\Phi_1$'+ ' [V]', ticks=Phi1Plot.levels[::2])
+#cbar.add_lines(Phi1Plot2)
+
+#with warnings.catch_warnings():
+#    warnings.simplefilter("always")
+plt.clabel(Phi1Plot2, fmt='%2.1f', colors='k', fontsize=14)
+
+#plt.subplots_adjust(wspace=0.27)
+
+print Phi1ToPlot.shape
+
+if makePDF:
+    print "Saving PDF"
+
+    if len(sys.argv)>2 : #Use the substituted name as file name
+       print "Writing plot to " + os.getcwd() + "/" + sys.argv[2] + ".pdf."
+       plt.savefig(sys.argv[2] + ".pdf", orientation = 'landscape', papertype='letter')
+    else :
+       head, tail = os.path.split(inspect.getfile(inspect.currentframe()))
+       print "Writing plot to " + os.getcwd() + "/" + tail + ".pdf."
+       plt.savefig(tail+'.pdf', orientation = 'landscape', papertype='letter')
+else:
+    plt.show()
