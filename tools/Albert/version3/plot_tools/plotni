@@ -28,7 +28,8 @@ print "This is "+ inspect.getfile(inspect.currentframe())
 ##INPUT##
 #########
 
-quantityToPlot = "Phi1Hat"
+quantityToPlot = "totalDensity"
+ispecies = 0
 
 filename = 'sfincsOutput.h5'
 
@@ -39,7 +40,7 @@ matplotlib.rc('font', **font)
 matplotlib.rc('lines',markeredgewidth=0,markersize=3,linewidth=2.5)
 matplotlib.rc('axes',linewidth=1.5)
 
-zFactor = 1000 ##kV -> V
+zFactor = 1 ##10^20
 ##W7-X##
 #xAxisTicks = [r'$0$', r'$\pi/10$', r'$2\pi/10$', r'$3\pi/10$', r'$4\pi/10$']
 ##LHD
@@ -66,7 +67,7 @@ numLevels = 5
 def fmt_cbar(x, pos):
    if x == 0.0:
       return r'${}$'.format(x)
-   a, b = '{:.1e}'.format(x).split('e')
+   a, b = '{:.2e}'.format(x).split('e')
    b = int(b)
    return r'${} \cdot 10^{{{}}}$'.format(a, b)
 
@@ -86,14 +87,19 @@ f.close()
 print "theta max: " + str(numpy.amax(theta))
 print "zeta max: " + str(numpy.amax(zeta))
 
+print "ni min: " + str(numpy.amin(Phi1Hat[:,:,ispecies, iteration])) 
+print "ni max: " + str(numpy.amax(Phi1Hat[:,:,ispecies, iteration])) 
 
-delta = (numpy.amax(Phi1Hat[:,:,iteration]) - numpy.amin(Phi1Hat[:,:,iteration])) / numLevels
-ContourLevels = numpy.arange(numpy.amin(Phi1Hat[:,:,iteration]), numpy.amax(Phi1Hat[:,:,iteration]) + delta/2.0, delta)
+
+delta = (numpy.amax(Phi1Hat[:,:,ispecies, iteration]) - numpy.amin(Phi1Hat[:,:,ispecies, iteration])) / numLevels
+ContourLevels = numpy.arange(numpy.amin(Phi1Hat[:,:,ispecies, iteration]), numpy.amax(Phi1Hat[:,:,ispecies, iteration]) + delta/2.0, delta)
 ContourLevels = zFactor*ContourLevels
+
+print ContourLevels
     
 ax = plt.subplot(numRows,numCols,1)
     #plt.contourf(zeta,theta,1000*numpy.fliplr(Phi1Hat[:,:,iteration].transpose()),numContours)
-Phi1Plot = plt.contourf(zeta,theta,zFactor*Phi1Hat[:,:,iteration].transpose(),numContours)
+Phi1Plot = plt.contourf(zeta,theta,zFactor*Phi1Hat[:,:,ispecies, iteration].transpose(),numContours)
 Phi1Plot2 = plt.contour(Phi1Plot,levels=ContourLevels, colors='k', hold='on')
 #Phi1Plot2 = plt.contour(Phi1Plot,levels=Phi1Plot.levels[::2], colors='k', hold='on')
 #plt.xlabel(r'$\zeta$' + ' [rad]')
@@ -126,7 +132,7 @@ if show_rN:
 #cbar = plt.colorbar(Phi1Plot, label=r'$\Phi_1$'+ ' [V]', ticks=Phi1Plot.levels[::2])
 #cbar.add_lines(Phi1Plot2)
 cbar = plt.colorbar(Phi1Plot, format=ticker.FuncFormatter(fmt_cbar), ticks=ContourLevels)
-cbar.ax.set_ylabel(r'$\Phi_1$'+ " " + r'$\mathrm{[V]}$', rotation=0, labelpad=10)
+cbar.ax.set_ylabel(r'$n_i$'+ " " + r'$[10^{20} {\mathrm{m}}^{-3}]$', rotation=270, labelpad=35)
 
 #with warnings.catch_warnings():
 #    warnings.simplefilter("always")
