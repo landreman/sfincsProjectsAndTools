@@ -1,6 +1,6 @@
 function Geom=readBoozerfile(filename,min_Bmn,max_m,maxabs_n,symmetry,varargin)
 
-newsigncorrectionmethod=1; %This is the default from 20160610
+newsigncorrectionmethod=NaN; %This is the default from 20160610
 
 switch nargin
  case 1
@@ -18,8 +18,12 @@ switch nargin
  case 4
   symmetry='unknown';
  case 6
-  if cmpstr(varargin{1},'old sign correction method')
+  if cmpstr(varargin{1},'signcorr1')
     newsigncorrectionmethod=0;
+  elseif cmpstr(varargin{1},'signcorr2')
+    newsigncorrectionmethod=1;
+  else
+    error('Sign correction method for JG files not recognised!')
   end
 end
 
@@ -192,8 +196,11 @@ if strcmp(filetype,'JG')
           ' but it has a positive Jacobian. Something is wrong!'])
   end
   
-  newsigncorrectionmethod=1;
+
   if Geom.torfluxtot*Bphi(1)>0
+    if isnan(newsigncorrectionmethod)
+      error('You must specify the signcorrection method signcorr1 or signcorr2')
+    end
     if not(newsigncorrectionmethod)
       Geom.newsigncorr=0;
       disp(['This is a stellarator symmetric file from Joachim Geiger.'...
