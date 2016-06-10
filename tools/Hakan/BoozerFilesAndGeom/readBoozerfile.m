@@ -17,7 +17,7 @@ switch nargin
   symmetry='unknown';
  case 4
   symmetry='unknown';
- case 5
+ case 6
   if cmpstr(varargin{1},'old sign correction method')
     newsigncorrectionmethod=0;
   end
