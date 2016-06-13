@@ -187,11 +187,19 @@ for hind=1:length(H)
           out.heatFlux_vm_psiN(ind,:)     =H{hind}.heatFlux_vm_psiN';
           out.momentumFlux_vm_psiN(ind,:) =H{hind}.momentumFlux_vm_psiN';
           out.FSABFlow(ind,:)             =H{hind}.FSABFlow';
-          out.flow{ind}                   =H{hind}.flow';
-          out.densityPerturbation{ind}    =H{hind}.densityPerturbation';
-          out.pressurePerturbation{ind}   =H{hind}.pressurePerturbation';
-          out.pressureAnisotropy{ind}     =H{hind}.pressureAnisotropy';
-          out.NTVBeforeSurfaceIntegral{ind}=H{hind}.NTVBeforeSurfaceIntegral';
+          if Nsp>1
+            out.flow{ind}                    =permute(H{hind}.flow,[3,2,1]);
+            out.densityPerturbation{ind}     =permute(H{hind}.densityPerturbation,[3,2,1]);
+            out.pressurePerturbation{ind}    =permute(H{hind}.pressurePerturbation,[3,2,1]);
+            out.pressureAnisotropy{ind}      =permute(H{hind}.pressureAnisotropy,[3,2,1]);
+            out.NTVBeforeSurfaceIntegral{ind}=permute(H{hind}.NTVBeforeSurfaceIntegral,[3,2,1]);
+          else
+            out.flow{ind}                    =H{hind}.flow';
+            out.densityPerturbation{ind}     =H{hind}.densityPerturbation';
+            out.pressurePerturbation{ind}    =H{hind}.pressurePerturbation';
+            out.pressureAnisotropy{ind}      =H{hind}.pressureAnisotropy';
+            out.NTVBeforeSurfaceIntegral{ind}=H{hind}.NTVBeforeSurfaceIntegral';
+          end
         else
           out.finished(ind)=-1;
           warning(['Run number ',num2str(ind),...
