@@ -142,8 +142,10 @@ w.llist.data=wout.lmns(:,skrindh);
 w.lmn=mnmat(w.llist,w.Nu,w.Nw,'forceSize');
 w.l=ifftmn(w.lmn,Geom.Nperiods,w.Nu,w.Nw,'forceSize');
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%% This is the transformation. See th notes by Hirshman
 %%%%% 'Transformation from VMEC to Boozer Coordinates', April 1995
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 alphamn1=invgrad(w.B_umntilde,w.B_wmntilde,Geom.Nperiods,1);
 alphamn2=invgrad(w.B_umntilde,w.B_wmntilde,Geom.Nperiods,2);
 

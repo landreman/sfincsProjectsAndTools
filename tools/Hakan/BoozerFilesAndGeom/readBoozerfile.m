@@ -1,4 +1,6 @@
-function Geom=readBoozerfile(filename,min_Bmn,max_m,maxabs_n,symmetry)
+function Geom=readBoozerfile(filename,min_Bmn,max_m,maxabs_n,symmetry,varargin)
+
+newsigncorrectionmethod=NaN; %This is the default from 20160610
 
 switch nargin
  case 1
@@ -15,6 +17,14 @@ switch nargin
   symmetry='unknown';
  case 4
   symmetry='unknown';
+ case 6
+  if cmpstr(varargin{1},'signcorr1')
+    newsigncorrectionmethod=0;
+  elseif cmpstr(varargin{1},'signcorr2')
+    newsigncorrectionmethod=1;
+  else
+    error('Sign correction method for JG files not recognised!')
+  end
 end
 
 fid = fopen(filename);
@@ -186,24 +196,41 @@ if strcmp(filetype,'JG')
           ' but it has a positive Jacobian. Something is wrong!'])
   end
   
+
   if Geom.torfluxtot*Bphi(1)>0
-    disp(['This is a stellarator symmetric file from Joachim Geiger.'...
-          ' It will now be turned 180 degrees around a ' ...
-          'horizontal axis <=> flip the sign of G and I, so that it matches the sign ' ...
-          'of its total toroidal flux.'])
-    Geom.headertext.maincomment=sprintf([Geom.headertext.maincomment,'\n',...
-               'CC This stellarator symmetric file has been turned 180 degrees around an\n', ...
-               'CC horizontal axis by flipping the signs of Itor and Ipol compared with the\n',...
-               'CC original file. This was done in order for these signs to be consistent with\n',...
-               'CC the total toroidal flux, which has the same sign as in the original file.']);
-    
-    % Such a rotation does not make it necessary to change the Fourier coefficients, 
-    % in the case of Stellarator symmetry
-    if not(Geom.StelSym)
-      error('Rotating 180 degrees only allowed for stellarator symmetric cases!')
+    if isnan(newsigncorrectionmethod)
+      error('You must specify the signcorrection method signcorr1 or signcorr2')
     end
-    Bphi=-Bphi;
-    Btheta=-Btheta;
+    if not(newsigncorrectionmethod)
+      Geom.newsigncorr=0;
+      disp(['This is a stellarator symmetric file from Joachim Geiger.'...
+            ' It will now be turned 180 degrees around a ' ...
+            'horizontal axis <=> flip the sign of G and I, so that it matches the sign ' ...
+            'of its total toroidal flux.'])
+      Geom.headertext.maincomment=sprintf([Geom.headertext.maincomment,'\n',...
+           'CC This stellarator symmetric file has been turned 180 degrees around an\n', ...
+           'CC horizontal axis by flipping the signs of Itor and Ipol compared with the\n',...
+           'CC original file. This was done in order for these signs to be consistent with\n',...
+           'CC the total toroidal flux, which has the same sign as in the original file.']);
+      
+      % Such a rotation does not make it necessary to change the Fourier coefficients, 
+      % in the case of Stellarator symmetry
+      if not(Geom.StelSym)
+        error('Rotating 180 degrees only allowed for stellarator symmetric cases!')
+      end
+      Bphi=-Bphi;
+      Btheta=-Btheta;
+    else % Use newsigncorrectionmethod
+      Geom.newsigncorr=1;
+      disp(['This is a stellarator symmetric file from Joachim Geiger.'...
+          ' The sign of the toroidal flux will be flipped so that it it is counted positive ' ...
+          ' in the direction of the toroidal coordinate. '])
+      Geom.headertext.maincomment=sprintf([Geom.headertext.maincomment,'\n',...
+           'CC In this stellarator symmetric file the sign of the toroidal flux\n', ...
+           'CC has been flipped so that it it is counted positive in the direction\n',...
+           'CC of the toroidal coordinate.']);
+      Geom.torfluxtot=-Geom.torfluxtot;      
+    end
   end
     
   rthetazeta_righthanded=sign(Geom.torfluxtot*Bphi(1)); %This is -1, because
