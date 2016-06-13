@@ -17,7 +17,10 @@ info = result.stdout.read().split('\n')
 
 print info[0]
 print info[1]
-i=0
+i=-1
 while i < len(info)-5:
-   print info[i+2] + dirs[i][dirs[i].find("version3")+8:]
    i=i+1
+   if -1 == dirs[i].find("version3"):
+      print info[i+2] + dirs[i][dirs[i].find("projects")+8:]
+   else:
+      print info[i+2] + dirs[i][dirs[i].find("version3")+8:]
