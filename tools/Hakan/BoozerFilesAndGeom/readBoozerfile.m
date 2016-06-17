@@ -26,6 +26,17 @@ switch nargin
     error('Sign correction method for JG files not recognised!')
   end
 end
+% some checks
+if nargin>=2 && isstr(min_Bmn)
+  error('Something is wrong. The min_Bmn input was given as a string. It should be a number!')
+end
+if nargin>=3 && isstr(max_m)
+  error('Something is wrong. The max_m input was given as a string. It should be a number!')
+end
+if nargin>=4 && isstr(maxabs_n)
+  error('Something is wrong. The maxabs_n input was given as a string. It should be a number!')
+end
+
 
 fid = fopen(filename);
 if fid<0
@@ -203,8 +214,8 @@ if strcmp(filetype,'JG')
     end
     if not(newsigncorrectionmethod)
       Geom.newsigncorr=0;
-      disp(['This is a stellarator symmetric file from Joachim Geiger.'...
-            ' It will now be turned 180 degrees around a ' ...
+      disp(['This was a stellarator symmetric file from Joachim Geiger.'...
+            ' It has been turned 180 degrees around a ' ...
             'horizontal axis <=> flip the sign of G and I, so that it matches the sign ' ...
             'of its total toroidal flux.'])
       Geom.headertext.maincomment=sprintf([Geom.headertext.maincomment,'\n',...
@@ -222,9 +233,9 @@ if strcmp(filetype,'JG')
       Btheta=-Btheta;
     else % Use newsigncorrectionmethod
       Geom.newsigncorr=1;
-      disp(['This is a stellarator symmetric file from Joachim Geiger.'...
-          ' The sign of the toroidal flux will be flipped so that it it is counted positive ' ...
-          ' in the direction of the toroidal coordinate. '])
+      disp(['This was a stellarator symmetric file from Joachim Geiger.'...
+          ' The sign of the toroidal flux has been flipped so that it it is counted positive' ...
+          ' in the direction of the toroidal coordinate irrespectively of handedness.'])
       Geom.headertext.maincomment=sprintf([Geom.headertext.maincomment,'\n',...
            'CC In this stellarator symmetric file the sign of the toroidal flux\n', ...
            'CC has been flipped so that it it is counted positive in the direction\n',...
@@ -240,8 +251,8 @@ if strcmp(filetype,'JG')
     error('The coordinate system in the Boozer file was right handed')
   end
   
-  Geom.torfluxtot=Geom.torfluxtot*rthetazeta_righthanded;
-  
+  Geom.torfluxtot=Geom.torfluxtot*rthetazeta_righthanded;  
+  Geom.psi_a=Geom.torfluxtot/2/pi;
   Geom.rnorm=sqrt(torfluxnorm);
   Geom.s=torfluxnorm;
   Geom.Bphi=Bphi*rthetazeta_righthanded^2;%amperes law minus sign and direction switch sign
@@ -252,6 +263,8 @@ if strcmp(filetype,'JG')
     Geom.dpds(end)=2*Geom.dpds(end-1)-Geom.dpds(end-2); %Extrapolate!
   end
   Geom.dVdsoverNper=dVdsoverNper*rthetazeta_righthanded;
+  Geom.FSAB2=abs(4*pi^2*Geom.psi_a/Geom.Nperiods*...
+                 (Geom.Bphi+Geom.iota.*Geom.Btheta)./Geom.dVdsoverNper);
   Geom.nmodes=no_of_modes;
   Geom.m=modesm;
   Geom.n=modesn; %sign is switched below
@@ -282,7 +295,6 @@ if strcmp(filetype,'JG')
   if not(Geom.StelSym)
     Geom.parity=modespar;
   end
-  Geom.psi_a=Geom.torfluxtot/2/pi;
   
   if not(Geom.StelSym)
     %If non-stellarator symmetric, then assume that it is from Erika.
