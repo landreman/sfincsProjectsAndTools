@@ -322,7 +322,7 @@ end
 
 %%%%% Direction of B
 if 0
-  alt=1
+  alt=1;
   %I thought this was wrong, but it is right
   BR=(dRdzeta+iota*dRdtheta).*B.^2/(G+iota*I);
   BZ=(dZdzeta+iota*dZdtheta).*B.^2/(G+iota*I);
@@ -334,7 +334,7 @@ if 0
   Booz.XYZ.B(2,:,:)=BY;
   Booz.XYZ.B(3,:,:)=BZ;
 else 
-  alt=2
+  alt=2;
   Booz.XYZ.B=zeros(3,Ntheta,Nzeta);
   Booz.XYZ.B(1,:,:)=...
       squeeze(Booz.XYZ.e_zeta(1,:,:)+iota*Booz.XYZ.e_theta(1,:,:))...
@@ -354,26 +354,24 @@ else
 end
 
 if 0 %testing
-BRopt=(dRdzeta+iota*dRdtheta).*B.^2/(G+iota*I);
-BZopt=(dZdzeta+iota*dZdtheta).*B.^2/(G+iota*I);
-Bgeomangopt=(R.*dgeomangdzeta+iota*R.*dgeomangdtheta).*B.^2/(G+iota*I);
-BXopt=BRopt.*cos(geomang)-Bgeomangopt.*sin(geomang);
-BYopt=BRopt.*sin(geomang)+Bgeomangopt.*cos(geomang);
+  BRopt=(dRdzeta+iota*dRdtheta).*B.^2/(G+iota*I);
+  BZopt=(dZdzeta+iota*dZdtheta).*B.^2/(G+iota*I);
+  Bgeomangopt=(R.*dgeomangdzeta+iota*R.*dgeomangdtheta).*B.^2/(G+iota*I);
+  BXopt=BRopt.*cos(geomang)-Bgeomangopt.*sin(geomang);
+  BYopt=BRopt.*sin(geomang)+Bgeomangopt.*cos(geomang);
 
-fig(50)
-surf(BXopt.^2+BYopt.^2+BZopt.^2-B.^2)
-%surf(BYopt-BY)
-%surf((dRdzeta+iota*dRdtheta).*B.^2/(G+iota*I).*cos(geomang)...
-%     -(R.*dgeomangdzeta+iota*R.*dgeomangdtheta).*B.^2/(G+iota*I).*sin(geomang)-BX)
-fig(51)
-%surf(BZopt-BZ)
-%surf((dZdzeta+iota*dZdtheta).*B.^2/(G+iota*I)-BZ)
-%surf((dRdzeta+iota*dRdtheta).*B.^2/(G+iota*I).*sin(geomang)...
-%     +(R.*dgeomangdzeta+iota*R.*dgeomangdtheta).*B.^2/(G+iota*I).*cos(geomang)-BY)
-surf(BX.^2+BY.^2+BZ.^2-B.^2)
+  fig(50)
+  surf(BXopt.^2+BYopt.^2+BZopt.^2-B.^2)
+  %surf(BYopt-BY)
+  %surf((dRdzeta+iota*dRdtheta).*B.^2/(G+iota*I).*cos(geomang)...
+  %     -(R.*dgeomangdzeta+iota*R.*dgeomangdtheta).*B.^2/(G+iota*I).*sin(geomang)-BX)
+  fig(51)
+  %surf(BZopt-BZ)
+  %surf((dZdzeta+iota*dZdtheta).*B.^2/(G+iota*I)-BZ)
+  %surf((dRdzeta+iota*dRdtheta).*B.^2/(G+iota*I).*sin(geomang)...
+  %     +(R.*dgeomangdzeta+iota*R.*dgeomangdtheta).*B.^2/(G+iota*I).*cos(geomang)-BY)
+  surf(BX.^2+BY.^2+BZ.^2-B.^2)
 end
-fig(51)
-surf(BX.^2+BY.^2+BZ.^2-B.^2)
 
 
 Booz.XYZ.Bxgradpsi=cross(Booz.XYZ.B,Booz.XYZ.gradpsi);

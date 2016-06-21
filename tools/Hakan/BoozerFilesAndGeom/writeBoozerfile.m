@@ -30,7 +30,12 @@ fprintf(fid,'%s\n',Geom.headertext.maincomment);
 if isfield(Geom.headertext,'globalvars')
   fprintf(fid,'%s\n',Geom.headertext.globalvars);
 else
-  fprintf(fid,' m0b  n0b nsurf nper  flux/[Tm^2]     a/[m]     R/[m]   avol/[m]  Rvol/[m] Vol/[m^3]\n');
+  if Geom.StelSym %JG includes a little more info in this case
+    fprintf(fid,[' m0b  n0b nsurf nper  flux/[Tm^2]     a/[m]     R/[m]   avol/[m]  ' ...
+                 'Rvol/[m] Vol/[m^3]\n']);
+  else %and ES a little less
+    fprintf(fid,' m0b   n0b  nsurf  nper    flux [Tm^2]        a [m]          R [m]\n');
+  end
 end
 
 minorradiusVMEC_exists=0;
@@ -96,12 +101,24 @@ for rind=1:Geom.nsurf
   if isfield(Geom.headertext,'surfvars')
     fprintf(fid,'%s\n',Geom.headertext.surfvars);
   else
-    fprintf(fid,'       s         iota  curr_pol/nper    curr_tor    pprime   sqrt g(0,0)\n');
+    if Geom.StelSym
+      fprintf(fid,['       s         iota  curr_pol/nper    curr_tor    pprime   sqrt ' ...
+                   'g(0,0)\n']);
+    else
+      fprintf(fid,['        s               iota           Jpol/nper          Itor',...
+                   '            pprime         sqrt g(0,0)\n']);
+    end
   end
   if isfield(Geom.headertext,'surfvarunits')
     fprintf(fid,'%s\n',Geom.headertext.surfvarunits);
   else
-    fprintf(fid,'                            [A]            [A]   dp/ds,[Pa] (dV/ds)/nper\n');
+    if Geom.StelSym
+      fprintf(fid,['                            [A]            [A]   dp/ds,[Pa] ' ...
+                   '(dV/ds)/nper\n']);
+    else
+      fprintf(fid,['                                          [A]           [A] ',...
+                   '            [Pa]         (dV/ds)/nper\n']);
+    end
   end
   if Geom.StelSym
     fprintf(fid,'%12.4E%12.4E%12.4E%12.4E%12.4E%12.4E\n',...
@@ -119,7 +136,14 @@ for rind=1:Geom.nsurf
   if isfield(Geom.headertext,'datavars')
     fprintf(fid,'%s\n',Geom.headertext.datavars);
   else
-    fprintf(fid,'    m    n        r/[m]           z/[m] (phib-phi)*nper/twopi     bmn/[T]\n');
+    if Geom.StelSym
+      fprintf(fid,['    m    n        r/[m]           z/[m] (phib-phi)*nper/twopi     ',...
+                   'bmn/[T]\n']);
+    else
+      fprintf(fid,['    m    n      rmnc [m]         rmns [m]         zmnc [m]         ',...
+                   'zmns [m]         vmnc [ ]         vmns [ ]         ',...
+                   'bmnc [T]         bmns [T]\n']);
+    end
   end
   if Geom.StelSym
     for ind=1:Geom.nmodes(rind)

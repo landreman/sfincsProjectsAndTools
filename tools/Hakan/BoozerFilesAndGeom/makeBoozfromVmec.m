@@ -6,12 +6,14 @@ function Booz=makeBoozfromVmec(woutin,s_wish,Nu,Nw,min_Bmn)
 %woutin is the wout file name or just the netcdf variables from the wout file
 %(Too old matlab versions do not have the necessary netcdf routines.)
 
-if not(isstruct(woutin))%if not already loaded, assume woutin is a string with the file name
+if isstruct(woutin)
+  wout=woutin;
+else %if not already loaded, assume woutin is a string with the file name
   wout=struct();
   if isstr(woutin)
     tmp=ncinfo(woutin);
     for vi=1:length(tmp.Variables)
-      data=setfield(wout,tmp.Variables(vi).Name,...
+      wout=setfield(wout,tmp.Variables(vi).Name,...
                          ncread(woutin,tmp.Variables(vi).Name));
     end
   else
@@ -74,8 +76,8 @@ s=Geom.s(rindh);
 Booz.s=Geom.s(rindh);
 Booz.rnorm=Geom.rnorm(rindh);
 Booz.iota=Geom.iota(rindh);
-Booz.Bphi=Geom.Bphi(rindh);
-Booz.Btheta=Geom.Btheta(rindh);
+Booz.G=Geom.Bphi(rindh);
+Booz.I=Geom.Btheta(rindh);
 
 G=Geom.Bphi(rindh);   %=wout.bsubvmnc(n0ind,m0ind,rind)
 I=Geom.Btheta(rindh); %=wout.bsubumnc(n0ind,m0ind,rind)
@@ -86,62 +88,120 @@ rindf_plus =skrindh;
 rindf_minus=skrindh-1;
 
 %now use a RH coordinate system (u,w,s) with w=-v
-if not(Geom.StelSym)
-  error('Non-stelllarator symmmetric case not implemented!')
-end
-
 w.Nu=Nu;
 w.Nw=Nw;
 
-w.Rmnlist.m=double(wout.xm);
-w.Rmnlist.n=signchange*double(wout.xn)/Geom.Nperiods;
-w.Rmnlist.cosparity=ones(size(w.Rmnlist.m));
-w.Rmnlist.data=(wout.rmnc(:,rindf_minus)+wout.rmnc(:,rindf_plus))/2;
-w.Rmn=mnmat(w.Rmnlist,w.Nu,w.Nw,'forceSize');
-w.R=ifftmn(w.Rmn,Geom.Nperiods,w.Nu,w.Nw,'forceSize');
 
-w.Zmnlist.m=double(wout.xm);
-w.Zmnlist.n=signchange*double(wout.xn)/Geom.Nperiods;
-w.Zmnlist.cosparity = 0*ones(size(w.Zmnlist.m));
-w.Zmnlist.data=(wout.zmns(:,rindf_minus)+wout.zmns(:,rindf_plus))/2;
-w.Zmn=mnmat(w.Zmnlist,w.Nu,w.Nw,'forceSize');
-w.Z=ifftmn(w.Zmn,Geom.Nperiods,w.Nu,w.Nw,'forceSize');
+if not(Geom.StelSym)
+  %error('Non-stelllarator symmmetric case not implemented!')
+  w.Rmnlist.m=[double(wout.xm);double(wout.xm)];
+  w.Rmnlist.n=signchange*double(wout.xn)/Geom.Nperiods;
+  w.Rmnlist.n=[w.Rmnlist.n;w.Rmnlist.n];
+  w.Rmnlist.cosparity=[ones(size(wout.xn));zeros(size(wout.xn))];
+  w.Rmnlist.data=[(wout.rmnc(:,rindf_minus)+wout.rmnc(:,rindf_plus))/2;
+                  (wout.rmns(:,rindf_minus)+wout.rmns(:,rindf_plus))/2];
+  w.Rmn=mnmat(w.Rmnlist,w.Nu,w.Nw,'forceSize');
+  w.R=ifftmn(w.Rmn,Geom.Nperiods,w.Nu,w.Nw,'forceSize');
 
-w.Bmnlist.m=double(wout.xm_nyq);
-w.Bmnlist.n=signchange*double(wout.xn_nyq)/Geom.Nperiods;
-w.Bmnlist.cosparity=ones(size(w.Bmnlist.m));
-w.Bmnlist.data=wout.bmnc(:,skrindh);
-w.Bmn=mnmat(w.Bmnlist,w.Nu,w.Nw,'forceSize');
-w.B=ifftmn(w.Bmn,Geom.Nperiods,w.Nu,w.Nw,'forceSize');
+  w.Zmnlist.m=[double(wout.xm);double(wout.xm)];
+  w.Zmnlist.n=signchange*double(wout.xn)/Geom.Nperiods;
+  w.Zmnlist.n=[w.Zmnlist.n;w.Zmnlist.n];
+  w.Zmnlist.cosparity = [zeros(size(wout.xn));ones(size(wout.xn))];
+  w.Zmnlist.data=[(wout.zmns(:,rindf_minus)+wout.zmns(:,rindf_plus))/2;
+                  (wout.zmnc(:,rindf_minus)+wout.zmnc(:,rindf_plus))/2];
+  w.Zmn=mnmat(w.Zmnlist,w.Nu,w.Nw,'forceSize');
+  w.Z=ifftmn(w.Zmn,Geom.Nperiods,w.Nu,w.Nw,'forceSize');
 
-w.Jmnlist.m=double(wout.xm_nyq);
-w.Jmnlist.n=signchange*double(wout.xn_nyq)/Geom.Nperiods;
-w.Jmnlist.cosparity=ones(size(w.Jmnlist.m));
-w.Jmnlist.data=wout.gmnc(:,skrindh) * signchange;
-w.Jmn=mnmat(w.Jmnlist,w.Nu,w.Nw,'forceSize');
-w.J=ifftmn(w.Jmn,Geom.Nperiods,w.Nu,w.Nw,'forceSize');
+  w.Bmnlist.m=[double(wout.xm_nyq);double(wout.xm_nyq)];
+  w.Bmnlist.n=signchange*double(wout.xn_nyq)/Geom.Nperiods;
+  w.Bmnlist.n=[w.Bmnlist.n;w.Bmnlist.n];
+  w.Bmnlist.cosparity=[ones(size(wout.xn_nyq));zeros(size(wout.xn_nyq))];
+  w.Bmnlist.data=[wout.bmnc(:,skrindh);wout.bmns(:,skrindh)];
+  w.Bmn=mnmat(w.Bmnlist,w.Nu,w.Nw,'forceSize');
+  w.B=ifftmn(w.Bmn,Geom.Nperiods,w.Nu,w.Nw,'forceSize');
 
-w.B_ulist.m=double(wout.xm_nyq);
-w.B_ulist.n=signchange*double(wout.xn_nyq)/Geom.Nperiods;
-w.B_ulist.cosparity=ones(size(w.B_ulist.m));
-w.B_ulist.data=wout.bsubumnc(:,skrindh);
-w.B_umn=mnmat(w.B_ulist,w.Nu,w.Nw,'forceSize');
-w.B_umntilde=remove00(w.B_umn);
+  w.Jmnlist.m=[double(wout.xm_nyq);double(wout.xm_nyq)];
+  w.Jmnlist.n=signchange*double(wout.xn_nyq)/Geom.Nperiods;
+  w.Jmnlist.n=[w.Jmnlist.n;w.Jmnlist.n];
+  w.Jmnlist.cosparity=[ones(size(wout.xn_nyq));zeros(size(wout.xn_nyq))];
+  w.Jmnlist.data=[wout.gmnc(:,skrindh);wout.gmns(:,skrindh)] * signchange;
+  w.Jmn=mnmat(w.Jmnlist,w.Nu,w.Nw,'forceSize');
+  w.J=ifftmn(w.Jmn,Geom.Nperiods,w.Nu,w.Nw,'forceSize');
 
-w.B_wlist.m=double(wout.xm_nyq);
-w.B_wlist.n=signchange*double(wout.xn_nyq)/Geom.Nperiods;
-w.B_wlist.cosparity=ones(size(w.B_wlist.m)); 
-w.B_wlist.data=wout.bsubvmnc(:,skrindh) * signchange;
-w.B_wmn=mnmat(w.B_wlist,w.Nu,w.Nw,'forceSize');
-w.B_wmntilde=remove00(w.B_wmn);
+  w.B_ulist.m=[double(wout.xm_nyq);double(wout.xm_nyq)];
+  w.B_ulist.n=signchange*double(wout.xn_nyq)/Geom.Nperiods;
+  w.B_ulist.n=[w.B_ulist.n;w.B_ulist.n];
+  w.B_ulist.cosparity=[ones(size(wout.xn_nyq));zeros(size(wout.xn_nyq))];
+  w.B_ulist.data=[wout.bsubumnc(:,skrindh);wout.bsubumns(:,skrindh)];
+  w.B_umn=mnmat(w.B_ulist,w.Nu,w.Nw,'forceSize');
+  w.B_umntilde=remove00(w.B_umn);
 
-w.llist.m=double(wout.xm);
-w.llist.n=signchange*double(wout.xn)/Geom.Nperiods;
-w.llist.cosparity = 0*ones(size(w.llist.m));
-w.llist.data=wout.lmns(:,skrindh);
-w.lmn=mnmat(w.llist,w.Nu,w.Nw,'forceSize');
-w.l=ifftmn(w.lmn,Geom.Nperiods,w.Nu,w.Nw,'forceSize');
+  w.B_wlist.m=[double(wout.xm_nyq);double(wout.xm_nyq)];
+  w.B_wlist.n=signchange*double(wout.xn_nyq)/Geom.Nperiods;
+  w.B_wlist.n=[w.B_wlist.n;w.B_wlist.n];
+  w.B_wlist.cosparity=[ones(size(wout.xn_nyq));zeros(size(wout.xn_nyq))];
+  w.B_wlist.data=[wout.bsubvmnc(:,skrindh);wout.bsubvmns(:,skrindh)]*signchange;
+  w.B_wmn=mnmat(w.B_wlist,w.Nu,w.Nw,'forceSize');
+  w.B_wmntilde=remove00(w.B_wmn);
 
+  w.llist.m=[double(wout.xm);double(wout.xm)];
+  w.llist.n=signchange*double(wout.xn)/Geom.Nperiods;
+  w.llist.n=[w.llist.n;w.llist.n];
+  w.llist.cosparity = [zeros(size(wout.xn));ones(size(wout.xn))];
+  w.llist.data=[wout.lmns(:,skrindh);wout.lmnc(:,skrindh)];
+  w.lmn=mnmat(w.llist,w.Nu,w.Nw,'forceSize');
+  w.l=ifftmn(w.lmn,Geom.Nperiods,w.Nu,w.Nw,'forceSize');
+  
+else
+  w.Rmnlist.m=double(wout.xm);
+  w.Rmnlist.n=signchange*double(wout.xn)/Geom.Nperiods;
+  w.Rmnlist.cosparity=ones(size(w.Rmnlist.m));
+  w.Rmnlist.data=(wout.rmnc(:,rindf_minus)+wout.rmnc(:,rindf_plus))/2;
+  w.Rmn=mnmat(w.Rmnlist,w.Nu,w.Nw,'forceSize');
+  w.R=ifftmn(w.Rmn,Geom.Nperiods,w.Nu,w.Nw,'forceSize');
+
+  w.Zmnlist.m=double(wout.xm);
+  w.Zmnlist.n=signchange*double(wout.xn)/Geom.Nperiods;
+  w.Zmnlist.cosparity = 0*ones(size(w.Zmnlist.m));
+  w.Zmnlist.data=(wout.zmns(:,rindf_minus)+wout.zmns(:,rindf_plus))/2;
+  w.Zmn=mnmat(w.Zmnlist,w.Nu,w.Nw,'forceSize');
+  w.Z=ifftmn(w.Zmn,Geom.Nperiods,w.Nu,w.Nw,'forceSize');
+
+  w.Bmnlist.m=double(wout.xm_nyq);
+  w.Bmnlist.n=signchange*double(wout.xn_nyq)/Geom.Nperiods;
+  w.Bmnlist.cosparity=ones(size(w.Bmnlist.m));
+  w.Bmnlist.data=wout.bmnc(:,skrindh);
+  w.Bmn=mnmat(w.Bmnlist,w.Nu,w.Nw,'forceSize');
+  w.B=ifftmn(w.Bmn,Geom.Nperiods,w.Nu,w.Nw,'forceSize');
+
+  w.Jmnlist.m=double(wout.xm_nyq);
+  w.Jmnlist.n=signchange*double(wout.xn_nyq)/Geom.Nperiods;
+  w.Jmnlist.cosparity=ones(size(w.Jmnlist.m));
+  w.Jmnlist.data=wout.gmnc(:,skrindh) * signchange;
+  w.Jmn=mnmat(w.Jmnlist,w.Nu,w.Nw,'forceSize');
+  w.J=ifftmn(w.Jmn,Geom.Nperiods,w.Nu,w.Nw,'forceSize');
+
+  w.B_ulist.m=double(wout.xm_nyq);
+  w.B_ulist.n=signchange*double(wout.xn_nyq)/Geom.Nperiods;
+  w.B_ulist.cosparity=ones(size(w.B_ulist.m));
+  w.B_ulist.data=wout.bsubumnc(:,skrindh);
+  w.B_umn=mnmat(w.B_ulist,w.Nu,w.Nw,'forceSize');
+  w.B_umntilde=remove00(w.B_umn);
+
+  w.B_wlist.m=double(wout.xm_nyq);
+  w.B_wlist.n=signchange*double(wout.xn_nyq)/Geom.Nperiods;
+  w.B_wlist.cosparity=ones(size(w.B_wlist.m)); 
+  w.B_wlist.data=wout.bsubvmnc(:,skrindh) * signchange;
+  w.B_wmn=mnmat(w.B_wlist,w.Nu,w.Nw,'forceSize');
+  w.B_wmntilde=remove00(w.B_wmn);
+
+  w.llist.m=double(wout.xm);
+  w.llist.n=signchange*double(wout.xn)/Geom.Nperiods;
+  w.llist.cosparity = 0*ones(size(w.llist.m));
+  w.llist.data=wout.lmns(:,skrindh);
+  w.lmn=mnmat(w.llist,w.Nu,w.Nw,'forceSize');
+  w.l=ifftmn(w.lmn,Geom.Nperiods,w.Nu,w.Nw,'forceSize');
+end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%% This is the transformation. See th notes by Hirshman
 %%%%% 'Transformation from VMEC to Boozer Coordinates', April 1995
@@ -181,9 +241,12 @@ Booz.Z=interp2_cyclic(w.u,w.w,w.Z,Booz_u,Booz_w,Geom.Nperiods);
 Booz.mnmat.B=fftmn(Booz.B);
 Booz.mnmat.R=fftmn(Booz.R);
 Booz.mnmat.Z=fftmn(Booz.Z);
+Booz.mnmat.Dzetaw=fftmn(Booz.Dzetaw);
 
 Booz.R00=mean(mean(Booz.R));
 Booz.B00=mean(mean(Booz.B));
+Booz.FSAB2=Nu*Nw/sum(sum(1./Booz.B.^2));
+
 
 %[mean(mean(Booz.R)),5.5170]
 %[mean(mean(Booz.B)),2.8234]
