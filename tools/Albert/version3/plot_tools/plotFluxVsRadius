@@ -1,0 +1,593 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+## THIS TOOL PLOTS FLUXES (Y-AXIS)  AS FUNCTIONS OF r/a
+
+
+outputFilename = "sfincsOutput.h5"
+
+import matplotlib
+#import matplotlib.pyplot as plt
+import h5py
+import numpy
+import numpy as np
+import inspect, math, os
+import pickle
+import sys
+from subprocess import call
+
+print "This is "+ inspect.getfile(inspect.currentframe())
+
+makePDF = False
+for arg in sys.argv:
+   if arg.lower()=='pdf':
+      makePDF = True
+
+if makePDF:
+   matplotlib.use('PDF')
+
+
+import matplotlib.pyplot as plt
+
+#matplotlib.rcParams['text.usetex'] = True
+#matplotlib.rcParams['text.latex.unicode'] = True
+
+numRuns = 0
+scanVariableValuesWithPhi1 = []
+scanVariableValuesWithoutPhi1 = []
+outputsWithPhi1 = []
+outputsWithoutPhi1 = []
+
+##INPUTS##
+e = 1.6021766208*10**(-19) #Electron charge
+mbar = 1.672621777*10**(-27) #Proton mass
+nbar = 10.0**20 # in 10^20
+Tbar = 1000*e 
+Rbar = 1.0
+Bbar = 1.0
+vbar = np.sqrt(2.0 * Tbar / mbar)
+
+
+xVariableName = "rN"
+
+yVariableNames = ["particleFlux_vd_rHat", "nHats"] ##For vectors plot all in same plot 
+
+yVariableFactors = [nbar*vbar / 10.0**20, nbar / 10.0**20]
+
+ySpecies = 2 ##Which species to plot results for. If irrelevant or if all species should be plotted put this to any negative value or 0.
+
+yPlotFirstDivdedBySecond = True ##If this quantity is True then yVariableNames should contain two parameters and the plot will show the first divided by the second.
+
+
+xAxisLabel = r'$r/a$'
+#yAxisLabels = [r'$<\mathbf{\Gamma}_s \cdot \nabla r>$ $[10^{20} \mathrm{m}^{-2} \mathrm{s}^{-1}]$', r'$n_s $ $[10^{20} \mathrm{m}^{-3}]$']
+yAxisLabels = [r'$<\mathbf{\Gamma}_z \cdot \nabla r> / n_z$ $[\mathrm{m} \mathrm{s}^{-1}]$']
+
+logXaxis = False
+logYaxis = [False, False]
+
+FigSize = (30,15)
+
+font = {'size':15}
+matplotlib.rc('font', **font)
+matplotlib.rc('lines',markeredgewidth=0,markersize=3,linewidth=2.5)
+matplotlib.rc('axes',linewidth=1.5)
+#matplotlib.rc('text', usetex=True)
+
+PlotLinespecs = ['rD-', 'bo-', 'gx-.', 'ys-.', 'cx--', 'm+--']
+PlotLineColors = ['r', 'b', 'g', 'y', 'c', 'm']
+PlotMarkerEdgeWidth = [0, 0, 3, 0, 3, 3]
+PlotLegendLabels = [r'w/ $\Phi_1$', r'w/o $\Phi_1$']
+
+LegendFontSize = 14
+
+PlotMarkerSize = 8
+
+##Er=-5.93##
+#InfoText = 'INFO: Collisionality has been varied by varying the densities' + r' ($n_i = n_e$)' + '.\nThe density gradients have been varied accordingly to keep the\ndensity gradient scale length fixed.\n'+ 'Base case: '+ r'$r/a = 0.50$, $a = 0.51092 \mathrm{m}$, $E_r = -5.93 \mathrm{kV/m}$,' + '\n' + r'$n_e = n_i = 0.93 \cdot 10^{20} \mathrm{m}^{-3}$,' + r'$T_e = 4.13\mathrm{keV}$, $T_i = 3.77\mathrm{keV}$,' + '\n' + r'$\frac{dn}{d(r/a)} = -0.33$, $\frac{dT_e}{d(r/a)} = -4.31\mathrm{keV}$, $\frac{dT_i}{d(r/a)} = -2.12\mathrm{keV}$.' +'\n\n' + r'$\nu_{i}^{\prime} = \frac{(G + \iota I) \nu_{ii}}{v_i B_0}$' + '\n' + r'$\nu_{ii} = \frac{4 \sqrt{2 \pi} n_i e^4 \ln \Lambda}{3 m_i^{1/2} T_i^{3/2}}$' + '\n' + 'See Moll' + u'é' + 'n et al. PoP ' + r'$\mathbf{22}$' + r' $112508$' + r' $(2015)$' + ' for definitions.' 
+
+##Er=0##
+InfoText = ''
+InfoTextPosX = 0.54
+InfoTextPosY = 0.40
+
+#inputfiles = ['DKES_baseline_ra0p5_Er-5.93kVm-1_Fluxes_vs_density.pydat']
+#inputfiles = ['DKES_baseline_ra0p5_Er0.0kVm-1_Fluxes_vs_density.pydat']
+inputfiles = []
+
+##To plot vertical line for baseline case
+#baselineDensity = 0.92589314
+
+##END INPUTS##
+
+MinFloat = pow(10, -sys.float_info.dig)
+
+xArrayPosition = -1
+yArrayPosition = -1
+
+
+if len(str(xVariableName).split("_")) != 1 :
+   try:
+      xArrayPosition = int(str(xVariableName).split("_")[-1])
+      xVariableName = '_'.join(str(xVariableName).split("_")[:-1])
+      if xArrayPosition < 1 :
+         print "WARNING: Index has to be larger than 0, using 1 instead."
+         xArrayPosition = 1
+   except ValueError:
+      xArrayPosition = -1
+
+xArrayPositionString = ""
+yArrayPositionString = ""
+
+
+if xArrayPosition != -1 :
+   xArrayPositionString = "[" + str(xArrayPosition) + "]"
+
+ySpecies = int(ySpecies)
+if ySpecies > 0:
+   yArrayPositionString = "[" + str(ySpecies) + "]"
+
+if len(yVariableNames) < 2 and yPlotFirstDivdedBySecond:
+   print "You need to specify two quantities to plot if you want to plot the ratio!"
+   exit(1)
+
+
+def uniq(seq):
+   checked = []
+   for e in seq:
+       if e not in checked:
+           checked.append(e)
+   return checked
+
+# Get a list of the subdirectories:                                                                        
+directories = filter(os.path.isdir, os.listdir("."))
+
+atLeastOneDirectorySucceeded = False
+
+for directory in directories:
+    filename = directory+"/"+outputFilename
+    if not os.path.isfile(filename):
+        print "Directory "+directory+" does not have a "+outputFilename+" file (yet)."
+        continue
+
+    try:
+        f = h5py.File(filename,'r')
+    except IOError:
+        print "Unable to open "+filename+" even though this file exists."
+        continue
+
+    try:
+        finished = f["finished"]
+    except KeyError:
+        print "Run in directory "+directory+" does not appear to have finished."
+        continue
+    try:
+        # Try reading a field that should definitely be present in the output file for any run that completed.
+        dummy = f["FSABFlow"][()]
+        integerToRepresentTrue = (f["integerToRepresentTrue"][()])
+        includePhi1_new = (f["includePhi1"][()] == integerToRepresentTrue)
+    except:
+        print "Unable to read "+filename+" even though this file exists."
+        continue
+
+    try:
+       # Try reading the x variable
+       if xArrayPosition != -1:
+          xVariable = (f[xVariableName][()])[xArrayPosition - 1]
+       else :
+          xVariable = f[xVariableName][()]
+    except:
+       print "Unable to read value of " + xVariableName + xArrayPositionString + " in " + filename + "."
+       continue
+    print "Read " + xVariableName + xArrayPositionString + " = " + str(xVariable) + " from " + filename + "."  
+    #try:
+    # Try reading the y variables 
+    yVariables = []
+    try:
+       iter = -1
+       for yVariableName in yVariableNames :
+          iter += 1
+          try:
+             if not includePhi1_new:
+                yVariableName = yVariableName.replace("_vd_", "_vm_")
+             yVariable = f[yVariableName][()]
+             if includePhi1_new:
+                if len(yVariable.shape) > 1:
+                   yVariable = yVariable[..., -1]
+                #else:
+                #   yVariable = yVariable[-1]
+             #else:
+             #   print str(yVariable)
+             #yVariables.append(yVariable)
+             if ySpecies < 1:
+                #if not np.isscalar(yVariable):
+                #   yVariable = yVariable[-1]
+                print "Read " + yVariableName + " = " + str(yVariable) + " from " + filename + "."
+                yVariable = yVariableFactors[iter] * yVariable
+                yVariables.append(yVariable)
+             else:
+                yVariable = yVariable[ySpecies - 1]
+                if not np.isscalar(yVariable):
+                   yVariable = yVariable[-1]
+                print "Read " + yVariableName + yArrayPositionString + " = " + str(yVariable) + " from " + filename + "."
+                yVariable = yVariableFactors[iter] * yVariable
+                yVariables.append(yVariable)
+          except:
+             print "Unable to read value of " + yVariableName + yArrayPositionString + " in " + filename + "."
+             raise
+    except: 
+       print "Unable to read value of all quantities in " + str(yVariableNames) + " in " + filename + "."
+       continue
+
+    try:
+       if yPlotFirstDivdedBySecond:
+          tmp = yVariables[0]/yVariables[1]
+          yVariables = tmp
+          print "Storing (" + str(yVariableFactors[0]) + "*" + yVariableNames[0] + yArrayPositionString + ") / ("  + str(yVariableFactors[1]) + "*" + yVariableNames[1] + yArrayPositionString + ") = " + str(yVariables) + "."
+    except:
+       print "Unexpected error!"
+       raise
+
+    print "Processing directory "+directory
+
+    # The expression [()] converts from an h5py dataset to a numpy ndarray:
+    inputRadialCoordinateForGradients_new = f["inputRadialCoordinateForGradients"][()]
+    RHSMode_new = f["RHSMode"][()]
+    Nspecies_new = f["Nspecies"][()]
+
+    Zs_new = f["Zs"][()]
+    THats_new = f["THats"][()] 
+    B0OverBBar_new = f["B0OverBBar"][()]
+    GHat_new = f["GHat"][()]
+    IHat_new = f["IHat"][()]
+    iota_new = f["iota"][()]
+    nu_n_new = f["nu_n"][()]
+    if numRuns == 0:
+       inputRadialCoordinateForGradients = inputRadialCoordinateForGradients_new
+       RHSMode = RHSMode_new
+       Nspecies = Nspecies_new
+       includePhi1 = includePhi1_new
+
+       Zs = Zs_new
+       THats = THats_new
+       B0OverBBar = B0OverBBar_new
+       GHat = GHat_new
+       IHat = IHat_new
+       iota = iota_new
+       nu_n = nu_n_new
+    else:
+       if inputRadialCoordinateForGradients != inputRadialCoordinateForGradients_new:
+          print "Error! inputRadialCoordinateForGradients is not consistent among runs."
+          exit(1)
+       if RHSMode != RHSMode_new:
+          print "Error! RHSMode is not consistent among runs."
+          exit(1)
+       if Nspecies != Nspecies_new:
+          print "Error! Nspecies is not consistent among runs."
+          exit(1)
+       #if includePhi1 != includePhi1_new:
+       #   print "Error! includePhi1 is not consistent among runs."
+       #   exit(1)
+
+       if not np.array_equal(Zs, Zs_new) :
+          print "Error! Zs is not consistent among runs."
+          exit(1)
+
+#       if not np.array_equal(THats, THats_new) :
+#          print "Error! THats is not consistent among runs."
+#          exit(1)
+#
+#       if B0OverBBar != B0OverBBar_new:
+#            print "Error! B0OverBBar is not consistent among runs."
+#            exit(1)
+#
+#       if GHat != GHat_new:
+#            print "Error! GHat is not consistent among runs."
+#            exit(1)
+#
+#       if IHat != IHat_new:
+#            print "Error! IHat is not consistent among runs."
+#            exit(1)
+#
+#       if iota != iota_new:
+#            print "Error! iota is not consistent among runs."
+#            exit(1)
+#
+#       if nu_n != nu_n_new:
+#            print "Error! nu_n is not consistent among runs."
+#            exit(1)
+
+
+    if RHSMode != 1 and RHSMode != 2 and RHSMode != 3:
+        print "Error! sfincsScanPlot is not yet set up for RHSMode = "+str(RHSMode)
+        exit(1)
+
+    ##TMP
+    print str(xVariable)
+    print str(yVariables)
+
+
+    #scanVariableValues.append(xVariable)
+    #outputs.append(yVariables)
+    if includePhi1_new:
+       scanVariableValuesWithPhi1.append(xVariable)
+       outputsWithPhi1.append(yVariables)
+    else:
+       scanVariableValuesWithoutPhi1.append(xVariable)
+       outputsWithoutPhi1.append(yVariables)
+
+    atLeastOneDirectorySucceeded = True
+
+    numRuns += 1
+
+    print "Successfully read run in directory "+directory
+
+if not atLeastOneDirectorySucceeded:
+   print "Error! There do not seem to be any completed sfincs jobs in subdirectories of this directory or none of the output files contain both " + xVariableName + xArrayPositionString +  " and " + str(yVariableNames).strip('[]') + "."
+   exit(1)
+
+
+##TMP
+print str(scanVariableValuesWithPhi1)
+print str(outputsWithPhi1)
+print str(scanVariableValuesWithoutPhi1)
+print str(outputsWithoutPhi1)
+#print len(outputs)
+#print outputs[0]
+#print outputs[1]
+#print outputs[0][1]
+#print outputs[0][1][1]
+#print outputs[0][1][1][0]
+#print outputs[0][:][1]
+#print outputs[0][2][0]
+#exit(0)
+
+# Sort:
+scanVariableValuesWithPhi1_sorted = sorted(scanVariableValuesWithPhi1)
+scanVariableValuesWithoutPhi1_sorted = sorted(scanVariableValuesWithoutPhi1)
+outputsWithPhi1_sorted = []
+outputsWithoutPhi1_sorted = []
+for scanVariableValue in scanVariableValuesWithPhi1_sorted:
+   outputsWithPhi1_sorted.append(outputsWithPhi1[scanVariableValuesWithPhi1.index(scanVariableValue)])
+
+for scanVariableValue in scanVariableValuesWithoutPhi1_sorted:
+   outputsWithoutPhi1_sorted.append(outputsWithoutPhi1[scanVariableValuesWithoutPhi1.index(scanVariableValue)])
+
+#print "AAA"
+print outputsWithPhi1_sorted
+print outputsWithoutPhi1_sorted
+outputsWithPhi1_array = numpy.array(outputsWithPhi1_sorted)
+outputsWithoutPhi1_array = numpy.array(outputsWithoutPhi1_sorted)
+#outputs_array = outputs_sorted
+
+scanVariableValuesWithPhi1_sorted =  numpy.array(scanVariableValuesWithPhi1_sorted)
+scanVariableValuesWithoutPhi1_sorted =  numpy.array(scanVariableValuesWithoutPhi1_sorted)
+
+print str(scanVariableValuesWithPhi1_sorted)
+print str(scanVariableValuesWithoutPhi1_sorted)
+print outputsWithPhi1_array
+print outputsWithoutPhi1_array
+
+#xAxisLabels=[]
+#yAxisLabels=[]
+
+numQuantities = len(yVariableNames)
+#xAxisLabels.append(xVariableName + xArrayPositionString) 
+#yAxisLabels.append(yVariableName + yArrayPositionString)
+
+if yPlotFirstDivdedBySecond:
+   numQuantities = 1
+
+#exit(0)
+# ***************************************************
+# Now make the plot
+# ***************************************************
+
+fig = plt.figure(figsize=FigSize)
+fig.patch.set_facecolor('white')
+
+numCols = math.ceil(math.sqrt(numQuantities*1.0))
+numRows = math.ceil(numQuantities*1.0/numCols)
+
+xdata = []
+ydata = []
+#xdata = np.empty()
+#ydata = np.empty()
+xlabels = []
+ylabels = []
+xscales = []
+yscales = []
+ymins = []
+ymaxs = []
+#linespec = '.-'
+
+for iQuantity in range(numQuantities):
+   ax = plt.subplot(numRows,numCols,iQuantity+1)
+   xdata.append(scanVariableValuesWithPhi1_sorted)
+   xdata.append(scanVariableValuesWithoutPhi1_sorted)
+   if numQuantities > 1:
+      ydata.append(outputsWithPhi1_array[:,iQuantity])
+      ydata.append(outputsWithoutPhi1_array[:,iQuantity])
+   else:
+      ydata.append(outputsWithPhi1_array[:])
+      ydata.append(outputsWithoutPhi1_array[:])
+
+
+   if logYaxis[iQuantity] :
+      yscales.append('symlog')
+   else:
+      yscales.append('linear')
+   
+
+   if logXaxis : 
+      xscales.append('log')
+   else:
+      xscales.append('linear') 
+
+   xlabels.append(xAxisLabel)
+   ylabels.append(yAxisLabels[iQuantity])
+
+   print "Plot"
+   print xdata[-2]
+   print xdata[-1]
+   print ydata[-2]
+   print ydata[-1]
+   print ""
+
+   plt.plot(xdata[-2], ydata[-2],PlotLinespecs[0], color=PlotLineColors[0], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[0], markeredgecolor=None, label=PlotLegendLabels[0])
+   plt.plot(xdata[-1], ydata[-1],PlotLinespecs[1], color=PlotLineColors[1], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[1], markeredgecolor=None, label=PlotLegendLabels[1])
+   plt.legend(bbox_to_anchor=(0.01, 0.70, 1., .102), loc=3, ncol=1, mode=None, borderaxespad=0., fontsize=LegendFontSize)
+   plt.show()
+   exit(0)
+
+   ydataToPlot = np.array(ydata[-1])
+  
+   ydataToPlot = ydataToPlot.tolist()
+
+#   ydataToPlot = [s.tolist() for s in ydataToPlot]
+
+   ydataToPlot = np.array(ydataToPlot)
+
+   if len(ydataToPlot.shape) > 1:
+      numToPlot = ydataToPlot.shape[1]
+   else:
+      numToPlot = 1
+
+   plotAbsMin = float("inf")
+   plotAbsMax = 0.0
+
+   for iPlot in range(numToPlot):
+      print xdata[-1]
+
+      if numToPlot > 1:
+         print ydataToPlot[:,iPlot].flatten().tolist()
+
+         plotAbsMin = min(plotAbsMin, np.amin(np.absolute(ydataToPlot[:,iPlot].flatten())))
+         plotAbsMax = max(plotAbsMax, np.amax(np.absolute(ydataToPlot[:,iPlot].flatten())))
+   
+         #plt.plot(xdata[-1],ydata[-1],linespec)
+         plt.plot(xdata[-1],ydataToPlot[:,iPlot].flatten().tolist(),PlotLinespecs[iPlot], color=PlotLineColors[iPlot], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[iPlot], markeredgecolor=None, label=PlotLegendLabels[iPlot])
+      else :
+         print ydataToPlot[:].flatten().tolist()
+         plotAbsMin = min(plotAbsMin, np.amin(np.absolute(ydataToPlot[:].flatten())))
+         plotAbsMax = max(plotAbsMax, np.amax(np.absolute(ydataToPlot[:].flatten())))
+
+         plt.plot(xdata[-1],ydataToPlot[:].flatten().tolist(),PlotLinespecs[4], color=PlotLineColors[4], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[4], markeredgecolor=None, label=PlotLegendLabels[0])
+
+
+   ##DATA FROM OTHER CODES THAN SFINCS##
+   for infile in inputfiles:
+      try:
+         inputParams = np.genfromtxt(infile, comments="#")
+      except Exception as exc:
+         print (exc.__class__.__name__, ": ", exc.message, "while reading %s" % infile)
+         sys.exit(0)
+      else:
+         ##print inputParams
+         nu_norm = DensityToNuFactor/nbar * inputParams[:,0] #Normalized collisionality
+         Gamma_e = 10**(-20) * inputParams[:,2] #Electron flux in 10^20 m^-2 s^-1
+         Gamma_i = 10**(-20) * inputParams[:,3] #Ion flux in 10^20 m^-2 s^-1
+
+         Q_e = inputParams[:,4] #Electron heat flux in kW m^-2
+         Q_i = inputParams[:,5] #Ion heat flux in kW m^-2
+
+         je_bsOverB0 = inputParams[:,6] #<J_e . B>/B0 in MA/m^2
+         ji_bsOverB0 = inputParams[:,7] #<J_i . B>/B0 in MA/m^2 
+         j_bs = - (je_bsOverB0 + ji_bsOverB0)*B0OverBBar*Bbar
+
+         if iQuantity == 0:
+            plt.plot(nu_norm.tolist(), Gamma_i.tolist(),PlotLinespecs[2], color=PlotLineColors[2], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[2], markeredgecolor=None, label=PlotLegendLabels[2])
+            plt.plot(nu_norm.tolist(), Gamma_e.tolist(),PlotLinespecs[3], color=PlotLineColors[3], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[3], markeredgecolor=None, label=PlotLegendLabels[3])
+         elif iQuantity == 1:
+            plt.plot(nu_norm.tolist(), Q_i.tolist(),PlotLinespecs[2], color=PlotLineColors[2], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[2], markeredgecolor=None, label=PlotLegendLabels[2])
+            plt.plot(nu_norm.tolist(), Q_e.tolist(),PlotLinespecs[3], color=PlotLineColors[3], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[3], markeredgecolor=None, label=PlotLegendLabels[3])
+         elif iQuantity == 2:
+            plt.plot(nu_norm.tolist(), j_bs.tolist(),PlotLinespecs[5], color=PlotLineColors[5], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[5], markeredgecolor=None, label=PlotLegendLabels[5])
+
+   #####################################      
+
+
+   plt.xscale(xscales[-1])
+   plt.yscale(yscales[-1])
+   plt.xlabel(xlabels[-1])
+   plt.ylabel(ylabels[-1])
+   plt.grid(which='both')
+
+   ymin,ymax = plt.ylim()
+   ymins.append(ymin)
+   ymaxs.append(ymax)
+
+   xmin,xmax = plt.xlim()
+
+   ##Add vertical line for baseline
+   #plt.vlines(baselineNu, ymin, ymax, colors='k', linestyles='dashed', label='Base case')
+
+   ## bbox_to_anchor dimensions: x_coord, y_coord, ?, ? 
+   if iQuantity == 1:
+      plt.legend(bbox_to_anchor=(0.01, 0.70, 1., .102), loc=3, ncol=1, mode=None, borderaxespad=0., fontsize=LegendFontSize)
+   elif iQuantity == 2:
+      plt.legend(bbox_to_anchor=(0.02, 0.88, 0.10, .10), loc=2, ncol=1, mode=None, borderaxespad=0., fontsize=LegendFontSize)
+
+   multipleSigns = False
+   if np.sign(ymin) != np.sign(ymax):
+      multipleSigns = True
+
+   if logYaxis[iQuantity] :
+      #plt.yticks([-1e-4, -1e-5, -1e-6, -1e-7])
+      if multipleSigns:
+         space_lin = 1
+         linlog_limit = np.power(10, np.floor(np.log10(plotAbsMin)))
+
+         linlog_limit_array = np.empty(ydataToPlot.shape[0]); linlog_limit_array.fill(linlog_limit)
+
+         plt.yscale('symlog', linthreshy = linlog_limit, linscaley = space_lin)
+##      if multipleSigns:
+##         plt.fill_between(xdata[-1], linlog_limit_array, -linlog_limit_array, facecolor='green', alpha=0.12, hatch='/')
+         fill_array = np.empty(xdata[-1].shape[0]); fill_array.fill(xmax)
+         fill_array[0] = xmin
+         plt.fill_between(fill_array, linlog_limit_array, -linlog_limit_array, facecolor='green', alpha=0.12, hatch='/')
+         plt.text(0.85, 0.5, r'Linear y-axis region', color='#005544', horizontalalignment='center',verticalalignment='center', transform=ax.transAxes)
+      else :
+         ##space_lin = MinFloat
+         ##linlog_limit = MinFloat
+         plt.yscale('log')
+
+#plt.legend(bbox_to_anchor=(-0.66, 1.04, 1., .102), loc=2, ncol=2, mode=None, borderaxespad=0., fontsize=24)
+
+outputFile = open('sfincsScan.dat','wb')
+scanType=21
+data = {'scanType':scanType, 'numQuantities':numQuantities, 'numRows':numRows,'numCols':numCols,
+        'xdata':xdata, 'ydata':ydata, 'xlabels':xlabels, 'ylabels':ylabels,
+        'xscales':xscales, 'yscales':yscales, 'ymins':ymins, 'ymaxs':ymaxs}
+# pickle.dump(scanType,outputFile)
+# pickle.dump(numQuantities,outputFile)
+# pickle.dump(numRows,outputFile)
+# pickle.dump(numCols,outputFile)
+# pickle.dump(xdata,outputFile)
+# pickle.dump(ydata,outputFile)
+# pickle.dump(xlabels,outputFile)
+# pickle.dump(ylabels,outputFile)
+# pickle.dump(xscales,outputFile)
+# pickle.dump(yscales,outputFile)
+# pickle.dump(ymins,outputFile)
+# pickle.dump(ymaxs,outputFile)
+pickle.dump(data,outputFile)
+outputFile.close()
+
+titleString = "Plot generated by "+ inspect.getfile(inspect.currentframe()) + "\nRun in "+os.getcwd()
+ax = fig.add_axes([0,0,1,1], frameon=False)
+ax.text(0.5,0.99,titleString,horizontalalignment='center',verticalalignment='top')
+
+ax.text(InfoTextPosX, InfoTextPosY, InfoText, color='#000000', horizontalalignment='left',verticalalignment='top', multialignment='left')
+
+# If this script was called with any command-line arguments, then do not actually display the plot:
+if len(sys.argv) == 1:
+    plt.show()
+
+if makePDF:
+   if len(sys.argv)>2 : #Use the substituted name as file name
+      print "Writing plot to " + os.getcwd() + "/" + sys.argv[2] + ".pdf."
+      plt.savefig(sys.argv[2] + ".pdf")
+   else: #Use script name as file name
+      print "Writing plot to " + os.getcwd() + "/" + os.path.basename(__file__) + ".pdf."
+      plt.savefig(os.path.basename(__file__) + ".pdf")
+
