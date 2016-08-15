@@ -1,0 +1,253 @@
+#!/usr/bin/env python
+
+
+
+import matplotlib
+import matplotlib.pyplot as plt
+import h5py
+import numpy
+import os, sys, inspect
+import warnings
+import matplotlib.ticker as ticker
+
+#show_rN = True
+show_rN = False
+
+#makePDF = True
+makePDF = False
+for arg in sys.argv:
+   if arg.lower()=='pdf':
+      makePDF = True
+
+if makePDF:
+   matplotlib.use('PDF')
+
+print "This is "+ inspect.getfile(inspect.currentframe())
+
+#########
+##INPUT##
+#########
+
+#quantityToPlot = "totalDensity"
+#quantityToPlot = "densityPerturbation"
+
+#ispecies = 1
+
+filename = 'sfincsOutput.h5'
+
+FigSize = (12,10)
+
+font = {'size':12}
+matplotlib.rc('font', **font)
+matplotlib.rc('lines',markeredgewidth=0,markersize=3,linewidth=2.5)
+matplotlib.rc('axes',linewidth=1.5)
+
+zFactor = 1 ##10^20
+##W7-X##
+#xAxisTicks = [r'$0$', r'$\pi/10$', r'$2\pi/10$', r'$3\pi/10$', r'$4\pi/10$']
+##LHD
+xAxisTicks = [r'$0$', r'$\pi/20$', r'$2\pi/20$', r'$3\pi/20$', r'$4\pi/20$']
+
+yAxisTicks = [r'$0$', r'$\pi/2$', r'$\pi$', r'$3\pi/2$', r'$2\pi$']
+
+
+#iteration = 0
+numContours = 100
+#ContourLevels = [-3.0, -1.5, 0.0, 1.5, 3.0, 4.5, 6.0]
+numLevels = 5
+
+numOfDecimals = 4
+
+
+#############
+##END INPUT##
+#############
+
+fig = plt.figure(figsize=FigSize)
+fig.patch.set_facecolor('white')
+
+def fmt_cbar(x, pos):
+   if x == 0.0:
+      return r'${}$'.format(x)
+   #a, b = '{:.2e}'.format(x).split('e')
+   formatString = '{:.' + str(numOfDecimals) + 'e}'
+   a, b = formatString.format(x).split('e')
+   b = int(b)
+   return r'${} \cdot 10^{{{}}}$'.format(a, b)
+
+def fmt_xy_axis(x, pos):
+   return r'${}$'.format(x)
+
+#for i in range(6):
+print "Processing file ",filename
+f = h5py.File(filename,'r')
+theta = f["theta"][()]
+zeta = f["zeta"][()]
+
+Nspecies = f["Nspecies"][()]
+totalDensity = f["totalDensity"][()]
+densityPerturbation = f["densityPerturbation"][()]
+
+iteration = f["NIterations"][()] - 1 #Results from last iteration
+rN = f["rN"][()]
+f.close()
+
+
+numRows = Nspecies
+numCols = 3
+
+print "theta max: " + str(numpy.amax(theta))
+print "zeta max: " + str(numpy.amax(zeta))
+
+for ispecies in range(Nspecies):
+
+   ################################
+
+   print "n_s min: " + str(numpy.amin(totalDensity[:,:,ispecies, iteration])) 
+   print "n_s max: " + str(numpy.amax(totalDensity[:,:,ispecies, iteration])) 
+   print "n_s1 min: " + str(numpy.amin(densityPerturbation[:,:,ispecies, iteration])) 
+   print "n_s1 max: " + str(numpy.amax(densityPerturbation[:,:,ispecies, iteration])) 
+
+   deltaNs = (numpy.amax(totalDensity[:,:,ispecies, iteration]) - numpy.amin(totalDensity[:,:,ispecies, iteration])) / numLevels
+   ContourLevelsNs = numpy.arange(numpy.amin(totalDensity[:,:,ispecies, iteration]), numpy.amax(totalDensity[:,:,ispecies, iteration]) + deltaNs/2.0, deltaNs)
+   ContourLevelsNs = zFactor*ContourLevelsNs
+
+   print ContourLevelsNs
+    
+   ax = plt.subplot(Nspecies, numCols, 3*ispecies + 1)
+    #plt.contourf(zeta,theta,1000*numpy.fliplr(Phi1Hat[:,:,iteration].transpose()),numContours)
+   NsPlot = plt.contourf(zeta,theta,zFactor*totalDensity[:,:,ispecies, iteration].transpose(),numContours)
+   NsPlot2 = plt.contour(NsPlot, levels=ContourLevelsNs, colors='k', hold='on')
+   plt.xlabel(r'$\zeta$' + " " + r'$\mathrm{[rad]}$')
+   plt.ylabel(r'$\theta$'+ " " + r'$\mathrm{[rad]}$')
+
+   plt.xticks([0,max(zeta)/4,max(zeta)/2,3*max(zeta)/4,max(zeta)])
+   plt.yticks([0.0,max(theta)/4,max(theta)/2,3*max(theta)/4,max(theta)])
+   plt.gca().axes.xaxis.set_ticklabels(xAxisTicks)
+   plt.gca().axes.yaxis.set_ticklabels(yAxisTicks)
+   
+   plt.gca().axes.xaxis.set_label_coords(0.5,-0.05)
+   plt.gca().axes.yaxis.set_label_coords(-0.09,0.5)
+   
+   plt.tight_layout(pad=0.1, w_pad=0.1, h_pad=1.0)
+
+   if show_rN:
+      plt.title('rN = '+str(rN))
+   plt.title(r'Species ' + str(ispecies))
+
+   cbar = plt.colorbar(NsPlot, format=ticker.FuncFormatter(fmt_cbar), ticks=ContourLevelsNs)
+   cbar.ax.set_ylabel(r'$n_s = n_{s0} + n_{s1}$'+ " " + r'$[10^{20} {\mathrm{m}}^{-3}]$', rotation=270, labelpad=35)
+
+   plt.clabel(NsPlot2, fmt=ticker.FuncFormatter(fmt_cbar), colors='k', fontsize=15, inline=False)
+
+   #plt.subplots_adjust(wspace=0.27)
+
+   #print Phi1Hat.shape
+
+   ################################
+
+   deltaN1 = (numpy.amax(densityPerturbation[:,:,ispecies, iteration]) - numpy.amin(densityPerturbation[:,:,ispecies, iteration])) / numLevels
+   ContourLevelsN1 = numpy.arange(numpy.amin(densityPerturbation[:,:,ispecies, iteration]), numpy.amax(densityPerturbation[:,:,ispecies, iteration]) + deltaN1/2.0, deltaN1)
+   ContourLevelsN1 = zFactor*ContourLevelsN1
+
+   print ContourLevelsN1
+    
+   ax = plt.subplot(Nspecies, numCols, 3*ispecies + 2)
+    #plt.contourf(zeta,theta,1000*numpy.fliplr(Phi1Hat[:,:,iteration].transpose()),numContours)
+   N1Plot = plt.contourf(zeta,theta,zFactor*densityPerturbation[:,:,ispecies, iteration].transpose(),numContours)
+   N1Plot2 = plt.contour(N1Plot, levels=ContourLevelsN1, colors='k', hold='on')
+   plt.xlabel(r'$\zeta$' + " " + r'$\mathrm{[rad]}$')
+   plt.ylabel(r'$\theta$'+ " " + r'$\mathrm{[rad]}$')
+
+   plt.xticks([0,max(zeta)/4,max(zeta)/2,3*max(zeta)/4,max(zeta)])
+   plt.yticks([0.0,max(theta)/4,max(theta)/2,3*max(theta)/4,max(theta)])
+   plt.gca().axes.xaxis.set_ticklabels(xAxisTicks)
+   plt.gca().axes.yaxis.set_ticklabels(yAxisTicks)
+   
+   plt.gca().axes.xaxis.set_label_coords(0.5,-0.05)
+   plt.gca().axes.yaxis.set_label_coords(-0.09,0.5)
+   
+   #plt.tight_layout(pad=0.4, w_pad=0.5, h_pad=1.0)
+
+   if show_rN:
+      plt.title('rN = '+str(rN))
+   plt.title(r'Species ' + str(ispecies))
+
+   cbar = plt.colorbar(N1Plot, format=ticker.FuncFormatter(fmt_cbar), ticks=ContourLevelsN1)
+   cbar.ax.set_ylabel(r'$n_{s1}$'+ " " + r'$[10^{20} {\mathrm{m}}^{-3}]$', rotation=270, labelpad=20)
+
+   plt.clabel(N1Plot2, fmt=ticker.FuncFormatter(fmt_cbar), colors='k', fontsize=15, inline=False)
+
+   ################################
+
+   #lowestOrderDensity = numpy.subtract(totalDensity[:,:,ispecies, iteration], densityPerturbation[:,:,ispecies, iteration])
+   lowestOrderDensity = totalDensity[:,:,ispecies, iteration] - densityPerturbation[:,:,ispecies, iteration]
+
+   print "totalDensity"
+   print str(totalDensity[:,:,ispecies, iteration])
+   print "densityPerturbation"
+   print str(densityPerturbation[:,:,ispecies, iteration])
+
+   print "lowestOrderDensity"
+   print str(lowestOrderDensity.shape)
+   print str(lowestOrderDensity)
+
+   deltaN0 = (numpy.amax(lowestOrderDensity) - numpy.amin(lowestOrderDensity)) / numLevels
+
+#   print str(deltaN0)
+#   print str(numpy.amax(lowestOrderDensity))
+#   print str(numpy.amin(lowestOrderDensity))
+
+   if deltaN0 != 0:
+      ContourLevelsN0 = numpy.arange(numpy.amin(lowestOrderDensity), numpy.amax(lowestOrderDensity) + deltaN0/2.0, deltaN0)
+      ContourLevelsN0 = zFactor*ContourLevelsN0
+
+      print ContourLevelsN0
+    
+   ax = plt.subplot(Nspecies, numCols, 3*ispecies + 3)
+    #plt.contourf(zeta,theta,1000*numpy.fliplr(Phi1Hat[:,:,iteration].transpose()),numContours)
+   N0Plot = plt.contourf(zeta,theta,zFactor*lowestOrderDensity.transpose(),numContours)
+   if deltaN0 != 0:
+      N0Plot2 = plt.contour(N0Plot, levels=ContourLevelsN0, colors='k', hold='on')
+
+   plt.xlabel(r'$\zeta$' + " " + r'$\mathrm{[rad]}$')
+   plt.ylabel(r'$\theta$'+ " " + r'$\mathrm{[rad]}$')
+
+   plt.xticks([0,max(zeta)/4,max(zeta)/2,3*max(zeta)/4,max(zeta)])
+   plt.yticks([0.0,max(theta)/4,max(theta)/2,3*max(theta)/4,max(theta)])
+   plt.gca().axes.xaxis.set_ticklabels(xAxisTicks)
+   plt.gca().axes.yaxis.set_ticklabels(yAxisTicks)
+   
+   plt.gca().axes.xaxis.set_label_coords(0.5,-0.05)
+   plt.gca().axes.yaxis.set_label_coords(-0.09,0.5)
+   
+   #plt.tight_layout(pad=0.4, w_pad=0.5, h_pad=1.0)
+
+   if show_rN:
+      plt.title('rN = '+str(rN))
+   plt.title(r'Species ' + str(ispecies))
+
+   if deltaN0 != 0:
+      cbar = plt.colorbar(N0Plot, format=ticker.FuncFormatter(fmt_cbar), ticks=ContourLevelsN0)
+   else:
+      cbar = plt.colorbar(N0Plot, format=ticker.FuncFormatter(fmt_cbar))
+
+   cbar.ax.set_ylabel(r'$n_{s0}$'+ " " + r'$[10^{20} {\mathrm{m}}^{-3}]$', rotation=270, labelpad=35)
+
+   if deltaN0 != 0:
+      plt.clabel(N0Plot2, fmt=ticker.FuncFormatter(fmt_cbar), colors='k', fontsize=15, inline=False)
+   else:
+      plt.clabel(N0Plot, fmt=ticker.FuncFormatter(fmt_cbar), colors='k', fontsize=15, inline=False)
+
+if makePDF:
+    print "Saving PDF"
+
+    if len(sys.argv)>2 : #Use the substituted name as file name
+       print "Writing plot to " + os.getcwd() + "/" + sys.argv[2] + ".pdf."
+       plt.savefig(sys.argv[2] + ".pdf", orientation = 'landscape', papertype='letter')
+    else :
+       head, tail = os.path.split(inspect.getfile(inspect.currentframe()))
+       print "Writing plot to " + os.getcwd() + "/" + tail + ".pdf."
+       plt.savefig(tail+'.pdf', orientation = 'landscape', papertype='letter')
+else:
+    plt.show()

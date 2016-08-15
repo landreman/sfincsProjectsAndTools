@@ -1,0 +1,23 @@
+#!/usr/bin/env python
+
+
+
+import os, inspect, math, subprocess, sys
+from sys import argv
+
+command = 'squeue -u almo --states=pending,running --start'
+result = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
+jobs = result.stdout.read().split('\n')
+
+for i in range(len(jobs)):
+   if len(jobs[i].split()) < 1:
+      print jobs[i]
+   elif (jobs[i].split())[0].isdigit():
+      command2 = 'scontrol show job ' + (jobs[i].split())[0] + ' | grep WorkDir'
+      result2 = subprocess.Popen(command2, shell=True, stdout=subprocess.PIPE)
+      dir2 = result2.stdout.read()
+      print jobs[i] + '   ' + dir2
+   else:
+      print jobs[i]
+
+#exit(0)
