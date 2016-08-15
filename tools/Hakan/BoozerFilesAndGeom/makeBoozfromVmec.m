@@ -73,6 +73,7 @@ Geom.iota = Geom.iota(skip+1:end);
 [dummy,rindh]=min(abs(Geom.s-s_wish));
 s=Geom.s(rindh);
 
+Booz.Nperiods = Geom.Nperiods;
 Booz.s=Geom.s(rindh);
 Booz.rnorm=Geom.rnorm(rindh);
 Booz.iota=Geom.iota(rindh);
@@ -237,6 +238,10 @@ Booz_w=Booz.zeta-Booz.Dzetaw;
 Booz.B=interp2_cyclic(w.u,w.w,w.B,Booz_u,Booz_w,Geom.Nperiods);
 Booz.R=interp2_cyclic(w.u,w.w,w.R,Booz_u,Booz_w,Geom.Nperiods);
 Booz.Z=interp2_cyclic(w.u,w.w,w.Z,Booz_u,Booz_w,Geom.Nperiods);
+Booz.cylR=Booz.R;
+Booz.cylZ=Booz.Z;
+Booz.cylphi=Booz_w;
+
 
 Booz.mnmat.B=fftmn(Booz.B);
 Booz.mnmat.R=fftmn(Booz.R);

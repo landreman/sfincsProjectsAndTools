@@ -1,0 +1,203 @@
+function Geom=makeBcfromVmec(woutin,Nu,Nw,min_Bmn)
+if nargin==1
+  Nu=inf;
+  Nw=inf;
+  min_Bmn=0;
+end
+
+%The result can be saved with writeBoozerfile.m
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Load the .nc file
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%woutin is the wout file name or just the netcdf variables from the wout file
+%(Too old matlab versions do not have the necessary netcdf routines.)
+
+if isstruct(woutin)
+  wout=woutin;
+else %if not already loaded, assume woutin is a string with the file name
+  wout=struct();
+  if isstr(woutin)
+    tmp=ncinfo(woutin);
+    for vi=1:length(tmp.Variables)
+      wout=setfield(wout,tmp.Variables(vi).Name,...
+                         ncread(woutin,tmp.Variables(vi).Name));
+    end
+  else
+    error('Unknown input. wout must be a file name or the netcdf variables from the wout file!')
+  end
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% let w = -v!
+
+signchange=double(wout.signgs); % is -1, because vmec is left handed
+
+Geom.headertext.input_extension = ...
+    wout.input_extension; %!<  suffix of the vmec-input file: input.<input_extension>
+Geom.headertext.maincomment=sprintf(...
+    ['CC Converted from VMEC using HS''s matlab routines\n',...
+     'CC The phase convention (m theta - n phi) is used in this file.\n',...
+     'CC The coordinate system (r,theta,phi) is left-handed.\n',...
+     'CC Toroidal flux is counted positive in the direction of the toroidal coordinate.']);
+
+Geom.m0b      = NaN;%double(wout.mpol);       %!< number of poloidal fourier modes (Not used)
+Geom.n0b      = NaN;%double(wout.ntor);       %!< upper bound toroidal fourier modes:
+                                         %-ntor <= n <= ntor (Not used)
+Geom.nsurf    = NaN;%double(wout.ns);    %!< number of radial surfaces, Set this below
+
+Geom.Nperiods = double(wout.nfp);        %!< number of field periods
+if not(isfield(wout,'iasym'))
+  wout.iasym=isfield(wout,'bmns');
+end
+Geom.StelSym  = not(wout.iasym); %!<  defines stellarator symmetry for iasym=0, otherwise =
+Geom.torfluxtot = ...
+   wout.phi(wout.ns)*signchange;%!<  total toroidal flux within the boundary (s=1)
+Geom.psi_a=Geom.torfluxtot/2/pi;
+
+Geom.minorradiusVMEC= wout.Aminor_p;  %!<  minor plasma radius
+Geom.majorradiusLastbcR00 = NaN; %Calculate this below (not necessary)
+Geom.minorradiusW7AS= NaN; %Calculate this below (not necessary)
+Geom.majorradiusVMEC= wout.Rmajor_p;  %!<  major plasma radius
+
+Geom.fullgrid.s     = wout.phi'/wout.phi(wout.ns);     %full grid
+Geom.fullgrid.rnorm = sqrt(Geom.fullgrid.s);     %full grid
+
+skip=1; %this is how many elements are skipped at low radii when going to half grid
+
+Geom.s=(Geom.fullgrid.s(skip:end-1)+Geom.fullgrid.s(skip+1:end))/2; %half grid
+Geom.rnorm=sqrt(Geom.s); %half grid
+Geom.nsurf=length(Geom.s);
+
+Geom.dpds=diff(wout.presf(skip:end))'./diff(Geom.fullgrid.s(skip:end));
+
+%Geom.dVdsoverNper=dVdsoverNper*signchange;
+Geom.Bphi  = wout.bvco*signchange;%direction switch sign
+Geom.Btheta= wout.buco;%*signchange;
+
+Geom.Bphi=Geom.Bphi(skip+1:end)';
+Geom.Btheta=Geom.Btheta(skip+1:end)';
+
+Geom.fullgrid.iota = wout.iotaf'*signchange; 
+Geom.iota = wout.iotas'*signchange; %half mesh
+Geom.iota = Geom.iota(skip+1:end);
+Geom.Bfilter.min_Bmn=min_Bmn;
+
+%%% Choose a suitable spatial resoulition
+if Nu==inf
+  %Use the Vmec mpol and mtor
+  Nu = 1+2*max(abs(double(wout.xm)));
+else
+  Nu=2*floor(Nu/2)+1; %force to be odd
+end
+if Nw==inf
+  %Use the Vmec mpol and mtor
+  Nw=1+2*max(abs(double(wout.xn))); 
+else
+  Nw=2*floor(Nw/2)+1; %force to be odd
+end
+Geom.m0b=(Nu-1)/2;
+Geom.n0b=(Nw-1)/2;
+Geom.Bfilter.max_m=(Nu-1)/2;
+Geom.Bfilter.maxabs_n=(Nw-1)/2;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% specific for each radius
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if Geom.StelSym
+  error('Not implemented yet!')
+end
+
+tic
+for sind=1:length(Geom.s)
+  fprintf(1,'\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b %i / %i',...
+          sind,length(Geom.s));
+  Booz=makeBoozfromVmec(woutin,Geom.s(sind),Nu,Nw,min_Bmn);
+  fprintf(1,' ,  %3.1f s',round(10*toc)/10);
+  Bmnlist=mnlist(Booz.mnmat.B);
+  Rmnlist=mnlist(Booz.mnmat.R);
+  Zmnlist=mnlist(Booz.mnmat.Z);
+  Dzetawmnlist=mnlist(Booz.mnmat.Dzetaw);
+  
+  Geom.nmodes(1,sind)=length(Bmnlist.m);
+  Geom.m{sind}  =Bmnlist.m;
+  Geom.n{sind}  =Bmnlist.n;
+  Geom.parity{sind}=Bmnlist.cosparity;
+  Geom.Bmn{sind}=Bmnlist.data;
+  Geom.B00(1,sind)=Booz.B00;
+  Geom.Bnorm{sind}=Geom.Bmn{sind}/Geom.B00(sind);
+  Geom.R00(1,sind)=Booz.R00;
+  Geom.R{sind}=Rmnlist.data;
+  Geom.Z{sind}=NaN*ones(size(Geom.R{sind}));
+  for mnind=1:length(Zmnlist.m)
+    ind=find(Geom.m{sind}==Zmnlist.m(mnind) & ...
+             Geom.n{sind}==Zmnlist.n(mnind) & ...
+             Geom.parity{sind}==not(Zmnlist.cosparity(mnind)));
+    Geom.Z{sind}(ind)=Zmnlist.data(mnind);
+  end
+  
+  Geom.Dphi{sind}=NaN*ones(size(Geom.R{sind}));
+  for mnind=1:length(Dzetawmnlist.m)
+    ind=find(Geom.m{sind}==Dzetawmnlist.m(mnind) & ...
+             Geom.n{sind}==Dzetawmnlist.n(mnind) & ...
+             Geom.parity{sind}==not(Dzetawmnlist.cosparity(mnind)));
+    Geom.Dphi{sind}(ind)=Dzetawmnlist.data(mnind);
+  end
+  ind=find(Geom.m{sind}==0 & Geom.n{sind}==0 & Geom.parity{sind}==1);
+  Geom.Dphi{sind}(ind)=0; 
+  Geom.Z{sind}(ind)=0; %These are NaN, but I set them to zero to avoid making .bc
+                       %files with NaNs in them. 
+  
+  %error('CHECK IF THERE ARE FACTORS LIKE Nperiods, 2pi or -1 missing for Dphi or
+  %parity ')
+  
+  
+  Geom.FSAB2=Booz.FSAB2; %=Nu*Nw/sum(sum(1./Booz.B.^2));
+  Geom.mnmat{sind}=Booz.mnmat;
+  Geom.dVdsoverNper(1,sind)=...
+      abs(Geom.psi_a*4*pi^2/Geom.Nperiods*(Booz.G+Booz.iota.*Booz.I)/Booz.FSAB2);
+end
+
+if length(Geom.R00)==length(Geom.s) %just check that all were made.
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % Calculate minorradiusW7AS
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  accum=0;
+  for m=1:wout.xm(end)
+    mind=m+1;
+    ii=find(wout.xm==m);
+    start_modes=ii(1);
+  end_modes=ii(end);
+  ns=wout.xn(start_modes:end_modes)/double(wout.nfp);
+  nnmat=(1+(-1).^(ns*ones(size(ns'))-ones(size(ns))*ns'))/2;
+  accum=accum+...
+        m*sum(sum((wout.rmnc(start_modes:end_modes,end)*...
+                   wout.zmns(start_modes:end_modes,end)').*nnmat));
+  end
+  Geom.minorradiusW7AS=sqrt(abs(accum));
+
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % Calculate majorradiusLastbcR00
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % We need to obtain the Boozer coordinates 
+  % for the last half mesh flux surface
+  % because Joachim defined his major radius to be 
+  % R00 in Boozer coordinates at s=0.995
+  %lastbcsurfind=find(abs(Geom.s-0.995)<5e-4);
+  %maybe it is better to really take the last half mesh radius
+  lastbcsurfind=length(Geom.s);
+
+  if not(isempty(lastbcsurfind))
+    Geom.majorradiusLastbcR00=Geom.R00(lastbcsurfind);
+  else
+    %We must construct the Boozer coordinates ourselfves!
+    s_wish=0.995;
+    Nu=121;
+    Nv=121;
+    min_Bmn=0;
+    Booz=makeBoozfromVmec(wout,s_wish,Nu,Nv,min_Bmn);
+    Geom.majorradiusLastbcR00=Booz.R00;
+  end
+end
+%Geom.dVdsoverNper=
