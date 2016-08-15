@@ -138,6 +138,7 @@ def griddatacyclic(unoneq, vnoneq, Fnoneq, N):
     
     #F = (interpolate.interp2d(unoneqBig,vnoneqBig,FnoneqBig))(u,v)
     F = (interpolate.interp2d(unoneqBig,vnoneqBig,FnoneqBig))(uvec,vvec)
+    F = F.transpose() ##MAYBE REMOVE THIS
     #print "F"
     #print F
     #print F.shape

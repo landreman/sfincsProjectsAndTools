@@ -46,8 +46,10 @@ def transformVMECtoPEST(woutin,s_wish,Nu,Nw,handedness):
    #    if handedness=1 (right handed) let w = -v!
    # else if handedness=-1 (left handed) let w = v!
 
-   inputfile = "/hydra/u/almo/Phi1/LHD/lhd2_B_III/Input/COPY_wout_lhd2.nc"
-   copyfile = "/hydra/u/almo/Phi1/LHD/lhd2_B_III/Input/wout_lhd2_COPY.nc"
+   #inputfile = "/hydra/u/almo/Phi1/LHD/lhd2_B_III/Input/COPY_wout_lhd2.nc"
+   #copyfile = "/hydra/u/almo/Phi1/LHD/lhd2_B_III/Input/wout_lhd2_COPY.nc"
+   copyfile = '.'.join((woutin.split('.'))[:-1]) + '_COPY.'+ (woutin.split('.'))[-1]
+   
 
    ##OPEN NETCDF FILE BY AM##
    #copy2("/hydra/u/almo/Phi1/LHD/lhd2_B_III/Input/COPY_wout_lhd2.nc", "/hydra/u/almo/Phi1/LHD/lhd2_B_III/Input/wout_lhd2_COPY.nc")
@@ -56,21 +58,23 @@ def transformVMECtoPEST(woutin,s_wish,Nu,Nw,handedness):
    #os.system ("cp %s %s" % ("/hydra/u/almo/Phi1/LHD/lhd2_B_III/Input/COPY_wout_lhd2.nc", "/hydra/u/almo/Phi1/LHD/lhd2_B_III/Input/wout_lhd2_COPY.nc"))
    #subprocess.call(["cp", "/afs/ipp/home/a/almo/Phi1/LHD/lhd2_B_III/Input/COPY_wout_lhd2.nc", "/afs/ipp/home/a/almo/Phi1/LHD/lhd2_B_III/Input/wout_lhd2_COPY.nc"])
 
-   copy2(inputfile, copyfile)
+   #copy2(inputfile, copyfile)
+   copy2(woutin, copyfile)
+   #sys.exit()
 
-   wout = Dataset("/hydra/u/almo/Phi1/LHD/lhd2_B_III/Input/wout_lhd2_COPY.nc", "r+", format="NETCDF4")
+   wout = Dataset(copyfile, "r+", format="NETCDF4")
    print wout["ntor"][...]
    print wout["ntor"].getValue()
    print wout["ntor"]
    #print wout["qwerty"]
    #print wout["qwerty"].getValue()
    #print wout.variables
-   print wout.get_variables_by_attributes(name='northward_sea_water_velocity')
-   print wout.get_variables_by_attributes(name='ntor')
-   print len(wout.get_variables_by_attributes(name='northward_sea_water_velocity'))
-   print len(wout.get_variables_by_attributes(name='ntor'))
-   print len(wout.get_variables_by_attributes(name='northward_sea_water_velocity')) < 1
-   print len(wout.get_variables_by_attributes(name='ntor')) < 1
+   #print wout.get_variables_by_attributes(name='northward_sea_water_velocity')
+   #print wout.get_variables_by_attributes(name='ntor')
+   #print len(wout.get_variables_by_attributes(name='northward_sea_water_velocity'))
+   #print len(wout.get_variables_by_attributes(name='ntor'))
+   #print len(wout.get_variables_by_attributes(name='northward_sea_water_velocity')) < 1
+   #print len(wout.get_variables_by_attributes(name='ntor')) < 1
    #wout.close()
    #sys.exit()
    ##########################
@@ -359,12 +363,12 @@ def transformVMECtoPEST(woutin,s_wish,Nu,Nw,handedness):
    wout.close()
    os.remove(copyfile)
    #wout.close()
-   sys.exit()
+#   sys.exit()
 
-
+   print "TEST"
    #return (Pest, Vmec)
    #I AM HERE
-   return (Pest_vmecu, Pest_vmecw, )
+   return (Pest_vmecu, Pest_vmecw, Vmec_vmecu, Vmec_vmecw, Geom_Nperiods)
 
 
-transformVMECtoPEST("/hydra/u/almo/Phi1/LHD/lhd2_B_III/Input/wout_lhd2.nc", 0.5, 10, 10, -1)
+#transformVMECtoPEST("/draco/u/almo/Phi1/LHD/lhd2_A_III/Input/wout_lhd2.nc", 0.5, 10, 10, -1)

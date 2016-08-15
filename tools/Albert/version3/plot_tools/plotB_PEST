@@ -10,6 +10,9 @@ import os, sys, inspect
 import warnings
 import matplotlib.ticker as ticker
 
+from VMECtoPEST_functions import interp2_cyclic, griddatacyclic
+from transformVMECtoPEST import transformVMECtoPEST
+
 #show_rN = True
 show_rN = False
 
@@ -28,9 +31,11 @@ print "This is "+ inspect.getfile(inspect.currentframe())
 ##INPUT##
 #########
 
-quantityToPlot = "Phi1Hat"
+quantityToPlot = "BHat"
 
 filename = 'sfincsOutput.h5'
+
+ncFilename = "/draco/u/almo/Phi1/LHD/lhd2_A_III/Input/wout_lhd2.nc"
 
 FigSize = (12,10)
 
@@ -39,7 +44,7 @@ matplotlib.rc('font', **font)
 matplotlib.rc('lines',markeredgewidth=0,markersize=3,linewidth=2.5)
 matplotlib.rc('axes',linewidth=1.5)
 
-zFactor = 1000 ##kV -> V
+zFactor = 1 ##T
 ##W7-X##
 #xAxisTicks = [r'$0$', r'$\pi/10$', r'$2\pi/10$', r'$3\pi/10$', r'$4\pi/10$']
 ##LHD
@@ -53,18 +58,12 @@ numRows = 1
 numCols = 1
 #iteration = 0
 numContours = 100
-ContourLevels = numpy.array([-9.0, -6.0, -3.0, 0.0, 3.0, 6.0, 9.0])/zFactor
-#numLevels = 5
-
-ScientificTicks = False
-cbarTicks = [-10.0, -7.5, -5.0, -2.5, 0.0, 2.5, 5.0, 7.5, 10.0]
-
+#ContourLevels = [2.7, 2.8, 2.9, 3.0, 3.1, 3.2]
+numLevels = 5
 
 #############
 ##END INPUT##
 #############
-
-
 
 def fmt_cbar(x, pos):
    if x == 0.0:
@@ -74,40 +73,55 @@ def fmt_cbar(x, pos):
    return r'${} \cdot 10^{{{}}}$'.format(a, b)
 
 def fmt_xy_axis(x, pos):
-   return r'${}$'.format(x)
+   #return r'${}$'.format(x)
+   return r'${}$'.format('{:1.2f}'.format(x))
 
 #for i in range(6):
 print "Processing file ",filename
 f = h5py.File(filename,'r')
 theta = f["theta"][()]
 zeta = f["zeta"][()]
-Phi1Hat = f[quantityToPlot][()]
-iteration = f["NIterations"][()] - 1 #Results from last iteration
+BHat = f[quantityToPlot][()]
 rN = f["rN"][()]
+
+############################################
+##Transform to PEST grid
+Ntheta = f["Ntheta"][()]
+Nzeta = f["Nzeta"][()]
+psiN = f["psiN"][()]
 f.close()
+Pest_vmecu, Pest_vmecw, Vmec_vmecu, Vmec_vmecw, Geom_Nperiods = transformVMECtoPEST(ncFilename, psiN, Ntheta, Nzeta, -1)
+print theta
+print theta.shape
+print Vmec_vmecu
+print Vmec_vmecu.shape
+print Pest_vmecu
+print Pest_vmecu.shape
+
+Pest_B = interp2_cyclic(Vmec_vmecu, Vmec_vmecw, BHat, Pest_vmecu, Pest_vmecw, Geom_Nperiods)
+#sys.exit()
+############################################
 
 print "theta max: " + str(numpy.amax(theta))
 print "zeta max: " + str(numpy.amax(zeta))
+print "Pest_vmecu max: " + str(numpy.amax(Pest_vmecu))
+print "Pest_vmecw max: " + str(numpy.amax(Pest_vmecw))
 
 
-#delta = (numpy.amax(Phi1Hat[:,:,iteration]) - numpy.amin(Phi1Hat[:,:,iteration])) / numLevels
-#ContourLevels = numpy.arange(numpy.amin(Phi1Hat[:,:,iteration]), numpy.amax(Phi1Hat[:,:,iteration]) + delta/2.0, delta)
+delta = (numpy.amax(Pest_B) - numpy.amin(Pest_B)) / numLevels
+ContourLevels = numpy.arange(numpy.amin(Pest_B), numpy.amax(Pest_B) + delta/2.0, delta)
 ContourLevels = zFactor*ContourLevels
-#print ContourLevels
     
 ax = plt.subplot(numRows,numCols,1)
-    #plt.contourf(zeta,theta,1000*numpy.fliplr(Phi1Hat[:,:,iteration].transpose()),numContours)
-Phi1Plot = plt.contourf(zeta,theta,zFactor*Phi1Hat[:,:,iteration].transpose(),numContours)
-Phi1Plot2 = plt.contour(Phi1Plot,levels=ContourLevels, colors='k', hold='on')
-#Phi1Plot2 = plt.contour(Phi1Plot,levels=Phi1Plot.levels[::2], colors='k', hold='on')
-#plt.xlabel(r'$\zeta$' + ' [rad]')
+    #plt.contourf(zeta,theta,1000*numpy.fliplr(BHat[:,:,iteration].transpose()),numContours)
+BPlot = plt.contourf(Pest_vmecw,Pest_vmecu,zFactor*Pest_B,numContours)
+BPlot2 = plt.contour(BPlot,levels=ContourLevels, colors='k', hold='on')
+#BPlot2 = plt.contour(BPlot,levels=BPlot.levels[::2], colors='k', hold='on')
 plt.xlabel(r'$\zeta$' + " " + r'$\mathrm{[rad]}$')
-#plt.ylabel(r'$\theta$'+ ' [rad]')
 plt.ylabel(r'$\theta$'+ " " + r'$\mathrm{[rad]}$')
-#plt.zlabel(r'$\Phi_1$'+ ' [V]')
-
-plt.xticks([0,max(zeta)/4,max(zeta)/2,3*max(zeta)/4,max(zeta)])
-plt.yticks([0.0,max(theta)/4,max(theta)/2,3*max(theta)/4,max(theta)])
+#plt.zlabel(r'$B$'+ ' [T]')
+plt.xticks([0,numpy.amax(Pest_vmecw)/4,numpy.amax(Pest_vmecw)/2,3*numpy.amax(Pest_vmecw)/4,numpy.amax(Pest_vmecw)])
+plt.yticks([0,numpy.amax(Pest_vmecu)/4,numpy.amax(Pest_vmecu)/2,3*numpy.amax(Pest_vmecu)/4,numpy.amax(Pest_vmecu)])
 plt.gca().axes.xaxis.set_ticklabels(xAxisTicks)
 plt.gca().axes.yaxis.set_ticklabels(yAxisTicks)
 
@@ -116,37 +130,25 @@ plt.gca().axes.yaxis.set_ticklabels(yAxisTicks)
 plt.gca().axes.xaxis.set_label_coords(0.5,-0.05)
 plt.gca().axes.yaxis.set_label_coords(-0.09,0.5)
 
-#ax.xaxis.set_major_formatter( ticker.FuncFormatter(fmt_xy_axis))
-#ax.xaxis.set_minor_formatter( ticker.FuncFormatter(fmt_xy_axis))
-#ax.yaxis.set_major_formatter( ticker.FuncFormatter(fmt_xy_axis)) 
-#ax.yaxis.set_minor_formatter( ticker.FuncFormatter(fmt_xy_axis))
-
 #plt.tight_layout(pad=0.4, w_pad=0.5, h_pad=1.0)
 
 if show_rN:
     plt.title('rN = '+str(rN))
 
-#cbar = plt.colorbar(Phi1Plot, label=r'$\Phi_1$'+ ' [V]', ticks=ContourLevels)
-#cbar = plt.colorbar(Phi1Plot, label=r'$\Phi_1$'+ ' [V]', ticks=Phi1Plot.levels[::2])
-#cbar.add_lines(Phi1Plot2)
-#cbar = plt.colorbar(Phi1Plot, format=ticker.FuncFormatter(fmt_cbar), ticks=ContourLevels)
-if ScientificTicks:
-   cbar = plt.colorbar(Phi1Plot, format=ticker.FuncFormatter(fmt_cbar))
-else:
-   cbar = plt.colorbar(Phi1Plot, ticks=cbarTicks)
-cbar.ax.set_ylabel(r'$\Phi_1$'+ " " + r'$\mathrm{[V]}$', rotation=0, labelpad=10)
+#cbar = plt.colorbar(BPlot, label=r'$B$'+ ' [T]', ticks=ContourLevels)
+#cbar = plt.colorbar(BPlot, label=r'$\Phi_1$'+ ' [V]', ticks=BPlot.levels[::2])
+#cbar.add_lines(BPlot2)
+cbar = plt.colorbar(BPlot, format=ticker.FuncFormatter(fmt_xy_axis), ticks=ContourLevels)
+cbar.ax.set_ylabel(r'$B$'+ " " + r'$\mathrm{[T]}$', rotation=0, labelpad=10)
 
 #with warnings.catch_warnings():
 #    warnings.simplefilter("always")
-#plt.clabel(Phi1Plot2, fmt='%2.1f', colors='k', fontsize=14)
-if ScientificTicks:
-   plt.clabel(Phi1Plot2, fmt=ticker.FuncFormatter(fmt_cbar), colors='k', fontsize=18, inline=False)
-else:
-   plt.clabel(Phi1Plot2, fmt='%2.1f', colors='k', fontsize=18, inline=False)
+#plt.clabel(BPlot2, fmt='%2.1f', colors='k', fontsize=14)
+plt.clabel(BPlot2, fmt=ticker.FuncFormatter(fmt_xy_axis), colors='k', fontsize=18, inline=False)
 
 #plt.subplots_adjust(wspace=0.27)
 
-print Phi1Hat.shape
+print Pest_B.shape
 
 if makePDF:
     print "Saving PDF"
