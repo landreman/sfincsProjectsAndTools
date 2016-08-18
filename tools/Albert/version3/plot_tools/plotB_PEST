@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-
-
 import matplotlib
 import matplotlib.pyplot as plt
 import h5py
@@ -81,7 +79,7 @@ print "Processing file ",filename
 f = h5py.File(filename,'r')
 theta = f["theta"][()]
 zeta = f["zeta"][()]
-BHat = f[quantityToPlot][()]
+BHat = f[quantityToPlot][()].transpose()
 rN = f["rN"][()]
 
 ############################################
@@ -90,22 +88,25 @@ Ntheta = f["Ntheta"][()]
 Nzeta = f["Nzeta"][()]
 psiN = f["psiN"][()]
 f.close()
-Pest_vmecu, Pest_vmecw, Vmec_vmecu, Vmec_vmecw, Geom_Nperiods = transformVMECtoPEST(ncFilename, psiN, Ntheta, Nzeta, -1)
-print theta
-print theta.shape
-print Vmec_vmecu
-print Vmec_vmecu.shape
-print Pest_vmecu
-print Pest_vmecu.shape
+Pest_vmecu, Pest_vmecw, Vmec_vmecu, Vmec_vmecw, Geom_Nperiods = transformVMECtoPEST(ncFilename, psiN, theta, zeta, -1)
 
 Pest_B = interp2_cyclic(Vmec_vmecu, Vmec_vmecw, BHat, Pest_vmecu, Pest_vmecw, Geom_Nperiods)
-#sys.exit()
 ############################################
 
+print "psiN: " + str(psiN)
 print "theta max: " + str(numpy.amax(theta))
+print "theta min: " + str(numpy.amin(theta))
 print "zeta max: " + str(numpy.amax(zeta))
+print "zeta min: " + str(numpy.amin(zeta))
 print "Pest_vmecu max: " + str(numpy.amax(Pest_vmecu))
+print "Pest_vmecu min: " + str(numpy.amin(Pest_vmecu))
 print "Pest_vmecw max: " + str(numpy.amax(Pest_vmecw))
+print "Pest_vmecw min: " + str(numpy.amin(Pest_vmecw))
+
+print "B max: " + str(numpy.amax(BHat))
+print "B min: " + str(numpy.amin(BHat))
+print "PEST_B max: " + str(numpy.amax(Pest_B))
+print "PEST_B min: " + str(numpy.amin(Pest_B))
 
 
 delta = (numpy.amax(Pest_B) - numpy.amin(Pest_B)) / numLevels
@@ -114,14 +115,14 @@ ContourLevels = zFactor*ContourLevels
     
 ax = plt.subplot(numRows,numCols,1)
     #plt.contourf(zeta,theta,1000*numpy.fliplr(BHat[:,:,iteration].transpose()),numContours)
-BPlot = plt.contourf(Pest_vmecw,Pest_vmecu,zFactor*Pest_B,numContours)
+BPlot = plt.contourf(Vmec_vmecw.transpose(), Vmec_vmecu.transpose(), zFactor*Pest_B.transpose(),numContours)
 BPlot2 = plt.contour(BPlot,levels=ContourLevels, colors='k', hold='on')
 #BPlot2 = plt.contour(BPlot,levels=BPlot.levels[::2], colors='k', hold='on')
 plt.xlabel(r'$\zeta$' + " " + r'$\mathrm{[rad]}$')
 plt.ylabel(r'$\theta$'+ " " + r'$\mathrm{[rad]}$')
 #plt.zlabel(r'$B$'+ ' [T]')
-plt.xticks([0,numpy.amax(Pest_vmecw)/4,numpy.amax(Pest_vmecw)/2,3*numpy.amax(Pest_vmecw)/4,numpy.amax(Pest_vmecw)])
-plt.yticks([0,numpy.amax(Pest_vmecu)/4,numpy.amax(Pest_vmecu)/2,3*numpy.amax(Pest_vmecu)/4,numpy.amax(Pest_vmecu)])
+plt.xticks([0,numpy.amax(Vmec_vmecw)/4,numpy.amax(Vmec_vmecw)/2,3*numpy.amax(Vmec_vmecw)/4,numpy.amax(Vmec_vmecw)])
+plt.yticks([0,numpy.amax(Vmec_vmecu)/4,numpy.amax(Vmec_vmecu)/2,3*numpy.amax(Vmec_vmecu)/4,numpy.amax(Vmec_vmecu)])
 plt.gca().axes.xaxis.set_ticklabels(xAxisTicks)
 plt.gca().axes.yaxis.set_ticklabels(yAxisTicks)
 
@@ -148,7 +149,7 @@ plt.clabel(BPlot2, fmt=ticker.FuncFormatter(fmt_xy_axis), colors='k', fontsize=1
 
 #plt.subplots_adjust(wspace=0.27)
 
-print Pest_B.shape
+print "PEST_B shape: " + str(Pest_B.shape)
 
 if makePDF:
     print "Saving PDF"
