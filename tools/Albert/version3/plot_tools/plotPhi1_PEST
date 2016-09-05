@@ -35,6 +35,8 @@ quantityToPlot = "Phi1Hat"
 
 filename = 'sfincsOutput.h5'
 
+ncFilename = "/draco/u/almo/Phi1/LHD/lhd2_A_III/Input/wout_lhd2.nc"
+
 FigSize = (12,10)
 
 font = {'size':25}
@@ -81,28 +83,44 @@ print "Processing file ",filename
 f = h5py.File(filename,'r')
 theta = f["theta"][()]
 zeta = f["zeta"][()]
-Phi1Hat = f[quantityToPlot][()]
 iteration = f["NIterations"][()] - 1 #Results from last iteration
+Phi1Hat = ((f[quantityToPlot][()])[:,:,iteration]).transpose()
 rN = f["rN"][()]
-f.close()
 
 ############################################
 ##Transform to PEST grid
+Ntheta = f["Ntheta"][()]
+Nzeta = f["Nzeta"][()]
+psiN = f["psiN"][()]
+f.close()
+Pest_vmecu, Pest_vmecw, Vmec_vmecu, Vmec_vmecw, Geom_Nperiods = transformVMECtoPEST(ncFilename, psiN, theta, zeta, -1)
 
-
+Pest_Phi1 = interp2_cyclic(Vmec_vmecu, Vmec_vmecw, Phi1Hat, Pest_vmecu, Pest_vmecw, Geom_Nperiods)
 ############################################
 
+print "psiN: " + str(psiN)
 print "theta max: " + str(numpy.amax(theta))
+print "theta min: " + str(numpy.amin(theta))
 print "zeta max: " + str(numpy.amax(zeta))
+print "zeta min: " + str(numpy.amin(zeta))
+print "Pest_vmecu max: " + str(numpy.amax(Pest_vmecu))
+print "Pest_vmecu min: " + str(numpy.amin(Pest_vmecu))
+print "Pest_vmecw max: " + str(numpy.amax(Pest_vmecw))
+print "Pest_vmecw min: " + str(numpy.amin(Pest_vmecw))
+
+print "Phi1 max: " + str(numpy.amax(Phi1Hat))
+print "Phi1 min: " + str(numpy.amin(Phi1Hat))
+print "PEST_Phi1 max: " + str(numpy.amax(Pest_Phi1))
+print "PEST_Phi1 min: " + str(numpy.amin(Pest_Phi1))
 
 
-delta = (numpy.amax(Phi1Hat[:,:,iteration]) - numpy.amin(Phi1Hat[:,:,iteration])) / numLevels
-ContourLevels = numpy.arange(numpy.amin(Phi1Hat[:,:,iteration]), numpy.amax(Phi1Hat[:,:,iteration]) + delta/2.0, delta)
+delta = (numpy.amax(Pest_Phi1) - numpy.amin(Pest_Phi1)) / numLevels
+ContourLevels = numpy.arange(numpy.amin(Pest_Phi1), numpy.amax(Pest_Phi1) + delta/2.0, delta)
 ContourLevels = zFactor*ContourLevels
     
 ax = plt.subplot(numRows,numCols,1)
     #plt.contourf(zeta,theta,1000*numpy.fliplr(Phi1Hat[:,:,iteration].transpose()),numContours)
-Phi1Plot = plt.contourf(zeta,theta,zFactor*Phi1Hat[:,:,iteration].transpose(),numContours)
+Phi1Plot = plt.contourf(Vmec_vmecw.transpose(), Vmec_vmecu.transpose(), zFactor*Pest_Phi1.transpose(),numContours)
 Phi1Plot2 = plt.contour(Phi1Plot,levels=ContourLevels, colors='k', hold='on')
 #Phi1Plot2 = plt.contour(Phi1Plot,levels=Phi1Plot.levels[::2], colors='k', hold='on')
 #plt.xlabel(r'$\zeta$' + ' [rad]')
@@ -111,8 +129,10 @@ plt.xlabel(r'$\zeta$' + " " + r'$\mathrm{[rad]}$')
 plt.ylabel(r'$\theta$'+ " " + r'$\mathrm{[rad]}$')
 #plt.zlabel(r'$\Phi_1$'+ ' [V]')
 
-plt.xticks([0,max(zeta)/4,max(zeta)/2,3*max(zeta)/4,max(zeta)])
-plt.yticks([0.0,max(theta)/4,max(theta)/2,3*max(theta)/4,max(theta)])
+#plt.xticks([0,max(zeta)/4,max(zeta)/2,3*max(zeta)/4,max(zeta)])
+#plt.yticks([0.0,max(theta)/4,max(theta)/2,3*max(theta)/4,max(theta)])
+plt.xticks([0,numpy.amax(Vmec_vmecw)/4,numpy.amax(Vmec_vmecw)/2,3*numpy.amax(Vmec_vmecw)/4,numpy.amax(Vmec_vmecw)])
+plt.yticks([0,numpy.amax(Vmec_vmecu)/4,numpy.amax(Vmec_vmecu)/2,3*numpy.amax(Vmec_vmecu)/4,numpy.amax(Vmec_vmecu)])
 plt.gca().axes.xaxis.set_ticklabels(xAxisTicks)
 plt.gca().axes.yaxis.set_ticklabels(yAxisTicks)
 
@@ -144,7 +164,7 @@ plt.clabel(Phi1Plot2, fmt=ticker.FuncFormatter(fmt_cbar), colors='k', fontsize=1
 
 #plt.subplots_adjust(wspace=0.27)
 
-print Phi1Hat.shape
+print "PEST_Phi1 shape: " + str(Pest_Phi1.shape)
 
 if makePDF:
     print "Saving PDF"
