@@ -1,5 +1,28 @@
 function [Ham,Booz,Cyl,Pest]=makeHamada(Geom,rind,Ntheta,Nzeta,varargin)
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% This function transforms Boozer coordinate data to other coordinate systems,
+% Hamada, Pest and (toroidally) Cylindrical.
+% The name of the output struct signifies the uniform grid coordinates upon which
+% included quantities are discretised. The struct also contains values of the 
+% other coordinates on that grid.
+% 
+% The input struct Geom which contains the Boozer coordinate data 
+% can be generated with readBoozerfile.m, readBoozerXformfile.m
+% or makeBcfromVmec.m
+%
+% rind is the index of the chosen flux surface
+%
+% Ntheta and Nzeta is the resolution of the spatial grid used in the
+% transformation to other coordinates. Ntheta and Nzeta must both be odd!
+% Typical values are 101 - 151. Larger values make the calculation heavy.
+%
+% Ntheta and Nzeta should be chosen to resolve the necessary toroidal
+% and poloidal mode numbers of the magnetic field. If you set Ntheta to Nzeta to
+% less than the numbers reuired to resolve the modes of Bmn in Geom, an error message
+% is produced. If you still want these low Ntheta and Nzeta, you can set the optional
+% argument varargin to be the string 'forceSize'.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 useFFT = 1; %to compare results of 0 and 1 here, one cannot use the ifftOpt='forceSize' option
 

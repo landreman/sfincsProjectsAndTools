@@ -106,12 +106,12 @@ Geom.Bfilter.maxabs_n=(Nw-1)/2;
 % specific for each radius
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if Geom.StelSym
-  error('Not implemented yet!')
+  error('Stellarator symmetric case not implemented yet!')
 end
 
 tic
 for sind=1:length(Geom.s)
-  fprintf(1,'\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b %i / %i',...
+  fprintf(1,'\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b radius %i / %i',...
           sind,length(Geom.s));
   Booz=makeBoozfromVmec(woutin,Geom.s(sind),Nu,Nw,min_Bmn);
   fprintf(1,' ,  %3.1f s',round(10*toc)/10);
@@ -200,4 +200,5 @@ if length(Geom.R00)==length(Geom.s) %just check that all were made.
     Geom.majorradiusLastbcR00=Booz.R00;
   end
 end
+fprintf(1,'\n')
 %Geom.dVdsoverNper=
