@@ -3,6 +3,10 @@ function [Ham,Booz,Cyl,Pest]=makeHamada(Geom,rind,Ntheta,Nzeta,varargin)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % This function transforms Boozer coordinate data to other coordinate systems,
 % Hamada, Pest and (toroidally) Cylindrical.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                                  INPUT
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % The name of the output struct signifies the uniform grid coordinates upon which
 % included quantities are discretised. The struct also contains values of the 
 % other coordinates on that grid.
@@ -22,6 +26,35 @@ function [Ham,Booz,Cyl,Pest]=makeHamada(Geom,rind,Ntheta,Nzeta,varargin)
 % less than the numbers reuired to resolve the modes of Bmn in Geom, an error message
 % is produced. If you still want these low Ntheta and Nzeta, you can set the optional
 % argument varargin to be the string 'forceSize'.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                                 OUTPUT
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% The name of the output struct denotes the uniform grid coordinates upon which
+% included quantities are discretised. The struct also contains values of the 
+% other coordinates on that grid.
+%
+% The basic output is the same in all four discretisation output structs. 
+% Let us call one of the output structs Discr in general, i.e. 
+% Discr = Ham, Booz, Cyl or Pest. The Fourier representation of B, R and Z in the respective 
+% coordinates is stored as
+% Discr.m, Discr.n, Discr.parity, Discr.Bmn, Discr.Rmn and Discr.Zmn
+% where parity=1 signifies a cosinus term for Bmn and Rmn, but a sinus term for Zmn.
+%
+% Names of coordinates (right-handed):
+%
+% Boozer:      psi,  theta,  zeta
+% Hamada:      psi,  vthet,  phi
+% Cylindrical: cylr, cylth,  cylphi (Not always possible to construct)
+% Pest:        psi,  ptheta, pzeta
+%
+% Some differences between the coordinates are also given. They are denoted with a D
+% followed by the names of the two coordinates. For instance, Booz.Dzetaphi is the difference
+% between zeta and phi at the discretisation points of the uniform (theta,zeta) grid. 
+%
+% The quantity u satisfies
+% (B dot grad) u = 2 iota |B|^-3 B x nabla psi dot nabla |B|
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 useFFT = 1; %to compare results of 0 and 1 here, one cannot use the ifftOpt='forceSize' option
