@@ -716,7 +716,7 @@ end
 %dDzetaphi_dtheta-dDzetaphi_dtheta_old
 %dDzetaphi_dzeta-dDzetaphi_dzeta_old
 
-%B_psi=B_psi_00+B_psi_tilde
+%B_psi_tilde is defined by B_psi=B_psi_00+B_psi_tilde
 B_psi_tilde=-mu0dpdpsi/FSAB2*(G+iota*I)*Dzetaphi;
 %B_psi_tilde_mn=-mu0dpdpsi/FSAB2*(G+iota*I)*Dzetaphi_mn;
 
@@ -866,7 +866,15 @@ end
 if 1
   [Booz,Ham] =interp2straightfieldlinecoords(Booz,Ham,Dzetaphi,'vthet','phi');
   [Booz,Pest]=interp2straightfieldlinecoords(Booz,Pest,Dzetacylphi,'ptheta','pzeta');
-else %This whole chunk has been moved to the above function
+  Ham.Dzetapzeta=interp2_cyclic(Booz.theta,Booz.zeta,Booz.Dzetapzeta,Ham.theta,Ham.zeta,NPeriods);
+  Ham.Dphipzeta=Ham.Dzetapzeta-Ham.Dzetaphi;
+  Ham.pzeta=Ham.phi+Ham.Dzetaphi;
+  Ham.ptheta=Ham.vthet+iota*Ham.Dzetaphi;
+  Pest.Dzetaphi=interp2_cyclic(Booz.theta,Booz.zeta,Booz.Dzetaphi,Pest.theta,Pest.zeta,NPeriods);
+  Pest.Dpzetaphi=Pest.Dzetaphi-Pest.Dzetapzeta;
+  Pest.phi=Pest.pzeta-Pest.Dpzetaphi;
+  Pest.vthet=Pest.ptheta-iota*Pest.Dpzetaphi;
+else %This whole chunk has been moved to the above function interp2straightfieldlinecoords
   Booz.Dzetaphi=Dzetaphi;
   Booz.phi=zeta-Booz.Dzetaphi;
   Booz.vthet=theta-iota*Booz.Dzetaphi;
@@ -926,11 +934,11 @@ else %This whole chunk has been moved to the above function
 
   %The following is the most time consuming step
   %tic
-  HamDzetaphi=griddata(BoozphiBig,BoozvthetBig,BoozDzetaphiBig,phi,vthet);
+  Ham.Dzetaphi=griddata(BoozphiBig,BoozvthetBig,BoozDzetaphiBig,phi,vthet);
   %toc 
 
-  Ham.zeta =Ham.phi+HamDzetaphi;
-  Ham.theta=Ham.vthet+iota*HamDzetaphi;
+  Ham.zeta =Ham.phi+Ham.Dzetaphi;
+  Ham.theta=Ham.vthet+iota*Ham.Dzetaphi;
 
   zetaDirection=sign(Booz.zeta(1,end)-Booz.zeta(1,1));
   thetaDirection=sign(Booz.theta(end,1)-Booz.theta(1,1));
