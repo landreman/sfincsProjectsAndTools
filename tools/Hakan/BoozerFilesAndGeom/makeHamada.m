@@ -67,6 +67,12 @@ if nargin==5
   ifftOpt=varargin{1};
 end
 
+%identifying names for the coordinate systems:
+Booz.name='Boozer';
+Ham.name='Hamada';
+Cyl.name='Cylindrical';
+Pest.name='Pest';
+
 NPeriods=Geom.Nperiods;
 I=Geom.Btheta(rind);
 G=Geom.Bphi(rind);
