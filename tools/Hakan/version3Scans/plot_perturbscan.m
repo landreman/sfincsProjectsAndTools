@@ -107,7 +107,8 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %fac=[1/8, 1/4, 1/2, 1, 2, 4]';%Hardcoded here
-fac=[1/16, 1/8, 1/4, 1/2, 1, 2, 4]';%Hardcoded here
+%fac=[1/16, 1/8, 1/4, 1/2, 1, 2, 4]';%Hardcoded here
+fac=[1/8, 1/4, 1/2, 1, 2, 4, 8]';%Hardcoded here
 
 pow12=log(Flux_psi(2)/Flux_psi(1))/log(2)
 pow13=log(Flux_psi(3)/Flux_psi(1))/log(4)
