@@ -1,4 +1,4 @@
-function [runs,miss]=plot_perturbscan(directory)
+function [runs,miss]=plot_perturbscan(directory,perturbfac)
 
 if directory(end-3:end)=='.dat'
   dirlist={};
@@ -83,7 +83,10 @@ while nameliststr(stopind)~='"';
   stopind=stopind+1;
 end
 stopind=stopind-1;
-Geom=readBoozerfile(nameliststr(startind:stopind));
+fullequilibriumpath=nameliststr(startind:stopind);
+strind=findstr(fullequilibriumpath,'equilibria/');
+justtheequilibriumfilename=fullequilibriumpath(strind+11:end);
+Geom=readBoozerfile(justtheequilibriumfilename);
 %eqnamnet=nameliststr(startind:stopind)
 
 rnorm=runs.rN(1);
@@ -108,7 +111,8 @@ end
 
 %fac=[1/8, 1/4, 1/2, 1, 2, 4]';%Hardcoded here
 %fac=[1/16, 1/8, 1/4, 1/2, 1, 2, 4]';%Hardcoded here
-fac=[1/8, 1/4, 1/2, 1, 2, 4, 8]';%Hardcoded here
+%fac=[1/8, 1/4, 1/2, 1, 2, 4, 8]';%Hardcoded here
+fac=perturbfac;
 
 pow12=log(Flux_psi(2)/Flux_psi(1))/log(2)
 pow13=log(Flux_psi(3)/Flux_psi(1))/log(4)
@@ -131,19 +135,35 @@ xlabel('perturbation amplitude')
 ylabel('radial particle flux [1/(sm^2)]')
 %xlim([0.1,5])
 %axis([0.1 4,0.8e16,1e19])
-axis([0.05 4,0.5e16,1e19])
-set(gca,'YTick',[10^15,10^16,10^17,10^18,10^19,10^20])
+%axis([0.05 4,0.5e16,1e19])
+%set(gca,'YTick',[10^15,10^16,10^17,10^18,10^19,10^20])
 %set(gca,'XTick',[1/16, 0.125, 0.25, 0.5, 1, 2, 4])
 legend('SFINCS','(perturbation amplitude)^2',2)
 %legend('calculated','\propto F^{1.8}','\propto F^2','\propto F^{2.2}',2)
 %legend('calculated','\propto F^2',...
 %       ['\propto F^{',num2str(round(pow*100)/100)],'}',2,'interpreter','latex')
-title(['ripple case,  \rho_{pol}=0.5,  d\Phi/ds = ',num2str(runs.dPhiHatdpsiN(1)),' kV'])
-title('half radius')
+%title(['ripple case,  \rho_{pol}=0.5,  d\Phi/ds = ',num2str(runs.dPhiHatdpsiN(1)),' kV'])
+%title('half radius')
+
+fig(2)
+flux_rel_asymp=Flux_psi/sqrt(Booz.FSAgpsipsi)./...
+       (Flux_psi(1)/sqrt(Booz.FSAgpsipsi).*(fac/fac(1)).^2)
+semilogx(fac,Flux_psi/sqrt(Booz.FSAgpsipsi)./...
+       (Flux_psi(1)/sqrt(Booz.FSAgpsipsi).*(fac/fac(1)).^2),'k-')%,...
+%       fac,Flux_psi(1)/sqrt(Booz.FSAgpsipsi).*(fac/fac(1)).^1.8,'b:',...
+%       fac,Flux_psi(1)/sqrt(Booz.FSAgpsipsi).*(fac/fac(1)).^2.2,'r:')%,...
+%       fac,Flux_psi(1)/sqrt(Booz.FSAgpsipsi)*(fac/fac(1)).^pow,'m--')
+set(gca,'FontSize',14)
+xlabel('perturbation amplitude')
+ylabel('particle flux relative to asymptote')
+
+
 end
 
 %figure(1);print -depsc rip_perturbscan_Er0.eps
 %figure(1);print -depsc rip_perturbscan_realEr_fortalk.eps
+%figure(1);print -depsc rmp90_perturbscan.eps
+%figure(2);print -depsc rmp90_perturbscan_relative.eps
 
 if all(A2==0)
   fig(2)
