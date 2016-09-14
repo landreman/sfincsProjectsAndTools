@@ -10,15 +10,22 @@ function runs_out=loadallh5(dirpath,sortafter)
 % the directories listed in the array.
 %
 
-
+presentdir=pwd;
 
 if nargin==0
-  dirpath=pwd;
+  dirpath=presentdir;
 end
 
 if not(iscell(dirpath)) 
-  if not(isempty(strfind(pwd,dirpath(2:end-1))))
-    dirpath=pwd; %We are already standing in that directory
+  if not(isempty(strfind(presentdir,dirpath(2:end-1))))
+    if dirpath(end)=='/'
+      tmp=dirpath(1:end-1);
+    else
+      tmp=dirpath;
+    end
+    if tmp(end-3:end)==presentdir(end-3:end)
+      dirpath=pwd %We are already standing in that directory
+    end
   end
   if not(exist(dirpath,'dir'))
     if dirpath(1)=='/'
@@ -31,7 +38,7 @@ if not(iscell(dirpath))
   if not(dirpath(end)=='/')
     dirpath=[dirpath,'/'];
   end
-  
+
   if isempty(list)
     error(['Nothing in the directory ',dirpath])
   end
@@ -43,7 +50,8 @@ if not(iscell(dirpath))
       if not(isempty(str2num(list(ind).name))) || ...
             strcmp(list(ind).name,'baseCase') || ...
             list(ind).name(1)=='N' || ...
-          strcmp(list(ind).name(1:2),'Er') || ...
+            strcmp(list(ind).name(1:2),'Er') || ...
+            strcmp(list(ind).name(1:4),'dPhi') || ...
             not(isempty(strfind(list(ind).name,'solverTolerance'))) || ...
             not(isempty(strfind(list(ind).name,'nhats')))
         runind=runind+1;

@@ -21,27 +21,31 @@ gind=0;
 dirs=listing([]);
 for ind=1:length(listing)
   if listing(ind).isdir
-    if not(isempty(str2num(listing(ind).name))) || ...
-          strcmp(listing(ind).name,'baseCase') || ...
-          listing(ind).name(1)=='N'|| ...
-          not(isempty(strfind(listing(ind).name,'solverTolerance')))|| ...
-          not(isempty(strfind(listing(ind).name,'nhats')))
-      
-      if inQueueOrRunning([thefullpath,'/',listing(ind).name])
-        disp([listing(ind).name,' : is in queue or running.'])
-      else
-        gind=gind+1;
-        dirs(gind)=listing(ind);
-        %[thefullpath,'/',listing(ind).name]
-        %readTime([thefullpath,'/',listing(ind).name])
-        [minutes,runnumbers]=readTime([thefullpath,'/',listing(ind).name]);
-        if minutes(1)==-1
-          disp([dirs(gind).name,' : run #',num2str(runnumbers(1)),', had error,',...
-                ' was cancelled',...
-                ' or reached wall clock limit'])
+    
+    if length(listing(ind).name)>=4
+      if not(isempty(str2num(listing(ind).name))) || ...
+            strcmp(listing(ind).name,'baseCase') || ...
+            listing(ind).name(1)=='N'|| ...
+            strcmp(listing(ind).name(1:4),'dPhi')|| ...
+            not(isempty(strfind(listing(ind).name,'solverTolerance')))|| ...
+            not(isempty(strfind(listing(ind).name,'nhats')))
+        
+        if inQueueOrRunning([thefullpath,'/',listing(ind).name])
+          disp([listing(ind).name,' : is in queue or running.'])
         else
-          disp([dirs(gind).name,' : run #',num2str(runnumbers(1)),', time=', ...
-                num2str(minutes(1)),' minutes'])
+          gind=gind+1;
+          dirs(gind)=listing(ind);
+          %[thefullpath,'/',listing(ind).name]
+          %readTime([thefullpath,'/',listing(ind).name])
+          [minutes,runnumbers]=readTime([thefullpath,'/',listing(ind).name]);
+          if minutes(1)==-1
+            disp([dirs(gind).name,' : run #',num2str(runnumbers(1)),', had error,',...
+                  ' was cancelled',...
+                  ' or reached wall clock limit'])
+          else
+            disp([dirs(gind).name,' : run #',num2str(runnumbers(1)),', time=', ...
+                  num2str(minutes(1)),' minutes'])
+          end
         end
       end
     end
@@ -71,14 +75,14 @@ end
 wcl_h=input('New wall clock limit, hours: ');
 wcl_m=input('New wall clock limit, minutes: ');
 newConsumableMemoryGB=input('Which nodes do you want (ConsumableMemory in GB): ');
-if not(newConsumableMemoryGB==120 || newConsumableMemoryGB==64)
+if not(newConsumableMemoryGB==120 || newConsumableMemoryGB==56)
   error('Nonexistent nodes!')
 end
 switch newConsumableMemoryGB
  case 120
   availableMemoryMB=112000;
- case 64
-  availableMemoryMB=60000;
+ case 56
+  availableMemoryMB=56000;
 end
 
 for ind=1:length(dirs)

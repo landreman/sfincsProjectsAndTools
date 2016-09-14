@@ -1,7 +1,11 @@
-module switch intel/14.0
+#module switch intel/14.0
+module load intel
+
 module unload mpi.ibm
 module load mpi.intel/4.1.3
-module switch mkl/11.1
+
+#module switch mkl/11.1
+module load mkl
 
 module load petsc-real/3.5.2
 

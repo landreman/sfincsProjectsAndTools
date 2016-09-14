@@ -110,20 +110,22 @@ if 0
 end
 
 
-%SATAKE FIGURE
-aw7x=0.51092;
-fig(7)
-dpsidr_w7x=psiAHat*2*runs.rN'/aw7x;
-Gamma=(runs.GHat'+runs.iota'.*runs.IHat')*4*pi./runs.FSABHat2'...
-      *psiAHat*nbar*vbar.*runs.particleFlux_vm_psiN(:,1);
-Gamma_m2s=1./dpsidr_w7x ...
-    *psiAHat*nbar*vbar.*runs.particleFlux_vm_psiN(:,1);
-
-Er_w7x=-runs.dPhiHatdpsiN'/psiAHat.*dpsidr_w7x;
-plot(Er_w7x,Gamma_m2s)
-ylabel('\Gamma [1/m^2s] ')
-xlabel('E_r [keV/m]')
-title('Satake case')
+if 0
+  %SATAKE FIGURE
+  aw7x=0.51092;
+  fig(7)
+  dpsidr_w7x=psiAHat*2*runs.rN'/aw7x;
+  Gamma=(runs.GHat'+runs.iota'.*runs.IHat')*4*pi./runs.FSABHat2'...
+        *psiAHat*nbar*vbar.*runs.particleFlux_vm_psiN(:,1);
+  Gamma_m2s=1./dpsidr_w7x ...
+            *psiAHat*nbar*vbar.*runs.particleFlux_vm_psiN(:,1);
+  
+  Er_w7x=-runs.dPhiHatdpsiN'/psiAHat.*dpsidr_w7x;
+  plot(Er_w7x,Gamma_m2s)
+  ylabel('\Gamma [1/m^2s] ')
+  xlabel('E_r [keV/m]')
+  title('Satake case')
+end
 
 fig(1)
 if Nspec==2
@@ -135,6 +137,19 @@ else
 end
 title('particleFlux')
 xlabel('d\Phi/d\psi_N')
+
+if Nspec==2
+   jnorm=runs.particleFlux_vm_psiN(:,1).*runs.Zs(:,1)+...
+        runs.particleFlux_vm_psiN(:,2).*runs.Zs(:,2);   
+   dPhiHatdpsiNroots=rootfind(runs.dPhiHatdpsiN,jnorm);
+   
+   fig(7)
+   plot(runs.dPhiHatdpsiN,jnorm,'b-',...
+        dPhiHatdpsiNroots,zeros(size( dPhiHatdpsiNroots)),'r+')
+   title('sum_{spec} (particleFlux*Z)')
+   xlabel('d\Phi/d\psi_N')
+   
+end
 
 
 fig(2)
