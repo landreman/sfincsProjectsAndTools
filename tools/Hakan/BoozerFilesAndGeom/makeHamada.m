@@ -44,7 +44,7 @@ function [Ham,Booz,Cyl,Pest]=makeHamada(Geom,rind,Ntheta,Nzeta,varargin)
 % Names of coordinates (right-handed):
 %
 % Boozer:      psi,  theta,  zeta
-% Hamada:      psi,  vthet,  phi
+% Hamada:      psi,  vthet,  phi   (Note: psi is the radial coordinate, not V)
 % Cylindrical: cylr, cylth,  cylphi (Not always possible to construct)
 % Pest:        psi,  ptheta, pzeta
 %
@@ -827,7 +827,7 @@ Booz.dBpsidtheta=-Booz.mu0dpdpsi/iota.*(u-iota*I*(B.^-2 - 1/FSAB2));
 Booz.dBpsidzeta = Booz.mu0dpdpsi/iota.*(u+G*(B.^-2 - 1/FSAB2));
 Booz.FSAB2=FSAB2;
 Booz.FSAu2B2=sum(sum(u.^2.*B.^2.*h))/sum(sum(h));
-Booz.Jacob=Booz.h*(G+iota*I);
+Booz.Jacob_psi_theta_zeta=Booz.h*(G+iota*I);
 Booz.g_thetatheta=g_thetatheta;
 Booz.g_thetazeta =g_thetazeta;
 Booz.g_zetazeta  =g_zetazeta;
@@ -1021,7 +1021,7 @@ else %This whole chunk has been moved to the above function interp2straightfield
   Ham.FSAgpsipsi =Booz.FSAgpsipsi;
   Ham.FSAu2B2=Booz.FSAu2B2;
 end
-Ham.Jacob=(G+iota*I)/Ham.FSAB2;
+Ham.Jacob_psi_vthet_phi=(G+iota*I)/Ham.FSAB2;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % If possible, create a cylindrical discretization cylth,cylphi
