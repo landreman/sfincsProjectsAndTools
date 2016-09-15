@@ -48,13 +48,40 @@ function [Ham,Booz,Cyl,Pest]=makeHamada(Geom,rind,Ntheta,Nzeta,varargin)
 % Cylindrical: cylr, cylth,  cylphi (Not always possible to construct)
 % Pest:        psi,  ptheta, pzeta
 %
+% Jacobians are given in the respective discretisation structs as
+% Ham.Jacob_psi_vthet_phi
+% Booz.Jacob_psi_theta_zeta
+%
 % Some differences between the coordinates are also given. They are denoted with a D
 % followed by the names of the two coordinates. For instance, Booz.Dzetaphi is the difference
 % between zeta and phi at the discretisation points of the uniform (theta,zeta) grid. 
 %
+% Some metric elements are also given. The notation is that, e.g.,
+% Booz.g_thetazeta is g_{\theta\zeta} = \mathbf{e}_\theta \cdot \mathbf{e}_\zeta
+% Booz.gpsipsi     is g^{\psi\psi} = \nabla\psi\cdot\nabla\psi
+%
 % The quantity u satisfies
 % (B dot grad) u = 2 iota |B|^-3 B x nabla psi dot nabla |B|
 %
+% G and I are defined by the expression for the magnetic field
+% \mathbf{B} = I\nabla\theta + G\nabla\zeta + B_\psi(\theta,\zeta)\nabla\psi
+% \mathbf{B} = I\nabla\vthet + G\nabla\phi + \nabla H(\psi,\vthet,\phi)
+%
+% where Booz.Bpsitilde is B_\psi up to an additive constant. 
+% (The m=0,n=0 comp. of Booz.Bpsitilde is set to zero.)
+%
+% Other quantities:
+% h = 1/B^2
+% FSAB2       = <B^2>   (FSA stands for flux surface average)
+% FSAu2B2     = <u^2 B^2>
+% FSAgpsipsi  = <g^{\psi\psi}>
+% FSAg_phiphi = <g_{\phi\phi}>
+% (CylR,CylZ,cylphi) or (CylR,-cylphi,CylZ): Coordinates of discretisation points in
+%                                            the "major radius cylinder"
+% (X,Y,CylZ) : Cartesian coordinates of discretisation points
+%
+%
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 useFFT = 1; %to compare results of 0 and 1 here, one cannot use the ifftOpt='forceSize' option
@@ -448,18 +475,23 @@ Booz.curv_normal=squeeze(dot(Booz.XYZ.gradpsi,Booz.XYZ.curv))./sqrt(gpsipsi);
 Booz.curv_geodes1=BxgradpsidotgradabsB./sqrt(gpsipsi)./B.^2;
 Booz.curv_geodes2=squeeze(dot(cross(Booz.XYZ.B,Booz.XYZ.gradpsi),Booz.XYZ.curv))./sqrt(gpsipsi)./B;
 Booz.gradpsidotgradB=Booz.curv_normal.*sqrt(gpsipsi).*B.^2-mu0dpdpsi.*gpsipsi;
-%Approximating that dr/zeta is roughly in the geometrical toroidal direction I do this
-%to project on the two directions perpedicular to the toroidal direction
-BRmean=mean(BR')'*ones(1,size(dRdtheta,2));
-BZmean=mean(BZ')'*ones(1,size(dRdtheta,2));
-%Bgeomangmean=mean(Bgeomang')'*ones(1,size(dRdtheta,2));
-bRmean=BRmean./sqrt(BRmean.^2+BZmean.^2);
-bZmean=BZmean./sqrt(BRmean.^2+BZmean.^2);
+
+% The following is for equilibria close to axi-symmetry, where we want to calculate 
+% the deviation from axi-symmetry in terms of dBinsurf and dBperp.
+% Approximating that dr/dzeta is roughly in the geometrical toroidal direction I 
+% assume that poloidal components of B in the "closest" axisymmetric equilibrium can
+% be obtained by averaging BR and BZ over the Boozer toroidal angle. Then we project
+% the deviation from axi-symmetry on the two directions perpedicular to the toroidal direction.
+BRmean=mean(BR')'*ones(1,size(dRdtheta,2)); %mean over the Boozer toroidal angle
+BZmean=mean(BZ')'*ones(1,size(dRdtheta,2)); %mean over the Boozer toroidal angle
+
+bRmean=BRmean./sqrt(BRmean.^2+BZmean.^2);  %unit vector tangent to flux surface
+bZmean=BZmean./sqrt(BRmean.^2+BZmean.^2);  %in the poloidal plane
 
 dBR=BR-BRmean;
 dBZ=BZ-BZmean;
-Booz.dBinsurf=dBR.*bRmean+dBZ.*bZmean;
-Booz.dBperp=dBR.*bZmean-dBZ.*bRmean;
+Booz.dBinsurf=dBR.*bRmean+dBZ.*bZmean; %dot product 
+Booz.dBperp=dBR.*bZmean-dBZ.*bRmean;   %cross product 
 %sqrt((dBR-Booz.dBinsurf*bRmean).^2+(dBZ-Booz.dBinsurf*bZmean).^2);
 
 
@@ -1002,17 +1034,8 @@ else %This whole chunk has been moved to the above function interp2straightfield
   Boozubig=[Booz.u,Booz.u(:,1)];
   Boozubig=[Boozubig;Boozubig(1,:)];
   Ham.u=interp2(Boozzetabig,Boozthetabig,Boozubig,...
-                mod(Ham.zeta,2*pi/NPeriods),mod(Ham.theta,2*pi)); 
-
-  % The quantity h=1/B^2:
-  if 0 %interpolate
-    Boozhbig=[Booz.h,Booz.h(:,1)];
-    Boozhbig=[Boozhbig;Boozhbig(1,:)];
-    Ham.h=interp2(Boozzetabig,Boozthetabig,Boozhbig,...
-                  mod(Ham.zeta,2*pi/NPeriods),mod(Ham.theta,2*pi)); 
-  else
-    Ham.h=1./Ham.B.^2;
-  end
+                mod(Ham.zeta,2*pi/NPeriods),mod(Ham.theta,2*pi));
+  Ham.h=1./Ham.B.^2;
   Ham.iota=Booz.iota;
   Ham.G=Booz.G;
   Ham.I=Booz.I;
