@@ -474,7 +474,7 @@ Booz.XYZ.curv(3,:,:)=(CZ+BZ./B.*BdotgradabsB)./B.^2;
 Booz.curv_normal=squeeze(dot(Booz.XYZ.gradpsi,Booz.XYZ.curv))./sqrt(gpsipsi);
 Booz.curv_geodes1=BxgradpsidotgradabsB./sqrt(gpsipsi)./B.^2;
 Booz.curv_geodes2=squeeze(dot(cross(Booz.XYZ.B,Booz.XYZ.gradpsi),Booz.XYZ.curv))./sqrt(gpsipsi)./B;
-Booz.gradpsidotgradB=Booz.curv_normal.*sqrt(gpsipsi).*B.^2-mu0dpdpsi.*gpsipsi;
+Booz.gradpsidotgradB=Booz.curv_normal.*sqrt(gpsipsi).*B-mu0dpdpsi.*gpsipsi;
 
 % The following is for equilibria close to axi-symmetry, where we want to calculate 
 % the deviation from axi-symmetry in terms of dBinsurf and dBperp.
