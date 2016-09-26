@@ -18,9 +18,9 @@ switch nargin
  case 4
   symmetry='unknown';
  case 6
-  if cmpstr(varargin{1},'signcorr1')
+  if strcmp(varargin{1},'signcorr1')
     newsigncorrectionmethod=0;
-  elseif cmpstr(varargin{1},'signcorr2')
+  elseif strcmp(varargin{1},'signcorr2')
     newsigncorrectionmethod=1;
   else
     error('Sign correction method for JG files not recognised!')

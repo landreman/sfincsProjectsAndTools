@@ -119,7 +119,9 @@ pow13=log(Flux_psi(3)/Flux_psi(1))/log(4)
 
 Flux_r=Flux_psi/sqrt(Booz.FSAgpsipsi)
 
-fac_Flux_re18=[fac,Flux_r/1e18]
+torque=-Z*e.*iota.*Flux_psi
+
+fac_Flux_re18=[fac,Flux_r/1e18] %,Flux_r(1)/1e18*(fac/fac(1)).^2]
 
 Flux_psi(1)/sqrt(Booz.FSAgpsipsi).*(fac/fac(1)).^2./...
     (Flux_psi/sqrt(Booz.FSAgpsipsi))
