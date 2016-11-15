@@ -40,8 +40,12 @@ filename = 'sfincsOutput.h5'
 
 
 MinFloat = pow(10, -sys.float_info.dig)
-
-f = h5py.File(filename,'r') 
+try:
+    f = h5py.File(filename,'r') 
+except:
+    print "Cannot open " + filename
+    print "Must be an HDF5 file in current folder"
+    sys.exit()
 Zs = f["Zs"][()]
 mHats = f["mHats"][()]
 THats = f["THats"][()]
