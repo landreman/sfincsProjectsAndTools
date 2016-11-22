@@ -57,7 +57,12 @@ iota = f["iota"][()]
 nu_n = f["nu_n"][()]
 FSABFlow = f["FSABFlow"][()]
 FSABjHat = f["FSABjHat"][()]
-particleFlux_vd_rHat = f["particleFlux_vd_rHat"][()]
+includePhi1 = f["includePhi1"][()]
+integerToRepresentTrue = f["integerToRepresentTrue"][()]
+if includePhi1 == integerToRepresentTrue:
+    particleFlux_vd_rHat = f["particleFlux_vd_rHat"][()]
+else:
+    particleFlux_vd_rHat = f["particleFlux_vm_rHat"][()]
 f.close()  
 
 ##nu_n = nuBar*Rbar/vbar
