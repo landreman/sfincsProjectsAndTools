@@ -142,7 +142,7 @@ for sind=1:length(Geom.s)
     ind=find(Geom.m{sind}==Dzetawmnlist.m(mnind) & ...
              Geom.n{sind}==Dzetawmnlist.n(mnind) & ...
              Geom.parity{sind}==not(Dzetawmnlist.cosparity(mnind)));
-    Geom.Dphi{sind}(ind)=Dzetawmnlist.data(mnind);
+    Geom.Dphi{sind}(ind)=Geom.Nperiods/2/pi*Dzetawmnlist.data(mnind);
   end
   ind=find(Geom.m{sind}==0 & Geom.n{sind}==0 & Geom.parity{sind}==1);
   Geom.Dphi{sind}(ind)=0; 
