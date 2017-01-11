@@ -1,4 +1,19 @@
-function [us,umnmats]=calcu(hs,Gs,Is,iotas,NPeriod)
+function [us,umnmats]=calcu(hs,Gs,Is,iotas,NPeriod,varargin)
+% This solves the equation
+%
+%   B\cdot\nabla u = - iota B\times\nabla\psi\cdot\nabla h
+%
+% given that <B^2 u> = 0
+%
+% The optional 6th argument zeroout_Deltaiota can be used to zero out mn components of wmn
+% which have abs(n/m*NPeriods - iota) < zeroout_Deltaiota.
+%
+
+if nargin>5
+  zeroout_Deltaiota=varargin{1};
+else
+  zeroout_Deltaiota=-1; %means that it will not be used
+end
 
 if length(NPeriod)==1
   NPeriods=NPeriod*ones(size(iotas));
@@ -27,6 +42,12 @@ if length(iotas)==1
     umn.m0ind=hmn.m0ind;
     umn.n0ind=hmn.n0ind;
 
+    m_tmp=hmn.m;
+    m_tmp(hmn.m0ind,:)=10*eps; %to avoid division by zero
+    badinds=find(abs(hmn.n./m_tmp*NPeriods - iota)<zeroout_Deltaiota);
+    umn.c(badinds)=0;
+    umn.s(badinds)=0; 
+    
     umnmats=mnmat(umn);
     us=ifftmn(umnmats);
 else %inputs were given in vectors
@@ -51,6 +72,12 @@ else %inputs were given in vectors
     umn.m0ind=hmn.m0ind;
     umn.n0ind=hmn.n0ind;
 
+    m_tmp=hmn.m;
+    m_tmp(hmn.m0ind,:)=10*eps; %to avoid division by zero
+    badinds=find(abs(hmn.n./m_tmp*NPeriods - iota)<zeroout_Deltaiota);
+    umn.c(badinds)=0;
+    umn.s(badinds)=0; 
+    
     umnmats{ind}=mnmat(umn);
     us{ind}=ifftmn(umnmats{ind});
   end

@@ -1,4 +1,21 @@
 function Geom=readBoozerfile(filename,min_Bmn,max_m,maxabs_n,symmetry,varargin)
+%
+% Geom=readBoozerfile(filename,min_Bmn,max_m,maxabs_n,symmetry,varargin)
+%
+% This reads the Boozer file of the .bc type
+% Note that the .bc file is left-handed and the output struct Geom
+% is right-handed.
+%
+% Only Fourier components with abs(Bmn)>min_Bmn, m<=max_m, |n|<=maxabs_n
+% are read.
+%
+% The input symmetry can be 'StelSym' to double-check that the 
+% input is stellarator symmetric
+%
+% If the .bc file was produced by JMC, one has to supply an extra argument
+% choosing which type of correction of the sign of the total flux to make.
+% varargin{1}='signcorr1': Bphi and Btheta will get sign changes
+% varargin{1}='signcorr2': Total toroidal flux will get a sign change
 
 newsigncorrectionmethod=NaN; %This is the default from 20160610
 
@@ -18,9 +35,9 @@ switch nargin
  case 4
   symmetry='unknown';
  case 6
-  if cmpstr(varargin{1},'signcorr1')
+  if strcmp(varargin{1},'signcorr1')
     newsigncorrectionmethod=0;
-  elseif cmpstr(varargin{1},'signcorr2')
+  elseif strcmp(varargin{1},'signcorr2')
     newsigncorrectionmethod=1;
   else
     error('Sign correction method for JG files not recognised!')
@@ -58,13 +75,17 @@ if strcmp(filetype,'JG')
 
   tmp_str=fgetl(fid);
   concat_str=tmp_str;
-  while tmp_str(1:2)=='CC'
-    tmp_str=fgetl(fid);
-    if tmp_str(1:2)=='CC'
-      concat_str = sprintf([concat_str,'\n',tmp_str]); %comment line
+  if strcmp(tmp_str(1:2),'CC')
+    while strcmp(tmp_str(1:2),'CC')
+      tmp_str=fgetl(fid);
+      if strcmp(tmp_str(1:2),'CC')
+        concat_str = sprintf([concat_str,'\n',tmp_str]); %comment line
+      end
     end
+    Geom.headertext.maincomment=concat_str;
+  else
+    Geom.headertext.maincomment='CC ----------------------------------------------';
   end
-  Geom.headertext.maincomment=concat_str;
   Geom.headertext.globalvars=tmp_str;
   header_d=fscanf(fid,'%d',4);
   %header_f=fscanf(fid,'%f',3);
@@ -72,8 +93,16 @@ if strcmp(filetype,'JG')
   header_f=sscanf(tmpstr,'%f');
   %header_f=fscanf(fid,'%f',3);
   %fgetl(fid); %just skip the return character
-  Geom.headertext.surfvars=fgetl(fid);  %Variable name line
-
+  Geom.headertext.surfvars=fgetl(fid);  %Variable name line  
+  YTstyle=0;
+  if not(isempty(strfind(Geom.headertext.surfvars,'[A]')))
+    %This is a file from Yuriy Turkin. Correct this line to the JG standard
+    YTstyle=1; %indicates Yuriy Turkin style
+    Geom.headertext.surfvars=...
+      '       s         iota  curr_pol/nper    curr_tor    pprime   sqrt g(0,0)';
+    Geom.headertext.surfvarunits=...
+      '                            [A]            [A]   dp/ds,[Pa] (dV/ds)/nper';   
+  end
   Geom.m0b        = header_d(1);
   Geom.n0b        = header_d(2);
   Geom.nsurf      = header_d(3);
@@ -98,7 +127,9 @@ if strcmp(filetype,'JG')
   while not(eof)
     rind=rind+1;
     fprintf(1,'\b\b\b\b\b\b\b\b\b\b\b%5i/%5i',rind,Geom.nsurf)
-    Geom.headertext.surfvarunits=fgetl(fid);
+    if not(YTstyle) %isempty(strfind(Geom.headertext.surfvars,'[A]'))
+      Geom.headertext.surfvarunits=fgetl(fid); %unit line only in JG files
+    end
     surfheader=fscanf(fid,'%f',6);
     torfluxnorm(rind) = surfheader(1);
     iota(rind)  = surfheader(2);
@@ -107,7 +138,7 @@ if strcmp(filetype,'JG')
     dpds(rind)  = surfheader(5);
     dVdsoverNper(rind)  = surfheader(6);
     fgetl(fid); %just skip the return character
-    tmpstr=fgetl(fid); %units line
+    tmpstrunits=fgetl(fid); %units line
     if rind==1
       Geom.headertext.datavars=tmpstr;
       Geom.StelSym=isempty(strfind(Geom.headertext.datavars, 'rmnc'));
@@ -122,20 +153,20 @@ if strcmp(filetype,'JG')
       end
     end
     position=ftell(fid);
-    tmp_str=fgetl(fid);
+    tmp_str1=fgetl(fid);
     if Geom.StelSym
-      tmp=sscanf(tmp_str,'%d %d %f %f %f %f',6);
+      tmp=sscanf(tmp_str1,'%d %d %f %f %f %f',6);
       while not(tmp(1)==0 && tmp(2)==0)
-        tmp_str=fgetl(fid);
-        tmp=sscanf(tmp_str,'%d %d %f %f %f %f',6);    
+        tmp_str1=fgetl(fid);
+        tmp=sscanf(tmp_str1,'%d %d %f %f %f %f',6);    
       end
       B00(rind)=tmp(6);
       R00(rind)=tmp(3);
     else
-      tmp=sscanf(tmp_str,'%d %d %f %f %f %f %f %f %f %f',10);
+      tmp=sscanf(tmp_str1,'%d %d %f %f %f %f %f %f %f %f',10);
       while not(tmp(1)==0 && tmp(2)==0)
-        tmp_str=fgetl(fid);
-        tmp=sscanf(tmp_str,'%d %d %f %f %f %f %f %f %f %f',10);
+        tmp_str1=fgetl(fid);
+        tmp=sscanf(tmp_str1,'%d %d %f %f %f %f %f %f %f %f',10);
       end
       B00(rind)=tmp(9);
       R00(rind)=tmp(3);     
@@ -199,25 +230,27 @@ if strcmp(filetype,'JG')
     end
     no_of_modes(rind)=modeind;
     %modesbnorm{rind}=modesb{rind}/B00(rind);
+    if no_of_modes(rind)==0
+      error(['no modes found for rind=',num2str(rind)])
+    end
   end
   fprintf(1,'\n')
-
+  
   if any(dVdsoverNper>0)
     error(['The coordinate system in the Boozer file should be left handed,'...
           ' but it has a positive Jacobian. Something is wrong!'])
   end
   
-
   if Geom.torfluxtot*Bphi(1)>0
     if isnan(newsigncorrectionmethod)
       error('You must specify the signcorrection method signcorr1 or signcorr2')
     end
     if not(newsigncorrectionmethod)
       Geom.newsigncorr=0;
-      disp(['This was a stellarator symmetric file from Joachim Geiger.'...
-            ' It has been turned 180 degrees around a ' ...
-            'horizontal axis <=> flip the sign of G and I, so that it matches the sign ' ...
-            'of its total toroidal flux.'])
+      %disp(['This was a stellarator symmetric file from Joachim Geiger.'...
+      %      ' It has been turned 180 degrees around a ' ...
+      %      'horizontal axis <=> flip the sign of G and I, so that it matches the sign ' ...
+      %      'of its total toroidal flux.'])
       Geom.headertext.maincomment=sprintf([Geom.headertext.maincomment,'\n',...
            'CC This stellarator symmetric file has been turned 180 degrees around an\n', ...
            'CC horizontal axis by flipping the signs of Itor and Ipol compared with the\n',...
@@ -233,9 +266,9 @@ if strcmp(filetype,'JG')
       Btheta=-Btheta;
     else % Use newsigncorrectionmethod
       Geom.newsigncorr=1;
-      disp(['This was a stellarator symmetric file from Joachim Geiger.'...
-          ' The sign of the toroidal flux has been flipped so that it it is counted positive' ...
-          ' in the direction of the toroidal coordinate irrespectively of handedness.'])
+      %disp(['This was a stellarator symmetric file from Joachim Geiger.'...
+      %    ' The sign of the toroidal flux has been flipped so that it it is counted positive' ...
+      %    ' in the direction of the toroidal coordinate irrespectively of handedness.'])
       Geom.headertext.maincomment=sprintf([Geom.headertext.maincomment,'\n',...
            'CC In this stellarator symmetric file the sign of the toroidal flux\n', ...
            'CC has been flipped so that it it is counted positive in the direction\n',...
@@ -292,6 +325,8 @@ if strcmp(filetype,'JG')
       Geom.Dphi{tmpind}=-Geom.Dphi{tmpind}; 
     end
   end
+  %Dphi =N/(2*pi)*(zeta-(-geomang))
+  
   if not(Geom.StelSym)
     Geom.parity=modespar;
   end
@@ -305,6 +340,26 @@ if strcmp(filetype,'JG')
     Geom.minorradiusW7AS=NaN;
     Geom.majorradiusLastbcR00=NaN;
   end
+  
+  %%%% Some security checks 
+  Ntheta=301;Nzeta=303;rind=1;
+  Bmn=mnmat(Geom,rind,'B',Ntheta,Nzeta,'forceSize');
+  B=ifftmn(Bmn);
+  FSAB2_test=Ntheta*Nzeta/sum(sum(B.^(-2)));
+  if abs(FSAB2_test./Geom.FSAB2(rind)-1)>0.05
+    warning('dVdsoverNper not correct in bc file')
+    Geom.dVdsoverNper=NaN*Geom.dVdsoverNper;
+    Geom.FSAB2=NaN*Geom.FSAB2;
+    abs(4*pi^2*Geom.psi_a/Geom.Nperiods*(Geom.Bphi+Geom.iota.*Geom.Btheta)./Geom.dVdsoverNper);
+    %Calculate the correct values
+    for rind=1:Geom.nsurf
+      Bmn=mnmat(Geom,rind,'B',Ntheta,Nzeta,'forceSize');
+      B=ifftmn(Bmn);
+      Geom.FSAB2(rind)=Ntheta*Nzeta/sum(sum(B.^(-2)));
+    end
+    Geom.dVdsoverNper=abs(4*pi^2*Geom.psi_a/Geom.Nperiods*(Geom.Bphi+Geom.iota.*Geom.Btheta)./Geom.FSAB2);
+  end
+  
   
   %fprintf(1,'\b\b\b\b\b\b\b\b\b\b\b')
   fprintf(1,'\n')

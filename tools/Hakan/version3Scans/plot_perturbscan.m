@@ -63,6 +63,9 @@ nuPrimei=(G+iota.*I).*nu_ii./vTi./B00;
 
 
 Flux_psi=runs.particleFlux_vm_psiN(:,ion)*nbar*vbar/Rbar*psiAHat;
+particleFlux_vm_psiN_fromNTV=runs.NTVfromFlux(:,ion)./iota./Z.*(runs.Delta'/2);
+Flux_psi_fromNTV=particleFlux_vm_psiN_fromNTV*nbar*vbar/Rbar*psiAHat;
+
 
 A1=(runs.dnHatdpsiN(:,ion)./runs.nHats(:,ion)...
     +(runs.dPhiHatdpsiN'*Phibar).*runs.Zs(:,ion).*e./(runs.THats(:,ion)*Tbar)...
@@ -119,17 +122,18 @@ pow13=log(Flux_psi(3)/Flux_psi(1))/log(4)
 
 Flux_r=Flux_psi/sqrt(Booz.FSAgpsipsi)
 
-fac_Flux_re18=[fac,Flux_r/1e18]
+torque=-Z*e.*iota.*Flux_psi
+
+fac_Flux_re18=[fac,Flux_r/1e18] %,Flux_r(1)/1e18*(fac/fac(1)).^2]
 
 Flux_psi(1)/sqrt(Booz.FSAgpsipsi).*(fac/fac(1)).^2./...
     (Flux_psi/sqrt(Booz.FSAgpsipsi))
 if 1
 fig(1)
 loglog(fac,Flux_psi/sqrt(Booz.FSAgpsipsi),'+--g',...
-       fac,Flux_psi(1)/sqrt(Booz.FSAgpsipsi).*(fac/fac(1)).^2,'k-')%,...
-%       fac,Flux_psi(1)/sqrt(Booz.FSAgpsipsi).*(fac/fac(1)).^1.8,'b:',...
-%       fac,Flux_psi(1)/sqrt(Booz.FSAgpsipsi).*(fac/fac(1)).^2.2,'r:')%,...
-%       fac,Flux_psi(1)/sqrt(Booz.FSAgpsipsi)*(fac/fac(1)).^pow,'m--')
+       fac,Flux_psi(1)/sqrt(Booz.FSAgpsipsi).*(fac/fac(1)).^2,'k-',...
+       fac,Flux_psi_fromNTV/sqrt(Booz.FSAgpsipsi),'k--',...
+       fac,Flux_psi_fromNTV(1)/sqrt(Booz.FSAgpsipsi).*(fac/fac(1)).^2,'k-.')
 set(gca,'FontSize',14)
 xlabel('perturbation amplitude')
 ylabel('radial particle flux [1/(sm^2)]')
