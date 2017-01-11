@@ -70,16 +70,22 @@ partFluxpers= runs.particleFlux_vm_psiN*vbar*nbar/Rbar.*([1;1]*dVdpsiN)';
 heatFluxMW=runs.heatFlux_vm_psiN*vbar^3*nbar*mbar/Rbar.*([1;1]*dVdpsiN)'/1e6;
 
 fig(1)
-plot(runs.rN,partFluxpers)
+%plot(runs.rN,partFluxpers)
+plot(runs.rN,partFluxpers(:,1),...
+     runs.rN,partFluxpers(:,2)*100)
 xlabel('r/a')
 ylabel('\Gamma [1/s]')
-legend('e','i')
+legend('\Gamma_1','\Gamma_2*100')
+axis([0,1,-2e20,3e21])
+
 
 fig(2)
 plot(runs.rN,heatFluxMW)
 xlabel('r/a')
 ylabel('Q [MW]')
-legend('e','i')
+legend('spec 1','spec 2')
 
 fig(3)
 plot(runs.rN,runs.FSABFlow)
+xlabel('r/a')
+legend('spec 1','spec 2')

@@ -30,7 +30,7 @@ for ind=1:length(listing)
             not(isempty(strfind(listing(ind).name,'solverTolerance')))|| ...
             not(isempty(strfind(listing(ind).name,'nhats')))
         
-        if inQueueOrRunning([thefullpath,'/',listing(ind).name])
+        if inQueueOrRunning_ll([thefullpath,'/',listing(ind).name])
           disp([listing(ind).name,' : is in queue or running.'])
         else
           gind=gind+1;

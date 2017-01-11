@@ -54,8 +54,13 @@ if not(iscell(dirpath))
             strcmp(list(ind).name(1:4),'dPhi') || ...
             not(isempty(strfind(list(ind).name,'solverTolerance'))) || ...
             not(isempty(strfind(list(ind).name,'nhats')))
-        runind=runind+1;
-        runlist{runind}=list(ind).name;
+        if not(exist([dirpath,list(ind).name,'/sfincsOutput.h5'],'file'))
+          disp(['Skipping the directory ',dirpath,list(ind).name])
+          disp('The file sfincsOutput.h5 did not exist!')
+        else         
+          runind=runind+1;
+          runlist{runind}=list(ind).name;
+        end
       end
     end
   end
@@ -77,6 +82,7 @@ if not(iscell(dirpath))
         elseif strcmp(err.identifier,'MATLAB:imagesci:validate:fileOpen')
           runs{ind}=[runlist{ind},' empty'];
         else
+          disp(['Problem opening the file: ',dirpath,runlist{ind},'/sfincsOutput.h5'])
           disp('rethrown error:')
           rethrow(err);
         end
