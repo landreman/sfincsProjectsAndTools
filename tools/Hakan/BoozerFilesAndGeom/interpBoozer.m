@@ -39,13 +39,21 @@ if size(s,1)>size(s,2)
 end
 
 out.StelSym=Geom.StelSym;
-out.headertext=Geom.headertext;
-out.m0b=Geom.m0b;
-out.n0b=Geom.n0b;
+if isfield(Geom,'headertext')
+  out.headertext=Geom.headertext;
+end
+if isfield(Geom,'m0b')
+  out.m0b=Geom.m0b;
+  out.n0b=Geom.n0b;
+end
 out.nsurf=length(s);
 out.Nperiods=Geom.Nperiods;
-out.psi_a=Geom.psi_a;
-out.torfluxtot=Geom.torfluxtot;
+if isfield(Geom,'psi_a')
+  out.psi_a=Geom.psi_a;
+end
+if isfield(Geom,'torfluxtot')
+  out.torfluxtot=Geom.torfluxtot;
+end
 out.minorradiusW7AS=Geom.minorradiusW7AS;
 out.majorradiusLastbcR00=Geom.majorradiusLastbcR00;
 if isfield(Geom,'minorradiusVMEC')
@@ -63,9 +71,10 @@ out.Bfilter=Geom.Bfilter;
 out.s=s;
 
 if strcmp(interptype,'linear') %This is the default case
-  out.headertext.maincomment=sprintf([out.headertext.maincomment,'\n',...
-                    'CC The file has been linearly interpolated to a new set of radii']);
-
+  if isfield(Geom,'headertext')
+    out.headertext.maincomment=sprintf([out.headertext.maincomment,'\n',...
+                        'CC The file has been linearly interpolated to a new set of radii']);
+  end
   corrindedge=find((Geom.s(end)<s) & (s<1.01*Geom.s(end)));
   if not(isempty(corrindedge))
     s(corrindedge)=Geom.s(end);
@@ -79,8 +88,12 @@ if strcmp(interptype,'linear') %This is the default case
   out.iota=interp1(Geom.s,Geom.iota,s);
   out.Bphi=interp1(Geom.s,Geom.Bphi,s);
   out.Btheta=interp1(Geom.s,Geom.Btheta,s);
-  out.dpds=interp1(Geom.s,Geom.dpds,s);
-  out.dVdsoverNper=interp1(Geom.s,Geom.dVdsoverNper,s);
+  if isfield(Geom,'dpds')
+    out.dpds=interp1(Geom.s,Geom.dpds,s);
+  end
+  if isfield(Geom,'dVdsoverNper')
+    out.dVdsoverNper=interp1(Geom.s,Geom.dVdsoverNper,s);
+  end
   out.B00=interp1(Geom.s,Geom.B00,s);
   out.R00=interp1(Geom.s,Geom.R00,s);
 
@@ -221,9 +234,11 @@ if strcmp(interptype,'linear') %This is the default case
             out.Z{surfind}(mode)=interp1(Geom.s(Lind:Rind)',...
                                          [Geom.Z{Lind}(Lmnind),Geom.Z{Rind}(Rmnind)],...
                                          s(surfind));
-            out.Dphi{surfind}(mode)=interp1(Geom.s(Lind:Rind)',...
-                                            [Geom.Dphi{Lind}(Lmnind),Geom.Dphi{Rind}(Rmnind)],...
-                                            s(surfind));
+            if isfield(Geom,'Dphi')
+              out.Dphi{surfind}(mode)=interp1(Geom.s(Lind:Rind)',...
+                                              [Geom.Dphi{Lind}(Lmnind),Geom.Dphi{Rind}(Rmnind)],...
+                                              s(surfind));
+            end
           elseif Lexists && not(Rexists)
             out.Bmn{surfind}(mode)=interp1(Geom.s(Lind:Rind)',...
                                            [Geom.Bmn{Lind}(Lmnind),0],...
@@ -236,9 +251,11 @@ if strcmp(interptype,'linear') %This is the default case
             out.Z{surfind}(mode)=interp1(Geom.s(Lind:Rind)',...
                                          [Geom.Z{Lind}(Lmnind),0],...
                                          s(surfind));
-            out.Dphi{surfind}(mode)=interp1(Geom.s(Lind:Rind)',...
-                                            [Geom.Dphi{Lind}(Lmnind),0],...
-                                            s(surfind));        
+            if isfield(Geom,'Dphi')
+              out.Dphi{surfind}(mode)=interp1(Geom.s(Lind:Rind)',...
+                                              [Geom.Dphi{Lind}(Lmnind),0],...
+                                              s(surfind));    
+            end
           elseif not(Lexists) && Rexists
             out.Bmn{surfind}(mode)=interp1(Geom.s(Lind:Rind)',...
                                            [0,Geom.Bmn{Rind}(Rmnind)],...
@@ -251,9 +268,11 @@ if strcmp(interptype,'linear') %This is the default case
             out.Z{surfind}(mode)=interp1(Geom.s(Lind:Rind)',...
                                          [0,Geom.Z{Rind}(Rmnind)],...
                                          s(surfind));
-            out.Dphi{surfind}(mode)=interp1(Geom.s(Lind:Rind)',...
-                                            [0,Geom.Dphi{Rind}(Rmnind)],...
-                                            s(surfind));        
+            if isfield(Geom,'Dphi')
+              out.Dphi{surfind}(mode)=interp1(Geom.s(Lind:Rind)',...
+                                              [0,Geom.Dphi{Rind}(Rmnind)],...
+                                              s(surfind));   
+            end
           else
             error('this is impossible')
           end
@@ -267,9 +286,10 @@ if strcmp(interptype,'linear') %This is the default case
 
   
 elseif strcmp(interptype,'nearest')
-  out.headertext.maincomment=sprintf([out.headertext.maincomment,'\n',...
-            'CC This file has only a subset of the flux surfaces of the original file.']);
-  
+  if isfield(Geom,'headertext')
+    out.headertext.maincomment=sprintf([out.headertext.maincomment,'\n',...
+                        'CC This file has only a subset of the flux surfaces of the original file.']);
+  end
   if strcmp(invarname,'index')
     inds=invar;
     if size(inds,1)>size(inds,2)
@@ -283,8 +303,12 @@ elseif strcmp(interptype,'nearest')
   out.iota=Geom.iota(inds);
   out.Bphi=Geom.Bphi(inds);
   out.Btheta=Geom.Btheta(inds);
-  out.dpds=Geom.dpds(inds);
-  out.dVdsoverNper=Geom.dVdsoverNper(inds);
+  if isfield(Geom,'dpds')
+    out.dpds=Geom.dpds(inds);
+  end
+  if isfield(Geom,'dVdsoverNper')
+    out.dVdsoverNper=Geom.dVdsoverNper(inds);
+  end
   out.B00=Geom.B00(inds);
   out.R00=Geom.R00(inds);
   out.nmodes=Geom.nmodes(inds);
@@ -293,7 +317,9 @@ elseif strcmp(interptype,'nearest')
     out.Bmn{surfind}  =Geom.Bmn{ind};
     out.R{surfind}    =Geom.R{ind};
     out.Z{surfind}    =Geom.Z{ind};
-    out.Dphi{surfind} =Geom.Dphi{ind};
+    if isfield(Geom,'Dphi')
+      out.Dphi{surfind} =Geom.Dphi{ind};
+    end
     out.Bnorm{surfind}=Geom.Bnorm{ind};
     out.m{surfind}    =Geom.m{ind};
     out.n{surfind}    =Geom.n{ind};
