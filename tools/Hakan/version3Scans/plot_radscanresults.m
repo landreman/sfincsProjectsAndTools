@@ -56,7 +56,7 @@ mi=runs.mHats(:,ion)*mp;
 
 
 %[tauP,tauE]=calcAlltau(runs);
-[tauP,tauE]=calcAlltau(runs,151,35);
+[tauP,tauE]=calcAlltau(runs,53,55);
 
 tauDirect=-runs.NTV*pbar; %tau is defined as -NTV.
 tauiDirect=tauDirect(:,ion)';
@@ -118,7 +118,7 @@ set(gca,'FontSize',fz)
 title('torque')
 xlabel('\rho_{tor}')
 ylabel('Nm / m^3')
-legend('from anisotropy','from anisotropy and Er','from flux','analytic approx.',2)
+legend('from anisotropy','from anisotropy and Er','from flux','analytic approx.')
 ax=axis;
 ax(3)=0;
 axis(ax);  

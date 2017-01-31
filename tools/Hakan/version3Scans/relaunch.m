@@ -11,7 +11,7 @@ end
 if not(exist(thefullpath,'dir'))
   thefullpath=[getenv('SFINCS_HOME'),'/fortran/version3/',thefullpath];
 end
-listing = dir(thefullpath);
+listing = dir(thefullpath)
 
 if isempty(listing)
   error('No subdirectories exist!')
@@ -21,10 +21,12 @@ disp('Subdirectories:')
 disp('---------------------')
 gind=0;
 dirs=listing([]);
+isok=[];
 for ind=1:length(listing)
   if listing(ind).isdir
-    
-    if length(listing(ind).name)>=3
+
+    if not(strcmp(listing(ind).name,'.') || strcmp(listing(ind).name,'..'))
+
       if not(isempty(str2num(listing(ind).name))) || ...
             strcmp(listing(ind).name,'baseCase') || ...
             listing(ind).name(1)=='N'|| ...
@@ -70,9 +72,10 @@ for ind=1:length(listing)
             disp([dirs(gind).name,' had error,',...
                   ' was cancelled',...
                   ' or reached wall clock limit'])
+            isok(gind)=0;
           else
             disp([dirs(gind).name,' is finished'])
-            
+            isok(gind)=1;
           end
         end
       end
@@ -80,7 +83,7 @@ for ind=1:length(listing)
   end
 end
 
-if isempty(dirs)
+if isempty(dirs) || all(isok)
   error('No subdirectories that need relaunch present!')
 end
 

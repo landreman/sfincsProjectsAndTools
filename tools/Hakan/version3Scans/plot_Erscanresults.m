@@ -141,7 +141,8 @@ xlabel('d\Phi/d\psi_N')
 if Nspec==2
    jnorm=runs.particleFlux_vm_psiN(:,1).*runs.Zs(:,1)+...
         runs.particleFlux_vm_psiN(:,2).*runs.Zs(:,2);   
-   dPhiHatdpsiNroots=rootfind(runs.dPhiHatdpsiN,jnorm);
+   %dPhiHatdpsiNroots=rootfind(runs.dPhiHatdpsiN,jnorm);
+   dPhiHatdpsiNroots=interp1(jnorm,runs.dPhiHatdpsiN,0,'pchip')
    
    fig(7)
    plot(runs.dPhiHatdpsiN,jnorm,'b-',...
