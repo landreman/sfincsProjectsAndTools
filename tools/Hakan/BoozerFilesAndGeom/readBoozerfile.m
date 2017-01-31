@@ -140,7 +140,7 @@ if strcmp(filetype,'JG')
     fgetl(fid); %just skip the return character
     tmpstrunits=fgetl(fid); %units line
     if rind==1
-      Geom.headertext.datavars=tmpstr;
+      Geom.headertext.datavars=tmpstrunits;
       Geom.StelSym=isempty(strfind(Geom.headertext.datavars, 'rmnc'));
       if not(strcmp(symmetry,'unknown'))
         if Geom.StelSym && not(strcmp(symmetry,'StelSym'))
@@ -371,6 +371,13 @@ if strcmp(filetype,'JG')
 elseif strcmp(filetype,'HM')
   Geom.StelSym=1;
   
+  if isnan(newsigncorrectionmethod)
+    newsigncorrectionmethod=0; 
+    Geom.newsigncorr=0;
+  else
+    Geom.newsigncorr=newsigncorrectionmethod;
+  end
+  
   tmp_str=fgetl(fid);
   while tmp_str(2)=='c' || tmp_str(2)=='C'; %Skip comment line
     tmp_str=fgetl(fid);
@@ -471,6 +478,10 @@ elseif strcmp(filetype,'HM')
     end
   end
    
+  if not(Geom.newsigncorr)
+    Geom.Bphi=-Geom.Bphi;
+    Geom.Btheta=-Geom.Btheta;
+  end
 end
 
 fclose(fid);

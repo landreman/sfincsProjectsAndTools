@@ -43,7 +43,6 @@ else
 
   while not(eof)
     rind=rind+1;
-    
     header1=sscanf(linestr,'%f %f %f %f %f %f %f',7);
     foundmaindata=0;
     while not(foundmaindata)
@@ -98,8 +97,12 @@ else
     dk.iota(rind)       =header1(4);  %HM: air(rind)
     dk.NormTorCurv(rind)=header1(5);  %HM: akn(rind)
     dk.FracTrap(rind)   =header1(6);  %HM: aftp(rind)
-    dk.B2av(rind)       =header1(7);  %HM: ab2av(rind)
-
+    if length(header1)>6
+      dk.B2av(rind)       =header1(7);  %HM: ab2av(rind)
+    else
+      dk.B2av(rind)=NaN;
+    end
+    
     dk.B02(rind)=dk.B0(rind)^2;
 
     % normalize efield to "resonance" value
@@ -107,9 +110,14 @@ else
     
     
     recind=0;
+    
+    if length(linestr)>=2
+      while linestr(2)=='c' %skip the c line
+        linestr=fgetl(fid);  %readnext line
+      end        
+    end
 
     while linestr(1)~='e' && linestr(2)~='e'
-      recind=recind+1;
       if length(linestr)>=2
         while linestr(2)=='c' %skip the c line
           linestr=fgetl(fid);  %readnext line
@@ -120,6 +128,7 @@ else
         %Todo: Check what happens if the last entry
         %before 'e' is commented out!
       end
+      recind=recind+1;
       line1=sscanf(linestr,'%f %f %f %f %f',7);
       linestr=fgetl(fid);
       line2=sscanf(linestr(5:end),'%d %d %f %f %f',7);
@@ -172,7 +181,7 @@ else
         end        
       end
       if length(linestr)>=2
-        if linestr(2)=='c' %skip the c line
+        while linestr(2)=='c' %skip the c line
           linestr=fgetl(fid);  %read beginning of next record
         end        
       end
