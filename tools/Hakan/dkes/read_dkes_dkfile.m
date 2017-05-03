@@ -2,7 +2,7 @@ function dk=read_dkes_dkfile(filename,varargin)
 
 
 if isstruct(filename) %a dk struct can also be given direct, if only the
-                      %interpolation is preparation is wanted, see below
+                      %interpolation preparation is wanted, see below
   dk=filename;
   if nargin>1
     dk.Einterp_type=varargin{1};
@@ -11,21 +11,23 @@ if isstruct(filename) %a dk struct can also be given direct, if only the
   end
 
 else
-  if nargin>1
-    dk.Einterp_type=varargin{1};
-  else
-    dk.Einterp_type='linear';
-  end
-
   if filename(end-2:end)~='.dk'
-    filename=[filename,'.dk'] %also accept only the nickname
+    filename=[filename,'.dk']; %also accept only the nickname
   end
-  %dk.filename=filename;
   
   fid = fopen(filename);
   if fid<0
     fid
     error(['Unable to open file:  ',filename])
+  end
+
+  dk.dkfile=filename;
+  dk.origin='DKES';
+  
+  if nargin>1
+    dk.Einterp_type=varargin{1};
+  else
+    dk.Einterp_type='linear';
   end
 
   %I assume that there is at least one comment line
