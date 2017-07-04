@@ -1,4 +1,4 @@
-function [runs,miss]=plot_Erscanresults(directory)
+function [runs,miss,dPhiHatdpsiNroots]=plot_Erscanresults(directory)
 
 if directory(end-3:end)=='.dat'
   dirlist={};
@@ -129,7 +129,7 @@ end
 
 fig(1)
 if Nspec==2
-  plot(runs.dPhiHatdpsiN,runs.particleFlux_vm_psiN(:,1),...
+  semilogy(runs.dPhiHatdpsiN,runs.particleFlux_vm_psiN(:,1),...
        runs.dPhiHatdpsiN,runs.particleFlux_vm_psiN(:,2))
   legend('e','i')
 else
@@ -142,7 +142,12 @@ if Nspec==2
    jnorm=runs.particleFlux_vm_psiN(:,1).*runs.Zs(:,1)+...
         runs.particleFlux_vm_psiN(:,2).*runs.Zs(:,2);   
    %dPhiHatdpsiNroots=rootfind(runs.dPhiHatdpsiN,jnorm);
-   dPhiHatdpsiNroots=interp1(jnorm,runs.dPhiHatdpsiN,0,'pchip')
+   if any(diff(sign(jnorm)))
+     dPhiHatdpsiNroots=interp1(jnorm,runs.dPhiHatdpsiN,0,'pchip')
+   else
+     dPhiHatdpsiNroots=NaN;
+     dPhiHatdpsiNroots_extrap=interp1(jnorm,runs.dPhiHatdpsiN,0,'pchip','extrap')
+   end
    
    fig(7)
    plot(runs.dPhiHatdpsiN,jnorm,'b-',...

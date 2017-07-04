@@ -73,6 +73,9 @@ if not(iscell(dirpath))
     warning(['No subdirectories in ',dirpath])
   else
     for ind=1:runind
+      if not(exist([dirpath,runlist{ind},'/sfincsOutput.h5'],'file'))
+        error(['Cannot find the file: ',dirpath,runlist{ind},'/sfincsOutput.h5'])
+      end
       try
         runs{ind}=h5load([dirpath,runlist{ind},'/sfincsOutput.h5']);
         runs{ind}.dirpath=dirpath;
@@ -94,6 +97,9 @@ if not(iscell(dirpath))
 else %Input was a cell array
   runlist=dirpath;
   for ind=1:length(runlist)
+    if not(exist([runlist{ind},'/sfincsOutput.h5'],'file'))
+      error(['Cannot find the file: ',runlist{ind},'/sfincsOutput.h5'])
+    end
     if not(isempty(strfind(pwd,runlist{ind}(2:end-1))))
       runlist{ind}=pwd; %We are already standing in that directory
     end

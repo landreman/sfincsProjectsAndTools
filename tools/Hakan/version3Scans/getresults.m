@@ -4,6 +4,7 @@ function [out,missing]=getresults(directory,sortafter)
 % Only succesful runs are loaded. The output struct "out"
 % is sorted after the vaiable with the name in the input "sortafter"
 %directory
+
 if nargin==2
   H=loadallh5(directory,sortafter);
 else

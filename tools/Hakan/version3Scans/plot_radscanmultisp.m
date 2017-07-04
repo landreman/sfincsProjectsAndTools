@@ -67,14 +67,21 @@ dVdpsiN=runs.VPrimeHat*Rbar/Bbar.*runs.psiAHat;
 
 partFluxpers= runs.particleFlux_vm_psiN*vbar*nbar/Rbar.*([1;1]*dVdpsiN)';
 heatFluxMW=runs.heatFlux_vm_psiN*vbar^3*nbar*mbar/Rbar.*([1;1]*dVdpsiN)'/1e6;
+flowpersm2=runs.FSABFlow*vbar*nbar*Bbar./B00;
+
+runs.rN(find(runs.rN<0.1))=NaN;
 
 fig(1)
-plot(runs.rN,partFluxpers)
-%plot(runs.rN,partFluxpers(:,1),...
-%     runs.rN,partFluxpers(:,2)*100)
+if 0
+  plot(runs.rN,partFluxpers)
+else
+  plot(runs.rN,partFluxpers(:,1),...
+      runs.rN,partFluxpers(:,2)*100)
+  legend('\Gamma_1','\Gamma_2*100')
+end
 xlabel('r/a')
 ylabel('\Gamma [1/s]')
-%legend('\Gamma_1','\Gamma_2*100')
+
 %axis([0,1,-2e20,3e21])
 
 
@@ -82,9 +89,10 @@ fig(2)
 plot(runs.rN,heatFluxMW)
 xlabel('r/a')
 ylabel('Q [MW]')
-legend('spec 1','spec 2')
+legend('Q_1','Q_2')
 
 fig(3)
 plot(runs.rN,runs.FSABFlow)
 xlabel('r/a')
 legend('spec 1','spec 2')
+ylabel('flow [1/(sm^2)]')
