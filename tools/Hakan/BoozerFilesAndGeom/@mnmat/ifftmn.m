@@ -1,14 +1,19 @@
 function varargout=ifftmn(Fmns,varargin)
+% varargout=ifftmn(Fmns,varargin)
+%
 % This routine can process more than one Fmn input by giving a vector as input:
 % Fmns=[Fmn1,Fmn2,Fmn3...]
 % if length(varargout)=length(Fmns)+2 then the two last output arguments are the
 % poloidal and toroidal dicretisation matrices u and v.
-
+%
 % The input Nperiods=varargin{1} is required if the output
 % toroidal discretisation matrix v is wanted
-
+%
 % The input 3 and 4 can be used to specify a different size of the output
 % compared to the input. Beware of information loss if you use this option.
+%
+% Set the fifth input to 'forceSize' if you want to insist on the inputs 3 and 4
+%
 
 Ninput=length(Fmns);
 

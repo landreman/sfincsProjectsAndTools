@@ -1,5 +1,5 @@
 function Fmn=fftmn(f)
-
+% Fmn=fftmn(f)
 %
 % This function gives the cos and sin coefficients of f(u,v)
 % written on the forms

@@ -1,18 +1,40 @@
 function [us,umnmats]=calcu(hs,Gs,Is,iotas,NPeriod,varargin)
 % This solves the equation
 %
-%   B\cdot\nabla u = - iota B\times\nabla\psi\cdot\nabla h
+%   B\cdot\nabla u = - B\times\nabla\chi\cdot\nabla h
 %
 % given that <B^2 u> = 0
 %
-% The optional 6th argument zeroout_Deltaiota can be used to zero out mn components of wmn
+% Very often we are interested to solve the equation with 
+% h=1/B^2, in which case one puts fftmn(1./B.^2) as the 
+% first argument.
+%
+% The optional 6th argument zeroout_Deltaiota can be used 
+% to zero out mn components of wmn
 % which have abs(n/m*NPeriods - iota) < zeroout_Deltaiota.
 %
+% The optional 7th argument can be used to change from the
+% poloidal flux \chi as the flux surface label in the above
+% equation to the toroidal flux \psi by giving the strings
+% 'poloidal flux' (default) or 'toroidal flux'.
+
 
 if nargin>5
   zeroout_Deltaiota=varargin{1};
 else
   zeroout_Deltaiota=-1; %means that it will not be used
+end
+if nargin>6
+  radialvariable=varargin{2};
+else
+  radialvariable='poloidal flux';
+end
+if strcmp(radialvariable,'poloidal flux')
+  iotaexp=1;
+elseif strcmp(radialvariable,'toroidal flux')
+  iotaexp=0;
+else
+  error('Radial variable not recognised!')
 end
 
 if length(NPeriod)==1
@@ -22,17 +44,15 @@ else
 end
 
 if length(iotas)==1
-    %B=Bs;
     G=Gs;
     I=Is;
     iota=iotas;
     N=NPeriods;
     
-    hmn=hs;
-    %hmn=fftmn(1./B.^2);
+    hmn=hs; % often fftmn(1./B.^2);
     
-    umn.c=iota*(G*hmn.m + I*hmn.n * N)./(hmn.n * N - iota*hmn.m).*hmn.c;
-    umn.s=iota*(G*hmn.m + I*hmn.n * N)./(hmn.n * N - iota*hmn.m).*hmn.s;
+    umn.c=iota^iotaexp*(G*hmn.m + I*hmn.n * N)./(hmn.n * N - iota*hmn.m).*hmn.c;
+    umn.s=iota^iotaexp*(G*hmn.m + I*hmn.n * N)./(hmn.n * N - iota*hmn.m).*hmn.s;
     
     umn.c(hmn.m0ind,hmn.n0ind)=0;
     umn.s(hmn.m0ind,hmn.n0ind)=NaN;
@@ -52,17 +72,15 @@ if length(iotas)==1
     us=ifftmn(umnmats);
 else %inputs were given in vectors
   for ind=1:length(iotas)
-    %B=Bs{ind};
     G=Gs(ind);
     I=Is(ind);
     iota=iotas(ind);
     N=NPeriods(ind);
     
-    hmn=hs(ind);
-    %hmn=fftmn(1./B.^2);
+    hmn=hs(ind); % often fftmn(1./B.^2);
     
-    umn.c=iota*(G*hmn.m + I*hmn.n * N)./(hmn.n * N - iota*hmn.m).*hmn.c;
-    umn.s=iota*(G*hmn.m + I*hmn.n * N)./(hmn.n * N - iota*hmn.m).*hmn.s;
+    umn.c=iota^iotaexp*(G*hmn.m + I*hmn.n * N)./(hmn.n * N - iota*hmn.m).*hmn.c;
+    umn.s=iota^iotaexp*(G*hmn.m + I*hmn.n * N)./(hmn.n * N - iota*hmn.m).*hmn.s;
     
     umn.c(hmn.m0ind,hmn.n0ind)=0;
     umn.s(hmn.m0ind,hmn.n0ind)=NaN;

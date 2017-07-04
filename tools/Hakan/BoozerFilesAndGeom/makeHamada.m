@@ -509,6 +509,7 @@ Booz.Bgeomang=Bgeomang;%wrong:(R.*dgeomangdzeta+iota*R.*dgeomangdtheta).*B.^2/(G
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Check if cylindrical coordinates are possible
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%I am assuming that the centre can lie at Z=0
 Rinboard=zeros(1,Nzeta);
 Routboard=zeros(1,Nzeta);
 cylPossible=1;
@@ -840,6 +841,9 @@ Booz.cylR=R;
 Booz.cylZ=Z;
 Booz.cylphi=cylphi;
 Booz.R00=mean(mean(R));
+if not(Geom.StelSym)
+  Booz.Z00=mean(mean(Z));
+end
 if cylPossible
   Booz.cylth=cylth;
   Booz.cylr=cylr;
@@ -869,12 +873,15 @@ Booz.g_vthetphi=g_vthetphi;
 Booz.gpsipsi=gpsipsi;
 Booz.FSAg_phiphi=sum(sum(g_phiphi.*h))/sum(sum(h));
 Booz.FSAgpsipsi=sum(sum(gpsipsi.*h))/sum(sum(h));
+Booz.FSAsqrtgpsipsi=sum(sum(sqrt(gpsipsi).*h))/sum(sum(h));
 
+Booz.dpsidrGraz=Booz.FSAsqrtgpsipsi*sign(Geom.psi_a);
+Booz.dsdrGraz  =Booz.FSAsqrtgpsipsi/abs(Geom.psi_a);
 
-Booz.dpsidr_eff=sqrt(Booz.FSAgpsipsi);
 Booz.r_eff=sqrt(Booz.FSAg_phiphi*Booz.FSAgpsipsi)/abs(Booz.G);
 Booz.r_eff_appr1=sqrt(sum(sum(gpsipsi.*h./B.^2))/sum(sum(h)));
 Booz.r_eff_appr2=sqrt((Booz.FSAg_phiphi-Booz.FSAu2B2-G^2/FSAB2)/iota^2);
+
 %r_eff_appr3=sqrt(mean(mean(cylr.^2)))
 
 %Copy data from Geom struct
@@ -1008,6 +1015,9 @@ else %This whole chunk has been moved to the above function interp2straightfield
                      mod(Ham.zeta,2*pi/NPeriods),mod(Ham.theta,2*pi))+...
       Ham.zeta-mod(Ham.zeta,2*pi/NPeriods); 
   Ham.R00=mean(mean(Ham.cylR));
+  if not(Geom.StelSym)
+    Ham.Z00=mean(mean(Ham.cylZ));
+  end
   if cylPossible
     % Geometrical poloidal angle (cylth)
     Boozcylthbig=[Booz.cylth;Booz.cylth(1,:)+thetaDirection*2*pi];

@@ -73,13 +73,21 @@ end
 
 if strcmp(filetype,'JG')
 
+  YTsign=1; %1 means no sign change, 
+            %-1 means sign change because YT has resaved JG's file
   tmp_str=fgetl(fid);
   concat_str=tmp_str;
   if strcmp(tmp_str(1:2),'CC')
+    if not(isempty(strfind(tmp_str,'CStconfig')))
+      YTsign=-1;
+    end
     while strcmp(tmp_str(1:2),'CC')
       tmp_str=fgetl(fid);
       if strcmp(tmp_str(1:2),'CC')
-        concat_str = sprintf([concat_str,'\n',tmp_str]); %comment line
+        if not(isempty(strfind(tmp_str,'CStconfig')))
+          YTsign=-1;
+        end
+         concat_str = sprintf([concat_str,'\n',tmp_str]); %comment line
       end
     end
     Geom.headertext.maincomment=concat_str;
@@ -108,7 +116,8 @@ if strcmp(filetype,'JG')
   Geom.nsurf      = header_d(3);
   Geom.Nperiods   = header_d(4);
   Geom.psi_a=NaN; %Insert psi_a at this place in the list, but set it later.
-  Geom.torfluxtot = header_f(1); %Note that this is not per pol. angle
+  Geom.torfluxtot = header_f(1)*YTsign; %Note that this is not per pol. angle,
+                                        %note: possible YTsign
   Geom.minorradiusW7AS        = header_f(2); 
   Geom.majorradiusLastbcR00 = header_f(3);
   if length(header_f)>3
@@ -247,16 +256,19 @@ if strcmp(filetype,'JG')
     end
     if not(newsigncorrectionmethod)
       Geom.newsigncorr=0;
-      %disp(['This was a stellarator symmetric file from Joachim Geiger.'...
-      %      ' It has been turned 180 degrees around a ' ...
-      %      'horizontal axis <=> flip the sign of G and I, so that it matches the sign ' ...
-      %      'of its total toroidal flux.'])
-      Geom.headertext.maincomment=sprintf([Geom.headertext.maincomment,'\n',...
+      if 1 %Optional output to screen
+        disp(['This was a stellarator symmetric file from Joachim Geiger.'...
+              ' It has been turned 180 degrees around a ' ...
+              'horizontal axis <=> flip the sign of G and I, so that it matches the sign ' ...
+              'of its total toroidal flux.'])
+      end
+      if 0 %Not necessary to write, because writeBoozerfile.m put the signs back again
+        Geom.headertext.maincomment=sprintf([Geom.headertext.maincomment,'\n',...
            'CC This stellarator symmetric file has been turned 180 degrees around an\n', ...
            'CC horizontal axis by flipping the signs of Itor and Ipol compared with the\n',...
            'CC original file. This was done in order for these signs to be consistent with\n',...
            'CC the total toroidal flux, which has the same sign as in the original file.']);
-      
+      end
       % Such a rotation does not make it necessary to change the Fourier coefficients, 
       % in the case of Stellarator symmetry
       if not(Geom.StelSym)
@@ -266,13 +278,17 @@ if strcmp(filetype,'JG')
       Btheta=-Btheta;
     else % Use newsigncorrectionmethod
       Geom.newsigncorr=1;
-      %disp(['This was a stellarator symmetric file from Joachim Geiger.'...
-      %    ' The sign of the toroidal flux has been flipped so that it it is counted positive' ...
-      %    ' in the direction of the toroidal coordinate irrespectively of handedness.'])
-      Geom.headertext.maincomment=sprintf([Geom.headertext.maincomment,'\n',...
-           'CC In this stellarator symmetric file the sign of the toroidal flux\n', ...
-           'CC has been flipped so that it it is counted positive in the direction\n',...
-           'CC of the toroidal coordinate.']);
+      if 0 %Optional output to screen
+        disp(['This was a stellarator symmetric file from Joachim Geiger.'...
+              ' The sign of the toroidal flux has been flipped so that it it is counted positive' ...
+              ' in the direction of the toroidal coordinate irrespectively of handedness.'])
+      end
+      if 0 %Not necessary to write, because writeBoozerfile.m put the signs back again
+        Geom.headertext.maincomment=sprintf([Geom.headertext.maincomment,'\n',...
+                            'CC In this stellarator symmetric file the sign of the toroidal flux\n', ...
+                            'CC has been flipped so that it it is counted positive in the direction\n',...
+                            'CC of the toroidal coordinate.']);
+      end
       Geom.torfluxtot=-Geom.torfluxtot;      
     end
   end

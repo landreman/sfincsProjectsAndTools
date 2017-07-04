@@ -87,30 +87,78 @@ for inputind=1:length(Fmns)
       end
     end
   end
-  
+
   if strcmp(thresholdType,'same mn as')
-    for mni=1:length(mnBase.m)
-      thism=mnBase.m(mni);
-      thisn=mnBase.n(mni);
-      ind=find(Fmn.m==thism & Fmn.n==thisn);
-      if isempty(ind)
-        Fmnlist.data((mni-1)*2+1)=0;
-        Fmnlist.m((mni-1)*2+1)=thism;
-        Fmnlist.n((mni-1)*2+1)=thisn;
-        Fmnlist.cosparity((mni-1)*2+1)=1;
-        Fmnlist.data((mni-1)*2+2)=0;
-        Fmnlist.m((mni-1)*2+2)=thism;
-        Fmnlist.n((mni-1)*2+2)=thisn;
-        Fmnlist.cosparity((mni-1)*2+2)=0;
-      else
-        Fmnlist.data((mni-1)*2+1)=Fmn.c(mni)
-        Fmnlist.m((mni-1)*2+1)=thism;
-        Fmnlist.n((mni-1)*2+1)=thisn;
-        Fmnlist.cosparity((mni-1)*2+1)=1;
-        Fmnlist.data((mni-1)*2+1)=Fmn.s(mni)
-        Fmnlist.m((mni-1)*2+1)=thism;
-        Fmnlist.n((mni-1)*2+1)=thisn;
-        Fmnlist.cosparity((mni-1)*2+1)=0;        
+    allsameparity=(all(mnBase.cosparity) || all(not(mnBase.cosparity)));
+    if allsameparity
+      for mni=1:length(mnBase.m)
+        thism=mnBase.m(mni);
+        thisn=mnBase.n(mni);
+        thecosparity=mnBase.cosparity(mni);
+        ind=find(Fmn.m==thism & Fmn.n==thisn);
+        if isempty(ind)
+          if thecosparity
+            Fmnlist.data(mni)=0;
+            Fmnlist.m(mni)=thism;
+            Fmnlist.n(mni)=thisn;
+            Fmnlist.cosparity(mni)=1;
+          else
+            Fmnlist.data(mni)=0;
+            Fmnlist.m(mni)=thism;
+            Fmnlist.n(mni)=thisn;
+            Fmnlist.cosparity(mni)=0;
+          end
+        else
+          if thecosparity
+            Fmnlist.data(mni)=Fmn.c(ind);
+            Fmnlist.m(mni)=thism;
+            Fmnlist.n(mni)=thisn;
+            Fmnlist.cosparity(mni)=1;
+          else
+            Fmnlist.data(mni)=Fmn.s(ind);
+            Fmnlist.m(mni)=thism;
+            Fmnlist.n(mni)=thisn;
+            Fmnlist.cosparity(mni)=0;        
+          end
+        end        
+      end
+    else      
+      error('not implemented and thought through yet!')
+      for mni=1:length(mnBase.m)
+        mni
+        thism=mnBase.m(mni);
+        thisn=mnBase.n(mni);
+        thiscosparity=mnBase.cosparity(mni);
+        %Fmn.m
+        %Fmn.n
+        %Fmn.s
+        %Fmn.c
+        ind=find(Fmn.m==thism & Fmn.n==thisn)
+        if isempty(ind)
+          if thiscosparity
+            Fmnlist.data((mni-1)*2+1)=0;
+            Fmnlist.m((mni-1)*2+1)=thism;
+            Fmnlist.n((mni-1)*2+1)=thisn;
+            Fmnlist.cosparity((mni-1)*2+1)=1;
+          else
+            Fmnlist.data((mni-1)*2+2)=0;
+            Fmnlist.m((mni-1)*2+2)=thism;
+            Fmnlist.n((mni-1)*2+2)=thisn;
+            Fmnlist.cosparity((mni-1)*2+2)=0;
+          end
+        else
+          if thiscosparity
+            Fmnlist.data((mni-1)*2+1)=Fmn.c(ind);
+            Fmnlist.m((mni-1)*2+1)=thism;
+            Fmnlist.n((mni-1)*2+1)=thisn;
+            Fmnlist.cosparity((mni-1)*2+1)=1;
+          else
+            Fmnlist.data((mni-1)*2+2)=Fmn.s(ind);
+            Fmnlist.m((mni-1)*2+2)=thism;
+            Fmnlist.n((mni-1)*2+2)=thisn;
+            Fmnlist.cosparity((mni-1)*2+2)=0;        
+          end
+        end
       end
     end
   else
@@ -121,8 +169,8 @@ for inputind=1:length(Fmns)
     end
   
     
-    cinds=find(abs(Fmn.c)>threshold)';
-    sinds=find(abs(Fmn.s)>threshold)';
+    cinds=find(abs(Fmn.c)>=threshold)'; % >= and not >, so that also Fmn that are exactly 0
+    sinds=find(abs(Fmn.s)>=threshold)'; % are included when threshold=0
     
     Fmnlist.data=[Fmn.c(cinds),Fmn.s(sinds)];
     Fmnlist.m=[Fmn.m(cinds),Fmn.m(sinds)];

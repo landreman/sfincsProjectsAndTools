@@ -94,7 +94,6 @@ w.Nw=Nw;
 
 
 if not(Geom.StelSym)
-  %error('Non-stelllarator symmmetric case not implemented!')
   w.Rmnlist.m=[double(wout.xm);double(wout.xm)];
   w.Rmnlist.n=signchange*double(wout.xn)/Geom.Nperiods;
   w.Rmnlist.n=[w.Rmnlist.n;w.Rmnlist.n];
@@ -250,6 +249,9 @@ Booz.mnmat.Dzetaw=fftmn(Booz.Dzetaw);
 
 Booz.R00=mean(mean(Booz.R));
 Booz.B00=mean(mean(Booz.B));
+if not(Geom.StelSym)
+  Booz.Z00=mean(mean(Booz.Z));
+end
 Booz.FSAB2=Nu*Nw/sum(sum(1./Booz.B.^2));
 
 

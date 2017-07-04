@@ -5,11 +5,11 @@ close all
 for rind=1:dkdata.Nradii
   %Check if it is a tokamak first
   if all(Geomdat.n{rind}==0)
-      d11fits.eps_efh(rind)=NaN;
-      d11fits.g11_ft(rind)=NaN;
-      d11fits.g11_er(rind)=NaN;
-      d11fits.ex_er(rind)=NaN;
-      d11fits.er_u(rind)=NaN;    
+      d11fits.eps_efh(rind)=-1;%NaN;
+      d11fits.g11_ft(rind)=-1;%NaN;
+      d11fits.g11_er(rind)=-1;%NaN;
+      d11fits.ex_er(rind)=-1;%NaN;
+      d11fits.er_u(rind)=-1;%NaN;    
   else
 
     nodk=dkdata.Nruns(rind); %number of dkes data

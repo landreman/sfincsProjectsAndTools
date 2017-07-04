@@ -17,7 +17,7 @@ else
 end
 
 
-if not(isfield(Geom,'newsigncorr'))
+if Geom.StelSym && not(isfield(Geom,'newsigncorr'))
    error('Geom did not contain any field ''newsigncorr''!')
 end
   
@@ -47,11 +47,13 @@ end
 Geom.Bphi=Geom.Bphi*signchange^2;
 Geom.Btheta=Geom.Btheta*signchange;
 
-if not(Geom.newsigncorr)
-  Geom.Bphi=-Geom.Bphi;
-  Geom.Btheta=-Geom.Btheta;
-else
-  Geom.torfluxtot=-Geom.torfluxtot;
+if Geom.StelSym
+  if not(Geom.newsigncorr)
+    Geom.Bphi=-Geom.Bphi;
+    Geom.Btheta=-Geom.Btheta;
+  else
+    Geom.torfluxtot=-Geom.torfluxtot;
+  end
 end
 
 Geom.iota=Geom.iota*signchange;

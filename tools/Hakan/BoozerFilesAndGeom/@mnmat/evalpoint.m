@@ -56,12 +56,29 @@ else
                          Fmns(lind).s.*s));
     end
   else
-    c=cos(Fmns.m * u - Fmns.n * Nperiods * v);
-    s=sin(Fmns.m * u - Fmns.n * Nperiods * v);
-    cnan=find(isnan(Fmns.c));
-    snan=find(isnan(Fmns.s));
-    Fmns.c(cnan)=0;
-    Fmns.s(snan)=0;
-    vals=sum(sum(Fmns.c.*c+Fmns.s.*s));    
+    if length(u)==1 && length(v)==1    
+      c=cos(Fmns.m * u - Fmns.n * Nperiods * v);
+      s=sin(Fmns.m * u - Fmns.n * Nperiods * v);
+      cnan=find(isnan(Fmns.c));
+      snan=find(isnan(Fmns.s));
+      Fmns.c(cnan)=0;
+      Fmns.s(snan)=0;
+      vals=sum(sum(Fmns.c.*c+Fmns.s.*s));
+    else %the case of vector input u and/or v
+      su=size(u);sv=size(v);
+      if su(1)>su(2)
+        u=u';
+      end
+      if sv(1)>sv(2)
+        v=v';
+      end
+      c=cos(Fmns.m(:) * u - Fmns.n(:) * v * Nperiods);
+      s=sin(Fmns.m(:) * u - Fmns.n(:) * v * Nperiods);
+      cnan=find(isnan(Fmns.c));
+      snan=find(isnan(Fmns.s));
+      Fmns.c(cnan)=0;
+      Fmns.s(snan)=0;
+      vals=Fmns.c(:)'*c+Fmns.s(:)'*s;
+    end
   end
 end

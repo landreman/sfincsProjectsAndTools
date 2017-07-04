@@ -52,7 +52,7 @@ for inputind=1:length(lsts)
       fieldtoextract='Z';
     elseif strcmp(objecttoextract,'Dzetacylphi') || ...
           strcmp(objecttoextract,'Dphi')
-      %Dzetacylphi=2*pi/Nperiods*Dphi
+      %Note: Dzetacylphi=2*pi/Nperiods*Dphi
       fieldtoextract='Dphi';
     else
       fieldtoextract=objecttoextract;
