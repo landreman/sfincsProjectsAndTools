@@ -169,8 +169,8 @@ for inputind=1:length(Fmns)
     end
   
     
-    cinds=find(abs(Fmn.c)>threshold)';
-    sinds=find(abs(Fmn.s)>threshold)';
+    cinds=find(abs(Fmn.c)>=threshold)'; % >= and not >, so that also Fmn that are exactly 0
+    sinds=find(abs(Fmn.s)>=threshold)'; % are included when threshold=0
     
     Fmnlist.data=[Fmn.c(cinds),Fmn.s(sinds)];
     Fmnlist.m=[Fmn.m(cinds),Fmn.m(sinds)];

@@ -73,13 +73,21 @@ end
 
 if strcmp(filetype,'JG')
 
+  YTsign=1; %1 means no sign change, 
+            %-1 means sign change because YT has resaved JG's file
   tmp_str=fgetl(fid);
   concat_str=tmp_str;
   if strcmp(tmp_str(1:2),'CC')
+    if not(isempty(strfind(tmp_str,'CStconfig')))
+      YTsign=-1;
+    end
     while strcmp(tmp_str(1:2),'CC')
       tmp_str=fgetl(fid);
       if strcmp(tmp_str(1:2),'CC')
-        concat_str = sprintf([concat_str,'\n',tmp_str]); %comment line
+        if not(isempty(strfind(tmp_str,'CStconfig')))
+          YTsign=-1;
+        end
+         concat_str = sprintf([concat_str,'\n',tmp_str]); %comment line
       end
     end
     Geom.headertext.maincomment=concat_str;
@@ -108,7 +116,8 @@ if strcmp(filetype,'JG')
   Geom.nsurf      = header_d(3);
   Geom.Nperiods   = header_d(4);
   Geom.psi_a=NaN; %Insert psi_a at this place in the list, but set it later.
-  Geom.torfluxtot = header_f(1); %Note that this is not per pol. angle
+  Geom.torfluxtot = header_f(1)*YTsign; %Note that this is not per pol. angle,
+                                        %note: possible YTsign
   Geom.minorradiusW7AS        = header_f(2); 
   Geom.majorradiusLastbcR00 = header_f(3);
   if length(header_f)>3
@@ -247,7 +256,7 @@ if strcmp(filetype,'JG')
     end
     if not(newsigncorrectionmethod)
       Geom.newsigncorr=0;
-      if 0 %Optional output to screen
+      if 1 %Optional output to screen
         disp(['This was a stellarator symmetric file from Joachim Geiger.'...
               ' It has been turned 180 degrees around a ' ...
               'horizontal axis <=> flip the sign of G and I, so that it matches the sign ' ...

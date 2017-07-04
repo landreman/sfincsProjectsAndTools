@@ -45,7 +45,7 @@ I=runs.IHat'*Bbar*Rbar;
 iota=runs.iota';
 B00=runs.B0OverBBar'*Bbar;
 psiAHat=runs.psiAHat(1);
-Nspec=size(runs.NTV,2);
+Nspec=size(runs.Zs,2);
 ion=find(runs.Zs(1,:)~=-1);
 TikeV=runs.THats(:,ion);
 vTi=sqrt(TikeV*e*1e3*2/mp./runs.mHats(:,ion));
@@ -66,16 +66,18 @@ fz=14;
 %dVdr=dVdsoverNper*Geom.Nperiods*2.*runs.rN/Geom.minorradiusW7AS;
 dVdpsiN=runs.VPrimeHat*Rbar/Bbar.*runs.psiAHat;
 
-partFluxpers= runs.particleFlux_vm_psiN*vbar*nbar/Rbar.*([1;1]*dVdpsiN)';
-heatFluxMW=runs.heatFlux_vm_psiN*vbar^3*nbar*mbar/Rbar.*([1;1]*dVdpsiN)'/1e6;
+partFluxpers= runs.particleFlux_vm_psiN*vbar*nbar/Rbar.*...
+    (ones(Nspec,1)*dVdpsiN)';
+heatFluxMW=runs.heatFlux_vm_psiN*vbar^3*nbar*mbar/Rbar.*...
+    (ones(Nspec,1)*dVdpsiN)'/1e6;
 
 fig(1)
-%plot(runs.rN,partFluxpers)
-plot(runs.rN,partFluxpers(:,1),...
-     runs.rN,partFluxpers(:,2)*100)
+plot(runs.rN,partFluxpers)
+%plot(runs.rN,partFluxpers(:,1),...
+%     runs.rN,partFluxpers(:,2)*100)
 xlabel('r/a')
 ylabel('\Gamma [1/s]')
-legend('\Gamma_1','\Gamma_2*100')
+%legend('\Gamma_1','\Gamma_2*100')
 axis([0,1,-2e20,3e21])
 
 

@@ -41,6 +41,9 @@ Geom.headertext.maincomment=sprintf(...
      'CC The phase convention (m theta - n phi) is used in this file.\n',...
      'CC The coordinate system (r,theta,phi) is left-handed.\n',...
      'CC Toroidal flux is counted positive in the direction of the toroidal coordinate.']);
+% Note: the comment that (r,theta,phi) is left-handed regards the 
+% file that is created when saving with writeBoozerfile.m. The struct
+% Geom produced by this function (makeBcfromVMEC) is right handed.
 
 Geom.m0b      = NaN;%double(wout.mpol);       %!< number of poloidal fourier modes (Not used)
 Geom.n0b      = NaN;%double(wout.ntor);       %!< upper bound toroidal fourier modes:
@@ -51,7 +54,8 @@ Geom.Nperiods = double(wout.nfp);        %!< number of field periods
 if not(isfield(wout,'iasym'))
   wout.iasym=isfield(wout,'bmns');
 end
-Geom.StelSym  = not(wout.iasym); %!<  defines stellarator symmetry for iasym=0, otherwise =
+Geom.StelSym  = not(wout.iasym);%!<  defines stellarator symmetry for iasym=0,otherwise =
+
 Geom.torfluxtot = ...
    wout.phi(wout.ns)*signchange;%!<  total toroidal flux within the boundary (s=1)
 Geom.psi_a=Geom.torfluxtot/2/pi;
@@ -97,6 +101,12 @@ if Nw==inf
 else
   Nw=2*floor(Nw/2)+1; %force to be odd
 end
+axisymm=0;
+if Nw==1
+  axisymm=1;
+  Nw=3; %The subroutines cannot handle Nw=1
+end
+
 Geom.m0b=(Nu-1)/2;
 Geom.n0b=(Nw-1)/2;
 Geom.Bfilter.max_m=(Nu-1)/2;
@@ -120,15 +130,25 @@ for sind=1:length(Geom.s)
   Zmnlist=mnlist(Booz.mnmat.Z);
   Dzetawmnlist=mnlist(Booz.mnmat.Dzetaw);
   
-  Geom.nmodes(1,sind)=length(Bmnlist.m);
-  Geom.m{sind}  =Bmnlist.m;
-  Geom.n{sind}  =Bmnlist.n;
-  Geom.parity{sind}=Bmnlist.cosparity;
-  Geom.Bmn{sind}=Bmnlist.data;
+  if Geom.StelSym
+    Geom.nmodes(1,sind)=length(Bmnlist.m);
+    Geom.m{sind}  =Bmnlist.m;
+    Geom.n{sind}  =Bmnlist.n;
+    Geom.parity{sind}=Bmnlist.cosparity;
+    Geom.Bmn{sind}=Bmnlist.data;
+    Geom.R{sind}  =Rmnlist.data;
+  else
+    Geom.nmodes(1,sind)=length(Bmnlist.m)+1;
+    Geom.m{sind}  =[Bmnlist.m,0];
+    Geom.n{sind}  =[Bmnlist.n,0];
+    Geom.parity{sind}=[Bmnlist.cosparity,0]; %Add a m=n=0 parity=0 component for Z00! 
+    Geom.Bmn{sind}=[Bmnlist.data,0]; %Set to 0 rather than NaN, to avoid NaNs in bc file.
+    Geom.R{sind}  =[Rmnlist.data,0]; %Set to 0 rather than NaN, to avoid NaNs in bc file.
+  end
   Geom.B00(1,sind)=Booz.B00;
   Geom.Bnorm{sind}=Geom.Bmn{sind}/Geom.B00(sind);
   Geom.R00(1,sind)=Booz.R00;
-  Geom.R{sind}=Rmnlist.data;
+  Geom.Z00(1,sind)=Booz.Z00;
   Geom.Z{sind}=NaN*ones(size(Geom.R{sind}));
   for mnind=1:length(Zmnlist.m)
     ind=find(Geom.m{sind}==Zmnlist.m(mnind) & ...
@@ -144,17 +164,34 @@ for sind=1:length(Geom.s)
              Geom.parity{sind}==not(Dzetawmnlist.cosparity(mnind)));
     Geom.Dphi{sind}(ind)=Geom.Nperiods/2/pi*Dzetawmnlist.data(mnind);
   end
-  ind=find(Geom.m{sind}==0 & Geom.n{sind}==0 & Geom.parity{sind}==1);
-  Geom.Dphi{sind}(ind)=0; 
-  Geom.Z{sind}(ind)=0; %These are NaN, but I set them to zero to avoid making .bc
-                       %files with NaNs in them. 
+  
+  %if Geom.StelSym
+    ind=find(Geom.m{sind}==0 & Geom.n{sind}==0 & Geom.parity{sind}==1);
+    Geom.Dphi{sind}(ind)=0; 
+    Geom.Z{sind}(ind)=0; %These are NaN, but I set them to zero to avoid making .bc
+                         %files with NaNs in them. 
+  %end
   
   %error('CHECK IF THERE ARE FACTORS LIKE Nperiods, 2pi or -1 missing for Dphi or
   %parity ')
   
+  if axisymm
+    good=find(Geom.n{sind}==0);
+    Geom.nmodes(1,sind)=length(good);
+    Geom.m{sind}=Geom.m{sind}(good);
+    Geom.n{sind}=Geom.n{sind}(good);
+    Geom.parity{sind}=Geom.parity{sind}(good);
+    Geom.Bmn{sind}=Geom.Bmn{sind}(good);
+    Geom.Bnorm{sind}=Geom.Bnorm{sind}(good);
+    Geom.R{sind}=Geom.R{sind}(good);
+    Geom.Z{sind}=Geom.Z{sind}(good);
+    Geom.Dphi{sind}=Geom.Dphi{sind}(good);   
+  end
   
   Geom.FSAB2=Booz.FSAB2; %=Nu*Nw/sum(sum(1./Booz.B.^2));
-  Geom.mnmat{sind}=Booz.mnmat;
+  
+  Geom.mnmat{sind}=Booz.mnmat; %note that for axisymmetry I still keep Nw=3 here!
+  
   Geom.dVdsoverNper(1,sind)=...
       abs(Geom.psi_a*4*pi^2/Geom.Nperiods*(Booz.G+Booz.iota.*Booz.I)/Booz.FSAB2);
 end

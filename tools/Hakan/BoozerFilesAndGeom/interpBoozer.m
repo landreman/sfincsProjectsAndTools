@@ -296,7 +296,7 @@ elseif strcmp(interptype,'nearest')
       inds=inds';
     end
   else
-    inds=interp1(Geom.s,1:length(Geom.s),s,'nearest');
+    inds=interp1(Geom.s,1:length(Geom.s),max(min(s,Geom.s(end)),Geom.s(1)),'nearest');
   end
   
   out.rnorm=Geom.rnorm(inds);
