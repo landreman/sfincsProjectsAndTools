@@ -66,8 +66,11 @@ fz=14;
 %a=Geom.minorradiusW7AS;
 %dVdsoverNper=interp1(Geom.rnorm,Geom.dVdsoverNper,runs.rN);
 %dVdr=dVdsoverNper*Geom.Nperiods*2.*runs.rN/Geom.minorradiusW7AS;
-dVdpsiN=runs.VPrimeHat*Rbar/Bbar.*runs.psiAHat;
 
+dVdpsiN=abs(runs.VPrimeHat*Rbar/Bbar.*runs.psiAHat);
+%dVdpsiN=runs.VPrimeHat*Rbar/Bbar.*runs.psiAHat;
+
+runs.VPrimeHat*Rbar/Bbar.*runs.psiAHat
 
 partFluxpers= runs.particleFlux_vm_psiN*vbar*nbar/Rbar.*(ones(Nspec,1)*dVdpsiN)';
 heatFluxMW=runs.heatFlux_vm_psiN*vbar^3*nbar*mbar/Rbar.*(ones(Nspec,1)*dVdpsiN)'/1e6;
@@ -76,7 +79,7 @@ flowpersm2=runs.FSABFlow*vbar*nbar*Bbar./B00;
 runs.rN(find(runs.rN<0.1))=NaN;
 
 fig(1)
-if 0
+if 1
   plot(runs.rN,partFluxpers)
 else
   plot(runs.rN,partFluxpers(:,1),...

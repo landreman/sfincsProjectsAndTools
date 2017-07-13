@@ -185,9 +185,11 @@ for hind=1:length(H)
         if isfield(H{hind},'NTV')
           out.NTV(ind,:)                  =H{hind}.NTV';
           out.particleFlux_vm_psiN(ind,:) =H{hind}.particleFlux_vm_psiN';
+          out.particleFlux_vm0_psiN(ind,:) =H{hind}.particleFlux_vm0_psiN';
           out.heatFlux_vm_psiN(ind,:)     =H{hind}.heatFlux_vm_psiN';
           out.momentumFlux_vm_psiN(ind,:) =H{hind}.momentumFlux_vm_psiN';
           out.FSABFlow(ind,:)             =H{hind}.FSABFlow';
+          out.FSABjHat                        =H{hind}.FSABjHat';
           if Nsp>1
             out.flow{ind}                    =permute(H{hind}.flow,[3,2,1]);
             out.densityPerturbation{ind}     =permute(H{hind}.densityPerturbation,[3,2,1]);
@@ -208,9 +210,11 @@ for hind=1:length(H)
                    ' says ''finished'' but output results are missing']);
           out.NTV(ind,:)                 =NaN*zeros(Nsp,1);
           out.particleFlux_vm_psiN(ind,:)=NaN*zeros(Nsp,1);
+          out.particleFlux_vm0_psiN(ind,:)=NaN*zeros(Nsp,1);
           out.heatFlux_vm_psiN(ind,:)    =NaN*zeros(Nsp,1);
           out.momentumFlux_vm_psiN(ind,:)=NaN*zeros(Nsp,1);
           out.FSABFlow(ind,:)            =NaN*zeros(Nsp,1);
+          out.FSABjHat                  =NaN;
           out.flow{ind}                  =NaN*zeros(Nsp,out.Ntheta(ind),out.Nzeta(ind));
           out.densityPerturbation{ind}   =NaN*zeros(Nsp,out.Ntheta(ind),out.Nzeta(ind));
           out.pressurePerturbation{ind}  =NaN*zeros(Nsp,out.Ntheta(ind),out.Nzeta(ind));
@@ -220,9 +224,11 @@ for hind=1:length(H)
       else
         out.NTV(ind,:)                  =NaN*ones(out.Nspecies(ind),1);
         out.particleFlux_vm_psiN(ind,:) =NaN*ones(out.Nspecies(ind),1);
+        out.particleFlux_vm0_psiN(ind,:) =NaN*ones(out.Nspecies(ind),1);
         out.heatFlux_vm_psiN(ind,:)     =NaN*ones(out.Nspecies(ind),1);
         out.momentumFlux_vm_psiN(ind,:) =NaN*ones(out.Nspecies(ind),1);
         out.FSABFlow(ind,:)             =NaN*ones(out.Nspecies(ind),1);
+        out.FSABjHat                        =NaN;
         out.flow{ind}                   =NaN*zeros(Nsp,out.Ntheta(ind),out.Nzeta(ind));
         out.densityPerturbation{ind}    =NaN*zeros(Nsp,out.Ntheta(ind),out.Nzeta(ind));
         out.pressurePerturbation{ind}   =NaN*zeros(Nsp,out.Ntheta(ind),out.Nzeta(ind));
