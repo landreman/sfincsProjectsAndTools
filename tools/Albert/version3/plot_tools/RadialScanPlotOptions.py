@@ -8,12 +8,16 @@
 
 import matplotlib
 
-#FigSize = (12,10)
-FigSize = (13.5,10) 
-font = {'size':20}
+FigSize = (12,10)
+#FigSize = (13.5,10) 
+font = {'size':25}
 matplotlib.rc('font', **font) 
 matplotlib.rc('lines',markeredgewidth=0,markersize=3,linewidth=2.5)
-matplotlib.rc('axes',linewidth=1.5) 
+matplotlib.rc('axes',linewidth=1.5)
+matplotlib.rcParams['mathtext.default'] = 'it'
+matplotlib.rcParams['text.usetex'] = True
+#matplotlib.rcParams['text.latex.preamble'].append(r'\usepackage{amsmath}')
+#matplotlib.rcParams['text.latex.preamble'].append(r'\usepackage{sfmath}')
 
 PlotLinespecs = ['rD-', 'bo-', 'mv-.', 'cs-.', 'yx--', 'g+--', 'kp:', 'k*:'] 
 PlotLineColors = ['r', 'b', 'm', 'c', 'y', 'g', 'k', '0.75'] 
@@ -31,17 +35,20 @@ yAxisLabel = r'$<\mathbf{\Gamma}_{e} \cdot \nabla r> $ $[10^{20} \mathrm{m}^{-2}
 AxesLabelSize = 30
 
 AxisLimAuto = True 
-xAxisLim = [0.0, 0.8]
-yAxisLim = [-4.0, 0.0]
+xAxisLim = [0.18, 0.92]
+yAxisLim = [-3.2, 0.0]
 
 PlotLegendLabels = [r'SFINCS Fokker-Planck w/o $\Phi_1$', r'SFINCS Pitch-angle scattering w/o $\Phi_1$', r'SFINCS Fokker-Planck w/ $\Phi_1$', r'SFINCS Pitch-angle scattering w/ $\Phi_1$'] 
 #PlotLegendLabels = [r'SFINCS Fokker-Planck w/o $\Phi_1$', r'SFINCS Fokker-Planck w/ $\Phi_1$']
 
 #PlotLegendLabels = []
 
-LegendFontSize = 18
+#LegendFontSize = 15
+#LegendProperties = {'weight':'bold'}
+LegendProperties ={'size':'20', 'weight':'heavy'}
 LegendPosition = 3
 LegendNumberColumns = 1
-LegendBBoxToAnchor = [0.01, 0.01, 1., .102]
-
+#LegendBBoxToAnchor = [0.01, 0.01, 1., .102]
+#LegendBBoxToAnchor = [0.435, 0.765, 1., .102]
+LegendBBoxToAnchor = [0.435, 0.01, 1., .102]
 

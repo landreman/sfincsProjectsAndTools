@@ -204,7 +204,7 @@ else :
     ymin,ymax = plt.ylim(yAxisLim) 
     xmin,xmax = plt.xlim(xAxisLim) 
 
-plt.legend(bbox_to_anchor = LegendBBoxToAnchor, loc=LegendPosition, ncol=LegendNumberColumns, mode=None, borderaxespad=0., fontsize=LegendFontSize)
+plt.legend(bbox_to_anchor = LegendBBoxToAnchor, loc=LegendPosition, ncol=LegendNumberColumns, mode=None, borderaxespad=0., prop=LegendProperties)#, fontsize=LegendFontSize)
 
 os.chdir(originalDirectory) 
 
