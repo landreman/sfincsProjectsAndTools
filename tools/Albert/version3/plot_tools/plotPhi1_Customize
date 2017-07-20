@@ -54,20 +54,39 @@ fig = plt.figure(figsize=FigSize)
 fig.patch.set_facecolor('white')
 numRows = 1
 numCols = 1
-#iteration = 0
+
+#ContourLevels = numpy.array([-100.0, -10.0, -1.0, 0.0, 1.0, 10.0, 100.0])/zFactor
 numContours = 100
-ContourLevels = numpy.array([-9.0, -6.0, -3.0, 0.0, 3.0, 6.0, 9.0])/zFactor
-#numLevels = 5
+numShowLevels = 20
 
 ScientificTicks = False
-cbarTicks = [-10.0, -7.5, -5.0, -2.5, 0.0, 2.5, 5.0, 7.5, 10.0]
+cbarTicks = [-100.0, -50.0, -10.0, -5.0, -1.0, -0.5, 0.0, 0.5, 1.0, 5.0, 10.0, 50.0, 100.0]
 
+zMin = -10.0 #None to get the default value
+zMax = 10.0 #None to get the default value
+#zMin = None
+#zMax = None
+zLogAxis = False
+LinearThreshold = 0.5 #In symlog plot
+LinearScale = 3.0 #When linscale == 1.0 (the default), the space used for the positive and negative halves of the linear range will be equal to one decade in the logarithmic range.
 
 #############
 ##END INPUT##
 #############
 
+ContourLevelsPos = numpy.logspace(numpy.log10(LinearThreshold), numpy.log10(numpy.absolute(zMax)), num=numpy.ceil(numContours/2.0), endpoint=True, base=10.0, dtype=None)/zFactor
+ContourLevelsNeg = - numpy.logspace(numpy.log10(LinearThreshold), numpy.log10(numpy.absolute(zMin)), num=numpy.ceil(numContours/2.0), endpoint=True, base=10.0, dtype=None)/zFactor
+ContourLevels = numpy.append(numpy.flip(ContourLevelsNeg, 0), ContourLevelsPos)
 
+ShowLevelsPos = numpy.logspace(numpy.log10(LinearThreshold), numpy.log10(numpy.absolute(zMax)), num=numpy.ceil(numShowLevels/2.0), endpoint=True, base=10.0, dtype=None)/zFactor
+ShowLevelsNeg = - numpy.logspace(numpy.log10(LinearThreshold), numpy.log10(numpy.absolute(zMin)), num=numpy.ceil(numShowLevels/2.0), endpoint=True, base=10.0, dtype=None)/zFactor
+ShowLevels = numpy.append(numpy.flip(ShowLevelsNeg, 0), ShowLevelsPos)
+
+print "#############"
+print "ContourLevels = " + str( zFactor*ContourLevels)
+print ""
+print "ShowLevels = " + str( zFactor*ShowLevels)
+print "#############"
 
 def fmt_cbar(x, pos):
    if x == 0.0:
@@ -79,7 +98,6 @@ def fmt_cbar(x, pos):
 def fmt_xy_axis(x, pos):
    return r'${}$'.format(x)
 
-#for i in range(6):
 print "Processing file ",filename
 f = h5py.File(filename,'r')
 theta = f["theta"][()]
@@ -92,23 +110,21 @@ f.close()
 print "theta max: " + str(numpy.amax(theta))
 print "zeta max: " + str(numpy.amax(zeta))
 
-
-#delta = (numpy.amax(Phi1Hat[:,:,iteration]) - numpy.amin(Phi1Hat[:,:,iteration])) / numLevels
-#ContourLevels = numpy.arange(numpy.amin(Phi1Hat[:,:,iteration]), numpy.amax(Phi1Hat[:,:,iteration]) + delta/2.0, delta)
 ContourLevels = zFactor*ContourLevels
-#print ContourLevels
+ShowLevels = zFactor*ShowLevels
     
 ax = plt.subplot(numRows,numCols,1)
-    #plt.contourf(zeta,theta,1000*numpy.fliplr(Phi1Hat[:,:,iteration].transpose()),numContours)
-Phi1Plot = plt.contourf(zeta,theta,zFactor*Phi1Hat[:,:,iteration].transpose(),numContours, cmap=plt.get_cmap('gist_rainbow'))
-#Phi1Plot2 = plt.contour(Phi1Plot,levels=ContourLevels, colors='k', hold='on')
-Phi1Plot2 = plt.contour(Phi1Plot,levels=ContourLevels, colors='k')
-#Phi1Plot2 = plt.contour(Phi1Plot,levels=Phi1Plot.levels[::2], colors='k', hold='on')
-#plt.xlabel(r'$\zeta$' + ' [rad]')
+
+if zLogAxis:
+   Phi1Plot = plt.contourf(zeta,theta,zFactor*Phi1Hat[:,:,iteration].transpose(),numContours, cmap=plt.get_cmap('gist_rainbow'), norm=matplotlib.colors.SymLogNorm(linthresh=LinearThreshold, linscale=LinearScale, vmin=zMin, vmax=zMax))
+else:
+   Phi1Plot = plt.contourf(zeta,theta,zFactor*Phi1Hat[:,:,iteration].transpose(),numContours, cmap=plt.get_cmap('gist_rainbow'), vmin=zMin, vmax=zMax, levels=ContourLevels)
+
+#Phi1Plot2 = plt.contour(Phi1Plot,levels=ContourLevels, colors='k')
+Phi1Plot2 = plt.contour(Phi1Plot,levels=ShowLevels, colors='k')
+
 plt.xlabel(r'$\zeta$' + " " + r'$\mathrm{[rad]}$')
-#plt.ylabel(r'$\theta$'+ ' [rad]')
 plt.ylabel(r'$\theta$'+ " " + r'$\mathrm{[rad]}$')
-#plt.zlabel(r'$\Phi_1$'+ ' [V]')
 
 plt.xticks([0,max(zeta)/4,max(zeta)/2,3*max(zeta)/4,max(zeta)])
 plt.yticks([0.0,max(theta)/4,max(theta)/2,3*max(theta)/4,max(theta)])
@@ -138,11 +154,9 @@ if ScientificTicks:
    cbar = plt.colorbar(Phi1Plot, format=ticker.FuncFormatter(fmt_cbar))
 else:
    cbar = plt.colorbar(Phi1Plot, ticks=cbarTicks)
+   #cbar = plt.colorbar(Phi1Plot)
 cbar.ax.set_ylabel(r'$\Phi_1$'+ " " + r'$\mathrm{[V]}$', rotation=0, labelpad=10)
 
-#with warnings.catch_warnings():
-#    warnings.simplefilter("always")
-#plt.clabel(Phi1Plot2, fmt='%2.1f', colors='k', fontsize=14)
 if ScientificTicks:
    plt.clabel(Phi1Plot2, fmt=ticker.FuncFormatter(fmt_cbar), colors='k', fontsize=18, inline=False)
 else:
