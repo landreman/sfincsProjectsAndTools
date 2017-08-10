@@ -43,7 +43,7 @@ radiusName = "rN" ##Radial coordinate to use on x-axis. Must be "psiHat", "psiN"
 
 #plotVariableName = "Er" ##Parameter to plot on y-axis. In this version it must be "Er", "dPhiHatdpsiHat", "dPhiHatdpsiN", "dPhiHatdrHat" or "dPhiHatdrN" .
 plotVariableName = "particleFlux_vd_rHat"
-species = 3
+species = 1
 TransformPlotVariableToOutputUnitsFactor = vbar
 
 MinFloat = pow(10, -sys.float_info.dig) 

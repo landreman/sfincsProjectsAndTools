@@ -24,10 +24,10 @@ matplotlib.rcParams['mathtext.default'] = 'it'
 matplotlib.rcParams['text.usetex'] = True
 #matplotlib.rcParams['text.latex.preamble'].append(r'\usepackage{amsmath}')
 
-#PlotLinespecs = ['rD-', 'bo-', 'mv-.', 'cs-.', 'yx--', 'g+--', 'kp:', 'k*:'] 
-#PlotLineColors = ['r', 'b', 'm', 'c', 'y', 'g', 'k', '0.75']
-PlotLinespecs = ['rD-', 'mv-.']
-PlotLineColors = ['r', 'm']
+PlotLinespecs = ['rD-', 'bo-', 'mv-.', 'cs-.', 'yx--', 'g+--', 'kp:', 'k*:'] 
+PlotLineColors = ['r', 'b', 'm', 'c', 'y', 'g', 'k', '0.75']
+#PlotLinespecs = ['rD-', 'mv-.']
+#PlotLineColors = ['r', 'm']
 PlotMarkerEdgeWidth = [3, 3, 3, 0, 3, 3, 3, 3] 
 PlotMarkerSize = 10 
 
@@ -39,10 +39,10 @@ ShowGrid = True
 xAxisLabel = r'$r/a$'
 #yAxisLabel = r'$n_{\mathrm{C}^{6+}}$ $[10^{19} \mathrm{m}^{-3}]$'
 #yAxisLabel = r'$n$ $[10^{19} \mathrm{m}^{-3}]$'
-#yAxisLabel = r'$T$ $[\mathrm{keV}]$'
+yAxisLabel = r'$T$ $[\mathrm{keV}]$'
 #yAxisLabel = r'$\nu^{\prime}$'
 # e   i   \mathrm{He}^{2+}   \mathrm{C}^{6+}   \mathrm{Ne}^{10+}
-yAxisLabel = r'$<\mathbf{\Gamma}_{\mathrm{Ne}^{10+}} \cdot \nabla r> $ $[10^{20} \mathrm{m}^{-2} \mathrm{s}^{-1}]$' 
+#yAxisLabel = r'$<\mathbf{\Gamma}_{e} \cdot \nabla r> $ $[10^{20} \mathrm{m}^{-2} \mathrm{s}^{-1}]$' 
 #yAxisLabel = r'$E_r$ $[\mathrm{kV/m}]$'
 AxesLabelSize = 40
 
@@ -60,14 +60,16 @@ RightMargin = 0.95
 TopMargin = 0.95
 BottomMargin = 0.15
 
-ShowLegend = False
+ShowLegend = True
 
 #PlotLegendLabels = [r'SFINCS Fokker-Planck w/o $\Phi_1$', r'SFINCS Pitch-angle scattering w/o $\Phi_1$', r'SFINCS Fokker-Planck w/ $\Phi_1$', r'SFINCS Pitch-angle scattering w/ $\Phi_1$'] 
 #PlotLegendLabels = [r'SFINCS Fokker-Planck w/o $\Phi_1$', r'SFINCS Fokker-Planck w/ $\Phi_1$']
 #PlotLegendLabels = [r'$n_e$', r'$n_i$', r'$n_{\mathrm{He}^{2+}}$', r'$n_{\mathrm{C}^{6+}}$']
 #PlotLegendLabels = [r'$T_e$', r'$T_i$', r'$T_{\mathrm{He}^{2+}}$', r'$T_{\mathrm{C}^{6+}}$']
+PlotLegendLabels = [r'$T_e$', r'$T_i$', r'$T_{\mathrm{Ne}^{10+}}$']
 #PlotLegendLabels = [r'$\nu_{ee}^{\prime}$', r'$\nu_{ii}^{\prime}$', r'$\nu_{HeHe}^{\prime}$', r'$\nu_{CC}^{\prime}$']
-PlotLegendLabels = [r'SFINCS Fokker-Planck w/o $\Phi_1$', r'SFINCS Fokker-Planck w/ $\Phi_1$']
+#PlotLegendLabels = [r'$\nu_{ee}^{\prime}$', r'$\nu_{ii}^{\prime}$', r'$\nu_{NeNe}^{\prime}$']
+#PlotLegendLabels = [r'SFINCS Fokker-Planck w/o $\Phi_1$', r'SFINCS Fokker-Planck w/ $\Phi_1$']
 
 #PlotLegendLabels = []
 
@@ -80,10 +82,15 @@ LegendNumberColumns = 1
 #LegendBBoxToAnchor = [0.005, 0.765, 1., .102]
 #LegendBBoxToAnchor = [0.435, 0.765, 1., .102]
 #LegendBBoxToAnchor = [0.30, 0.01, 1., .102]
-LegendBBoxToAnchor = [0.01, 0.01, 1., .102]
+#LegendBBoxToAnchor = [0.13, 0.01, 1., .102]
 #LegendBBoxToAnchor = [0.01, 0.655, 1., .102]
+#LegendBBoxToAnchor = [0.005, 0.665, 1., .102]
+LegendBBoxToAnchor = [0.005, 0.35, 1., .102]
 
 ShowSubPlotLabel = True
-SubPlotLabel = '(c)'
+SubPlotLabel = '(b)'
 SubPlotLabelXcoord = 0.085
-SubPlotLabelYcoord = -0.00043
+#SubPlotLabelXcoord = 0.40
+#SubPlotLabelYcoord = -0.00043
+#SubPlotLabelYcoord = 0.1283
+SubPlotLabelYcoord = 2.090
