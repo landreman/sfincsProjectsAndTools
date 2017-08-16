@@ -24,33 +24,44 @@ matplotlib.rcParams['mathtext.default'] = 'it'
 matplotlib.rcParams['text.usetex'] = True
 #matplotlib.rcParams['text.latex.preamble'].append(r'\usepackage{amsmath}')
 
-PlotLinespecs = ['rD-', 'bo-', 'mv-.', 'cs-.', 'yx--', 'g+--', 'kp:', 'k*:'] 
-PlotLineColors = ['r', 'b', 'm', 'c', 'y', 'g', 'k', '0.75']
+#PlotLinespecs = ['rD-', 'bo-', 'mv-.', 'cs-.', 'yx--', 'g+--', 'kp:', 'k*:']
+#PlotLineColors = ['r', 'b', 'm', 'c', 'y', 'g', 'k', '0.75']
 #PlotLinespecs = ['rD-', 'mv-.']
 #PlotLineColors = ['r', 'm']
+PlotLinespecs = ['r-', 'b--', 'g-.', 'y:']
+PlotLineColors = ['r', 'b', 'g', '#AAAA00']
+#PlotLinespecs = ['k-']
+#PlotLineColors = ['#555555']
 PlotMarkerEdgeWidth = [3, 3, 3, 0, 3, 3, 3, 3] 
-PlotMarkerSize = 10 
+PlotMarkerSize = 10
+PlotLineWidth=5.0
 
 xAxisScale = 'linear' #'linear', 'log' or 'symlog'
-yAxisScale = 'linear' #'linear', 'log' or 'symlog' 
+yAxisScale = 'log' #'linear', 'log' or 'symlog' 
 
 ShowGrid = True
 
 xAxisLabel = r'$r/a$'
 #yAxisLabel = r'$n_{\mathrm{C}^{6+}}$ $[10^{19} \mathrm{m}^{-3}]$'
 #yAxisLabel = r'$n$ $[10^{19} \mathrm{m}^{-3}]$'
-yAxisLabel = r'$T$ $[\mathrm{keV}]$'
-#yAxisLabel = r'$\nu^{\prime}$'
+#yAxisLabel = r'$T$ $[\mathrm{keV}]$'
+yAxisLabel = r'$\nu_{ss}^{\prime}$'
 # e   i   \mathrm{He}^{2+}   \mathrm{C}^{6+}   \mathrm{Ne}^{10+}
 #yAxisLabel = r'$<\mathbf{\Gamma}_{e} \cdot \nabla r> $ $[10^{20} \mathrm{m}^{-2} \mathrm{s}^{-1}]$' 
 #yAxisLabel = r'$E_r$ $[\mathrm{kV/m}]$'
+#yAxisLabel = r'$Z_{\mathrm{eff}}$'
 AxesLabelSize = 40
 
-AxisLimAuto = True 
-xAxisLim = [0.18, 0.92]
-yAxisLim = [-3.2, 0.0]
+AxisLimAuto = False 
+#xAxisLim = [0.18, 0.92]
+#yAxisLim = [-3.2, 0.0]
 #xAxisLim = [0.10, 1.02]
 #yAxisLim = [-25.0, 0.0]
+xAxisLim = [0.0, 1.0]
+yAxisLim = [0.00007, 0.15]
+#yAxisLim = [0.0, 1.5]
+#yAxisLim = [0.0, 5.5]
+#yAxisLim = [1.0, 2.5]
 
 xAxisLabelCoords = [0.5,-0.09]
 yAxisLabelCoords = [-0.11,0.5]
@@ -65,9 +76,11 @@ ShowLegend = True
 #PlotLegendLabels = [r'SFINCS Fokker-Planck w/o $\Phi_1$', r'SFINCS Pitch-angle scattering w/o $\Phi_1$', r'SFINCS Fokker-Planck w/ $\Phi_1$', r'SFINCS Pitch-angle scattering w/ $\Phi_1$'] 
 #PlotLegendLabels = [r'SFINCS Fokker-Planck w/o $\Phi_1$', r'SFINCS Fokker-Planck w/ $\Phi_1$']
 #PlotLegendLabels = [r'$n_e$', r'$n_i$', r'$n_{\mathrm{He}^{2+}}$', r'$n_{\mathrm{C}^{6+}}$']
+#PlotLegendLabels = [r'$n_e$', r'$n_i$', r'$n_{\mathrm{He}^{2+}}$', r'$10 \times n_{\mathrm{C}^{6+}}$']
 #PlotLegendLabels = [r'$T_e$', r'$T_i$', r'$T_{\mathrm{He}^{2+}}$', r'$T_{\mathrm{C}^{6+}}$']
-PlotLegendLabels = [r'$T_e$', r'$T_i$', r'$T_{\mathrm{Ne}^{10+}}$']
-#PlotLegendLabels = [r'$\nu_{ee}^{\prime}$', r'$\nu_{ii}^{\prime}$', r'$\nu_{HeHe}^{\prime}$', r'$\nu_{CC}^{\prime}$']
+#PlotLegendLabels = [r'$T_e$', r'$T_i$', r'$T_{\mathrm{Ne}^{10+}}$']
+#PlotLegendLabels = [r'$T_e$', r'$T_i = T_{\mathrm{He}^{2+}} = T_{\mathrm{C}^{6+}}$']
+PlotLegendLabels = [r'$\nu_{ee}^{\prime}$', r'$\nu_{ii}^{\prime}$', r'$\nu_{HeHe}^{\prime}$', r'$\nu_{CC}^{\prime}$']
 #PlotLegendLabels = [r'$\nu_{ee}^{\prime}$', r'$\nu_{ii}^{\prime}$', r'$\nu_{NeNe}^{\prime}$']
 #PlotLegendLabels = [r'SFINCS Fokker-Planck w/o $\Phi_1$', r'SFINCS Fokker-Planck w/ $\Phi_1$']
 
@@ -85,12 +98,21 @@ LegendNumberColumns = 1
 #LegendBBoxToAnchor = [0.13, 0.01, 1., .102]
 #LegendBBoxToAnchor = [0.01, 0.655, 1., .102]
 #LegendBBoxToAnchor = [0.005, 0.665, 1., .102]
-LegendBBoxToAnchor = [0.005, 0.35, 1., .102]
+#LegendBBoxToAnchor = [0.005, 0.35, 1., .102]
+#LegendBBoxToAnchor = [0.005, 0.47, 1., .102]
+#LegendBBoxToAnchor = [0.005, 0.005, 1., .102]
+LegendBBoxToAnchor = [0.005, 0.58, 1., .102]
 
 ShowSubPlotLabel = True
-SubPlotLabel = '(b)'
-SubPlotLabelXcoord = 0.085
+SubPlotLabel = '(d)'
+#SubPlotLabelXcoord = 0.085
 #SubPlotLabelXcoord = 0.40
+SubPlotLabelXcoord = 0.01
+#SubPlotLabelXcoord = 0.28
 #SubPlotLabelYcoord = -0.00043
-#SubPlotLabelYcoord = 0.1283
-SubPlotLabelYcoord = 2.090
+SubPlotLabelYcoord = 0.1283
+#SubPlotLabelYcoord = 2.090
+#SubPlotLabelYcoord = 1.422
+#SubPlotLabelYcoord = 5.2
+#SubPlotLabelYcoord = 2.422
+SubPlotLabelYcoord = 0.1
