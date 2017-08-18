@@ -22,6 +22,10 @@ for inputind=1:length(lsts)
     Fmn.n0ind=lst.n0ind;
 
     Fmn=class(Fmn,'mnmat');
+    
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  %%%%%%   Geometry struct  %%%%%%%%%%%%
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   elseif isfield(lst,'headertext')&&...
         isfield(lst,'StelSym')&&...
         isfield(lst,'Nperiods')&&...
@@ -83,7 +87,85 @@ for inputind=1:length(lsts)
     elseif nargin==6
       Fmn=mnmat(lista,varargin{3},varargin{4},varargin{5});
     end
-  
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  %%%%%%   wout VMEC struct %%%%%%%%%%%%
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  elseif isfield(lst,'bmnc')&&...
+        isfield(lst,'rmnc')&&...
+        isfield(lst,'zmns')&&...
+        isfield(lst,'xm')&&...
+        isfield(lst,'xn')&&...
+        isfield(lst,'xm_nyq')&&...
+        isfield(lst,'xn_nyq')&&...
+        isfield(lst,'phi')&&...
+        isfield(lst,'chi')
+    %disp('mnmat input from a wout struct loaded from a VMEC output.')
+    %This is a wout struct
+    %I require the input (wout,rind,fieldtoextract)
+    %or (wout,rind,fieldtoextract,Nu,Nv,forceSize_option)
+    if nargin<3
+      error('Not enough inputs')
+    end
+    clear lista
+    rind=varargin{1};
+    objecttoextract=varargin{2};
+    if strcmp(objecttoextract,'bmn') || strcmp(objecttoextract,'B')
+      fieldtoextract='bmn';
+      lista.m=lst.xm_nyq;
+      lista.n=lst.xn_nyq;
+    elseif strcmp(objecttoextract,'rmn') || strcmp(objecttoextract,'R')
+      fieldtoextract='rmn';
+      lista.m=lst.xm;
+      lista.n=lst.xn;
+    elseif strcmp(objecttoextract,'zmn') || strcmp(objecttoextract,'Z')
+      fieldtoextract='zmn';
+      lista.m=lst.xm;
+      lista.n=lst.xn;
+    elseif strcmp(objecttoextract,'lmn') 
+      fieldtoextract='lmn';
+      lista.m=lst.xm;
+      lista.n=lst.xn;
+    else
+      fieldtoextract=objecttoextract;
+      lista.m=lst.xm_nyq;
+      lista.n=lst.xn_nyq;
+    end   
+    if isfield(lst,[fieldtoextract,'c'])
+      fieldc=getfield(lst,[fieldtoextract,'c']);
+    end
+    if isfield(lst,[fieldtoextract,'s'])
+      fields=getfield(lst,[fieldtoextract,'s']);
+    end
+    
+    if not(isfield(lst,'bmns')) %<=>StelSym
+      %disp('Stellarator symmetric')
+      lista.cosparity=ones(size(lista.m));
+      if strcmp(fieldtoextract,'zmn')
+        lista.data=fields(:,rind);
+      else
+        lista.data=fieldc(:,rind);
+      end
+    else
+      lista.m=[lista.m;lista.m];
+      lista.n=[lista.n;lista.n];
+      if strcmp(fieldtoextract,'zmn') || strcmp(fieldtoextract,'lmn') ...
+            || strcmp(fieldtoextract,'bsubsmn')
+        lista.cosparity=[zeros(length(lista.m)/2,1);ones(length(lista.m)/2,1)];
+        lista.data=[fields(:,rind);fieldc(:,rind)];
+      else
+        lista.cosparity=[ones(length(lista.m)/2,1);zeros(length(lista.m)/2,1)];
+        lista.data=[fieldc(:,rind);fields(:,rind)];        
+      end
+    end
+
+    if nargin==3
+      Fmn=mnmat(lista); %recursive call to default case below  
+    elseif nargin==5
+      Fmn=mnmat(lista,varargin{3},varargin{4});
+    elseif nargin==6
+      Fmn=mnmat(lista,varargin{3},varargin{4},varargin{5});
+    end
+
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   else %Default case: list input
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

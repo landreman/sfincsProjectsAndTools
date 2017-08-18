@@ -204,7 +204,7 @@ if strcmp(filetype,'bc')
                      'bmnc [T]         bmns [T]\n']);
       end
     end
-    if Geom.StelSym
+    if Geom.StelSym %I choose not to mn-sort the components because they usually come sorted.
       for ind=1:Geom.nmodes(rind)
         fprintf(fid,'%5d%5d%16.8E%16.8E%16.8E%16.8E\n',...
                 Geom.m{rind}(ind),Geom.n{rind}(ind),...

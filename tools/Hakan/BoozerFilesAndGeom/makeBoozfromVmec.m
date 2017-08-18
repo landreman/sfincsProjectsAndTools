@@ -206,8 +206,10 @@ end
 %%%%% This is the transformation. See th notes by Hirshman
 %%%%% 'Transformation from VMEC to Boozer Coordinates', April 1995
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-alphamn1=invgrad(w.B_umntilde,w.B_wmntilde,Geom.Nperiods,1);
+alphamn1=invgrad(w.B_umntilde,w.B_wmntilde,Geom.Nperiods,1); 
 alphamn2=invgrad(w.B_umntilde,w.B_wmntilde,Geom.Nperiods,2);
+%if B_umn and B_wmn are good, then alphamn1 should equal alphamn2
+%I SHOULD TEST THIS
 
 w.pmn=(alphamn2-I*w.lmn)*(1/(G+iota*I));
 

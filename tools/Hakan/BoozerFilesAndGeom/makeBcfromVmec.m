@@ -188,7 +188,7 @@ for sind=1:length(Geom.s)
     Geom.Dphi{sind}=Geom.Dphi{sind}(good);   
   end
   
-  Geom.FSAB2=Booz.FSAB2; %=Nu*Nw/sum(sum(1./Booz.B.^2));
+  Geom.FSAB2(1,sind)=Booz.FSAB2; %=Nu*Nw/sum(sum(1./Booz.B.^2));
   
   Geom.mnmat{sind}=Booz.mnmat; %note that for axisymmetry I still keep Nw=3 here!
   
