@@ -44,9 +44,9 @@ matplotlib.rcParams['text.usetex'] = True
 
 zFactor = 1000 ##kV -> V
 ##W7-X##
-#xAxisTicks = [r'$0$', r'$\pi/10$', r'$2\pi/10$', r'$3\pi/10$', r'$4\pi/10$']
+xAxisTicks = [r'$0$', r'$\pi/10$', r'$2\pi/10$', r'$3\pi/10$', r'$4\pi/10$']
 ##LHD
-xAxisTicks = [r'$0$', r'$\pi/20$', r'$2\pi/20$', r'$3\pi/20$', r'$4\pi/20$']
+#xAxisTicks = [r'$0$', r'$\pi/20$', r'$2\pi/20$', r'$3\pi/20$', r'$4\pi/20$']
 
 yAxisTicks = [r'$0$', r'$\pi/2$', r'$\pi$', r'$3\pi/2$', r'$2\pi$']
 
@@ -88,6 +88,11 @@ f.close()
 
 print "theta max: " + str(numpy.amax(theta))
 print "zeta max: " + str(numpy.amax(zeta))
+
+zMinData = zFactor*numpy.amin(Phi1Hat[:,:,iteration])
+zMaxData = zFactor*numpy.amax(Phi1Hat[:,:,iteration])
+print "zMin = " + str(zMinData)
+print "zMax = " + str(zMaxData)
 
 
 delta = (numpy.amax(Phi1Hat[:,:,iteration]) - numpy.amin(Phi1Hat[:,:,iteration])) / numLevels

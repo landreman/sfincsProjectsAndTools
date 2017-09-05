@@ -9,6 +9,13 @@
 import matplotlib
 import numpy 
 
+#matplotlib.rc_context(rc={
+#'lines.linewidth': 1.5,
+#'lines.dashed_pattern' : [2.8, 1.2],
+#'lines.dashdot_pattern' : [4.8, 1.2, 0.8, 1.2],
+#'lines.dotted_pattern' : [1.1, 1.1],
+#'lines.scale_dashes': True})
+
 FigSize = (12,10)
 #FigSize = (13.5,10) 
 font = {'size':35}
@@ -23,6 +30,9 @@ matplotlib.rc('axes.formatter', limits=(0,2))
 matplotlib.rcParams['mathtext.default'] = 'it'
 matplotlib.rcParams['text.usetex'] = True
 #matplotlib.rcParams['text.latex.preamble'].append(r'\usepackage{amsmath}')
+
+#matplotlib.style.use('grayscale')
+
 
 #PlotLinespecs = ['rD-', 'bo-', 'mv-.', 'cs-.', 'yx--', 'g+--', 'kp:', 'k*:']
 #PlotLineColors = ['r', 'b', 'm', 'c', 'y', 'g', 'k', '0.75']

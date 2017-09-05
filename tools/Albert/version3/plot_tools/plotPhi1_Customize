@@ -121,6 +121,11 @@ if zMax == None:
    zMax = zFactor*numpy.amax(Phi1Hat[:,:,iteration])
 print "zMin = " + str(zMin)
 print "zMax = " + str(zMax)
+
+zMinData = zFactor*numpy.amin(Phi1Hat[:,:,iteration])
+zMaxData = zFactor*numpy.amax(Phi1Hat[:,:,iteration])
+print "zMin = " + str(zMinData)
+print "zMax = " + str(zMaxData)
 #sys.exit(0)
 
 if zMax < zMin:
