@@ -39,6 +39,7 @@ if size(s,1)>size(s,2)
 end
 
 out.StelSym=Geom.StelSym;
+out.newsigncorr=Geom.newsigncorr;
 if isfield(Geom,'headertext')
   out.headertext=Geom.headertext;
 end
@@ -300,6 +301,7 @@ elseif strcmp(interptype,'nearest')
   end
   
   out.rnorm=Geom.rnorm(inds);
+  out.s=Geom.s(inds);
   out.iota=Geom.iota(inds);
   out.Bphi=Geom.Bphi(inds);
   out.Btheta=Geom.Btheta(inds);

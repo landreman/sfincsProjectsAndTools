@@ -1,9 +1,20 @@
 function d11fits=dkes_ftd11(Geomdat,dkdata,varargin);
 
-if nargin==3
+if nargin>=3
   fignr=varargin{1};
 else
   fignr=1;
+end
+if nargin==4
+  dkesoutputpath=varargin{2};
+  if not(exist([dkesoutputpath,'ps'],'dir'))
+    success=mkdir(dkesoutputpath,'ps');
+    if not(success)
+      error(['Could not create the directory ',dkesoutputpath,'ps'])
+    end
+  end
+else
+  dkesoutputpath='';
 end
 if ishandle(fignr)
   close(fignr)
@@ -477,8 +488,11 @@ for rind=1:dkdata.Nradii
       figurefile=['fits_for_radius',num2str(rind),'of',num2str(dkdata.Nradii),'.eps'];
       disp(['Printing figure file: ',figurefile])
       pwd
-      print('-depsc',figurefile)
-      
+      if strcmp(dkesoutputpath,'')
+        print('-depsc',figurefile)
+      else
+        print('-depsc',[dkesoutputpath,'ps/',figurefile])
+      end
     end
   end
 end
