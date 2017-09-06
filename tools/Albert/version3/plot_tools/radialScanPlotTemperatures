@@ -42,9 +42,9 @@ filename = 'sfincsOutput.h5' ##Name for SFINCS output HDF5 files.
 radiusName = "rN" ##Radial coordinate to use on x-axis. Must be "psiHat", "psiN", "rHat" or "rN".
 
 #plotVariableName = "Er" ##Parameter to plot on y-axis. In this version it must be "Er", "dPhiHatdpsiHat", "dPhiHatdpsiN", "dPhiHatdrHat" or "dPhiHatdrN" .
-plotVariableName = "particleFlux_vd_rHat"
-species = 1
-TransformPlotVariableToOutputUnitsFactor = vbar
+plotVariableName = "THats"
+
+TransformPlotVariableToOutputUnitsFactor = 1.
 
 MinFloat = pow(10, -sys.float_info.dig) 
 
@@ -78,7 +78,7 @@ fig.patch.set_facecolor('white')
 
 ax = plt.subplot(1, 1, 1)
 
-linenumber = 0
+#linenumber = 0
 
 for directory in PlotDirectories:
     try:
@@ -129,9 +129,9 @@ for directory in PlotDirectories:
                 file.close()
                 
                 #if plotVariableName == "particleFlux_vm_rHat":
-                if plotVariableName.find('Flux_v') != -1:
-                    VariableValue = VariableValue[:, -1]
-                    VariableValue = VariableValue[species -1] 
+                #if plotVariableName.find('Flux_v') != -1:
+                #    VariableValue = VariableValue[:, -1]
+                #    VariableValue = VariableValue[species -1] 
 
                 VariableValue = TransformPlotVariableToOutputUnitsFactor * VariableValue
                 if includePhi1 == integerToRepresentTrue:
@@ -173,13 +173,14 @@ for directory in PlotDirectories:
         print ""
         print np.array(ydata_sorted)
 
-        try:
-            LegendLabel = PlotLegendLabels[linenumber]
-        except:
-            LegendLabel = directory
+        for linenumber in range(0,4):
+            try:
+                LegendLabel = PlotLegendLabels[linenumber]
+            except:
+                LegendLabel = directory
 
-        plt.plot(np.array(radii_sorted), np.array(ydata_sorted), PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel)
-        linenumber += 1
+            plt.plot(np.array(radii_sorted), np.array(ydata_sorted)[:, linenumber], PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel)
+        #linenumber += 1
 
     except:
         os.chdir(originalDirectory)
@@ -204,18 +205,7 @@ else :
     ymin,ymax = plt.ylim(yAxisLim) 
     xmin,xmax = plt.xlim(xAxisLim) 
 
-if ShowLegend:
-    plt.legend(bbox_to_anchor = LegendBBoxToAnchor, loc=LegendPosition, ncol=LegendNumberColumns, mode=None, borderaxespad=0., prop=LegendProperties)#, fontsize=LegendFontSize)
-
-plt.gca().axes.xaxis.set_label_coords(xAxisLabelCoords[0], xAxisLabelCoords[1])
-plt.gca().axes.yaxis.set_label_coords(yAxisLabelCoords[0], yAxisLabelCoords[1])
-
-plt.tight_layout()
-
-plt.subplots_adjust(left=LeftMargin, right=RightMargin, top=TopMargin, bottom=BottomMargin)
-
-if ShowSubPlotLabel:
-    plt.text(SubPlotLabelXcoord, SubPlotLabelYcoord, SubPlotLabel)
+plt.legend(bbox_to_anchor = LegendBBoxToAnchor, loc=LegendPosition, ncol=LegendNumberColumns, mode=None, borderaxespad=0., prop=LegendProperties)#, fontsize=LegendFontSize)
 
 os.chdir(originalDirectory) 
 
