@@ -42,9 +42,9 @@ filename = 'sfincsOutput.h5' ##Name for SFINCS output HDF5 files.
 radiusName = "rN" ##Radial coordinate to use on x-axis. Must be "psiHat", "psiN", "rHat" or "rN".
 
 #plotVariableName = "Er" ##Parameter to plot on y-axis. In this version it must be "Er", "dPhiHatdpsiHat", "dPhiHatdpsiN", "dPhiHatdrHat" or "dPhiHatdrN" .
-plotVariableName = "particleFlux_vd_rHat"
-species = 1
-TransformPlotVariableToOutputUnitsFactor = vbar
+plotVariableName = "nHats"
+
+TransformPlotVariableToOutputUnitsFactor = 1.0
 
 MinFloat = pow(10, -sys.float_info.dig) 
 
@@ -78,7 +78,7 @@ fig.patch.set_facecolor('white')
 
 ax = plt.subplot(1, 1, 1)
 
-linenumber = 0
+#linenumber = 0
 
 for directory in PlotDirectories:
     try:
@@ -126,12 +126,26 @@ for directory in PlotDirectories:
                 else:
                     VariableValue = file[plotVariableName][()]
 
+                Zs = file["Zs"][()]
+                mHats = file["mHats"][()]
+                THats = file["THats"][()]
+                nHats = file["nHats"][()]
+                B0OverBBar = file["B0OverBBar"][()]
+                GHat = file["GHat"][()]
+                IHat = file["IHat"][()]
+                iota = file["iota"][()]
+                nu_n = file["nu_n"][()]
+
+                DensityToNuFactor = np.absolute((GHat + iota*IHat)*nu_n*Zs**4 / (B0OverBBar*THats**2))
+
                 file.close()
                 
                 #if plotVariableName == "particleFlux_vm_rHat":
-                if plotVariableName.find('Flux_v') != -1:
-                    VariableValue = VariableValue[:, -1]
-                    VariableValue = VariableValue[species -1] 
+                #if plotVariableName.find('Flux_v') != -1:
+                #    VariableValue = VariableValue[:, -1]
+                #    VariableValue = VariableValue[species -1]
+
+                VariableValue = VariableValue * DensityToNuFactor
 
                 VariableValue = TransformPlotVariableToOutputUnitsFactor * VariableValue
                 if includePhi1 == integerToRepresentTrue:
@@ -173,13 +187,14 @@ for directory in PlotDirectories:
         print ""
         print np.array(ydata_sorted)
 
-        try:
-            LegendLabel = PlotLegendLabels[linenumber]
-        except:
-            LegendLabel = directory
+        for linenumber in range(0,4):
+            try:
+                LegendLabel = PlotLegendLabels[linenumber]
+            except:
+                LegendLabel = directory
 
-        plt.plot(np.array(radii_sorted), np.array(ydata_sorted), PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel)
-        linenumber += 1
+            plt.plot(np.array(radii_sorted), np.array(ydata_sorted)[:, linenumber], PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel, linewidth=PlotLineWidth)
+        #linenumber += 1
 
     except:
         os.chdir(originalDirectory)
@@ -216,7 +231,7 @@ plt.subplots_adjust(left=LeftMargin, right=RightMargin, top=TopMargin, bottom=Bo
 
 if ShowSubPlotLabel:
     plt.text(SubPlotLabelXcoord, SubPlotLabelYcoord, SubPlotLabel)
-
+    
 os.chdir(originalDirectory) 
 
 if makePDF: 

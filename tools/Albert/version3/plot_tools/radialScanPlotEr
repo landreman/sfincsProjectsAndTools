@@ -197,7 +197,18 @@ else :
     ymin,ymax = plt.ylim(yAxisLim) 
     xmin,xmax = plt.xlim(xAxisLim) 
 
-plt.legend(bbox_to_anchor = LegendBBoxToAnchor, loc=LegendPosition, ncol=LegendNumberColumns, mode=None, borderaxespad=0., fontsize=LegendFontSize)
+if ShowLegend:
+    plt.legend(bbox_to_anchor = LegendBBoxToAnchor, loc=LegendPosition, ncol=LegendNumberColumns, mode=None, borderaxespad=0., prop=LegendProperties)#, fontsize=LegendFontSize)
+
+plt.gca().axes.xaxis.set_label_coords(xAxisLabelCoords[0], xAxisLabelCoords[1])
+plt.gca().axes.yaxis.set_label_coords(yAxisLabelCoords[0], yAxisLabelCoords[1])
+
+plt.tight_layout()
+
+plt.subplots_adjust(left=LeftMargin, right=RightMargin, top=TopMargin, bottom=BottomMargin)
+
+if ShowSubPlotLabel:
+    plt.text(SubPlotLabelXcoord, SubPlotLabelYcoord, SubPlotLabel)
 
 os.chdir(originalDirectory) 
 

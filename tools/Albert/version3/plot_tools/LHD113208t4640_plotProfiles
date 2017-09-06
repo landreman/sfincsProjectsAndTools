@@ -1,0 +1,164 @@
+#!/usr/bin/env python 
+
+import matplotlib 
+import h5py
+import numpy 
+import numpy as np 
+import os, sys, inspect, math
+import warnings  
+import matplotlib.ticker as ticker  
+import subprocess
+
+makePDF = False 
+for arg in sys.argv:
+    if arg.lower()=='pdf':
+        makePDF = True
+
+if makePDF:
+    matplotlib.use('PDF')
+
+import matplotlib.pyplot as plt
+
+print "This is "+ inspect.getfile(inspect.currentframe())
+
+sfincsHome = os.environ.get('SFINCS_HOME') 
+sfincsProjectsAndToolsHome = os.environ.get('SFINCS_PROJECTS_AND_TOOLS_HOME')
+
+##INPUTS##
+
+#PlotWhat = 'density' #density, temperature or Zeff
+#PlotWhat = 'temperature' #density, temperature or Zeff
+PlotWhat = 'Zeff' #density, temperature or Zeff
+
+##NORMALIZATION FACTORS FOR SI UNITS##
+######################################
+qe = 1.6021766208*10**(-19) #Electron charge
+mbar = 1.672621777*10**(-27) #Proton mass 
+nbar = 10.0**20 # in 10^20 
+Tbar = 1000*qe 
+Rbar = 1.0  
+Bbar = 1.0  
+vbar = np.sqrt(2.0 * Tbar / mbar)  
+######################################
+
+MinFloat = pow(10, -sys.float_info.dig) 
+
+##PLOT OPTIONS##
+
+execfile(sfincsProjectsAndToolsHome + "/tools/Albert/version3/plot_tools"  + "/RadialScanPlotOptions.py")
+
+################
+
+Zi = 1
+ZHe = 2
+ZC = 6
+
+##Profile functions for LHD113208t4640##
+def ni(rOa):
+    return 0.63555 + 0.47629*rOa**2 - 3.8575*rOa**4 + 10.139*rOa**6 - 9.6938*rOa**8 + 2.6298*rOa**10
+
+def nHe(rOa):
+    return 0.2129 + 0.15949*rOa**2 - 1.2917*rOa**4 + 3.3949*rOa**6 - 3.2454*rOa**8 + 0.88017*rOa**10
+
+def nC(rOa):
+    return 0.028718 - 0.16842*rOa**2 + 1.0352*rOa**4 - 2.1803*rOa**6 + 2.0323*rOa**8 - 0.73207*rOa**10
+
+def ne(rOa):
+    return Zi*ni(rOa) + ZHe*nHe(rOa) + ZC*nC(rOa)
+
+def Te(rOa):
+    return 3.6330 - 2.6128*rOa**2 + 0.10186*rOa**4 - 0.56081*rOa**6
+
+def Ti(rOa):
+    return 5.4219 - 5.8287*rOa**2 - 1.6314*rOa**4 +  2.9678*rOa**6
+
+def Zeff(rOa):
+    return (Zi**2 * ni(rOa) + ZHe**2 * nHe(rOa) + ZC**2 * nC(rOa)) / ne(rOa)
+###############################
+
+##############################
+##########END INPUTS##########
+##############################
+
+if PlotWhat.lower() != 'density' and PlotWhat.lower() != 'temperature' and PlotWhat.lower() != 'zeff':
+    print "Error! Cannot plot " + str(PlotWhat)
+    sys.exit(1)
+
+##PLOT THE DATA##
+originalDirectory = os.getcwd() 
+
+fig = plt.figure(figsize=FigSize) 
+fig.patch.set_facecolor('white') 
+
+ax = plt.subplot(1, 1, 1)
+
+rOas = np.arange(0.0, 1.0, 0.01)
+
+if PlotWhat.lower() == 'density':
+    linenumber = 0
+    plt.plot(rOas, ne(rOas), PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=PlotLegendLabels[linenumber], linewidth=PlotLineWidth)
+
+    linenumber += 1
+    plt.plot(rOas, ni(rOas), PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=PlotLegendLabels[linenumber], linewidth=PlotLineWidth)
+
+    linenumber += 1
+    plt.plot(rOas, nHe(rOas), PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=PlotLegendLabels[linenumber], linewidth=PlotLineWidth)
+
+    linenumber += 1
+    plt.plot(rOas, 10.0*nC(rOas), PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=PlotLegendLabels[linenumber], linewidth=PlotLineWidth)
+
+elif PlotWhat.lower() == 'temperature':
+    linenumber = 0
+    plt.plot(rOas, Te(rOas), PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=PlotLegendLabels[linenumber], linewidth=PlotLineWidth)
+
+    linenumber += 1
+    plt.plot(rOas, Ti(rOas), PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=PlotLegendLabels[linenumber], linewidth=PlotLineWidth)
+
+elif PlotWhat.lower() == 'zeff':
+    linenumber = 0
+    plt.plot(rOas, Zeff(rOas), PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=PlotLegendLabels[linenumber], linewidth=PlotLineWidth)
+    
+
+plt.xscale(xAxisScale) 
+plt.yscale(yAxisScale)
+
+if ShowGrid:
+    plt.grid(which='both')
+
+plt.xlabel(xAxisLabel, fontsize=AxesLabelSize)
+plt.ylabel(yAxisLabel, fontsize=AxesLabelSize) 
+
+if AxisLimAuto: 
+    ymin,ymax = plt.ylim()
+    xmin,xmax = plt.xlim() 
+else : 
+    ymin,ymax = plt.ylim(yAxisLim) 
+    xmin,xmax = plt.xlim(xAxisLim) 
+
+if ShowLegend:
+    plt.legend(bbox_to_anchor = LegendBBoxToAnchor, loc=LegendPosition, ncol=LegendNumberColumns, mode=None, borderaxespad=0., prop=LegendProperties)#, fontsize=LegendFontSize)
+
+plt.gca().axes.xaxis.set_label_coords(xAxisLabelCoords[0], xAxisLabelCoords[1])
+plt.gca().axes.yaxis.set_label_coords(yAxisLabelCoords[0], yAxisLabelCoords[1])
+
+plt.tight_layout()
+
+plt.subplots_adjust(left=LeftMargin, right=RightMargin, top=TopMargin, bottom=BottomMargin)
+
+if ShowSubPlotLabel:
+    plt.text(SubPlotLabelXcoord, SubPlotLabelYcoord, SubPlotLabel)
+    
+os.chdir(originalDirectory) 
+
+if makePDF: 
+    print "Saving PDF"  
+
+    if len(sys.argv)>2 : #Use the substituted name as file name 
+       print "Writing plot to " + os.getcwd() + "/" + sys.argv[2] + ".pdf."    
+       plt.savefig(sys.argv[2] + ".pdf", orientation = 'landscape', papertype='letter')  
+    else : 
+       head, tail = os.path.split(inspect.getfile(inspect.currentframe()))  
+       print "Writing plot to " + os.getcwd() + "/" + tail + ".pdf."  
+       plt.savefig(tail+'.pdf', orientation = 'landscape', papertype='letter')  
+else:   
+    plt.show()       

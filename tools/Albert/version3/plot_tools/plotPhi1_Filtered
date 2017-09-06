@@ -42,6 +42,9 @@ matplotlib.rc('font', **font)
 matplotlib.rc('lines',markeredgewidth=0,markersize=3,linewidth=2.5)
 matplotlib.rc('axes',linewidth=1.5)
 
+matplotlib.rcParams['mathtext.default'] = 'it'
+matplotlib.rcParams['text.usetex'] = True
+
 zFactor = 1000 ##kV -> V
 ##W7-X##
 #xAxisTicks = [r'0', r'$\pi/10$', r'$2\pi/10$', r'$3\pi/10$', r'$4\pi/10$']
@@ -166,8 +169,9 @@ ContourLevels = zFactor*ContourLevels
     
 ax = plt.subplot(numRows,numCols,1)
     #plt.contourf(zeta,theta,1000*numpy.fliplr(Phi1Hat[:,:,iteration].transpose()),numContours)
-Phi1Plot = plt.contourf(zetaToPlot,thetaToPlot,zFactor*Phi1ToPlot, numContours)
-Phi1Plot2 = plt.contour(Phi1Plot,levels=ContourLevels, colors='k', hold='on')
+Phi1Plot = plt.contourf(zetaToPlot,thetaToPlot,zFactor*Phi1ToPlot, numContours, cmap=plt.get_cmap('gist_rainbow'))
+Phi1Plot2 = plt.contour(Phi1Plot,levels=ContourLevels, colors='k')
+#Phi1Plot2 = plt.contour(Phi1Plot,levels=ContourLevels, colors='k', hold='on')
 #Phi1Plot2 = plt.contour(Phi1Plot,levels=Phi1Plot.levels[::2], colors='k', hold='on')
 #plt.xlabel(r'$\zeta$' + ' [rad]')
 plt.xlabel(r'$\zeta$' + " " + r'$\mathrm{[rad]}$')
@@ -182,7 +186,7 @@ plt.gca().axes.yaxis.set_ticklabels(yAxisTicks)
 
 #plt.gca().axes.xaxis.set_label_coords(0.5,-0.09)
 #plt.gca().axes.yaxis.set_label_coords(-0.09,0.5)
-plt.gca().axes.xaxis.set_label_coords(0.5,-0.05)
+plt.gca().axes.xaxis.set_label_coords(0.5,-0.09)
 plt.gca().axes.yaxis.set_label_coords(-0.09,0.5)
 
 #plt.tight_layout(pad=0.4, w_pad=0.5, h_pad=1.0)
