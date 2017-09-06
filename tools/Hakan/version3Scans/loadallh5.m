@@ -47,14 +47,23 @@ if not(iscell(dirpath))
   runind=0;
   for ind=1:length(list)
     if list(ind).name(1)~='.'
-      if not(isempty(str2num(list(ind).name))) || ...
-            strcmp(list(ind).name,'baseCase') || ...
+      relevant=0;
+      if not(isempty(str2num(list(ind).name)))
+        relevant=1;
+      elseif strcmp(list(ind).name,'baseCase') || ...
             list(ind).name(1)=='N' || ...
-            strcmp(list(ind).name(1:2),'Er') || ...
-            strcmp(list(ind).name(1:4),'dPhi') || ...
             not(isempty(strfind(list(ind).name,'nuprime'))) || ...
             not(isempty(strfind(list(ind).name,'solverTolerance'))) || ...
             not(isempty(strfind(list(ind).name,'nhats')))
+        relevant=1;
+      elseif length(list(ind).name)>=2
+        if strcmp(list(ind).name(1:2),'Er')
+          relevant=1;
+        elseif length(list(ind).name)>=4
+          relevant=strcmp(list(ind).name(1:4),'dPhi');
+        end
+      end
+      if relevant
         if not(exist([dirpath,list(ind).name,'/sfincsOutput.h5'],'file'))
           disp(['Skipping the directory ',dirpath,list(ind).name])
           disp('The file sfincsOutput.h5 did not exist!')
