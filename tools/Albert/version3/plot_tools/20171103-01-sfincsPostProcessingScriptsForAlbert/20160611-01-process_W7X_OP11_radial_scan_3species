@@ -1,10 +1,26 @@
 #!/usr/bin/env python
 
-impurityName='O8+'
+import numpy as np
 
-min_rN = 0.075
+impurityName='C6+'
+
+#min_radius = 0.075
+#min_radius = 5.053384184067095E-2
+#min_radius = 0.2
+min_radius = 0.0
+max_radius = 0.5
+radius_label = 'r_{eff} (m)'
 
 Nspecies = 3
+
+qe = 1.6021766208*10**(-19) #Electron charge
+mbar = 1.672621777*10**(-27) #Proton mass
+nbar = 10.0**20 # in 10^20
+Tbar = 1000*qe
+Rbar = 1.0
+Bbar = 1.0
+#vbar = 437694.73191
+vbar = np.sqrt(2.0 * Tbar / mbar)
 
 import matplotlib
 import sys
@@ -52,13 +68,14 @@ numPlots = Nspecies*5+2
 numRows=3
 numCols=6
 
-factor = 437695 * 1e20 * 1.602177e-19 / (1e6)
+factor = vbar * nbar * qe / (1e6)
 sfincsLinewidth=1.7
 mycolor='r'
 
 [head,extension] = os.path.split(os.getcwd())
 f = open(extension+".sfincsResults",'w')
-f.write('r/a=sqrt(s)')
+#f.write('r/a=sqrt(s)')
+f.write(radius_label)
 # For future use, in case I want to plot multiple scans on the same axes:
 for whichDirectory in [1]:
 
@@ -79,20 +96,20 @@ for whichDirectory in [1]:
         #desiredLabel='FSABjHat'
         #if data['ylabels'][index] != desiredLabel:
         #    print "Error! At the index where I expected "+desiredLabel+", I instead found ",data['ylabels'][index]
-        rN = np.array(data['xdata'][whichPlot])
+        radius = np.array(data['xdata'][whichPlot])
         #FSABjHat = np.array(data['ydata'][index]) * factor
         #ylabel = data['ylabel'][whichPlot]
         if whichPlot==0:
             label = 'Density (e)\n[m^-3]'
-            factor = 1e20
+            factor = nbar
             shouldBe = 'nHat, species 1'
         elif whichPlot==1:
             label = 'Density (H)\n[m^-3]'
-            factor = 1e20
+            factor = nbar
             shouldBe = 'nHat, species 2'
         elif whichPlot==2:
             label = 'Density ('+impurityName+')\n[m^-3]'
-            factor = 1e20
+            factor = nbar
             shouldBe = 'nHat, species 3'
         elif whichPlot==3:
             label = 'Temperature (e) [keV]'
@@ -113,68 +130,68 @@ for whichDirectory in [1]:
         elif whichPlot==7:
             label = '<V dot B> (e) [T km / s]'
             nHat = np.array(data['ydata'][0])
-            factor = 437695 / nHat / 1000
+            factor = vbar / nHat / 1000
             shouldBe = 'FSABFlow'
         elif whichPlot==8:
             label = 'Particle flux (e)\n[s^-1 m^-2]'
-            factor = (1e20)*(437695) # nBar * vBar, so radial flux now has units of 1 /(s*m^2)
+            factor = (nbar)*(vbar) # nBar * vBar, so radial flux now has units of 1 /(s*m^2)
             shouldBe = 'particleFlux'
         elif whichPlot==9:
             label = 'Heat flux (e) [kW / m^2]'
-            factor = (1e20)*(1.6726e-27)*(437695 ** 3)/(1e3) # * nBar * mBar * vBar^3 / RBar / 1e6, so units become MW/(m^2)
+            factor = (nbar)*(mbar)*(vbar ** 3)/(1e3) # * nBar * mBar * vBar^3 / RBar / 1e6, so units become MW/(m^2)
             shouldBe = 'heatFlux'
         elif whichPlot==10:
             label = '<V dot B> (H) [T km / s]'
             nHat = np.array(data['ydata'][1])
-            factor = 437695 / nHat / 1000
+            factor = vbar / nHat / 1000
             shouldBe = 'FSABFlow'
         elif whichPlot==11:
             label = 'Particle flux (H)\n[s^-1 m^-2]'
-            factor=(1e20)*(437695) # nBar * vBar, so radial flux now has units of 1 /(s*m^2)
+            factor=(nbar)*(vbar) # nBar * vBar, so radial flux now has units of 1 /(s*m^2)
             shouldBe = 'particleFlux'
         elif whichPlot==12:
             label = 'Heat flux (H) [kW / m^2]'
-            factor = (1e20)*(1.6726e-27)*(437695 ** 3)/(1e3) # * nBar * mBar * vBar^3 / RBar / 1e6, so units become MW/(m^2)
+            factor = (nbar)*(mbar)*(vbar ** 3)/(1e3) # * nBar * mBar * vBar^3 / RBar / 1e6, so units become MW/(m^2)
             shouldBe = 'heatFlux'
         elif whichPlot==13:
             label = '<V dot B> ('+impurityName+') [T km / s]'
             nHat = np.array(data['ydata'][1])
-            factor = 437695 / nHat / 1000
+            factor = vbar / nHat / 1000
             shouldBe = 'FSABFlow'
         elif whichPlot==14:
             label = 'Particle flux ('+impurityName+')\n[s^-1 m^-2]'
-            factor=(1e20)*(437695) # nBar * vBar, so radial flux now has units of 1 /(s*m^2)
+            factor=(nbar)*(vbar) # nBar * vBar, so radial flux now has units of 1 /(s*m^2)
             shouldBe = 'particleFlux'
         elif whichPlot==15:
             label = 'Heat flux ('+impurityName+') [kW / m^2]'
-            factor = (1e20)*(1.6726e-27)*(437695 ** 3)/(1e3) # * nBar * mBar * vBar^3 / RBar / 1e6, so units become MW/(m^2)
+            factor = (nbar)*(mbar)*(vbar ** 3)/(1e3) # * nBar * mBar * vBar^3 / RBar / 1e6, so units become MW/(m^2)
             shouldBe = 'heatFlux'
         elif whichPlot==16:
             label = '<J dot B> [kA T / m^3]'
-            factor = 437695 * 1e20 * 1.602177e-19 / (1e3)
+            factor = vbar * nbar * qe / (1e3)
             shouldBe = 'FSABjHat'
 
         f.write(string.replace(label,'\n',' '))
         ydata = np.array(data['ydata'][whichPlot]) * factor
 
-        mask = rN >= min_rN
-        #rN = np.insert(rN[mask],0,[0])
+        mask = radius >= min_radius
+        #radius = np.insert(radius[mask],0,[0])
         #ydata = np.insert(ydata[mask],0,[0])
-        rN = rN[mask]
+        radius = radius[mask]
         ydata = ydata[mask]
 
         plt.subplot(numRows,numCols,whichPlot+1)
-        plt.plot(rN, ydata,linespec,linewidth=sfincsLinewidth,color=mycolor)
-        plt.xlim([0,1])
+        plt.plot(radius, ydata,linespec,linewidth=sfincsLinewidth,color=mycolor)
+        plt.xlim([min_radius,max_radius])
         plt.plot([0,1],[0,0],':k')
-        plt.xlabel('r/a=sqrt(s)')
+        plt.xlabel(radius_label)
         plt.title(label,fontsize=10)
 
-        rN = np.insert(rN,0,[0])
+        radius = np.insert(radius,0,[0])
         ydata = np.insert(ydata,0,[0])
 
         if whichPlot==0:
-            dataToSave.append(rN)
+            dataToSave.append(radius)
         dataToSave.append(ydata)
 
         oldLabel = data['ylabels'][whichPlot]
@@ -184,7 +201,7 @@ for whichDirectory in [1]:
             exit(1)
 
 f.write('\n')
-for i in range(len(rN)):
+for i in range(len(radius)):
     for j in range(len(dataToSave)):
         if j>0:
             f.write(', ')
