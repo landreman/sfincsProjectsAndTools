@@ -1,9 +1,16 @@
-function [out,missing]=getresults(directory,sortafter)
+function [out,missing]=getresults(directory,sortafter,varargin)
 % Retrieves the output from the sfincs runs with the same discretisation
 % in the numbered subdirectories in "directory". 
 % Only succesful runs are loaded. The output struct "out"
 % is sorted after the vaiable with the name in the input "sortafter"
 %directory
+
+load_unfinished_too=0;
+if nargin>2
+  if strcmp(varargin{1},'load unfinished too')
+    load_unfinished_too=1;
+  end
+end
 
 if nargin==2
   H=loadallh5(directory,sortafter);
@@ -157,6 +164,23 @@ for hind=1:length(H)
       out.dTHatdpsiN(ind,:)  =H{hind}.dTHatdpsiN;      
       out.dPhiHatdpsiN(ind)  =H{hind}.dPhiHatdpsiN;
       out.EParallelHat(ind)  =H{hind}.EParallelHat;
+      out.withAdiabatic(ind) =(H{hind}.withAdiabatic==H{hind}.integerToRepresentTrue);
+      if out.withAdiabatic(ind)
+        out.adiabaticZ(ind)=H{hind}.adiabaticZ;
+        out.adiabaticMHat(ind)=H{hind}.adiabaticMHat;
+        out.adiabaticNHat(ind)=H{hind}.adiabaticNHat;
+        out.adiabaticTHat(ind)=H{hind}.adiabaticTHat;
+      end
+      if isfield(H{hind},'withNBIspec')
+        out.withNBIspec(ind)   =(H{hind}.withNBIspec==H{hind}.integerToRepresentTrue);
+        if out.withNBIspec(ind)
+          out.NBIspecZ(ind)=H{hind}.NBIspecZ;
+          out.NBIspecNHat(ind)=H{hind}.NBIspecNHat;
+        end
+      else
+        out.withNBIspec(ind)=0;
+      end
+      out.includePhi1(ind)   =(H{hind}.includePhi1==H{hind}.integerToRepresentTrue);
     end
     if out.RHSMode(ind)==2
        out.transportMatrix(ind,:,:)=H{hind}.transportMatrix;
@@ -181,28 +205,40 @@ for hind=1:length(H)
     end
     
     if out.RHSMode(ind)==1
-      if out.finished(ind)
+      if out.finished(ind) || (load_unfinished_too && out.includePhi1(ind))
         if isfield(H{hind},'NTV')
-          out.NTV(ind,:)                  =H{hind}.NTV';
-          out.particleFlux_vm_psiN(ind,:) =H{hind}.particleFlux_vm_psiN';
-          out.particleFlux_vm0_psiN(ind,:) =H{hind}.particleFlux_vm0_psiN';
-          out.heatFlux_vm_psiN(ind,:)     =H{hind}.heatFlux_vm_psiN';
-          out.heatFlux_vm0_psiN(ind,:)     =H{hind}.heatFlux_vm0_psiN';
-          out.momentumFlux_vm_psiN(ind,:) =H{hind}.momentumFlux_vm_psiN';
-          out.FSABFlow(ind,:)             =H{hind}.FSABFlow';
-          out.FSABjHat(ind,1)             =H{hind}.FSABjHat';
-          if Nsp>1
-            out.flow{ind}                    =permute(H{hind}.flow,[3,2,1]);
-            out.densityPerturbation{ind}     =permute(H{hind}.densityPerturbation,[3,2,1]);
-            out.pressurePerturbation{ind}    =permute(H{hind}.pressurePerturbation,[3,2,1]);
-            out.pressureAnisotropy{ind}      =permute(H{hind}.pressureAnisotropy,[3,2,1]);
-            out.NTVBeforeSurfaceIntegral{ind}=permute(H{hind}.NTVBeforeSurfaceIntegral,[3,2,1]);
+          out.NTV(ind,:)                  =H{hind}.NTV(:,end)';
+          out.particleFlux_vm_psiN(ind,:) =H{hind}.particleFlux_vm_psiN(:,end)';
+          out.particleFlux_vm0_psiN(ind,:) =H{hind}.particleFlux_vm0_psiN(:,end)';
+          out.heatFlux_vm_psiN(ind,:)     =H{hind}.heatFlux_vm_psiN(:,end)';
+          out.heatFlux_vm0_psiN(ind,:)     =H{hind}.heatFlux_vm0_psiN(:,end)';
+          out.momentumFlux_vm_psiN(ind,:) =H{hind}.momentumFlux_vm_psiN(:,end)';
+          out.FSABFlow(ind,:)             =H{hind}.FSABFlow(:,end)';
+          out.FSABjHat(ind,1)             =H{hind}.FSABjHat(:,end)';
+          if length(size(H{hind}.flow))==4 %Phi1 was included and iterations are the
+                                           %last dimension
+                                           %assume several species for now, I may have to update
+            out.flow{ind}                    =permute(squeeze(H{hind}.flow(:,:,:,end)),[3,2,1]);
+            out.densityPerturbation{ind}     =permute(squeeze(H{hind}.densityPerturbation(:,:,:,end)),[3,2,1]);
+            out.pressurePerturbation{ind}    =permute(squeeze(H{hind}.pressurePerturbation(:,:,:,end)),[3,2,1]);
+            out.pressureAnisotropy{ind}      =permute(squeeze(H{hind}.pressureAnisotropy(:,:,:,end)),[3,2,1]);
+            out.NTVBeforeSurfaceIntegral{ind}=permute(squeeze(H{hind}.NTVBeforeSurfaceIntegral(:,:,:,end)),[3,2,1]);
+            out.dPhi1Hatdtheta{ind}          =squeeze(H{hind}.dPhi1Hatdtheta(:,:,end))';
+            out.dPhi1Hatdzeta{ind}           =squeeze(H{hind}.dPhi1Hatdzeta(:,:,end))';
           else
-            out.flow{ind}                    =H{hind}.flow';
-            out.densityPerturbation{ind}     =H{hind}.densityPerturbation';
-            out.pressurePerturbation{ind}    =H{hind}.pressurePerturbation';
-            out.pressureAnisotropy{ind}      =H{hind}.pressureAnisotropy';
-            out.NTVBeforeSurfaceIntegral{ind}=H{hind}.NTVBeforeSurfaceIntegral';
+            if Nsp>1
+              out.flow{ind}                    =permute(H{hind}.flow,[3,2,1]);
+              out.densityPerturbation{ind}     =permute(H{hind}.densityPerturbation,[3,2,1]);
+              out.pressurePerturbation{ind}    =permute(H{hind}.pressurePerturbation,[3,2,1]);
+              out.pressureAnisotropy{ind}      =permute(H{hind}.pressureAnisotropy,[3,2,1]);
+              out.NTVBeforeSurfaceIntegral{ind}=permute(H{hind}.NTVBeforeSurfaceIntegral,[3,2,1]);
+            else
+              out.flow{ind}                    =H{hind}.flow';
+              out.densityPerturbation{ind}     =H{hind}.densityPerturbation';
+              out.pressurePerturbation{ind}    =H{hind}.pressurePerturbation';
+              out.pressureAnisotropy{ind}      =H{hind}.pressureAnisotropy';
+              out.NTVBeforeSurfaceIntegral{ind}=H{hind}.NTVBeforeSurfaceIntegral';
+            end
           end
         else
           out.finished(ind)=-1;

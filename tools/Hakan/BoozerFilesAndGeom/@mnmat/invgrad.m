@@ -6,7 +6,9 @@ Nu_even=isnan(Fmn.s(end,Fmn.n0ind));
 if nargin==2
   %Only one argument given. Calculate two outputs whose u resp v derivatives equal Fmn.
   Nperiods=varargin{1};
-  
+  if length(Nperiods)>1
+    error('invgrad.m: Nperiods must be a scalar!')
+  end
   if get00(F)~=0
     error('There is a 00 component in an mnmat to be integrated!')
   end

@@ -913,8 +913,9 @@ if 1
   [Booz,Pest]=interp2straightfieldlinecoords(Booz,Pest,Dzetacylphi,'ptheta','pzeta');
   Ham.Dzetapzeta=interp2_cyclic(Booz.theta,Booz.zeta,Booz.Dzetapzeta,Ham.theta,Ham.zeta,NPeriods);
   Ham.Dphipzeta=Ham.Dzetapzeta-Ham.Dzetaphi;
-  Ham.pzeta=Ham.phi+Ham.Dzetaphi;
-  Ham.ptheta=Ham.vthet+iota*Ham.Dzetaphi;
+  Ham.Dpzetaphi=-Ham.Dphipzeta;
+  Ham.pzeta=Ham.phi+Ham.Dpzetaphi;
+  Ham.ptheta=Ham.vthet+iota*Ham.Dpzetaphi;
   Pest.Dzetaphi=interp2_cyclic(Booz.theta,Booz.zeta,Booz.Dzetaphi,Pest.theta,Pest.zeta,NPeriods);
   Pest.Dpzetaphi=Pest.Dzetaphi-Pest.Dzetapzeta;
   Pest.phi=Pest.pzeta-Pest.Dpzetaphi;
