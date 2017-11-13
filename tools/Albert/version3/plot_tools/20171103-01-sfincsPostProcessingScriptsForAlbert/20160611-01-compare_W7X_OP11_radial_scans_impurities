@@ -1,0 +1,267 @@
+#!/usr/bin/env python
+
+impurityName = 'O8+'
+
+min_rN = 0.075
+#min_rN = 0.1
+
+#Nspecies = 2
+
+import matplotlib
+import sys
+
+makePDF = False
+dirs = []
+for whichFile in range(1,len(sys.argv)):
+    if sys.argv[whichFile]=='pdf':
+        makePDF = True
+    else:
+        dirs.append(sys.argv[whichFile])
+
+if makePDF:
+    matplotlib.use('PDF')
+    # Change default font size
+    #font = {'size':6}
+    #matplotlib.rc('font', **font)
+    #matplotlib.rc('lines',markeredgewidth=0,markersize=3,linewidth=0.5)
+    #matplotlib.rc('axes',linewidth=0.7)
+
+
+import matplotlib.pyplot as plt
+import numpy as np
+import inspect, os, pickle
+from scipy.io import netcdf
+import string
+
+#if len(sys.argv) != 1:
+#    print "Error! You must specify 1 or more arguments: the answers_plot.XXX file(s)."
+#    exit(1)
+
+matplotlib.rcParams.update({'font.size': 10})
+
+maxNspecies=1
+for whichDirectory in range(len(dirs)):
+
+    inputFile = open(dirs[whichDirectory]+'/sfincsScan.dat','rb')
+    data=pickle.load(inputFile)
+    inputFile.close()
+    Nspecies = data['Nspecies']
+    maxNspecies = np.max((maxNspecies,Nspecies))
+
+if maxNspecies==2:
+    myFigsize=(11,8.5)
+    numRows=3
+    numCols=4
+elif maxNspecies==3:
+    myFigsize=(17,8.5)
+    numRows=3
+    numCols=6
+else:
+    myFigsize=(11,8.5)
+    numCols = np.ceil(np.sqrt(numPlots))
+    numRows = np.ceil(numPlots/numCols)
+
+if makePDF:
+    fig = plt.figure(figsize=myFigsize)
+else:
+    fig = plt.figure(figsize=myFigsize)
+
+fig.patch.set_facecolor('white')
+
+
+numPlots = maxNspecies*5+2
+# For each species, plot n, T, V, Gamma, q.
+# Also plot ambipolar Er & J_bs
+#numCols = np.ceil(np.sqrt(numPlots))
+#numRows = np.ceil(numPlots/numCols)
+
+factor = 437695 * 1e20 * 1.602177e-19 / (1e6)
+sfincsLinewidth=1.7
+
+#colors=['r','b','limegreen']
+colors=['b','r']
+#colors=['r','limegreen','b']
+
+#[head,extension] = os.path.split(os.getcwd())
+#f = open(extension+".sfincsResults",'w')
+#f.write('r/a=sqrt(s)')
+# For future use, in case I want to plot multiple scans on the same axes:
+for whichDirectory in range(len(dirs)):
+    if whichDirectory==0:
+        linespec0='+'
+    else:
+        linespec0='.'
+    print "Processing directory",whichDirectory
+    inputFile = open(dirs[whichDirectory]+'/sfincsScan.dat','rb')
+    data=pickle.load(inputFile)
+    inputFile.close()
+    Nspecies = data['Nspecies']
+
+    dataToSave = []
+    for whichPlot in range(Nspecies*5+2):
+        #f.write(', ')
+
+        if whichPlot<2*Nspecies:
+            linespec=linespec0+'-'
+        else:
+            linespec=linespec0
+
+        #index = 10
+        #desiredLabel='FSABjHat'
+        #if data['ylabels'][index] != desiredLabel:
+        #    print "Error! At the index where I expected "+desiredLabel+", I instead found ",data['ylabels'][index]
+        rN = np.array(data['xdata'][whichPlot])
+        #FSABjHat = np.array(data['ydata'][index]) * factor
+        #ylabel = data['ylabel'][whichPlot]
+
+        whichPlot_new = -1
+
+        oldLabel = data['ylabels'][whichPlot]
+        if oldLabel.find('nHat, species 1') == 0:
+            label = 'Density (e)\n[m^-3]'
+            factor = 1e20
+            whichPlot_new = 0
+        elif oldLabel.find('nHat, species 2') ==0:
+            label = 'Density (H)\n[m^-3]'
+            factor = 1e20
+            whichPlot_new = 1
+        elif oldLabel.find('nHat, species 3') ==0:
+            label = 'Density ('+impurityName+')\n[m^-3]'
+            factor = 1e20
+            whichPlot_new = 2
+        elif oldLabel.find('THat, species 1')==0:
+            label = 'Temperature (e) [keV]'
+            factor = 1
+            whichPlot_new = maxNspecies
+        elif oldLabel.find('THat, species 2')==0:
+            label = 'Temperature (H) [keV]'
+            factor = 1
+            whichPlot_new = maxNspecies+1
+        elif oldLabel.find('THat, species 3')==0:
+            label = 'Temperature ('+impurityName+') [keV]'
+            factor = 1
+            whichPlot_new = maxNspecies+2
+        elif oldLabel.find('Ambipolar Er')==0:
+            label = 'Ambipolar Er [kV/m]'
+            factor = 1
+            whichPlot_new = maxNspecies*2
+        elif oldLabel.find('FSABFlow (species 1)')==0:
+            label = '<V dot B> (e) [T km / s]'
+            nHat = np.array(data['ydata'][0])
+            factor = 437695 / nHat / 1000
+            whichPlot_new = maxNspecies*2+1
+        elif oldLabel.find('FSABFlow (species 2)')==0:
+            label = '<V dot B> (H) [T km / s]'
+            nHat = np.array(data['ydata'][1])
+            factor = 437695 / nHat / 1000
+            whichPlot_new = maxNspecies*2+4
+        elif oldLabel.find('FSABFlow (species 3)')==0:
+            label = '<V dot B> ('+impurityName+') [T km / s]'
+            nHat = np.array(data['ydata'][2])
+            factor = 437695 / nHat / 1000
+            whichPlot_new = maxNspecies*2+7
+        elif oldLabel.find('particleFlux rHat (species 1')==0:
+            label = 'Particle flux (e)\n[s^-1 m^-2]'
+            factor = (1e20)*(437695) # nBar * vBar, so radial flux now has units of 1 /(s*m^2)
+            whichPlot_new = maxNspecies*2+2
+        elif oldLabel.find('particleFlux rHat (species 2')==0:
+            label = 'Particle flux (H)\n[s^-1 m^-2]'
+            factor = (1e20)*(437695) # nBar * vBar, so radial flux now has units of 1 /(s*m^2)
+            whichPlot_new = maxNspecies*2+5
+        elif oldLabel.find('particleFlux rHat (species 3')==0:
+            label = 'Particle flux ('+impurityName+')\n[s^-1 m^-2]'
+            factor = (1e20)*(437695) # nBar * vBar, so radial flux now has units of 1 /(s*m^2)
+            whichPlot_new = maxNspecies*2+8
+        elif oldLabel.find('heatFlux rHat (species 1')==0:
+            label = 'Heat flux (e) [kW / m^2]'
+            factor = (1e20)*(1.6726e-27)*(437695 ** 3)/(1e3) # * nBar * mBar * vBar^3 / RBar / 1e6, so units become MW/(m^2)
+            whichPlot_new = maxNspecies*2+3
+        elif oldLabel.find('heatFlux rHat (species 2')==0:
+            label = 'Heat flux (H) [kW / m^2]'
+            factor = (1e20)*(1.6726e-27)*(437695 ** 3)/(1e3) # * nBar * mBar * vBar^3 / RBar / 1e6, so units become MW/(m^2)
+            whichPlot_new = maxNspecies*2+6
+        elif oldLabel.find('heatFlux rHat (species 3')==0:
+            label = 'Heat flux ('+impurityName+') [kW / m^2]'
+            factor = (1e20)*(1.6726e-27)*(437695 ** 3)/(1e3) # * nBar * mBar * vBar^3 / RBar / 1e6, so units become MW/(m^2)
+            whichPlot_new = maxNspecies*2+9
+        elif oldLabel.find('FSABjHat')==0:
+            label = '<J dot B> [kA T / m^3]'
+            factor = 437695 * 1e20 * 1.602177e-19 / (1e3)
+            whichPlot_new = maxNspecies*5+1
+
+        if whichPlot_new<0:
+            print "Error! I did not recognize the label ",oldLabel
+            exit(1)
+
+        print "oldLabel:",oldLabel,', whichPlot:',whichPlot,", new:",whichPlot_new
+        #f.write(string.replace(label,'\n',' '))
+        ydata = np.array(data['ydata'][whichPlot]) * factor
+
+        mask = rN >= min_rN
+        rN = rN[mask]
+        ydata = ydata[mask]
+
+        #if whichPlot<Nspecies*2:
+        #    whichPlot_new = whichPlot
+        #elif whichPlot==Nspecies*5+1:
+        #    whichPlot_new = maxNspecies*5+1
+        #else:
+            
+
+        if whichPlot==0:
+            dataToSave.append(rN)
+        dataToSave.append(ydata)
+        plt.subplot(numRows,numCols,whichPlot_new+1)
+        plt.plot(rN, ydata,linespec,linewidth=sfincsLinewidth,color=colors[whichDirectory],label=dirs[whichDirectory])
+        plt.xlim([0,1])
+        plt.plot([0,1],[0,0],':k')
+        plt.xlabel('r/a=sqrt(s)')
+        plt.title(label,fontsize=10)
+        if whichPlot==0:
+            #plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3, borderaxespad=0., prop={'size':9})
+            plt.legend(bbox_to_anchor=(0., 1.2, 1., .102), loc=3, borderaxespad=0., prop={'size':9})
+
+        #oldLabel = data['ylabels'][whichPlot]
+        #if oldLabel.find(shouldBe) != 0:
+        #    print "ERROR!!! I was expecting to find "+shouldBe+" but instead found "+oldLabel
+        #    print "whichPlot=",whichPlot
+        #    exit(1)
+
+#f.write('\n')
+#for i in range(len(rN)):
+#    for j in range(len(dataToSave)):
+#        if j>0:
+#            f.write(', ')
+#        f.write('{:20.14g}'.format(dataToSave[j][i]))
+#    f.write('\n')
+#f.close()
+
+#plt.subplots_adjust(left=0.07,bottom=0.1,right=0.98,top=0.93,wspace=0.32,hspace=0.50)
+plt.subplots_adjust(left=0.07,bottom=0.1,right=0.98,top=0.87,wspace=0.32,hspace=0.50)
+
+#plt.ylabel('- <j dot B> [MA T / m^2]')
+#plt.legend(loc=0,fontsize=11)
+#plt.subplots_adjust(left=0.08,bottom=0.14,right=0.97,top=0.90)
+#plt.ylim([0,10])
+#plt.plot([0,1],[0,0],':k')
+#plt.title('Bootstrap current density for fixed p(r), varying collisionality.\nA=6 pilot plant, free-boundary equilibrium (ns=199), straight-outer-leg coils.')
+
+#titleString = "Plot generated by "+ inspect.getfile(inspect.currentframe()) + "\nRun in "+os.getcwd()
+#titleString = "Plotting data in "+os.path.abspath(filename)
+#(head,tail) = os.path.split(os.path.abspath(filename))
+#titleString = "Plotting data file "+tail+"\nIn "+head
+#plt.figtext(0.5,0.99,titleString,horizontalalignment='center',verticalalignment='top')
+
+titleString = "Plot generated by "+ os.path.abspath(inspect.getfile(inspect.currentframe()))
+plt.figtext(0.5,0.01,titleString,horizontalalignment='center',verticalalignment='bottom',fontsize=8)
+
+#titleString = "Scan directory "+ os.getcwd()
+#plt.figtext(0.5,0.99,titleString,horizontalalignment='center',verticalalignment='top',fontsize=8)
+
+if makePDF:
+    print "Saving PDF"
+    plt.savefig(os.path.basename(__file__) + ".pdf", orientation = 'landscape', papertype='letter')
+    plt.savefig(extension + ".pdf", orientation = 'landscape', papertype='letter')
+else:
+    plt.show()
+
