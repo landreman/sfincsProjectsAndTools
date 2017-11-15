@@ -37,6 +37,7 @@ else
   error('Radial variable not recognised!')
 end
 
+
 if length(NPeriod)==1
   NPeriods=NPeriod*ones(size(iotas));
 else
