@@ -93,15 +93,16 @@ elseif nargin>=3 %Both dduGmn and ddvGmn are given and Gmn is sought
   Gmn.c=zeros(size(dduGmn.c));
   Gmn.s=zeros(size(dduGmn.s));
   
-  nnon0=Gmn.n0ind+1:size(Gmn.c,2);
+  nnon0_form0=Gmn.n0ind+1:size(Gmn.c,2);
+  nnon0=[1:Gmn.n0ind-1,Gmn.n0ind+1:size(Gmn.c,2)];
   
   %Two options that should be equivalent
   if method
     Gmn.s(2:end,:) =  dduGmn.c(2:end,:)./dduGmn.m(2:end,:);
     Gmn.c(2:end,:) = -dduGmn.s(2:end,:)./dduGmn.m(2:end,:);
 
-    Gmn.s(1,nnon0) = -ddvGmn.c(1,nnon0)./(ddvGmn.n(1,nnon0)*Nperiods);
-    Gmn.c(1,nnon0) =  ddvGmn.s(1,nnon0)./(ddvGmn.n(1,nnon0)*Nperiods);
+    Gmn.s(1,nnon0_form0) = -ddvGmn.c(1,nnon0_form0)./(ddvGmn.n(1,nnon0_form0)*Nperiods);
+    Gmn.c(1,nnon0_form0) =  ddvGmn.s(1,nnon0_form0)./(ddvGmn.n(1,nnon0_form0)*Nperiods);
   else
     Gmn.s(:,nnon0) = -ddvGmn.c(:,nnon0)./(ddvGmn.n(:,nnon0)*Nperiods);
     Gmn.c(:,nnon0) =  ddvGmn.s(:,nnon0)./(ddvGmn.n(:,nnon0)*Nperiods);

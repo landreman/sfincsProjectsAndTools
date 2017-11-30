@@ -6,7 +6,7 @@ from bcgeom import bcgeom
 
 class mnmat:
     
-    def __init__(self,input,Ntheta=None,Nzeta=None,Nperiods=None,rind=None,quantity='B'):
+    def __init__(self,input,Ntheta=None,Nzeta=None,Nperiods=None,rind=None,quantity='B',vmecgrid='half'):
         #Note that rind and quantity are only needed if input is a bcgeom
         if isinstance(input, int):
             input=float(input)
@@ -164,17 +164,68 @@ class mnmat:
             self.c=tmp.c
             self.s=tmp.s
 
+        elif isinstance(input, vmecgeom):
+            #quantity can be R,Z,B,lambda,B_u or B_w where (u,w,s) is RH and w=-v. (u,v,s) is the LH VMEC system.
+            lista=mnlist(input,rind=rind,quantity=quantity,vmecgrid=vmecgrid)
+            tmp=mnmat(lista,Ntheta,Nzeta)
+            self.Nperiods=tmp.Nperiods
+            self.Ntheta  =tmp.Ntheta
+            self.Nzeta   =tmp.Nzeta
+
+            maxm=(self.Ntheta-1)/2
+            Nm=maxm+1
+            maxabsn=(self.Nzeta-1)/2
+            Nn=self.Nzeta
+            self.m,self.n=np.mgrid[0:Nm,-maxabsn:maxabsn+1]
+             
+            self.m0ind   =tmp.m0ind
+            self.n0ind   =tmp.n0ind
+            self.c=tmp.c
+            self.s=tmp.s
             
+
+
+
+                
     #-----------------------------------------------------------------------
     # Other functions
     #-----------------------------------------------------------------------
     def __add__(self,other):
         if isinstance(other, mnmat):
-            summa=mnmat(0)
+            summa=mnmat(0,Ntheta=self.Ntheta,Nzeta=self.Nzeta,Nperiods=self.Nperiods)
             summa.c=self.c+other.c            
             summa.s=self.c+other.s            
             return summa
 
+    def __sub__(self,other):
+        if isinstance(other, mnmat):
+            difference=mnmat(0,Ntheta=self.Ntheta,Nzeta=self.Nzeta,Nperiods=self.Nperiods)
+            difference.c=self.c-other.c            
+            difference.s=self.c-other.s            
+            return difference
+        
+    def __neg__(self):
+        difference=mnmat(0,Ntheta=self.Ntheta,Nzeta=self.Nzeta,Nperiods=self.Nperiods)
+        difference.c=-self.c
+        difference.s=-self.c
+        return difference
+
+    def __mul__(self,other):
+        if isinstance(other, mnmat):
+            sys.exit('Cannot multiply two mnmats')
+        out=copy.deepcopy(self)
+        out.c=self.c*other
+        out.s=self.s*other
+        return out
+        
+    def __rmul__(self,other):
+        if isinstance(other, mnmat):
+            sys.exit('Cannot multiply two mnmats')
+        out=copy.deepcopy(self)
+        out.c=self.c*other
+        out.s=self.s*other
+        return out
+        
     def disp(self):
         if not(self.Nperiods is None):
             print 'Nperiods='+str(self.Nperiods)
@@ -308,4 +359,39 @@ class mnmat:
         outmn.c[outmn.m0ind,outmn.n0ind]=0
         outmn.s[outmn.m0ind,outmn.n0ind]=np.nan
 
+        return outmn
+
+    def invgrad(self,dGdv,method=1):
+        Gmn=copy.deepcopy(self)
+        dduGmn=self
+        if dGdu.c[self.m0ind,self.n0ind]!=0:
+            sys.exit('There is a 00 component in an mnmat to be integrated!')
+        if dGdv.c[self.m0ind,self.n0ind]!=0:
+            sys.exit('There is a 00 component in an mnmat to be integrated!')
+
+        #Two options that should be equivalent
+        if method==1:
+            Gmn.s[1:,:] =  dduGmn.c[1:,:]./dduGmn.m[1:,:];
+            Gmn.c[1:,:] = -dduGmn.s[1:,:]./dduGmn.m[1:,:];
+
+            Gmn.s[0,Gmn.n0ind+1:] = -ddvGmn.c[0,Gmn.n0ind+1:]/[ddvGmn.n[0,Gmn.n0ind+1:]*Gmn.Nperiods];
+            Gmn.c[0,Gmn.n0ind+1:] =  ddvGmn.s[0,Gmn.n0ind+1:]/[ddvGmn.n[0,Gmn.n0ind+1:]*Gmn.Nperiods];
+        else:
+            Gmn.s[:,Gmn.n0ind+1:] = -ddvGmn.c[:,Gmn.n0ind+1:]/[ddvGmn.n[:,Gmn.n0ind+1:]*Gmn.Nperiods];
+            Gmn.c[:,Gmn.n0ind+1:] =  ddvGmn.s[:,Gmn.n0ind+1:]/[ddvGmn.n[:,Gmn.n0ind+1:]*Gmn.Nperiods];
+            Gmn.s[1:,:Gmn.n0ind-1] = -ddvGmn.c[1:,:Gmn.n0ind-1]/[ddvGmn.n[1:,:Gmn.n0ind-1]*Gmn.Nperiods];
+            Gmn.c[1:,:Gmn.n0ind-1] =  ddvGmn.s[1:,:Gmn.n0ind-1]/[ddvGmn.n[1:,:Gmn.n0ind-1]*Gmn.Nperiods];
+    
+            Gmn.s[1:,Gmn.n0ind] =  dduGmn.c[1:,Gmn.n0ind]./dduGmn.m[1:,Gmn.n0ind];
+            Gmn.c[1:,Gmn.n0ind] = -dduGmn.s[1:,Gmn.n0ind]./dduGmn.m[1:,Gmn.n0ind];    
+            
+            
+        return Gmn
+
+    def get00(self):
+        return self.c[outmn.m0ind,outmn.n0ind]
+            
+    def remove00(self):
+        outmn=copy.deepcopy(self)
+        outmn.c[outmn.m0ind,outmn.n0ind]=0
         return outmn
