@@ -33,7 +33,7 @@ out.s = arg.c./(iota*arg.m-Nperiods*arg.n);
 
 m_tmp=out.m;
 m_tmp(out.m0ind,:)=10*eps; %to avoid division by zero
-badinds=find(abs(out.n./m_tmp*NPeriods - iota)<zeroout_Deltaiota);
+badinds=find(abs(out.n./m_tmp*Nperiods - iota)<zeroout_Deltaiota);
 out.c(badinds)=0;
 out.s(badinds)=0; 
 
