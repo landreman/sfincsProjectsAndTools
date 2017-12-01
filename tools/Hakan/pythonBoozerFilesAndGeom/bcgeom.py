@@ -1,8 +1,11 @@
 #!/usr/bin/env python
 import numpy as np
 import sys
-#from mnlist import mnlist
-#from mnmat import mnmat
+
+import mnlist
+import mnmat
+from vmecgeom import vmecgeom
+import fluxcoorddiscr
 
 class headertxt:
   def __init__(self):
@@ -457,6 +460,7 @@ class bcgeom:
            self.B=modesb
            self.Bnorm=modesbnorm
            self.B00=B00
+           self.Bfilter=Bfiltr()
            self.Bfilter.min_Bmn  = min_Bmn
            self.Bfilter.max_m    = max_m
            self.Bfilter.maxabs_n = maxabs_n
@@ -470,13 +474,19 @@ class bcgeom:
            if not(self.newsigncorr):
                self.Bphi=-self.Bphi
                self.Btheta=-self.Btheta
+               
+    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  
+    #% Turn a loaded vmec dataset vmecgeom into a bcgeom
+    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  
     elif isinstance(input,vmecgeom):
         wout=input
         signchange=float(wout.signgs) #is -1, because vmec is left handed
+        self.StelSym=input.StelSym
+        self.newsigncorr=True
         self.headertext=headertxt()
         self.headertext.maincomment=('CC Converted from VMEC using HSs routines\n'+
-        'CC version_       = '+str(self.version_)+'\n'+
-        'CC input_extension= '+self.input_extension)
+        'CC version_       = '+str(wout.version_)+'\n'+
+        'CC input_extension= '+wout.input_extension)
         #'CC The phase convention (m theta - n phi) is used in this file.\n'+
         #'CC The coordinate system (r,theta,phi) is left-handed.\n'+
         #'CC Toroidal flux is counted positive in the direction of the toroidal coordinate.'
@@ -486,33 +496,34 @@ class bcgeom:
         self.nsurf= np.nan      #number of radial surfaces, Set this below
         self.Nperiods=wout.ns   #%!< number of field periods
         self.torfluxtot = wout.phi[wout.ns-1]*signchange
-        self.psi_a=Geom.torfluxtot/2/np.pi
+        self.psi_a=self.torfluxtot/2/np.pi
         self.minorradiusVMEC      = wout.Aminor_p  #minor plasma radius
         self.majorradiusLastbcR00 = np.nan         #Calculate this below (not necessary)
         self.minorradiusW7AS      = np.nan         #Calculate this below (not necessary)
         self.majorradiusVMEC      = wout.Rmajor_p  #major plasma radius
-        fullgrid_s           = wout.phi/wout.phi[wout.ns-1] #full grid
-        fullgrid_rnorm       = sqrt(fullgrid_s);     #full grid
+        fullgrid_s           = np.array(wout.phi/wout.phi[wout.ns-1]) #full grid
+        fullgrid_rnorm       = np.sqrt(fullgrid_s);     #full grid
 
         skip=wout.skip #=1,this is how many elements are skipped at low radii when going to half grid
 
-        self.s      = fullgrid_s(skip-1:-2)+fullgrid_s(skip:))/2  #half grid
-        self.rnorm  = sqrt(self.s) #half grid
+        self.s      = (fullgrid_s[skip-1:-1]+fullgrid_s[skip:])/2  #half grid
+        self.rnorm  = np.sqrt(self.s) #half grid
         self.nsurf  = len(self.s)
-        self.dpds   = np.array(np.diff(wout.presf[skip-1:])./np.diff(fullgrid_s[skip-1:])
-        self.Bphi        = wout.bvco[wout.skip:]*signchange #direction switch sign
-        self.Btheta      = wout.buco[wout.skip:] #sign change
+        self.dpds   = np.array(np.diff(wout.presf[skip-1:])/np.diff(fullgrid_s[skip-1:]))
+        self.Bphi        = wout.bvco[skip:]*signchange #direction switch sign
+        self.Btheta      = wout.buco[skip:] #sign change
 
         fullgrid_iota=wout.iotaf*signchange
         iota   = wout.iotas*signchange #half mesh
         self.iota=iota[skip:]
         
+        self.Bfilter=Bfiltr()
         self.Bfilter.min_Bmn  = min_Bmn
 
         #Use a RH coordinate system (u,w,s) with w=-v. Here, (u,v) are the VMEC coordinates
 
         if max_m==np.inf:
-          Ntheta = 1+2*max(abs(float(wout.xm)))
+          Ntheta = 1+2*max(abs(wout.xm))
           self.Bfilter.max_m    = (Ntheta-1)/2
         else:
           Ntheta = max_m*2+1
@@ -525,32 +536,72 @@ class bcgeom:
           Nzeta = maxabs_n*2+1
           self.Bfilter.maxabs_n = maxabs_n
 
-        dpds=np.array([])
-        dVdsoverNper=np.array([])
-        B00=np.array([])
-        R00=np.array([])
-        no_of_modes=np.array([])
-        modesm=[]
-        modesn=[]
-        modesr=[]
-        modesz=[]
-        modesp=[]
-        modesb=[]
-        modesbnorm=[]
-        modespar=[]
-         
+        self.dVdsoverNper=np.zeros(len(self.s)) 
+        self.B00    =np.zeros(len(self.s))
+        self.R00    =np.zeros(len(self.s))
+        self.nmodes =np.zeros(len(self.s))
+        self.m=[]
+        self.n=[]
+        if not(self.StelSym):
+            self.parity=[]
+        self.B=[]
+        self.R=[]
+        self.Z=[]
+        self.Bnorm=[]
+        self.Dphi=[]
+
+        print 'Converting VMEC to Boozer coordinates...'
         for rind in range(len(self.s)):
-            Booz=fluxcoorddiscr(wout,rind=rind,Ntheta=Ntheta,Nzeta=Nzeta,name='Boozer')
-        
-        self.nmodes=no_of_modes
-        self.m=modesm
-        self.n=modesn #sign is switched below
-        self.B=modesb
-        self.Bnorm=modesbnorm
-        self.B00=B00
-        self.R00=R00
-        self.R=modesr
-        self.Z=modesz
+            print '\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\bRadius%5i/%5i'% (rind+1,len(self.s)),
+            Booz=fluxcoorddiscr.fluxcoorddiscr(wout,rind=rind,Ntheta=Ntheta,Nzeta=Nzeta,name='Boozer')
+
+            self.B00[rind]=Booz.B00
+            self.R00[rind]=Booz.R00
+            if self.StelSym:
+                self.nmodes[rind]=(Ntheta*Nzeta+1)/2
+            else:
+                self.nmodes[rind]=Ntheta*Nzeta
+            self.dVdsoverNper[rind]=4*np.pi**2/self.Nperiods*abs(
+                self.psi_a*(self.Bphi[rind]+self.iota[rind]*self.Btheta[rind]))/Booz.FSAB2
+            
+            self.m.append(np.array([]))
+            self.n.append(np.array([]))
+            self.B.append(np.array([]))
+            self.Bnorm.append(np.array([]))
+            self.R.append(np.array([]))
+            self.Z.append(np.array([0]))    #m=n=0 cos element is 0
+            self.Dphi.append(np.array([0])) #m=n=0 cos element is 0
+            if not(self.StelSym):
+                self.parity.append(np.array([]))
+            
+            Blist=(mnmat.mnmat(Booz.B,Nperiods=self.Nperiods)).mnlist()
+            Rlist=(mnmat.mnmat(Booz.R,Nperiods=self.Nperiods)).mnlist()
+            Zlist=(mnmat.mnmat(Booz.Z,Nperiods=self.Nperiods)).mnlist()
+            Dphilist=(mnmat.mnmat(Booz.Dzetapzeta,Nperiods=self.Nperiods)).mnlist()
+
+            #NOTA BENE: The following works because Bmn.mnlist() gives first cos, then sin components of Bmn
+            if self.StelSym:
+                self.m[rind]   =np.append(self.m[rind],Blist.m[:(Ntheta*Nzeta+1)/2])
+                self.n[rind]   =np.append(self.n[rind],Blist.n[:(Ntheta*Nzeta+1)/2])
+                self.B[rind]   =np.append(self.B[rind],Blist.data[:(Ntheta*Nzeta+1)/2])
+                self.R[rind]   =np.append(self.R[rind],Rlist.data[:(Ntheta*Nzeta+1)/2])
+                self.Z[rind]   =np.append(self.Z[rind],Zlist.data[(Ntheta*Nzeta+1)/2:])
+                self.Dphi[rind]=np.append(self.Dphi[rind],Dphilist.data[(Ntheta*Nzeta+1)/2:])
+            else:
+                self.m[rind]=np.append(self.m[rind],Blist.m)
+                self.n[rind]=np.append(self.n[rind],Blist.n)
+                self.parity[rind]=np.append(self.parity[rind],Blist.cosparity)
+                self.B[rind]=np.append(self.B[rind],Blist.data)
+                self.R[rind]=np.append(self.R[rind],Rlist.data)
+                self.Z[rind]=np.append(self.Z[rind],np.concatenate((Zlist.data[(Ntheta*Nzeta+1)/2:],Zlist.data[1:(Ntheta*Nzeta+1)/2])))
+                self.Dphi[rind]=np.append(self.Dphi[rind],np.concatenate((Dphilist.data[(Ntheta*Nzeta+1)/2:],Dphilist.data[1:(Ntheta*Nzeta+1)/2])))
+                   
+            self.Bnorm[rind]=np.append(self.Bnorm[rind],self.B[rind]/Booz.B00)
+
+        #end radius loop
+        print '' #carriage return
+
+
           
 ####################################################################
   def disp(self,verbose=0):

@@ -1,13 +1,16 @@
 #!/usr/bin/env python
 import numpy as np
 import sys, copy
-from mnlist import mnlist
-from bcgeom import bcgeom
+#from mnlist import mnlist
+import mnlist
+import bcgeom
+import vmecgeom
 
 class mnmat:
     
-    def __init__(self,input,Ntheta=None,Nzeta=None,Nperiods=None,rind=None,quantity='B',vmecgrid='half'):
+    def __init__(self,input,Ntheta=None,Nzeta=None,Nperiods=None,rind=None,quantity='B',vmecgrid='half',warnings='off'):
         #Note that rind and quantity are only needed if input is a bcgeom
+
         if isinstance(input, int):
             input=float(input)
             
@@ -38,14 +41,16 @@ class mnmat:
             self.c=np.zeros((Nm,Nn))
             self.s=np.zeros((Nm,Nn))
             self.c[0,n0ind]=input
-            print('float input: '+str(self.c))
+            #print('float input: '+str(self.c))
 
         elif isinstance(input, np.ndarray): #This is the fft routine, Nperiods is required input
             Ntheta_size=input.shape[0]
             if Ntheta is None:
                 Ntheta=Ntheta_size
             elif Ntheta_size!=Ntheta:
-                sys.exit('Not implemented yet')
+                print 'Ntheta size of input: '+str(Ntheta_size)
+                print 'Ntheta parameter: '+str(Ntheta)
+                sys.exit('Ntheta differs from input size in mnmat fft routine for ndarrays! Not implemented yet.')
             else:
                 Ntheta=Ntheta_size
             self.Ntheta=Ntheta
@@ -54,7 +59,7 @@ class mnmat:
             if Nzeta is None:
                 Nzeta=Nzeta_size
             elif Nzeta_size!=Nzeta:
-                sys.exit('Not implemented yet')
+                sys.exit('Nzeta differs from input in mnmat fft routine for ndarrays! Not implemented yet.')
             else:
                 Nzeta=Nzeta_size
             self.Nzeta=Nzeta
@@ -87,7 +92,12 @@ class mnmat:
             #print(self.c)
             #print(self.s)
 
-        elif isinstance(input, mnlist):
+        elif isinstance(input, mnlist.mnlist):
+            #print input.m.shape
+            #print input.n.shape
+            #print input.data.shape
+            #print input.cosparity.shape
+            
             if input.Nperiods is None:
                 self.Nperiods=Nperiods
             elif not(Nperiods is None):
@@ -120,34 +130,39 @@ class mnmat:
             self.c=np.zeros((Nm,Nn))
             self.s=np.zeros((Nm,Nn))
 
-            if (input.m>maxm).any():
-                sys.exit('Increase Ntheta')
-            if (abs(input.n)>maxabsn).any():
-                sys.exit('Increase Nzeta')
+            if warnings=='on':
+                if (input.m>maxm).any():
+                    Ntheta_needed=max(input.m)*2+1
+                    sys.exit('Increase Ntheta to '+str(Ntheta_needed))
+                if (abs(input.n)>maxabsn).any():
+                    Nzeta_needed=max(abs(input.n))*2+1
+                    sys.exit('Increase Nzeta to '+str(Nzeta_needed))
             
             if input.cosparity.all():
                 #print(len(input.m))
                 for ind in range(len(input.m)):
                     #print('ind='+str(ind)+', m='+str(input.m[ind])+', n='+str(input.n[ind]))
-                    if input.m[ind]==0 and input.n[ind]<=0:
-                        self.c[0,n0ind-input.n[ind]]=input.data[ind]
-                    else:
-                        self.c[input.m[ind],n0ind+input.n[ind]]=input.data[ind]
+                    if input.m[ind]<=maxm and abs(input.n[ind])<=maxabsn:
+                        if input.m[ind]==0 and input.n[ind]<=0:
+                            self.c[0,n0ind-input.n[ind]]+=input.data[ind]            # (*)
+                        else:
+                            self.c[input.m[ind],n0ind+input.n[ind]]+=input.data[ind] #+= necessary because of (*)
             else:
                 for ind in range(len(input.m)):
-                    if input.m[ind]==0 and input.n[ind]<0 and input.cosparity[ind]==1:
-                        self.c[0,n0ind-input.n[ind]]=input.data[ind]
-                    elif input.m[ind]==0 and input.n[ind]<0 and input.cosparity[ind]==0:
-                        self.s[0,n0ind-input.n[ind]]=-input.data[ind]
-                    elif input.cosparity[ind]==1:
-                        self.c[input.m[ind],n0ind+input.n[ind]]=input.data[ind]
-                    else: #sinus component
-                        self.s[input.m[ind],n0ind+input.n[ind]]=input.data[ind]
+                    if input.m[ind]<=maxm and abs(input.n[ind])<=maxabsn:
+                        if input.m[ind]==0 and input.n[ind]<0 and input.cosparity[ind]==1:
+                            self.c[0,n0ind-input.n[ind]]+=input.data[ind]
+                        elif input.m[ind]==0 and input.n[ind]<0 and input.cosparity[ind]==0:
+                            self.s[0,n0ind-input.n[ind]]-=input.data[ind]
+                        elif input.cosparity[ind]==1:
+                            self.c[input.m[ind],n0ind+input.n[ind]]+=input.data[ind]
+                        else: #sinus component
+                            self.s[input.m[ind],n0ind+input.n[ind]]+=input.data[ind]
             #print('list input:')
             #print(self.c)
             #print(self.s)
-        elif isinstance(input, bcgeom):
-            lista=mnlist(input,rind=rind,quantity=quantity)
+        elif isinstance(input, bcgeom.bcgeom):
+            lista=mnlist.mnlist(input,rind=rind,quantity=quantity)
             tmp=mnmat(lista,Ntheta,Nzeta)
             self.Nperiods=tmp.Nperiods
             self.Ntheta  =tmp.Ntheta
@@ -164,10 +179,14 @@ class mnmat:
             self.c=tmp.c
             self.s=tmp.s
 
-        elif isinstance(input, vmecgeom):
+        elif isinstance(input, vmecgeom.vmecgeom):
             #quantity can be R,Z,B,lambda,B_u or B_w where (u,w,s) is RH and w=-v. (u,v,s) is the LH VMEC system.
-            lista=mnlist(input,rind=rind,quantity=quantity,vmecgrid=vmecgrid)
-            tmp=mnmat(lista,Ntheta,Nzeta)
+            lista=mnlist.mnlist(input,rind=rind,quantity=quantity,vmecgrid=vmecgrid)
+            #print 'shape of lista: '+str(lista.m.shape)
+            #print 'Ntheta='+str(Ntheta)
+            #print 'Nzeta='+str(Nzeta)
+
+            tmp=mnmat(lista,Ntheta=Ntheta,Nzeta=Nzeta)
             self.Nperiods=tmp.Nperiods
             self.Ntheta  =tmp.Ntheta
             self.Nzeta   =tmp.Nzeta
@@ -225,6 +244,21 @@ class mnmat:
         out.c=self.c*other
         out.s=self.s*other
         return out
+
+    def mnlist(self):
+        maxm=(self.Ntheta-1)/2
+        Nn=self.Nzeta
+        Ns=Nn*maxm+(Nn-1)/2
+        Nc=Ns+1
+        m_flat=self.m.flatten()
+        n_flat=self.n.flatten()
+        c_flat=self.c.flatten()
+        s_flat=self.s.flatten()
+        m=np.concatenate((m_flat[self.n0ind:],m_flat[self.n0ind+1:]))
+        n=np.concatenate((n_flat[self.n0ind:],n_flat[self.n0ind+1:]))
+        data=np.concatenate((c_flat[self.n0ind:],s_flat[self.n0ind+1:]))
+        cosparity=np.concatenate((np.ones(Nc),np.zeros(Ns)))
+        return mnlist.mnlist(m,n,data,cosparity,self.Nperiods)
         
     def disp(self):
         if not(self.Nperiods is None):
@@ -361,35 +395,37 @@ class mnmat:
 
         return outmn
 
-    def invgrad(self,dGdv,method=1):
+    def invgrad(self,ddvGmn,method=1):
         Gmn=copy.deepcopy(self)
+        Gmn.c[:,:]=0
+        Gmn.s[:,:]=0
         dduGmn=self
-        if dGdu.c[self.m0ind,self.n0ind]!=0:
+        if dduGmn.c[self.m0ind,self.n0ind]!=0:
             sys.exit('There is a 00 component in an mnmat to be integrated!')
-        if dGdv.c[self.m0ind,self.n0ind]!=0:
+        if ddvGmn.c[self.m0ind,self.n0ind]!=0:
             sys.exit('There is a 00 component in an mnmat to be integrated!')
 
         #Two options that should be equivalent
         if method==1:
-            Gmn.s[1:,:] =  dduGmn.c[1:,:]./dduGmn.m[1:,:];
-            Gmn.c[1:,:] = -dduGmn.s[1:,:]./dduGmn.m[1:,:];
+            Gmn.s[1:,:] =  dduGmn.c[1:,:]/dduGmn.m[1:,:];
+            Gmn.c[1:,:] = -dduGmn.s[1:,:]/dduGmn.m[1:,:];
 
             Gmn.s[0,Gmn.n0ind+1:] = -ddvGmn.c[0,Gmn.n0ind+1:]/[ddvGmn.n[0,Gmn.n0ind+1:]*Gmn.Nperiods];
             Gmn.c[0,Gmn.n0ind+1:] =  ddvGmn.s[0,Gmn.n0ind+1:]/[ddvGmn.n[0,Gmn.n0ind+1:]*Gmn.Nperiods];
         else:
             Gmn.s[:,Gmn.n0ind+1:] = -ddvGmn.c[:,Gmn.n0ind+1:]/[ddvGmn.n[:,Gmn.n0ind+1:]*Gmn.Nperiods];
             Gmn.c[:,Gmn.n0ind+1:] =  ddvGmn.s[:,Gmn.n0ind+1:]/[ddvGmn.n[:,Gmn.n0ind+1:]*Gmn.Nperiods];
-            Gmn.s[1:,:Gmn.n0ind-1] = -ddvGmn.c[1:,:Gmn.n0ind-1]/[ddvGmn.n[1:,:Gmn.n0ind-1]*Gmn.Nperiods];
-            Gmn.c[1:,:Gmn.n0ind-1] =  ddvGmn.s[1:,:Gmn.n0ind-1]/[ddvGmn.n[1:,:Gmn.n0ind-1]*Gmn.Nperiods];
+            Gmn.s[1:,:Gmn.n0ind] = -ddvGmn.c[1:,:Gmn.n0ind]/[ddvGmn.n[1:,:Gmn.n0ind]*Gmn.Nperiods];
+            Gmn.c[1:,:Gmn.n0ind] =  ddvGmn.s[1:,:Gmn.n0ind]/[ddvGmn.n[1:,:Gmn.n0ind]*Gmn.Nperiods];
     
-            Gmn.s[1:,Gmn.n0ind] =  dduGmn.c[1:,Gmn.n0ind]./dduGmn.m[1:,Gmn.n0ind];
-            Gmn.c[1:,Gmn.n0ind] = -dduGmn.s[1:,Gmn.n0ind]./dduGmn.m[1:,Gmn.n0ind];    
+            Gmn.s[1:,Gmn.n0ind] =  dduGmn.c[1:,Gmn.n0ind]/dduGmn.m[1:,Gmn.n0ind];
+            Gmn.c[1:,Gmn.n0ind] = -dduGmn.s[1:,Gmn.n0ind]/dduGmn.m[1:,Gmn.n0ind];    
             
             
         return Gmn
 
     def get00(self):
-        return self.c[outmn.m0ind,outmn.n0ind]
+        return self.c[self.m0ind,self.n0ind]
             
     def remove00(self):
         outmn=copy.deepcopy(self)
