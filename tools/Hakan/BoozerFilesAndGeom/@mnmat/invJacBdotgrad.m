@@ -19,9 +19,10 @@ if not(mod(sz(1),2)) || not(mod(sz(2),2))
   error('information loss if Nu or Nv even!')
 end
 
-if arg.c(out.m0ind,out.n0ind)~=0
-  error('The 00 component of the input has to be = 0!')
+if abs(arg.c(arg.m0ind,arg.n0ind))>100*eps
+  warning('The 00 component of the input has to be = 0!')
 end
+arg.c(arg.m0ind,arg.n0ind)=0;
 
 out.m=arg.m;
 out.n=arg.n;
