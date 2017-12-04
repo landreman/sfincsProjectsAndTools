@@ -20,7 +20,10 @@ if not(mod(sz(1),2)) || not(mod(sz(2),2))
 end
 
 if abs(arg.c(arg.m0ind,arg.n0ind))>100*eps
-  warning('The 00 component of the input has to be = 0!')
+  warning('The 00 component of the input to invJacBdotgrad.m has to be = 0!')
+end
+if abs(arg.c(arg.m0ind,arg.n0ind))>1e-6
+  error('The 00 component of the input to invJacBdotgrad.m has to be = 0!')
 end
 arg.c(arg.m0ind,arg.n0ind)=0;
 
