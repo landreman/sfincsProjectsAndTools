@@ -1,10 +1,26 @@
-function Booz=makeBoozfromVmec(woutin,s_wish,Nu,Nw,min_Bmn)
-
-%This routine has been tested and compared to jmc and/or booz2xform to find that B00
-%and R00 coincides.
-
-%woutin is the wout file name or just the netcdf variables from the wout file
+function Booz=makeBoozfromVmec(woutin,s_wish,Nu,Nw)
+% This function takes a vmec output file and produces a spatial 
+% discretisation of one flux surface in Boozer coordinates
+%
+% woutin is the wout file name or just the netcdf variables from the 
+% wout file loaded with readVMECstruct.m
 %(Too old matlab versions do not have the necessary netcdf routines.)
+%
+% s_wish is the normalised toroidal flux of the wanted surface. 
+% The Boozer discretisation for the surface with the closest value 
+% of s to s_wish will be given as output.
+%
+% Nu,Nw are the number of discretisation points in space in the 
+% poloidal and toroidal directions, respectively. 
+% Nota Bene! Nu and Nw have to be odd numbers!
+% If you choose them too small you might loose some Fourier modes.
+% Much higher than ~151 or so tends to make the Fouriertransformations slow
+% on some systems. 
+% 
+
+% This routine has been tested and compared to jmc and/or booz2xform to
+% find that B00 and R00 coincides.
+
 
 if isstruct(woutin)
   wout=woutin;

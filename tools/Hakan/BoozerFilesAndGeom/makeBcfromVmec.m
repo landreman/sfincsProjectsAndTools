@@ -123,7 +123,7 @@ tic
 for sind=1:length(Geom.s)
   fprintf(1,'\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b radius %i / %i',...
           sind,length(Geom.s));
-  Booz=makeBoozfromVmec(woutin,Geom.s(sind),Nu,Nw,min_Bmn);
+  Booz=makeBoozfromVmec(woutin,Geom.s(sind),Nu,Nw);
   fprintf(1,' ,  %3.1f s',round(10*toc)/10);
   Bmnlist=mnlist(Booz.mnmat.B);
   Rmnlist=mnlist(Booz.mnmat.R);
@@ -149,7 +149,7 @@ for sind=1:length(Geom.s)
   Geom.Bnorm{sind}=Geom.Bmn{sind}/Geom.B00(sind);
   Geom.R00(1,sind)=Booz.R00;
   Geom.Z00(1,sind)=Booz.Z00;
-  Geom.Z{sind}=NaN*ones(size(Geom.R{sind}));
+  Geom.Z{sind}=0*ones(size(Geom.R{sind}));
   for mnind=1:length(Zmnlist.m)
     ind=find(Geom.m{sind}==Zmnlist.m(mnind) & ...
              Geom.n{sind}==Zmnlist.n(mnind) & ...
@@ -157,7 +157,7 @@ for sind=1:length(Geom.s)
     Geom.Z{sind}(ind)=Zmnlist.data(mnind);
   end
   
-  Geom.Dphi{sind}=NaN*ones(size(Geom.R{sind}));
+  Geom.Dphi{sind}=0*ones(size(Geom.R{sind}));
   for mnind=1:length(Dzetawmnlist.m)
     ind=find(Geom.m{sind}==Dzetawmnlist.m(mnind) & ...
              Geom.n{sind}==Dzetawmnlist.n(mnind) & ...
@@ -187,6 +187,19 @@ for sind=1:length(Geom.s)
     Geom.Z{sind}=Geom.Z{sind}(good);
     Geom.Dphi{sind}=Geom.Dphi{sind}(good);   
   end
+
+  %Filter Bmns:
+  good=find(abs(Geom.Bmn{sind})>min_Bmn);
+  Geom.nmodes(1,sind)=length(good);
+  Geom.m{sind}=Geom.m{sind}(good);
+  Geom.n{sind}=Geom.n{sind}(good);
+  Geom.parity{sind}=Geom.parity{sind}(good);
+  Geom.Bmn{sind}=Geom.Bmn{sind}(good);
+  Geom.Bnorm{sind}=Geom.Bnorm{sind}(good);
+  Geom.R{sind}=Geom.R{sind}(good);
+  Geom.Z{sind}=Geom.Z{sind}(good);
+  Geom.Dphi{sind}=Geom.Dphi{sind}(good);   
+  
   
   Geom.FSAB2(1,sind)=Booz.FSAB2; %=Nu*Nw/sum(sum(1./Booz.B.^2));
   
@@ -232,8 +245,7 @@ if length(Geom.R00)==length(Geom.s) %just check that all were made.
     s_wish=0.995;
     Nu=121;
     Nv=121;
-    min_Bmn=0;
-    Booz=makeBoozfromVmec(wout,s_wish,Nu,Nv,min_Bmn);
+    Booz=makeBoozfromVmec(wout,s_wish,Nu,Nv);
     Geom.majorradiusLastbcR00=Booz.R00;
   end
 end
