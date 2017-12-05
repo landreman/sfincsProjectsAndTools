@@ -122,7 +122,7 @@ LegendNumberColumns = 1
 LegendBBoxToAnchor = [0.005, 0.58, 1., .102]
 
 ShowSubPlotLabel = False
-SubPlotLabel = '(c)'
+SubPlotLabel = '(f)'
 SubPlotLabelSize = 40
 #SubPlotLabelXcoord = 0.085
 #SubPlotLabelXcoord = 0.40
@@ -138,5 +138,6 @@ SubPlotLabelXcoord = 0.006 #CONTOUR PLOT WITHOUT COLORBAR W7-X_NBI_case_Q34Q78_Z
 #SubPlotLabelYcoord = 5.2
 #SubPlotLabelYcoord = 5.84 #CONTOUR PLOT WITHOUT COLORBAR LHD discharge 113208 at t = 4.64 s
 SubPlotLabelYcoord = 5.715 #CONTOUR PLOT WITHOUT COLORBAR W7-X_NBI_case_Q34Q78_Z10_Zeff2p0
+#SubPlotLabelYcoord = 5.55 #CONTOUR PLOT WITHOUT COLORBAR W7-X_NBI_case_Q34Q78_Z10_Zeff2p0
 #SubPlotLabelYcoord = 2.422
 #SubPlotLabelYcoord = 0.1

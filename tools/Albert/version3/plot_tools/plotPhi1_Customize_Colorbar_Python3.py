@@ -44,6 +44,14 @@ filename = 'sfincsOutput.h5'
 
 #FigSize = (12,10)
 
+FigSize = (10,12)
+LeftMargin = 0.01
+RightMargin = 0.5
+TopMargin = 0.99
+BottomMargin = 0.01
+zLabelPad = 45
+PhiLabelPad = 30
+
 #font = {'size':25}
 #matplotlib.rc('font', **font)
 #matplotlib.rc('lines',markeredgewidth=0,markersize=3,linewidth=2.5)
@@ -54,9 +62,9 @@ filename = 'sfincsOutput.h5'
 
 zFactor = 1000 ##kV -> V
 ##W7-X##
-xAxisTicks = [r'$0$', r'$\pi/10$', r'$2\pi/10$', r'$3\pi/10$', r'$4\pi/10$']
+#xAxisTicks = [r'$0$', r'$\pi/10$', r'$2\pi/10$', r'$3\pi/10$', r'$4\pi/10$']
 ##LHD
-#xAxisTicks = [r'$0$', r'$\pi/20$', r'$2\pi/20$', r'$3\pi/20$', r'$4\pi/20$']
+xAxisTicks = [r'$0$', r'$\pi/20$', r'$2\pi/20$', r'$3\pi/20$', r'$4\pi/20$']
 
 yAxisTicks = [r'$0$', r'$\pi/2$', r'$\pi$', r'$3\pi/2$', r'$2\pi$']
 
@@ -69,22 +77,22 @@ numCols = 1
 numContours = 100
 numShowLevels = 10
 
-ShowColorbar = False
+ShowColorbar = True
 
 #ScientificTicks = False
-#cbarTicks = [-200.0, -50.0, -20.0, -5.0, -1.0, 0.0, 1.0, 5.0, 20.0, 50.0, 200.0] # LHD discharge 113208 at t = 4.64 s
-cbarTicks = [-10.0, -5.0, -1.0, -0.5, 0.0, 0.5, 1.0, 5.0, 10.0] # W7-X_NBI_case_Q34Q78_Z10_Zeff2p0
+cbarTicks = [-200.0, -50.0, -20.0, -5.0, -1.0, 0.0, 1.0, 5.0, 20.0, 50.0, 200.0] # LHD discharge 113208 at t = 4.64 s
+#cbarTicks = [-10.0, -5.0, -1.0, -0.5, -0.1, 0.0, 0.1, 0.5, 1.0, 5.0, 10.0] # W7-X_NBI_case_Q34Q78_Z10_Zeff2p0
 #cbarTicks = [-5.0, -2.5 -1.0, -0.5, 0.0, 0.5, 1.0, 2.5, 5.0]
 #cbarTicks =None #None for automatic
 
-#zMin = -250.0 # LHD discharge 113208 at t = 4.64 s
-#zMax = 250.0 # LHD discharge 113208 at t = 4.64 s
-zMin = -15.0 # W7-X_NBI_case_Q34Q78_Z10_Zeff2p0
-zMax = 15.0 # W7-X_NBI_case_Q34Q78_Z10_Zeff2p0
+zMin = -250.0 # LHD discharge 113208 at t = 4.64 s
+zMax = 250.0 # LHD discharge 113208 at t = 4.64 s
+#zMin = -15.0 # W7-X_NBI_case_Q34Q78_Z10_Zeff2p0
+#zMax = 15.0 # W7-X_NBI_case_Q34Q78_Z10_Zeff2p0
 #zMin = None #None to get the default value
 #zMax = None #None to get the default value
 zLogAxis = True
-LinearThreshold = 0.1 #In symlog plot
+LinearThreshold = 1.0 #In symlog plot
 LinearScale = 1.0 #When linscale == 1.0 (the default), the space used for the positive and negative halves of the linear range will be equal to one decade in the logarithmic range.
 
 TickFormat = r'$%2.1f$'
@@ -92,7 +100,7 @@ TickFormat = r'$%2.1f$'
 #TickFormat = r'%2.1f'
 #TickFormat = ticker.FuncFormatter(fmt_cbar)
 
-PhiLabelPad = 30
+#PhiLabelPad = 30
 ExtendRectangle = True
 
 ContourLabelSize = 30
@@ -108,11 +116,11 @@ ColorMap = 'gist_rainbow'
 #ColorMap = 'hsv'
 ColorMap = 'rainbow'
 
-AddMaxMinBox = True
-#MaxMinBoxXcoord = 0.4177 # LHD discharge 113208 at t = 4.64 s
-MaxMinBoxXcoord = 2.016*0.4177 # W7-X_NBI_case_Q34Q78_Z10_Zeff2p0
-#MaxMinBoxYcoord = -1.25 # LHD discharge 113208 at t = 4.64 s
-MaxMinBoxYcoord = -1.224 # W7-X_NBI_case_Q34Q78_Z10_Zeff2p0
+AddMaxMinBox = False
+MaxMinBoxXcoord = 0.4177 # LHD discharge 113208 at t = 4.64 s
+#MaxMinBoxXcoord = 2.016*0.4177 # W7-X_NBI_case_Q34Q78_Z10_Zeff2p0
+MaxMinBoxYcoord = -1.25 # LHD discharge 113208 at t = 4.64 s
+#MaxMinBoxYcoord = -1.224 # W7-X_NBI_case_Q34Q78_Z10_Zeff2p0
 MaxMinBoxLabelSize = 40
 MaxMinBoxFormat = '{:1.1f}'
 
@@ -251,19 +259,21 @@ if zLogAxis:
 else:
    Phi1Plot = plt.contourf(zeta,theta,zFactor*Phi1Hat[:,:,iteration].transpose(),numContours, levels=ContourLevels, cmap=plt.get_cmap(ColorMap), vmin=zMin, vmax=zMax, extend='both')
 
+ax.set_visible(False)
+   
 #Phi1Plot2 = plt.contour(Phi1Plot,levels=ShowLevels, colors='k')
-Phi1Plot2 = plt.contour(Phi1Plot,levels=ShowLevels, colors='k', linewidths=ContourThickness)
+#Phi1Plot2 = plt.contour(Phi1Plot,levels=ShowLevels, colors='k', linewidths=ContourThickness)
 
-if SymLogFlag:
-   Phi1Plot3 = plt.contour(Phi1Plot,levels=numpy.array([-LinearThreshold, LinearThreshold]), colors=ContourBorderColor, linewidths=ContourBorderLineWidth)
+#if SymLogFlag:
+#   Phi1Plot3 = plt.contour(Phi1Plot,levels=numpy.array([-LinearThreshold, LinearThreshold]), colors=ContourBorderColor, linewidths=ContourBorderLineWidth)
 
-plt.xlabel(r'$\zeta$' + " " + r'$\mathrm{[rad]}$', fontsize=AxesLabelSize)
-plt.ylabel(r'$\theta$'+ " " + r'$\mathrm{[rad]}$', fontsize=AxesLabelSize)
+#plt.xlabel(r'$\zeta$' + " " + r'$\mathrm{[rad]}$', fontsize=AxesLabelSize)
+#plt.ylabel(r'$\theta$'+ " " + r'$\mathrm{[rad]}$', fontsize=AxesLabelSize)
 
-plt.xticks([0,max(zeta)/4,max(zeta)/2,3*max(zeta)/4,max(zeta)], fontsize=TickSize)
-plt.yticks([0.0,max(theta)/4,max(theta)/2,3*max(theta)/4,max(theta)], fontsize=TickSize)
-plt.gca().axes.xaxis.set_ticklabels(xAxisTicks)
-plt.gca().axes.yaxis.set_ticklabels(yAxisTicks)
+#plt.xticks([0,max(zeta)/4,max(zeta)/2,3*max(zeta)/4,max(zeta)], fontsize=TickSize)
+#plt.yticks([0.0,max(theta)/4,max(theta)/2,3*max(theta)/4,max(theta)], fontsize=TickSize)
+#plt.gca().axes.xaxis.set_ticklabels(xAxisTicks)
+#plt.gca().axes.yaxis.set_ticklabels(yAxisTicks)
 
 #plt.gca().axes.xaxis.set_label_coords(0.5,-0.09)
 #plt.gca().axes.yaxis.set_label_coords(-0.09,0.5)
@@ -289,11 +299,11 @@ if ShowColorbar:
    
    cbar.ax.set_ylabel(r'$\Phi_1$'+ " " + r'$\mathrm{[V]}$', rotation=0, labelpad=PhiLabelPad, fontsize=AxesLabelSize)
 
-plt.clabel(Phi1Plot2, fmt=TickFormat, colors='k', fontsize=ContourLabelSize, inline=ContourLabelRemoveLine)
+#plt.clabel(Phi1Plot2, fmt=TickFormat, colors='k', fontsize=ContourLabelSize, inline=ContourLabelRemoveLine)
 
 if SymLogFlag:
-   if ContourLabelShowLinearBorder:
-      plt.clabel(Phi1Plot3, fmt=TickFormat, colors=ContourBorderColor, fontsize=ContourLabelSize, inline=ContourLabelRemoveLine)
+   #if ContourLabelShowLinearBorder:
+   #   plt.clabel(Phi1Plot3, fmt=TickFormat, colors=ContourBorderColor, fontsize=ContourLabelSize, inline=ContourLabelRemoveLine)
 
    if ShowColorbar:
       #cbar.add_lines(Phi1Plot3)
