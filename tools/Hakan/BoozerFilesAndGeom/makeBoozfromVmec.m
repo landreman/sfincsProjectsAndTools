@@ -227,7 +227,7 @@ alphamn2=invgrad(w.B_umntilde,w.B_wmntilde,Geom.Nperiods,2);
 %if B_umn and B_wmn are good, then alphamn1 should equal alphamn2
 %I SHOULD TEST THIS
 
-w.pmn=(alphamn2-I*w.lmn)*(1/(G+iota*I));
+w.pmn=(alphamn1-I*w.lmn)*(1/(G+iota*I));
 
 w.Dw=2*pi/w.Nw/Geom.Nperiods;
 w.Du=2*pi/w.Nu;
