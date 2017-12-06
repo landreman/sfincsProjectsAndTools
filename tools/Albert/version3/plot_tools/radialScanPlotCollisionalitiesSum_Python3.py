@@ -150,6 +150,15 @@ for directory in PlotDirectories:
 
                 VariableValue = VariableValue * DensityToNuFactor
 
+                #INSTEAD OF PLOTTING nu_{aa}' WE PLOT nu_{a}' = SUM_{b} (nu_{ab}')
+                #print(Zs)
+                #print(nHats)
+                #print(Zs**2 * nHats)
+                #print(sum(Zs**2 * nHats))
+                #print(VariableValue)
+                #print(VariableValue * sum(Zs**2 * nHats) / (Zs**2 * nHats))
+                VariableValue = VariableValue * sum(Zs**2 * nHats) / (Zs**2 * nHats)
+
                 VariableValue = TransformPlotVariableToOutputUnitsFactor * VariableValue
                 if includePhi1 == integerToRepresentTrue:
                     if didNonlinearCalculationConverge != integerToRepresentTrue:
