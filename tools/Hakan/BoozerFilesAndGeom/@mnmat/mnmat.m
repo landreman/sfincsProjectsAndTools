@@ -44,7 +44,10 @@ for inputind=1:length(lsts)
     %I require the input (Geom,rind,fieldtoextract)
     %or (Geom,rind,fieldtoextract,Nu,Nv,forceSize_option)
     if nargin<3
-      error('Not enough inputs')
+      error(['Not enough inputs to mnmat. ',...
+             'For Geometry struct input the inputs are ',...
+             '(Geom,rind,fieldtoextract) or ',...
+             '(Geom,rind,fieldtoextract,Nu,Nv,forceSize_option)'])
     end
     rind=varargin{1};
     objecttoextract=varargin{2};

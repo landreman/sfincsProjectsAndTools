@@ -41,13 +41,6 @@ function Fmn=fftmn(f)
 
 [Nu,Nv]=size(f);
 
-%if Nv/2-floor(Nv/2)~=0 || Nu/2-floor(Nu/2)~=0
-%  error('Nv and Nu must be even numbers!')
-%end
-%if Nv~=Nu
-%  error('f must be square!')
-%end
-
 F=fliplr(fftshift(fft2(f),2));
 
 mmax=floor(Nu/2);

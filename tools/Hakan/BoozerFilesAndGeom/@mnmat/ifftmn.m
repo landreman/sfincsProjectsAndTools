@@ -3,6 +3,7 @@ function varargout=ifftmn(Fmns,varargin)
 %
 % This routine can process more than one Fmn input by giving a vector as input:
 % Fmns=[Fmn1,Fmn2,Fmn3...]
+% Example: [f1,f2,f3]=ifftmn([Fmn1,Fmn2,Fmn3])
 % if length(varargout)=length(Fmns)+2 then the two last output arguments are the
 % poloidal and toroidal dicretisation matrices u and v.
 %
@@ -58,7 +59,7 @@ for inputind=1:Ninput
   Nv=size(Fmn.c,2);
   n0ind_tmp=ceil(Nv/2);
   % The boolean isnan(Fmn.s(end,Fmn.n0ind)) marks whether Nu is even
-  Nu=(size(Fmn.c,1)-1)*2+not(isnan(Fmn.s(end,n0ind_tmp)));
+  Nu=(size(Fmn.c,1)-1)*2+not(isnan(Fmn.s(end,n0ind_tmp))); 
   Nudiscr=Nu; %used for the assembly below
   Nvdiscr=Nv;  %used for the assembly below
   
