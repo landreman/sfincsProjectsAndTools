@@ -17,14 +17,19 @@ for arg in sys.argv:
 if makePDF:
     matplotlib.use('PDF')
 
-
-
 import matplotlib.pyplot as plt
 
-print("This is "+ inspect.getfile(inspect.currentframe()))
+print ("This is "+ inspect.getfile(inspect.currentframe()))
 
 sfincsHome = os.environ.get('SFINCS_HOME') 
 sfincsProjectsAndToolsHome = os.environ.get('SFINCS_PROJECTS_AND_TOOLS_HOME')
+
+##PLOT OPTIONS##
+
+#execfile(sfincsProjectsAndToolsHome + "/tools/Albert/version3/plot_tools"  + "/RadialScanPlotOptions.py")
+exec(open(sfincsProjectsAndToolsHome + "/tools/Albert/version3/plot_tools"  + "/RadialScanPlotOptions.py").read())
+
+################
 
 ##INPUTS##
 
@@ -43,17 +48,12 @@ filename = 'sfincsOutput.h5' ##Name for SFINCS output HDF5 files.
 
 radiusName = "rN" ##Radial coordinate to use on x-axis. Must be "psiHat", "psiN", "rHat" or "rN".
 
-plotVariableName = "Er" ##Parameter to plot on y-axis. In this version it must be "Er", "dPhiHatdpsiHat", "dPhiHatdpsiN", "dPhiHatdrHat" or "dPhiHatdrN" .
+#plotVariableName = "Er" ##Parameter to plot on y-axis. In this version it must be "Er", "dPhiHatdpsiHat", "dPhiHatdpsiN", "dPhiHatdrHat" or "dPhiHatdrN" .
+plotVariableName = "particleFlux_vd_rHat"
+species = 4
+TransformPlotVariableToOutputUnitsFactor = vbar
 
 MinFloat = pow(10, -sys.float_info.dig) 
-
-##PLOT OPTIONS##
-
-exec(open(sfincsProjectsAndToolsHome + "/tools/Albert/version3/plot_tools"  + "/RadialScanPlotOptions.py").read())
-
-################
-
-
 
 ##############################
 ##########END INPUTS##########
@@ -63,13 +63,6 @@ if radiusName != "psiHat" and radiusName != "psiN" and radiusName != "rHat" and 
     print ("Error! Invalid radial coordinate.")
     sys.exit(1)
 
-if plotVariableName != "Er" and plotVariableName != "dPhiHatdpsiHat" and plotVariableName != "dPhiHatdpsiN" and plotVariableName != "dPhiHatdrHat" and plotVariableName != "dPhiHatdrN":
-    print ("Error! Invalid variable name.")
-    sys.exit(1)
-
-
-
-
 ##READ AND PLOT THE DATA##
 originalDirectory = os.getcwd() 
 print ("Starting to create a plot from directories in " + originalDirectory)
@@ -78,7 +71,7 @@ print ("Starting to create a plot from directories in " + originalDirectory)
 PlotDirectories = sorted(filter(os.path.isdir, os.listdir("."))) 
 
 if len(PlotDirectories) < 1:
-    print ("Error! Could not find any directories in " + originalDirectory) 
+    print ("Error! Could not find any directories in " + originalDirectory)
     sys.exit(1)
 
 fig = plt.figure(figsize=FigSize) 
@@ -116,7 +109,7 @@ for directory in PlotDirectories:
             try:
                 file = h5py.File(fullSubDirectory + "/" + filename,'r')
                 radiusValue = file[radiusName][()]
-                VariableValue = file[plotVariableName][()] 
+                #VariableValue = file[plotVariableName][()] 
 
                 finished = file["finished"][()] 
                 integerToRepresentTrue = file["integerToRepresentTrue"][()]
@@ -124,9 +117,24 @@ for directory in PlotDirectories:
 
                 if includePhi1 == integerToRepresentTrue:
                     didNonlinearCalculationConverge = file["didNonlinearCalculationConverge"][()]
+                    #if plotVariableName == "particleFlux_vm_rHat":
+                    #    VariableValue = file["particleFlux_vd_rHat"][()]
+                
+                if (plotVariableName.find('Flux_vd') != -1 or plotVariableName.find('Flux_vE') != -1) and (includePhi1 != integerToRepresentTrue):
+                    print (plotVariableName + " only exists in nonlinear runs, but this is a linear run.") 
+                    print ("Reading " + plotVariableName.replace('Flux_vd', 'Flux_vm').replace('Flux_vE', 'Flux_vm') + " instead.")
+                    VariableValue = file[plotVariableName.replace('Flux_vd', 'Flux_vm').replace('Flux_vE', 'Flux_vm')][()]
+                else:
+                    VariableValue = file[plotVariableName][()]
 
                 file.close()
                 
+                #if plotVariableName == "particleFlux_vm_rHat":
+                if plotVariableName.find('Flux_v') != -1:
+                    VariableValue = VariableValue[:, -1]
+                    VariableValue = VariableValue[species -1] 
+
+                VariableValue = TransformPlotVariableToOutputUnitsFactor * VariableValue
                 if includePhi1 == integerToRepresentTrue:
                     if didNonlinearCalculationConverge != integerToRepresentTrue:
                         print ("The nonlinear solver did not converge in " + fullSubDirectory)
@@ -171,7 +179,7 @@ for directory in PlotDirectories:
         except:
             LegendLabel = directory
 
-        plt.plot(np.array(radii_sorted), np.array(ydata_sorted), PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel)
+        plt.plot(np.array(radii_sorted), np.array(ydata_sorted), PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel, linewidth=PlotLineWidth)
         linenumber += 1
 
     except:
@@ -197,7 +205,18 @@ else :
     ymin,ymax = plt.ylim(yAxisLim) 
     xmin,xmax = plt.xlim(xAxisLim) 
 
-plt.legend(bbox_to_anchor = LegendBBoxToAnchor, loc=LegendPosition, ncol=LegendNumberColumns, mode=None, borderaxespad=0., fontsize=LegendFontSize)
+if ShowLegend:
+    plt.legend(bbox_to_anchor = LegendBBoxToAnchor, loc=LegendPosition, ncol=LegendNumberColumns, mode=None, borderaxespad=0., prop=LegendProperties)#, fontsize=LegendFontSize)
+
+plt.gca().axes.xaxis.set_label_coords(xAxisLabelCoords[0], xAxisLabelCoords[1])
+plt.gca().axes.yaxis.set_label_coords(yAxisLabelCoords[0], yAxisLabelCoords[1])
+
+plt.tight_layout()
+
+plt.subplots_adjust(left=LeftMargin, right=RightMargin, top=TopMargin, bottom=BottomMargin)
+
+if ShowSubPlotLabel:
+    plt.text(SubPlotLabelXcoord, SubPlotLabelYcoord, SubPlotLabel)
 
 os.chdir(originalDirectory) 
 
