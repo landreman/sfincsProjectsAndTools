@@ -93,13 +93,13 @@ else %it starts witn a '.'
       if all(all(isnan(subsref(A.c,Snew))==isnan(B)))
         A.c=subsasgn(A.c,Snew,B); %A.c(minds,ninds)=B;
       else
-        error('Assignment not allowed!')
+        error('Assignment not allowed! NaN pattern does not coincide with original.')
       end
     elseif strcmp(S(1).subs,'sin') || strcmp(S(1).subs,'s')
       if all(all(isnan(subsref(A.s,Snew))==isnan(B)))
         A.s=subsasgn(A.s,Snew,B); %A.s(minds,ninds)=B;
       else
-        error('Assignment not allowed!')
+        error('Assignment not allowed! NaN pattern does not coincide with original.')
       end
     end
 

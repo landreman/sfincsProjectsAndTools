@@ -36,14 +36,30 @@ signchange=double(wout.signgs); % is -1, because vmec is left handed
 
 Geom.headertext.input_extension = ...
     wout.input_extension; %!<  suffix of the vmec-input file: input.<input_extension>
-Geom.headertext.maincomment=sprintf(...
+
+StelSym=not(isfield(wout,'bmns'));
+
+if StelSym
+  % Use Joachim Geiger's JMC convention as default for stellarator symmetric files:
+  % Toroidal flux is counted positive in the direction opposite to the toroidal coordinate.
+  Geom.headertext.maincomment=sprintf(...
     ['CC Converted from VMEC using HS''s matlab routines\n',...
      'CC The phase convention (m theta - n phi) is used in this file.\n',...
      'CC The coordinate system (r,theta,phi) is left-handed.\n',...
-     'CC Toroidal flux is counted positive in the direction of the toroidal coordinate.']);
-% Note: the comment that (r,theta,phi) is left-handed regards the 
-% file that is created when saving with writeBoozerfile.m. The struct
-% Geom produced by this function (makeBcfromVMEC) is right handed.
+     'CC Toroidal flux is counted positive in the direction opposite to the toroidal ', ...
+     'coordinate (JG Style).']);
+else  
+  % Use Erika Strumberger's convention as default for non-stellarator symmetric files:
+  % Toroidal flux is counted positive in the direction of the toroidal coordinate.
+  Geom.headertext.maincomment=sprintf(...
+    ['CC Converted from VMEC using HS''s matlab routines\n',...
+     'CC The phase convention (m theta - n phi) is used in this file.\n',...
+     'CC The coordinate system (r,theta,phi) is left-handed.\n',...
+     'CC Toroidal flux is counted positive in the direction of the toroidal coordinate (ES Style).']);
+  % Note: the comment that (r,theta,phi) is left-handed regards the 
+  % file that is created when saving with writeBoozerfile.m. The struct
+  % Geom produced by this function (makeBcfromVMEC) is right handed.
+end
 
 Geom.m0b      = NaN;%double(wout.mpol);       %!< number of poloidal fourier modes (Not used)
 Geom.n0b      = NaN;%double(wout.ntor);       %!< upper bound toroidal fourier modes:
@@ -51,11 +67,15 @@ Geom.n0b      = NaN;%double(wout.ntor);       %!< upper bound toroidal fourier m
 Geom.nsurf    = NaN;%double(wout.ns);    %!< number of radial surfaces, Set this below
 
 Geom.Nperiods = double(wout.nfp);        %!< number of field periods
-if not(isfield(wout,'iasym'))
-  wout.iasym=isfield(wout,'bmns');
-end
-Geom.StelSym  = not(wout.iasym);%!<  defines stellarator symmetry for iasym=0,otherwise =
+%if not(isfield(wout,'iasym'))
+%  wout.iasym=isfield(wout,'bmns');
+%end
+%Geom.StelSym  = not(wout.iasym);%!<  defines stellarator symmetry for iasym=0,otherwise =
 
+Geom.StelSym  = StelSym;
+if StelSym
+  Geom.newsigncorr=0; %This is the convention in SFINCS
+end
 Geom.torfluxtot = ...
    wout.phi(wout.ns)*signchange;%!<  total toroidal flux within the boundary (s=1)
 Geom.psi_a=Geom.torfluxtot/2/pi;
@@ -115,9 +135,9 @@ Geom.Bfilter.maxabs_n=(Nw-1)/2;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % specific for each radius
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if Geom.StelSym
-  error('Stellarator symmetric case not implemented yet!')
-end
+%if Geom.StelSym
+%  error('Stellarator symmetric case not implemented yet!')
+%end
 
 tic
 for sind=1:length(Geom.s)
@@ -141,14 +161,16 @@ for sind=1:length(Geom.s)
     Geom.nmodes(1,sind)=length(Bmnlist.m)+1;
     Geom.m{sind}  =[Bmnlist.m,0];
     Geom.n{sind}  =[Bmnlist.n,0];
-    Geom.parity{sind}=[Bmnlist.cosparity,0]; %Add a m=n=0 parity=0 component for Z00! 
+    Geom.parity{sind}=[Bmnlist.cosparity,0]; %Add a m=n=0 parity=0 (sin) component for Z00! 
     Geom.Bmn{sind}=[Bmnlist.data,0]; %Set to 0 rather than NaN, to avoid NaNs in bc file.
     Geom.R{sind}  =[Rmnlist.data,0]; %Set to 0 rather than NaN, to avoid NaNs in bc file.
   end
   Geom.B00(1,sind)=Booz.B00;
   Geom.Bnorm{sind}=Geom.Bmn{sind}/Geom.B00(sind);
   Geom.R00(1,sind)=Booz.R00;
-  Geom.Z00(1,sind)=Booz.Z00;
+  if not(Geom.StelSym)
+    Geom.Z00(1,sind)=Booz.Z00;
+  end
   Geom.Z{sind}=0*ones(size(Geom.R{sind}));
   for mnind=1:length(Zmnlist.m)
     ind=find(Geom.m{sind}==Zmnlist.m(mnind) & ...
@@ -171,9 +193,6 @@ for sind=1:length(Geom.s)
     Geom.Z{sind}(ind)=0; %These are NaN, but I set them to zero to avoid making .bc
                          %files with NaNs in them. 
   %end
-  
-  %error('CHECK IF THERE ARE FACTORS LIKE Nperiods, 2pi or -1 missing for Dphi or
-  %parity ')
   
   if axisymm
     good=find(Geom.n{sind}==0);
