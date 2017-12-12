@@ -60,15 +60,15 @@ xAxisLabel = r'$r/a$'
 #yAxisLabel = r'$\nu_{ss}^{\prime}$'
 #yAxisLabel = r'$\nu_{s}^{\prime}$'
 # e   i   \mathrm{He}^{2+}   \mathrm{C}^{6+}   \mathrm{Ne}^{10+}
-#yAxisLabel = r'$<\mathbf{\Gamma}_{\mathrm{C}^{6+}} \cdot \nabla r> $ $[10^{20} \mathrm{m}^{-2} \mathrm{s}^{-1}]$' 
-yAxisLabel = r'$E_r$ $[\mathrm{kV/m}]$'
+yAxisLabel = r'$<\mathbf{\Gamma}_{e} \cdot \nabla r> $ $[10^{20} \mathrm{m}^{-2} \mathrm{s}^{-1}]$' 
+#yAxisLabel = r'$E_r$ $[\mathrm{kV/m}]$'
 #yAxisLabel = r'$Z_{\mathrm{eff}}$'
 AxesLabelSize = 40
 
 TickSize = 35
 
-#AxisLimAuto = True
-AxisLimAuto = False
+AxisLimAuto = True
+#AxisLimAuto = False
 xAxisLim = [0.18, 0.92] #LHD113208t4640 Er scan
 yAxisLim = [-3.2, 0.0] #LHD113208t4640 Er scan
 #xAxisLim = [0.10, 1.02]
@@ -98,7 +98,7 @@ TopMargin = 0.95 #LHD113208t4640 Er scan, Flux scan
 BottomMargin = 0.15 #LHD113208t4640 Er scan, Flux scan
 #BottomMargin = 0.17 #CONTOUR PLOT WITHOUT COLORBAR
 
-ShowLegend = True
+ShowLegend = False
 
 #PlotLegendLabels = [r'SFINCS Fokker-Planck w/o $\Phi_1$', r'SFINCS Pitch-angle scattering w/o $\Phi_1$', r'SFINCS Fokker-Planck w/ $\Phi_1$', r'SFINCS Pitch-angle scattering w/ $\Phi_1$']
 PlotLegendLabels = [r'SFINCS Fokker-Planck w/o $\Phi_1$', r'SFINCS Pitch-angle scattering w/o $\Phi_1$', r'SFINCS Fokker-Planck w/ $\Phi_1$', r'SFINCS Pitch-angle scattering w/ $\Phi_1$', r'DKES + momentum correction', r'DKES (no momentum correction)']
