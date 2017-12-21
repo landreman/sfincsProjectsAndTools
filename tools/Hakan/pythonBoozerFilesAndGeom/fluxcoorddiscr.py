@@ -186,7 +186,10 @@ class fluxcoorddiscr:
 
       mu0=1.256637061e-06
       if isinstance(Geom,bcgeom.bcgeom):
-          NPeriods=Geom.Nperiods
+          if rind > Geom.nsurf-1:
+              sys.exit('Error in input to fluxcoorddiscr.py: The radius index rind = '+
+                       str(rind)+' is greater than max rind = '+str(Geom.nsurf-1))
+          Nperiods=Geom.Nperiods
           I=Geom.Btheta[rind]
           G=Geom.Bphi[rind]
           iota=Geom.iota[rind]
@@ -216,6 +219,9 @@ class fluxcoorddiscr:
 
           signchange=float(Geom.signgs) #is -1, because vmec is left handed
           skip=Geom.skip #=1,this is how many elements are skipped at low radii when going to half grid
+          if rind > Geom.ns-1-skip: #Note: max(rind) on the half grid is Geom.ns-2
+              sys.exit('Error in input to fluxcoorddiscr.py: The radius index rind = '+
+                       str(rind)+' is greater than max rind = '+str(Geom.nsurf-1-skip))
           fullgrid_s      = Geom.phi/Geom.phi[Geom.ns-1] #full grid
           halfgrid_iota   = Geom.iotas[skip:]*signchange
           halfgrid_Bphi   = Geom.bvco[skip:]*signchange

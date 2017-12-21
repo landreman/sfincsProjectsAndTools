@@ -331,12 +331,12 @@ class vmecgeom:
     print 'Radial arrays:'
     print '-----------------------------------------------'
     print 'iotaf        '+frs.format(self.iotaf.shape)+   ': q-factor on full mesh'
-    if not((self.q_factor==np.nan).all()):
+    if not((np.isnan(self.q_factor)).all()):
       print 'q_factor     '+frs.format(self.q_factor.shape)+':'
     print 'presf        '+frs.format(self.presf.shape)+': pressure on full mesh [Pa]'
     print 'phi          '+frs.format(self.phi.shape)+  ': Toroidal flux on full mesh [Wb]'
     print 'phipf        '+frs.format(self.phipf.shape)+': d(phi)/ds: Toroidal flux deriv on full mesh'
-    if not((self.chi==np.nan).all()):
+    if not((np.isnan(self.chi)).all()):
       print 'chi          '+frs.format(self.chi.shape)+  ': Poloidal flux on full mesh [Wb]'
       print 'chipf        '+frs.format(self.chipf.shape)+': d(chi)/ds: Poroidal flux deriv on full mesh'
     print 'jcuru        '+frs.format(self.jcuru.shape)+':'

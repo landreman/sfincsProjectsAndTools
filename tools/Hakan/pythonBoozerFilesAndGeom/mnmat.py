@@ -137,8 +137,8 @@ class mnmat:
                 if (abs(input.n)>maxabsn).any():
                     Nzeta_needed=max(abs(input.n))*2+1
                     sys.exit('Increase Nzeta to '+str(Nzeta_needed))
-            
-            if input.cosparity.all():
+
+            if (input.cosparity==1).all():
                 #print(len(input.m))
                 for ind in range(len(input.m)):
                     #print('ind='+str(ind)+', m='+str(input.m[ind])+', n='+str(input.n[ind]))

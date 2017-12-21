@@ -277,12 +277,12 @@ if strcmp(interptype,'linear') %This is the default case
           else
             error('this is impossible')
           end
-        end
-      end
-    end
+        end %for mind
+      end %for nind
+    end %if not(StelSym)
     out.Bnorm{surfind}=out.Bmn{surfind}/out.B00(surfind);
     out.nmodes(surfind)=mode;
-  end
+  end %surfind loop
   fprintf(1,'\n')
 
   

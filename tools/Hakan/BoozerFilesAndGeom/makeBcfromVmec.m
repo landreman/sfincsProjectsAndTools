@@ -237,12 +237,12 @@ if length(Geom.R00)==length(Geom.s) %just check that all were made.
     mind=m+1;
     ii=find(wout.xm==m);
     start_modes=ii(1);
-  end_modes=ii(end);
-  ns=wout.xn(start_modes:end_modes)/double(wout.nfp);
-  nnmat=(1+(-1).^(ns*ones(size(ns'))-ones(size(ns))*ns'))/2;
-  accum=accum+...
-        m*sum(sum((wout.rmnc(start_modes:end_modes,end)*...
-                   wout.zmns(start_modes:end_modes,end)').*nnmat));
+    end_modes=ii(end);
+    ns=wout.xn(start_modes:end_modes)/double(wout.nfp);
+    nnmat=(1+(-1).^(ns*ones(size(ns'))-ones(size(ns))*ns'))/2;
+    accum=accum+...
+          m*sum(sum((wout.rmnc(start_modes:end_modes,end)*...
+                     wout.zmns(start_modes:end_modes,end)').*nnmat));
   end
   Geom.minorradiusW7AS=sqrt(abs(accum));
 

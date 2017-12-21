@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import numpy as np
-import sys
+import sys, copy
+import datetime
 
 import mnlist
 import mnmat
@@ -40,7 +41,7 @@ class bcgeom:
        # If the .bc file was produced by JMC, one should supply an extra argument
        # choosing which type of correction of the sign of the total flux to make.
        # signcorr=1: Bphi and Btheta will get sign changes (as in SFINCS)
-       # signcorr=2: Total toroidal flux will get a sign change (default, as YT)
+       # signcorr=2: Total toroidal flux will get a sign change (default, as Yuriy Turkin)
 
        def sscan(strng,dtype=float,count=-1):
            return np.fromstring(strng,dtype,count,sep=' ')
@@ -78,11 +79,15 @@ class bcgeom:
                YTsign=-1
            while tmp_str[0:2]=='CC':
                tmp_str=f.readline()
-               if tmp_str[0:2]=='CC':
-                   concat_str = concat_str+'\n'+tmp_str #comment line
+               if tmp_str[0:2]=='CC': #comment line
+                   if concat_str[-1]=='\n':
+                       concat_str = concat_str+tmp_str 
+                   else:
+                       concat_str = concat_str+'\n'+tmp_str 
                if 'CStconfig' in tmp_str:
                    YTsign=-1
-
+           if concat_str[-1]=='\n':
+               concat_str=concat_str[:-1]
            self.headertext.maincomment=concat_str
          else:
            self.headertext.maincomment=('CC ----------------------'+
@@ -103,7 +108,7 @@ class bcgeom:
              '                            [A]            [A]   dp/ds,[Pa] (dV/ds)/nper')  
          self.m0b        = header_df[0]
          self.n0b        = header_df[1]
-         self.nsurf      = header_df[2]
+         self.nsurf      = int(header_df[2])
          self.Nperiods   = header_df[3]
          self.psi_a=np.nan #Insert psi_a at this place in the list, but set it later.
          self.torfluxtot = header_df[4]*YTsign #Note that this is not per pol. angle,
@@ -119,9 +124,9 @@ class bcgeom:
          else:
            self.majorradiusVMEC=np.nan
          if len(header_df)>9:
-           self.VolumeVMEC=header_df[9]
+           self.volumeVMEC=header_df[9]
          else:
-           self.VolumeVMEC=np.nan
+           self.volumeVMEC=np.nan
          
          endoffile=False
          rind=-1
@@ -134,7 +139,7 @@ class bcgeom:
          dVdsoverNper=np.array([])
          B00=np.array([])
          R00=np.array([])
-         no_of_modes=np.array([])
+         no_of_modes=[]
          modesm=[]
          modesn=[]
          modesr=[]
@@ -207,13 +212,15 @@ class bcgeom:
            while proceed:
                tmp_str=f.readline()
                if f.tell() == eof+1:
+                   #print 'eof found '+tmp_str
                    proceed=False
                    endoffile=True
                    #print 'found end of file'
-               elif ('s' in tmp_str): #Next flux surface has been reached
+               if ('s' in tmp_str): #Next flux surface has been reached
                    proceed=False
                    #print 'found next surface'
                else:
+                   #print tmp_str
                    if self.StelSym:
                        tmp=sscan(tmp_str,count=6)
                        if ((abs(tmp[5])/B00[rind]>min_Bmn) and
@@ -258,9 +265,10 @@ class bcgeom:
                    #end
                #end
            #end while proceed
-           no_of_modes=np.append(no_of_modes,modeind)
-           if no_of_modes[rind]==0:
-               sys.exit('no modes found for rind='+str(rind))
+           if modeind==-1:
+              sys.exit('no modes found for rind='+str(rind))
+
+           no_of_modes.append(int(modeind+1))
 
          #end while loop over radii
          f.close()
@@ -340,9 +348,9 @@ class bcgeom:
            #Then the minor and major radii are VMEC and not Joachims definitions
            self.minorradiusVMEC=self.minorradiusW7AS
            self.majorradiusVMEC=self.majorradiusLastbcR00
-           self.VolumeVMEC=pi*self.minorradiusVMEC**2*2*pi*self.majorradiusVMEC
-           self.minorradiusW7AS=NaN
-           self.majorradiusLastbcR00=NaN
+           self.volumeVMEC=np.pi*self.minorradiusVMEC**2*2*np.pi*self.majorradiusVMEC
+           self.minorradiusW7AS=np.nan
+           self.majorradiusLastbcR00=np.nan
 
 
          #%%%% Some security checks 
@@ -379,37 +387,65 @@ class bcgeom:
            while tmp_str[1]=='c' or tmp_str[1]=='C':  #Skip comment line
                tmp_str=f.readline() 
 
+           torfluxnorm=np.array([])
+           iota=np.array([])
+           Bphi=np.array([])
+           Btheta=np.array([])
+           dpds=np.array([])
+           dVdsoverNper=np.array([])
+           B00=np.array([])
+           R00=np.array([])
+           no_of_modes=[]
+           modesm=[]
+           modesn=[]
+           modesr=[]
+           modesz=[]
+           modesp=[]
+           modesb=[]
+           modesbnorm=[]
+           modespar=[]
+             
            endoffile=False
            rind=-1
 
            while not endoffile:
                rind=rind+1
-               surfheader1=sscan(tmp_str,count=8)
-               radii[rind] = surfheader1[0]/100 #(cm)
-               iota[rind]  = surfheader1[1]
-               Nperiods=surfheader1[2]
+               surfheader1     = sscan(tmp_str,count=8)
+               radii           = np.append(radii,surfheader1[0]/100) #(cm)
+               iota            = np.append(iota,surfheader1[1])
+               Nperiods        = surfheader1[2]
                minorradiusW7AS = surfheader1[3]/100 #(cm)
-               majorradiusLastbcR00  = surfheader1[4]/100 #(cm)
+               majorradiusLastbcR00 = surfheader1[4]/100 #(cm)
                if len(surfheader1)>5:
-                   torfluxnorm[rind] = surfheader1[5]
-                   R00[rind]   = surfheader1[7]/100
+                   torfluxnorm = np.append(torfluxnorm,surfheader1[5])
+                   R00         = np.append(R00,surfheader1[7]/100)
                else:
-                   torfluxnorm[rind] = np.nan
-                   R00[rind] =np.nan
+                   torfluxnorm = np.append(torfluxnorm,np.nan)
+                   R00         = np.append(R00,np.nan)
        
                tmp_str=f.readline()
                if tmp_str[1]=='>':
                    surfheader2=sscan(tmp_str[2:],count=3)
            
-                   Bphi[rind]  =surfheader2[0]*1e6*Nperiods/2/pi*(4*pi*1e-7) #Tesla*meter
-                   Btheta[rind]=surfheader2[1]*1e6/2/pi*(4*pi*1e-7)          #Tesla*meter
-                   B00[rind]   =surfheader2[2] #Tesla
+                   Bphi      = np.append(Bphi,surfheader2[0]*1.0e6*Nperiods/2.0/pi*(4*pi*1e-7)) #Tesla*meter
+                   Btheta    = np.append(Btheta,surfheader2[1]*1.0e6/2.0/pi*(4*pi*1e-7))        #Tesla*meter
+                   B00       = np.append(B00,surfheader2[2]) #Tesla
                    tmp_str=f.readline()
                else:
-                   Bphi[rind]  =np.nan
-                   Btheta[rind]=np.nan
-                   B00[rind]   =np.nan
+                   Bphi   = np.append(Bphi,np.nan)
+                   Btheta = np.append(Btheta,np.nan)
+                   B00    = np.append(B00,np.nan)
 
+
+               modesm.append(np.array([]))
+               modesn.append(np.array([]))
+               modesr.append(np.array([]))
+               modesz.append(np.array([]))
+               modesp.append(np.array([]))
+               modesb.append(np.array([]))
+               modesbnorm.append(np.array([]))
+               modespar.append(np.array([]))
+    
                proceed=True
                modeind=-1
            
@@ -421,17 +457,20 @@ class bcgeom:
                        if ((abs(tmp[2])>min_Bmn)and(tmp[0]<=max_m)and
                            (abs(tmp[1])<=maxabs_n)):
                            modeind=modeind+1
-                           modesm[rind][modeind]=tmp[0]
-                           modesn[rind][modeind]=tmp[1]
-                           modesbnorm[rind][modeind]=tmp[2]
-                           modesb[rind][modeind]=tmp[3]
-                           modesdbdrnorm[rind][modeind]=tmp[4]*100 #convert cm^-1 -> m^-1
-                           modesr[rind][modeind]=tmp[5]
-                           modesz[rind][modeind]=tmp[6]
+                           modesm[rind]       = np.append(modesm[rind],tmp[0])
+                           modesn[rind]       = np.append(modesn[rind],tmp[1])
+                           modesbnorm[rind]   = np.append(modesbnorm[rind],tmp[2])
+                           modesb[rind]       = np.append(modesb[rind],tmp[3])
+                           modesdbdrnorm[rind]= np.append(modesdbdrnorm[rind],tmp[4]*100) #conv. cm^-1 to m^-1
+                           modesr[rind]= np.append(modesr[rind],tmp[5])
+                           modesz[rind]= np.append(modesz[rind],tmp[6])
          
                    tmp_str=f.readline() #get the next line or surface header line
                #end while proceed
-               no_of_modes[rind]=modeind  
+               if modeind==-1:
+                   sys.exit('no modes found for rind='+str(rind))
+
+               no_of_modes.append(int(modeind+1))
 
                if f.tell() == eof:
                    endoffile=True
@@ -449,6 +488,12 @@ class bcgeom:
            self.Nperiods=Nperiods
            self.minorradiusW7AS=minorradiusW7AS
            self.majorradiusLastbcR00=majorradiusLastbcR00
+           self.minorradiusVMEC = np.nan
+           self.majorradiusVMEC = np.nan
+           self.volumeVMEC      = np.nan
+           self.m0b             = np.nan
+           self.n0b             = np.nan
+           self.torfluxtot      = np.nan
            self.rnorm=radii/self.minorradiusW7AS
            self.s=torfluxnorm
            self.iota=iota*rthetazeta_righthanded
@@ -484,13 +529,27 @@ class bcgeom:
         self.StelSym=input.StelSym
         self.newsigncorr=True
         self.headertext=headertxt()
-        self.headertext.maincomment=('CC Converted from VMEC using HSs routines\n'+
-        'CC version_       = '+str(wout.version_)+'\n'+
-        'CC input_extension= '+wout.input_extension)
-        #'CC The phase convention (m theta - n phi) is used in this file.\n'+
-        #'CC The coordinate system (r,theta,phi) is left-handed.\n'+
-        #'CC Toroidal flux is counted positive in the direction of the toroidal coordinate.'
-
+        # Note that the following are only comments to what would appear in a file stored with .write()
+        # The internal representation in python is right handed and psi_a>0 in the direction of phi!
+        if self.StelSym:
+            # Use Joachim Geiger's JMC convention as default for stellarator symmetric files:
+            # Toroidal flux is counted positive in the direction opposite to the toroidal coordinate.
+            self.headertext.maincomment=('CC Converted from VMEC using HS''s python bcgeom.py routines\n'+
+               'CC version_       = '+str(wout.version_)+'\n'+
+               'CC input_extension= '+wout.input_extension+'\n'+
+               'CC The phase convention (m theta - n phi) is used in this file.\n'+
+               'CC The coordinate system (r,theta,phi) is left-handed.\n'+
+               'CC Toroidal flux is counted positive in the direction opposite to the toroidal coordinate.')
+        else:
+            # Use Erika Strumberger's convention as default for non-stellarator symmetric files:
+            # Toroidal flux is counted positive in the direction of the toroidal coordinate.
+            self.headertext.maincomment=('CC Converted from VMEC using HSs routines\n'+
+            'CC VMEC version         = '+str(wout.version_)+'\n'+
+            'CC VMEC input extension = '+wout.input_extension+'\n'+
+            'CC The phase convention (m theta - n phi) is used in this file.\n'+
+            'CC The coordinate system (r,theta,phi) is left-handed.\n'+
+            'CC Toroidal flux is counted positive in the direction of the toroidal coordinate.')
+          
         self.m0b=wout.mpol
         self.n0b=wout.ntor
         self.nsurf= np.nan      #number of radial surfaces, Set this below
@@ -501,6 +560,8 @@ class bcgeom:
         self.majorradiusLastbcR00 = np.nan         #Calculate this below (not necessary)
         self.minorradiusW7AS      = np.nan         #Calculate this below (not necessary)
         self.majorradiusVMEC      = wout.Rmajor_p  #major plasma radius
+        self.volumeVMEC           = wout.volume_p  #plasma volume
+        
         fullgrid_s           = np.array(wout.phi/wout.phi[wout.ns-1]) #full grid
         fullgrid_rnorm       = np.sqrt(fullgrid_s);     #full grid
 
@@ -536,10 +597,11 @@ class bcgeom:
           Nzeta = maxabs_n*2+1
           self.Bfilter.maxabs_n = maxabs_n
 
-        self.dVdsoverNper=np.zeros(len(self.s)) 
-        self.B00    =np.zeros(len(self.s))
-        self.R00    =np.zeros(len(self.s))
-        self.nmodes =np.zeros(len(self.s))
+        self.dVdsoverNper = np.zeros(len(self.s)) 
+        self.B00          = np.zeros(len(self.s))
+        self.R00          = np.zeros(len(self.s))
+        self.nmodes       = [0] * len(self.s)  #np.zeros(len(self.s))
+        self.FSAB2        = np.zeros(len(self.s))
         self.m=[]
         self.n=[]
         if not(self.StelSym):
@@ -558,12 +620,13 @@ class bcgeom:
             self.B00[rind]=Booz.B00
             self.R00[rind]=Booz.R00
             if self.StelSym:
-                self.nmodes[rind]=(Ntheta*Nzeta+1)/2
+                self.nmodes[rind]=int((Ntheta*Nzeta+1)/2)
             else:
-                self.nmodes[rind]=Ntheta*Nzeta
+                self.nmodes[rind]=int(Ntheta*Nzeta)
             self.dVdsoverNper[rind]=4*np.pi**2/self.Nperiods*abs(
                 self.psi_a*(self.Bphi[rind]+self.iota[rind]*self.Btheta[rind]))/Booz.FSAB2
-            
+
+            FSAB2[rind]=Booz.FSAB2
             self.m.append(np.array([]))
             self.n.append(np.array([]))
             self.B.append(np.array([]))
@@ -601,9 +664,744 @@ class bcgeom:
         #end radius loop
         print '' #carriage return
 
+        self.dVdsoverNper=np.abs(self.psi_a*4*np.pi**2.0/self.Nperiods*
+                                 (self.Bphi+self.iota*self.Btheta)/self.FSAB2)
+
+        #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        #% Calculate minorradiusW7AS
+        #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        accum=0;
+        for m in range(1,wout.xm[-1]+1):
+            ii=[i for i,x in numerate(wout.xm) if x==m]
+            first_mode=ii[0]
+            last_mode =ii[-1]
+            ns=np.expand_dims(wout.xn[ii[0]:ii[-1]]/wout.nfp, axis=1) #row vector
+            nnmat=(1+(-1)**ns-ns.T)/2
+            accum=accum+m*np.sum((np.expand_dims(wout.rmnc[-1][ii[0]:ii[-1]], axis=1)*
+                                  np.expand_dims(wout.zmns[-1][ii[0]:ii[-1]], axis=0))*nnmat)
+
+        self.minorradiusW7AS=np.sqrt(np.abs(accum))
+        
+        #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        # Calculate majorradiusLastbcR00
+        #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        # Joachim defined his major radius to be
+        # R00 in Boozer coordinates at s=0.995
+        # which in his case is at the last half mesh radius
+        # I choose to always take it at the last half mesh radius
+        self.majorradiusLastbcR00=self.R00[-1]
+
+  ####################################################################
+  # filter a bcgeom
+  ####################################################################
+  def filter(self,varinput,max_m=np.inf,maxabs_n=np.inf,makecopy=True):
+      #This can be called in the following ways:
+      #out=self.filter(min_Bmn)
+      #out=self.filter(min_Bmn,max_m,maxabs_n)
+      #out=self.filter(Bfilter)
+      # if makecopy=True the output is a copy of the input
+
+      if makecopy:
+         out=copy.deepcopy(self)
+      
+      if isinstance(varinput,Bfiltr):
+          min_Bmn  = max(varinput.min_Bmn,self.Bfilter.min_Bmn)
+          max_m    = min(varinput.max_m,self.Bfilter.max_m)
+          maxabs_n = min(varinput.maxabs_n,self.Bfilter.maxabs_n)
+      else:
+          min_Bmn  = max(varinput,self.Bfilter.min_Bmn)
+          max_m    = min(max_m,self.Bfilter.max_m)
+          maxabs_n = min(maxabs_n,self.Bfilter.maxabs_n)
+
+      if makecopy:
+          out.Bfilter.min_Bmn  = min_Bmn
+          out.Bfilter.max_m    = max_m
+          out.Bfilter.maxabs_n = maxabs_n
+      else:
+          self.Bfilter.min_Bmn  = min_Bmn
+          self.Bfilter.max_m    = max_m
+          self.Bfilter.maxabs_n = maxabs_n
 
           
-####################################################################
+      for rind in range(self.nsurf):
+          inds=np.where(np.logical_and(np.abs(self.Bnorm[rind])>=min_Bmn,
+                                       np.logical_and(self.m[rind]<=max_m,
+                                                      np.abs(self.n[rind])<=maxabs_n)))[0]
+          if makecopy:
+              out.m[rind]=self.m[rind][inds]
+              out.n[rind]=self.n[rind][inds]
+              out.B[rind]=self.B[rind][inds]
+              out.R[rind]=self.R[rind][inds]
+              out.Z[rind]=self.Z[rind][inds]
+              out.Bnorm[rind]=self.Bnorm[rind][inds]
+              out.Dphi[rind]=self.Dphi[rind][inds]
+              if not(self.StelSym):
+                  out.parity[rind]=self.parity[rind][inds]
+
+              #print self.Bnorm[rind]
+              #print out.Bnorm[rind]
+              #print out.m[rind]
+              #print out.n[rind]
+              #sys.exit('stop')
+          else:
+              self.m[rind]=self.m[rind][inds]
+              self.n[rind]=self.n[rind][inds]
+              self.B[rind]=self.B[rind][inds]
+              self.R[rind]=self.R[rind][inds]
+              self.Z[rind]=self.Z[rind][inds]
+              self.Bnorm[rind]=self.Bnorm[rind][inds]
+              self.Dphi[rind]=self.Dphi[rind][inds]
+              if not(self.StelSym):
+                  self.parity[rind]=self.parity[rind][inds]
+      if makecopy:
+          return out
+      else:
+          return self
+      
+  ####################################################################
+  # Write a bcgeom to a file
+  ####################################################################
+  def write(self,filename,Nradii=None,min_Bmn=0,nsortstyle='ascend',printheadercomment=True):
+      #argument Nradii is only used for .dat files.
+      #First check which type of file the user wants.
+      if filename[-3:]=='.bc':
+          filetype='bc'
+      elif filename[-4:]=='.dat':
+          filetype='dat'
+          if Nradii is None:
+              Nradii=7 #7 is the default for HM's DKES runs
+      else: #if no file extension is given, assume .bc
+          filetype='bc' 
+          filename=filename+'.bc'
+
+      if filetype=='bc':
+          if min_Bmn==0:
+              selfie=copy.copy(self)
+          else:
+              selfie=self.filter(min_Bmn)
+      else: #.dat
+          if Nradii != self.nsurf:
+              #HS's choice:
+              #rnorms=np.linspace(self.rnorm[0],self.rnorm[-1],num=Nradii+1,endpoint=False)
+              #HM's choice:
+              rnorms=np.linspace(0.0,1.0,Nradii,endpoint=False)+1.0/Nradii/2.0
+              rnorms[ 0] = max(rnorms[ 0],self.rnorm[ 0])
+              rnorms[-1] = min(rnorms[-1],self.rnorm[-1])
+              selfie=self.interp(rnorms**2.0,'s','linear').filter(min_Bmn)
+          else:
+              selfie=self.interp(self.s,'s','linear').filter(min_Bmn) #This is just to retrieve dBdrnorm
+              
+      f = open(filename, 'w')
+      now = datetime.datetime.now()
+      
+      signchange=-1; #sign changer
+      psi_a      = selfie.psi_a*signchange
+      torfluxtot = selfie.torfluxtot*signchange
+      Bphi=selfie.Bphi
+      Btheta=selfie.Btheta*signchange
+      if selfie.StelSym:
+         if not(selfie.newsigncorr):
+            Bphi   = -Bphi
+            Btheta = -Btheta
+         else:
+            torfluxtot=-torfluxtot
+
+      iota=selfie.iota*signchange
+      dVdsoverNper=selfie.dVdsoverNper*signchange
+      Dphi=[]
+      m=selfie.m
+      n=[]
+      for tmpind in range(len(selfie.n)):
+          Dphi.append(np.array([]))
+          n.append(np.array([]))
+          Dphi[tmpind]=-selfie.Dphi[tmpind] 
+          n[tmpind]=np.where(selfie.m[tmpind]==0,np.abs(selfie.n[tmpind]),-selfie.n[tmpind])
+
+      #################################################################################
+      if filetype=='bc':
+      #################################################################################
+         if printheadercomment:
+            f.write('CC Saved %4d.%2d.%2d %2d:%2d by HS python routine bcgeom.write.\n' %
+                    (now.year,now.month,now.day,now.hour,now.minute))
+            f.write('CC ---------------------------------------------------------\n')
+            f.write(selfie.headertext.maincomment+'\n')
+
+         if selfie.StelSym: #JG includes a little more info in this case
+            if not(np.isnan(selfie.minorradiusVMEC)) and np.isnan(selfie.majorradiusVMEC) and np.isnan(selfie.volumeVMEC):
+                f.write(' m0b  n0b nsurf nper  flux/[Tm^2]     a/[m]     R/[m]   avol/[m]\n')
+                f.write('%3d%5d%6d%4d%16.6E%10.5f%10.5f%11.5f\n' %
+                        (selfie.m0b,selfie.n0b,selfie.nsurf,selfie.Nperiods,torfluxtot,
+                         selfie.minorradiusW7AS,selfie.majorradiusLastbcR00,selfie.minorradiusVMEC))
+            elif not(np.isnan(selfie.minorradiusVMEC)) and not(np.isnan(selfie.majorradiusVMEC)) and np.isnan(selfie.volumeVMEC):
+                f.write(' m0b  n0b nsurf nper  flux/[Tm^2]     a/[m]     R/[m]   avol/[m]  '+
+                        'Rvol/[m]\n')
+                f.write('%3d%5d%6d%4d%16.6E%10.5f%10.5f%11.5f%11.5f%11.5f\n' %
+                        (selfie.m0b,selfie.n0b,selfie.nsurf,selfie.Nperiods,torfluxtot,
+                         selfie.minorradiusW7AS,selfie.majorradiusLastbcR00,
+                         selfie.minorradiusVMEC,selfie.majorradiusVMEC,
+                         np.pi*selfie.minorradiusVMEC**2.0*2.0*np.pi*selfie.majorradiusVMEC))
+            elif not(np.isnan(selfie.minorradiusVMEC)) and not(np.isnan(selfie.majorradiusVMEC)) and not(np.isnan(selfie.volumeVMEC)):
+                f.write(' m0b  n0b nsurf nper  flux/[Tm^2]     a/[m]     R/[m]   avol/[m]  '+
+                        'Rvol/[m] Vol/[m^3]\n')
+                f.write('%3d%5d%6d%4d%16.6E%10.5f%10.5f%11.5f%11.5f%11.5f\n' %
+                        (selfie.m0b,selfie.n0b,selfie.nsurf,selfie.Nperiods,torfluxtot,
+                         selfie.minorradiusW7AS,selfie.majorradiusLastbcR00,
+                         selfie.minorradiusVMEC,selfie.majorradiusVMEC,selfie.volumeVMEC))
+            else: #all three are nan
+                f.write(' m0b  n0b nsurf nper flux/[Tm^2]     a/[m]     R/[m]\n')
+                f.write('%3d%5d%6d%4d%16.6E%10.5f%10.5f\n' %
+                        (selfie.m0b,selfie.n0b,selfie.nsurf,selfie.Nperiods,torfluxtot,
+                         selfie.minorradiusW7AS,selfie.majorradiusLastbcR00))
+         else: #non-StelSym, ES uses a little less info than JG
+            f.write(' m0b   n0b  nsurf  nper    flux [Tm^2]        a [m]          R [m]\n')
+            #Difficult! I Think Erika uses VMEC quantities here but I am not sure!
+            if not(np.isnan(selfie.minorradiusVMEC)) and not(np.isnan(selfie.majorradiusVMEC)):
+                f.write('%4d%6d%7d%6d%15.8f%15.8f%15.8f\n' %
+                        (selfie.m0b,selfie.n0b,selfie.nsurf,selfie.Nperiods,torfluxtot,
+                         selfie.minorradiusVMEC,selfie.majorradiusVMEC))
+            else:
+                sys.exit('Did not find the minorradiusVMEC and majorradiusVMEC!')
+
+         for rind in range(0,selfie.nsurf):
+           if selfie.StelSym:
+               f.write('       s         iota  curr_pol/nper    curr_tor    pprime   sqrt '+
+                        'g(0,0)\n')
+               f.write('                            [A]            [A]   dp/ds,[Pa] (dV/ds)/nper\n')
+               f.write('%12.4E%12.4E%12.4E%12.4E%12.4E%12.4E\n' %
+                       (selfie.s[rind],iota[rind],
+                        Bphi[rind]/(selfie.Nperiods/2.0/np.pi*(4.0*np.pi*1.0e-7)),
+                        Btheta[rind]*1.0e7/(1.0/2.0/np.pi*(4.0*np.pi)),
+                        selfie.dpds[rind],dVdsoverNper[rind]))
+           else:
+               f.write('        s               iota           Jpol/nper          Itor'+
+                       '            pprime         sqrt g(0,0)\n')
+               f.write('                                          [A]           [A] '+
+                       '            [Pa]         (dV/ds)/nper\n')
+               f.write('%17.8E%17.8E%17.8E%17.8E%17.8E%17.8E\n' %
+                       (selfie.s[rind],iota[rind],
+                        Bphi[rind]/(selfie.Nperiods/2.0/np.pi*(4.0*np.pi*1.0e-7)),
+                        Btheta[rind]*1.0e7/(1.0/2.0/np.pi*(4.0*np.pi)),
+                        selfie.dpds[rind],dVdsoverNper[rind]))
+         
+           if selfie.StelSym:
+               f.write('    m    n        r/[m]           z/[m] (phib-phi)*nper/twopi     '+
+                       'bmn/[T]\n')
+           else:
+               f.write('    m    n      rmnc [m]         rmns [m]         zmnc [m]         '+
+                        'zmns [m]         vmnc [ ]         vmns [ ]         '+
+                        'bmnc [T]         bmns [T]\n')
+
+           if selfie.StelSym:
+              do_sort=False #If False, I choose not to mn-sort the components because they usually come sorted.
+              if do_sort:
+                  inds=np.lexsort((n[rind],m[rind]))
+                  for j in range(0,selfie.nmodes[rind]):
+                      rmnc=selfie.R[rind][inds[j]]
+                      zmns=selfie.Z[rind][inds[j]]
+                      vmns=Dphi[rind][inds[j]]
+                      bmnc=selfie.B[rind][inds[j]]
+                      f.write('%5d%5d%16.8E%16.8E%16.8E%16.8E\n' %
+                              (m[rind][inds[j]],n[rind][inds[j]],
+                               selfie.R[rind][inds[j]],selfie.Z[rind][inds[j]],
+                               Dphi[rind][inds[j]],selfie.B[rind][inds[j]]))
+              else:
+                   for ind in range(0,selfie.nmodes[rind]):
+                       f.write('%5d%5d%16.8E%16.8E%16.8E%16.8E\n' %
+                               (m[rind][ind],n[rind][ind],
+                                selfie.R[rind][ind],selfie.Z[rind][ind],
+                                Dphi[rind][ind],selfie.B[rind][ind]))
+
+           else:
+              #imn=np.concatenate((range(selfie.nmodes[rind]),selfie.m[rind],selfie.n[rind]),axis=1).T
+              #imnsort=np.sort(imn,kind='mergesort',axis=[1,2])
+              if nsortstyle=='ascend':
+                  inds=np.lexsort((selfie.parity[rind],n[rind],m[rind]))
+              elif nsortstyle=='descend':
+                  inds=np.lexsort((selfie.parity[rind],-n[rind],m[rind]))
+              else: #(nsortstyle=='HM')
+                  inds_acsend=np.lexsort((selfie.parity[rind],n[rind],m[rind]))
+                  indsdescend=np.lexsort((selfie.parity[rind],-n[rind],m[rind]))
+                  inds=np.where(m[rind][inds_acsend]==0,inds_acsend,indsdescend)
+              j=0
+              while j<selfie.nmodes[rind]:
+                  thism=m[rind][inds[j]]
+                  thisn=n[rind][inds[j]]
+                  rmnc=0.0
+                  rmns=0.0
+                  zmnc=0.0
+                  zmns=0.0
+                  vmnc=0.0
+                  vmns=0.0
+                  bmnc=0.0
+                  bmns=0.0
+                  #print thism, thisn, j, selfie.nmodes[rind], selfie.parity[rind][inds[j]]
+                  if selfie.parity[rind][inds[j]]==1: #j is cosinus components
+                       rmnc=selfie.R[rind][inds[j]]
+                       zmns=selfie.Z[rind][inds[j]]
+                       vmns=Dphi[rind][inds[j]]
+                       bmnc=selfie.B[rind][inds[j]]
+                       j+=1              
+                  else: #j is sinus components
+                      rmns=selfie.R[rind][inds[j]]
+                      zmnc=selfie.Z[rind][inds[j]]
+                      vmnc=Dphi[rind][inds[j]]
+                      bmns=selfie.B[rind][inds[j]]
+                      if j+1==selfie.nmodes[rind]:
+                          #print 'A '+str(j)
+                          j+=1
+                      else: 
+                          if thism==m[rind][inds[j+1]] and thisn==n[rind][inds[j+1]] and selfie.parity[rind][inds[j+1]]==1:
+                              #print 'B1 '+str(j)
+                              rmnc=selfie.R[rind][inds[j+1]]
+                              zmns=selfie.Z[rind][inds[j+1]]
+                              vmns=Dphi[rind][inds[j+1]]
+                              bmnc=selfie.B[rind][inds[j+1]]
+                              j+=2
+                          else:
+                              #print 'B2 '+str(j)
+                              j+=1 
+                  f.write('%5d%5d%17.8E%17.8E%17.8E%17.8E%17.8E%17.8E%17.8E%17.8E\n' %
+                          (thism,thisn,rmnc,rmns,zmnc,zmns,vmnc,vmns,bmnc,bmns))
+
+      #################################################################################
+      else: #save a .dat file instead
+      #################################################################################
+         if np.isnan(selfie.majorradiusLastbcR00):
+             majorradiusLastbcR00=0.0
+         else:
+             majorradiusLastbcR00=selfie.majorradiusLastbcR00
+
+         if printheadercomment:
+             f.write('cc Saved %4d.%2d.%2d %2d:%2d by HS python routine bcgeom.write.\n' %
+                     (now.year,now.month,now.day,now.hour,now.minute))
+             f.write('cc ---------------------------------------------------------\n')
+             f.write(selfie.headertext.maincomment+'\n')
+             f.write('cc  m0b  n0b nsurf nper  flux/[Tm^2]     a/[m]     '+
+                     'R/[m]   avol/[m]  Rvol/[m] Vol/[m^3]\n')
+
+             if not(np.isnan(selfie.m0b)) and not(np.isnan(selfie.n0b)) and not(np.isnan(selfie.torfluxtot)):
+                if (not(np.isnan(selfie.minorradiusVMEC)) and np.isnan(selfie.majorradiusVMEC)
+                    and np.isnan(selfie.volumeVMEC)):
+                   f.write('cc %3d%5d%6d%4d%16.6E%10.5f%10.5f%11.5f\n'%
+                           (selfie.m0b,selfie.n0b,selfie.nsurf,selfie.Nperiods,torfluxtot,
+                            selfie.minorradiusW7AS,selfie.majorradiusLastbcR00,selfie.minorradiusVMEC))
+                elif (not(np.isnan(selfie.minorradiusVMEC)) and not(np.isnan(selfie.majorradiusVMEC))
+                      and np.isnan(selfie.volumeVMEC)):
+                   f.write('cc %3d%5d%6d%4d%16.6E%10.5f%10.5f%11.5f%11.5f%11.5f\n'%
+                           (selfie.m0b,selfie.n0b,selfie.nsurf,selfie.Nperiods,torfluxtot,
+                            selfie.minorradiusW7AS,selfie.majorradiusLastbcR00,
+                            selfie.minorradiusVMEC,selfie.majorradiusVMEC,
+                            np.pi*selfie.minorradiusVMEC**2.0*2.0*np.pi*selfie.majorradiusVMEC))
+                elif (not(np.isnan(selfie.minorradiusVMEC)) and not(np.isnan(selfie.majorradiusVMEC))
+                      and not(np.isnan(selfie.volumeVMEC))):
+                   f.write('cc %3d%5d%6d%4d%16.6E%10.5f%10.5f%11.5f%11.5f%11.5f\n'%
+                           (selfie.m0b,selfie.n0b,selfie.nsurf,selfie.Nperiods,torfluxtot,
+                            selfie.minorradiusW7AS,selfie.majorradiusLastbcR00,
+                            selfie.minorradiusVMEC,selfie.majorradiusVMEC,selfie.VolumeVMEC))
+                else:
+                   f.write('cc %3d%5d%6d%4d%16.6E%10.5f%10.5f\n'%
+                           (selfie.m0b,selfie.n0b,selfie.nsurf,selfie.Nperiods,torfluxtot,
+                            selfie.minorradiusW7AS,selfie.majorradiusLastbcR00))
+             else:
+                if (not(np.isnan(selfie.minorradiusVMEC)) and np.isnan(selfie.majorradiusVMEC)
+                    and np.isnan(selfie.volumeVMEC)):
+                   f.write('cc %6d%4d%10.5f%10.5f%11.5f\n'%
+                           (selfie.nsurf,selfie.Nperiods,
+                            selfie.minorradiusW7AS,selfie.majorradiusLastbcR00,selfie.minorradiusVMEC))
+                elif (not(np.isnan(selfie.minorradiusVMEC)) and not(np.isnan(selfie.majorradiusVMEC))
+                      and np.isnan(selfie.volumeVMEC)):
+                   f.write('cc %6d%4d%10.5f%10.5f%11.5f%11.5f%11.5f\n'%
+                           (selfie.nsurf,selfie.Nperiods,
+                            selfie.minorradiusW7AS,selfie.majorradiusLastbcR00,
+                            selfie.minorradiusVMEC,selfie.majorradiusVMEC,
+                            np.pi*selfie.minorradiusVMEC**2.0*2.0*np.pi*selfie.majorradiusVMEC))
+                elif (not(np.isnan(selfie.minorradiusVMEC)) and not(np.isnan(selfie.majorradiusVMEC))
+                      and not(np.isnan(selfie.volumeVMEC))):
+                   f.write(' cc %6d%4d%10.5f%10.5f%11.5f%11.5f%11.5f\n'%
+                           (selfie.nsurf,selfie.Nperiods,
+                            selfie.minorradiusW7AS,selfie.majorradiusLastbcR00,
+                            selfie.minorradiusVMEC,selfie.majorradiusVMEC,selfie.VolumeVMEC))
+                else:
+                   f.write('cc %6d%4d%10.5f%10.5f\n'%
+                           (selfie.nsurf,selfie.Nperiods,
+                            selfie.minorradiusW7AS,selfie.majorradiusLastbcR00))
+         #end if headercomment
+         
+         f.write(' c     m, n, B_mn/B_00, B_mn, (dB_mn/dr)/B_00 [1/cm], R_mn, z_mn\n')
+
+         for rind in range(selfie.nsurf):
+             f.write('%6.2f%8.4f%3i%8.2f%8.2f%7.4f%8.2f%8.2f  r,io,N,ra,Rm,s,r_o,R00\n'%
+                     (selfie.minorradiusW7AS*selfie.rnorm[rind]*100.0,
+                      iota[rind],selfie.Nperiods,selfie.minorradiusW7AS*100.0,
+                      selfie.majorradiusLastbcR00*100.0,selfie.s[rind],
+                      selfie.minorradiusW7AS*selfie.rnorm[rind]*100.0,selfie.R00[rind]*100.0))
+             f.write(' >  %13.4E%13.4E%13.4E     cur_pol=g, cur_tor=I, B_00\n'%
+                     (Bphi[rind]/(1.0e6*selfie.Nperiods/2.0/np.pi*(4.0*np.pi*1.0e-7)),
+                      Btheta[rind]/(1.0e6/2.0/np.pi*(4.0*np.pi*1.0e-7)),
+                      selfie.B00[rind]))
+             m0inds=np.where(m[rind]==0)[0]
+             if nsortstyle=='ascend' or nsortstyle=='HM':
+                 m0inds=m0inds[np.argsort(n[rind][m0inds])]
+             else:
+                 m0inds=m0inds[np.argsort(-n[rind][m0inds])]   
+             for m0i in m0inds:
+                 f.write('%4i%4i%11.6f%11.6f%12.3E%11.5f%11.5f\n'%
+                         (m[rind][m0i],
+                          n[rind][m0i],
+                          selfie.Bnorm[rind][m0i],
+                          selfie.B[rind][m0i],
+                          selfie.dBdrnorm[rind][m0i]/selfie.B00[rind]/selfie.minorradiusW7AS/100.0,
+                          selfie.R[rind][m0i]*100.0,
+                          selfie.Z[rind][m0i]*100.0))
+             for thism in range(1,int(np.max(m[rind]))+1):
+                 thisminds=np.where(m[rind]==thism)[0]
+                 if nsortstyle=='ascend':
+                     thisminds=thisminds[np.argsort(n[rind][thisminds])]
+                 else: #(including nsortstyle=='HM')
+                     thisminds=thisminds[np.argsort(-n[rind][thisminds])]
+                 for mi in thisminds:
+                     f.write('%4i%4i%11.6f%11.6f%12.3E%11.5f%11.5f\n'%
+                             (m[rind][mi],
+                              n[rind][mi],
+                              selfie.Bnorm[rind][mi],
+                              selfie.B[rind][mi],
+                              selfie.dBdrnorm[rind][mi]/selfie.B00[rind]/selfie.minorradiusW7AS/100.0,
+                              selfie.R[rind][mi]*100.0,
+                              selfie.Z[rind][mi]*100.0))
+             #end for thism
+             f.write('  -1   0 0.0 0.0 0.0 0.0 0.0     end of input\n')
+         #end for rind
+         
+      #end if filetype=='bc' or 'dat'   
+      f.close()
+
+  ####################################################################
+  # Interpolate a bcgeom to a set of new radii
+  ####################################################################
+  def interp(self,invar,invarname='rnorm',interptype='linear'):
+      # This function interpolates the bcgeom to a new
+      # set of radii. The chosen new values invar of the flux label 
+      # given by the string invarname ('s', 'rnorm', 'rW7AS', 'rVMEC') are interpolated.
+      # Default is 'rnorm'.
+      # The input invarname can also be 'index', in which case no interpolation
+      # takes place, the output is just self at the indices given in invar.
+      #
+      # The interptype can be 'linear' or 'nearest', default is 'linear'.
+
+
+      if np.any(np.isnan(invar)):
+          sys.exit('Input invar to bcgeom.interp contains nans!')
+        
+      smin=self.s[0]
+      smax=self.s[-1]
+      
+      #Decide which variable to interpolate over
+      if invarname=='s':
+          s=invar
+          if np.any(s<smin) or np.any(s>smax):
+            sys.exit('Chosen s out of range!')
+      elif invarname=='rnorm':
+          s=invar**2
+          if np.any(s<smin) or np.any(s>smax):
+            sys.exit('Chosen rnorm out of range!')
+      elif invarname=='rW7AS':
+          s=(invar/self.minorradiusW7AS)**2
+          if np.any(s<smin) or np.any(s>smax):
+            sys.exit('Chosen rW7AS out of range!')
+      elif invarname=='rVMEC':
+          s=(invar/self.minorradiusVMEC)**2
+          if np.any(s<smin) or np.any(s>smax):
+            sys.exit('Chosen rVMEC out of range!')
+      elif invarname=='index':
+          if np.any(invar<0) or np.any(invar>(len(self.s)-1)):
+            sys.exit('Chosen index out of range!')
+          invar=np.sort(invar)
+          s=self.s(invar)
+          interptype='nearest'
+      else:
+          sys.exit('invarname not recognised!')
+        
+      out=copy.deepcopy(self)
+
+      s=np.sort(s)
+      if np.any(np.diff(s)<=0):
+          sys.exit('invar contains doublets')
+      out.nsurf=len(s)
+
+      if interptype=='linear': #This is the default case
+          actualinterpolation=True
+          if len(s)==len(self.s):
+              actualinterpolation=np.any(s!=self.s)
+          if actualinterpolation:
+             out.headertext.maincomment=(out.headertext.maincomment+'\n'+
+                    'CC The file has been linearly interpolated to a new set of radii.')
+          
+          out.s=s
+          out.rnorm        = np.sqrt(s)
+          out.iota         = np.interp(s,self.s,self.iota)
+          out.Bphi         = np.interp(s,self.s,self.Bphi)
+          out.Btheta       = np.interp(s,self.s,self.Btheta)
+          out.dpds         = np.interp(s,self.s,self.dpds)
+          out.dVdsoverNper = np.interp(s,self.s,self.dVdsoverNper)
+          out.B00          = np.interp(s,self.s,self.B00)
+          out.R00          = np.interp(s,self.s,self.R00)
+
+          out.m=[]
+          out.n=[]
+          if not(self.StelSym):
+             out.parity=[]
+          out.B=[]
+          out.dBdrnorm=[]
+          out.R=[]
+          out.Z=[]
+          out.Bnorm=[]
+          out.Dphi=[]
+
+          for surfind in range(out.nsurf):
+              #print '\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b%4i/%4i'% (surfind+1,out.nsurf)
+              if not(s[surfind] in self.s):
+                  Rind=np.where(np.sign(self.s-s[surfind])==1)[0][0]
+              else:
+                  exactind=np.where(self.s==s[surfind])[0][0]
+                  Rind=exactind+1
+                  if exactind==len(s):
+                      Rind=len(s)-1
+                      
+              Lind=Rind-1
+              
+              Ds=self.s[Rind]-self.s[Lind]
+              Drnorm=self.rnorm[Rind]-self.rnorm[Lind]
+              wR=(s[surfind]-self.s[Lind])/Ds
+              wL=(self.s[Rind]-s[surfind])/Ds
+              
+              out.m.append(np.array([]))
+              out.n.append(np.array([]))
+              if not(self.StelSym):
+                  out.parity.append(np.array([]))
+              out.B.append(np.array([]))
+              out.dBdrnorm.append(np.array([]))
+              out.Bnorm.append(np.array([]))
+              out.R.append(np.array([]))
+              out.Z.append(np.array([]))    
+              out.Dphi.append(np.array([])) 
+
+
+              if not(self.StelSym):
+                 mode=-1
+                 for par in range(2):
+                    pindsL=np.where(self.parity[Lind]==par)[0]
+                    pindsR=np.where(self.parity[Rind]==par)[0]
+
+                    mL=self.m[Lind][pindsL]
+                    nL=self.n[Lind][pindsL]
+                    mR=self.m[Rind][pindsR]
+                    nR=self.n[Rind][pindsR]
+
+                    allns=np.sort(np.concatenate((nL,nR)))
+                    if len(allns)>1:    
+                        ns=allns[np.append(np.nonzero(np.diff(allns))[0],len(allns)-1)]
+                    else:
+                        ns=allns
+                        
+                    Nn=len(ns)
+
+                    for nind in range(Nn):
+                       n=ns[ninds]
+                       allms=np.sort(np.concatenate((mL[np.where(nL==n)[0]],
+                                                     mR[np.where(nR==n)[0]])))
+                       if len(allms)>1:
+                           ms=allms[np.append(np.nonzero(np.diff(allms))[0],len(allms)-1)]
+                       else:
+                           ms=allms
+                       Nm=len(ms)
+
+                       for mind in range(Nm):
+                          mode+=1
+                          m=ms[mind]
+                          Lmnind=np.where(np.logical_and(self.m[Lind]==m,
+                                                         self.n[Lind]==n,
+                                                         self.parity[Lind]==par))[0]
+                          Lexists=(Lmnind.size!=0)
+                          Rmnind=np.where(np.logical_and(self.m[Rind]==m,
+                                                         self.n[Rind]==n,
+                                                         self.parity[Rind]==par))[0]
+                          Rexists=(Rmnind.size!=0)
+                          out.m[surfind]=np.append(out.m[surfind],m)
+                          out.n[surfind]=np.append(out.n[surfind],n)
+                          out.parity[surfind]=np.append(out.parity[surfind],par)
+                          if Lexists and Rexists:
+                             out.B[surfind]=np.append(out.B[surfind],
+                                                      wL*self.B[Lind][Lmnind]+
+                                                      wR*self.B[Rind][Rmnind])
+                             out.dBdrnorm[surfind]=np.append(out.dBdrnorm[surfind],
+                                        (self.B[Rind][Rmnind]-self.B[Lind][Lmnind])/Drnorm)
+                             out.R[surfind]=np.append(out.R[surfind],
+                                                      wL*self.R[Lind][Lmnind]+
+                                                      wR*self.R[Rind][Rmnind])
+                             out.Z[surfind]=np.append(out.Z[surfind],
+                                                      wL*self.Z[Lind][Lmnind]+
+                                                      wR*self.Z[Rind][Rmnind])
+                             out.Dphi[surfind]=np.append(out.Dphi[surfind],
+                                                      wL*self.Dphi[Lind][Lmnind]+
+                                                      wR*self.Dphi[Rind][Rmnind])
+                          elif Lexists and not(Rexists):
+                             out.B[surfind]=np.append(out.B[surfind],
+                                                      wL*self.B[Lind][Lmnind])
+                             out.dBdrnorm[surfind]=np.append(out.dBdrnorm[surfind],
+                                                         -self.B[Lind][Lmnind]/Drnorm)
+                             out.R[surfind]=np.append(out.R[surfind],
+                                                      wL*self.R[Lind][Lmnind])
+                             out.Z[surfind]=np.append(out.Z[surfind],
+                                                      wL*self.Z[Lind][Lmnind])
+                             out.Dphi[surfind]=np.append(out.Dphi[surfind],
+                                                      wL*self.Dphi[Lind][Lmnind])
+                          elif not(Lexists) and Rexists:
+                             out.B[surfind]=np.append(out.B[surfind],
+                                                      wR*self.B[Rind][Rmnind])
+                             out.dBdrnorm[surfind]=np.append(out.dBdrnorm[surfind],
+                                                         self.B[Rind][Rmnind]/Drnorm)
+                             out.R[surfind]=np.append(out.R[surfind],
+                                                      wR*self.R[Rind][Rmnind])
+                             out.Z[surfind]=np.append(out.Z[surfind],
+                                                      wR*self.Z[Rind][Rmnind])
+                             out.Dphi[surfind]=np.append(out.Dphi[surfind],
+                                                      wR*self.Dphi[Rind][Rmnind])
+                          else:
+                             sys.exit('This is impossible')
+
+              else: #Stellarator symmetric case
+                 mode=-1
+
+                 mL=self.m[Lind]
+                 nL=self.n[Lind]
+                 mR=self.m[Rind]
+                 nR=self.n[Rind]
+
+                 allns=np.sort(np.concatenate((nL,nR)))
+                 if len(allns)>1:
+                     ns=allns[np.append(np.nonzero(np.diff(allns))[0],len(allns)-1)]
+                 else:
+                     ns=allns
+                     
+                 Nn=len(ns)
+
+                 for nind in range(Nn):
+                    n=ns[nind]
+                    allms=np.sort(np.concatenate((mL[np.where(nL==n)[0]],
+                                                  mR[np.where(nR==n)[0]])))
+                    if len(allms)>1:
+                        ms=allms[np.append(np.nonzero(np.diff(allms))[0],len(allms)-1)]
+                    else:
+                        ms=allms
+                        
+                    Nm=len(ms)
+
+                    for mind in range(Nm):
+                       mode+=1
+                       m=ms[mind]
+                       Lmnind=np.where(np.logical_and(self.m[Lind]==m,
+                                                      self.n[Lind]==n))[0]
+                       Lexists=(Lmnind.size!=0)
+                       Rmnind=np.where(np.logical_and(self.m[Rind]==m,
+                                                      self.n[Rind]==n))[0]
+                       Rexists=(Rmnind.size!=0)
+                       out.m[surfind]=np.append(out.m[surfind],m)
+                       out.n[surfind]=np.append(out.n[surfind],n)
+                       if Lexists and Rexists:
+                          out.B[surfind]=np.append(out.B[surfind],
+                                                   wL*self.B[Lind][Lmnind]+
+                                                   wR*self.B[Rind][Rmnind])
+                          out.dBdrnorm[surfind]=np.append(out.dBdrnorm[surfind],
+                                        (self.B[Rind][Rmnind]-self.B[Lind][Lmnind])/Drnorm)
+                          out.R[surfind]=np.append(out.R[surfind],
+                                                   wL*self.R[Lind][Lmnind]+
+                                                   wR*self.R[Rind][Rmnind])
+                          out.Z[surfind]=np.append(out.Z[surfind],
+                                                   wL*self.Z[Lind][Lmnind]+
+                                                   wR*self.Z[Rind][Rmnind])
+                          out.Dphi[surfind]=np.append(out.Dphi[surfind],
+                                                   wL*self.Dphi[Lind][Lmnind]+
+                                                   wR*self.Dphi[Rind][Rmnind])
+                       elif Lexists and not(Rexists):
+                          out.B[surfind]=np.append(out.B[surfind],
+                                                   wL*self.B[Lind][Lmnind])
+                          out.dBdrnorm[surfind]=np.append(out.dBdrnorm[surfind],
+                                                      -self.B[Lind][Lmnind]/Drnorm)
+                          out.R[surfind]=np.append(out.R[surfind],
+                                                   wL*self.R[Lind][Lmnind])
+                          out.Z[surfind]=np.append(out.Z[surfind],
+                                                   wL*self.Z[Lind][Lmnind])
+                          out.Dphi[surfind]=np.append(out.Dphi[surfind],
+                                                   wL*self.Dphi[Lind][Lmnind])
+                       elif not(Lexists) and Rexists:
+                          out.B[surfind]=np.append(out.B[surfind],
+                                                   wR*self.B[Rind][Rmnind])
+                          out.dBdrnorm[surfind]=np.append(out.dBdrnorm[surfind],
+                                                      self.B[Rind][Rmnind]/Drnorm)
+                          out.R[surfind]=np.append(out.R[surfind],
+                                                   wR*self.R[Rind][Rmnind])
+                          out.Z[surfind]=np.append(out.Z[surfind],
+                                                   wR*self.Z[Rind][Rmnind])
+                          out.Dphi[surfind]=np.append(out.Dphi[surfind],
+                                                   wR*self.Dphi[Rind][Rmnind])
+                       else:
+                          sys.exit('This is impossible')
+                    #end for mind
+                 #end for nind
+              #end if not(StelSym)
+              
+              out.Bnorm[surfind] = out.B[surfind]/out.B00[surfind]
+              out.nmodes[surfind]= mode+1
+          #end for surfind
+          #print '\n'
+      elif interptype=='nearest': #Pick the nearest existing surface
+        actualinterpolation=True
+        if len(s)==len(self.s):
+            actualinterpolation=np.any(s!=self.s)
+        if actualinterpolation:
+            out.headertext.maincomment=(out.headertext.maincomment+'\n'+
+                    'CC The file has only a subset of the flux surfaces of the original file.')
+
+        if invarname=='index':
+           inds=invar
+        else:
+           inds=np.zeros((len(s),),dtype=np.int)
+           if invarname=='s':
+              for iind in range(len(s)):
+                 inds[iind]=(np.abs(self.s-s[iind])).argmin()
+           else:
+              for iind in range(len(s)):
+                 inds[iind]=(np.abs(np.sqrt(self.s)-np.sqrt(s[iind]))).argmin()
+
+        out.s      = self.s[inds]
+        out.rnorm  = np.sqrt(out.s)
+        out.iota   = self.iota[inds]
+        out.Bphi   = self.Bphi[inds]
+        out.Btheta = self.Btheta[inds]
+        out.dpds   = self.dpds[inds]
+        out.dVdsoverNper = self.dVdsoverNper[inds]
+        out.B00    = self.B00[inds]
+        out.R00    = self.R00[inds]
+        out.nmodes = self.nmodes[inds]
+        out.B      = self.B[inds]
+        out.R      = self.R[inds]
+        out.Z      = self.Z[inds]
+        out.Dphi   = self.Dphi[inds]
+        out.Bnorm  = self.Bnorm[inds]
+        out.m      = self.m[inds]
+        out.n      = self.n[inds]
+        if not(self.StelSym):
+           out.parity = self.parity[inds]
+
+      else:
+        sys.exit('Unknown interpolation type!')
+
+      return out
+
+        
+  ####################################################################
+  # Display the content of a bcgeom
+  ####################################################################
   def disp(self,verbose=0):
 
     print '-----------------------------------------------'
@@ -622,7 +1420,7 @@ class bcgeom:
     print 'majorradiusLastbcR00 = '+str(self.majorradiusLastbcR00)
     print 'minorradiusVMEC      = '+str(self.minorradiusVMEC)
     print 'majorradiusVMEC      = '+str(self.majorradiusVMEC)
-    print 'VolumeVMEC           = '+str(self.VolumeVMEC)
+    print 'volumeVMEC           = '+str(self.volumeVMEC)
     print 'Bfilter.min_Bmn      = '+str(self.Bfilter.min_Bmn)
     print 'Bfilter.max_m        = '+str(self.Bfilter.max_m)
     print 'Bfilter.maxabs_n     = '+str(self.Bfilter.maxabs_n)

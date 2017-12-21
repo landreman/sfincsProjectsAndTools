@@ -35,9 +35,9 @@ class mnlist:
                     sys.exit('Undefined quantity!')
             else:
                 if quantity=='B' or quantity=='R':
-                    self.cosparity=geometry.parity
+                    self.cosparity=geometry.parity[rind]
                 elif quantity=='Z' or quantity=='Dphi':
-                    self.cosparity=1-geometry.parity
+                    self.cosparity=1-geometry.parity[rind]
                 else:
                     sys.exit('Undefined quantity!')
             
