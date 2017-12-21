@@ -21,12 +21,24 @@ if makePDF:
 
 import matplotlib.pyplot as plt
 
-print("This is "+ inspect.getfile(inspect.currentframe()))
+print ("This is "+ inspect.getfile(inspect.currentframe()))
 
 sfincsHome = os.environ.get('SFINCS_HOME') 
 sfincsProjectsAndToolsHome = os.environ.get('SFINCS_PROJECTS_AND_TOOLS_HOME')
 
+##PLOT OPTIONS##
+
+#execfile(sfincsProjectsAndToolsHome + "/tools/Albert/version3/plot_tools"  + "/RadialScanPlotOptions.py")
+exec(open(sfincsProjectsAndToolsHome + "/tools/Albert/version3/plot_tools"  + "/RadialScanPlotOptions.py").read())
+
+################
+
 ##INPUTS##
+
+withExternal = True
+externalDataFileType = '.dat'
+radiusColumn = 0
+ErColumn = 1
 
 ##NORMALIZATION FACTORS FOR SI UNITS##
 ######################################
@@ -46,14 +58,6 @@ radiusName = "rN" ##Radial coordinate to use on x-axis. Must be "psiHat", "psiN"
 plotVariableName = "Er" ##Parameter to plot on y-axis. In this version it must be "Er", "dPhiHatdpsiHat", "dPhiHatdpsiN", "dPhiHatdrHat" or "dPhiHatdrN" .
 
 MinFloat = pow(10, -sys.float_info.dig) 
-
-##PLOT OPTIONS##
-
-exec(open(sfincsProjectsAndToolsHome + "/tools/Albert/version3/plot_tools"  + "/RadialScanPlotOptions.py").read())
-
-################
-
-
 
 ##############################
 ##########END INPUTS##########
@@ -171,7 +175,7 @@ for directory in PlotDirectories:
         except:
             LegendLabel = directory
 
-        plt.plot(np.array(radii_sorted), np.array(ydata_sorted), PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel)
+        plt.plot(np.array(radii_sorted), np.array(ydata_sorted), PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel, linewidth=PlotLineWidth)
         linenumber += 1
 
     except:
@@ -180,6 +184,37 @@ for directory in PlotDirectories:
         print ("Continuing with next directory.")
         continue
 
+
+##ADD EXTERNAL DATA TO PLOT (E.G. DKES)##
+if withExternal :
+    os.chdir(originalDirectory)
+    externalInputFiles = [];
+
+    for externalfile in os.listdir(originalDirectory):
+        if externalfile.endswith(externalDataFileType):
+            try:
+                inputParams = np.genfromtxt(externalfile, dtype=None, comments="#", skip_header=1)
+                #print(inputParams[:,radiusColumn])
+                #print(inputParams[:,ErColumn])
+                try:
+                    LegendLabel = PlotLegendLabels[linenumber]
+                except:
+                    LegendLabel = externalfile
+                plt.plot(inputParams[:,radiusColumn], inputParams[:,ErColumn], PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel, linewidth=PlotLineWidth)
+                linenumber += 1
+
+                externalInputFiles.append(externalfile)
+            except Exception as e:
+                print (e.__class__.__name__, ": ", e.message, "while reading %s" % inputfile)
+                print ("Continuing with next file!")
+                continue
+
+    if len(externalInputFiles) > 0 :
+        print("Read external data files: " + str(externalInputFiles))
+    else:
+        print("Could not read any external data files.")
+
+#########################################
 
 plt.xscale(xAxisScale) 
 plt.yscale(yAxisScale)
@@ -197,7 +232,18 @@ else :
     ymin,ymax = plt.ylim(yAxisLim) 
     xmin,xmax = plt.xlim(xAxisLim) 
 
-plt.legend(bbox_to_anchor = LegendBBoxToAnchor, loc=LegendPosition, ncol=LegendNumberColumns, mode=None, borderaxespad=0., fontsize=LegendFontSize)
+if ShowLegend:
+    plt.legend(bbox_to_anchor = LegendBBoxToAnchor, loc=LegendPosition, ncol=LegendNumberColumns, mode=None, borderaxespad=0., prop=LegendProperties)#, fontsize=LegendFontSize)
+
+plt.gca().axes.xaxis.set_label_coords(xAxisLabelCoords[0], xAxisLabelCoords[1])
+plt.gca().axes.yaxis.set_label_coords(yAxisLabelCoords[0], yAxisLabelCoords[1])
+
+plt.tight_layout()
+
+plt.subplots_adjust(left=LeftMargin, right=RightMargin, top=TopMargin, bottom=BottomMargin)
+
+if ShowSubPlotLabel:
+    plt.text(SubPlotLabelXcoord, SubPlotLabelYcoord, SubPlotLabel)
 
 os.chdir(originalDirectory) 
 
