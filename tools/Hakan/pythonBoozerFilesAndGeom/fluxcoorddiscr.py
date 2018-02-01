@@ -676,8 +676,6 @@ class fluxcoorddiscr:
 
         self.Bmn=mnmat.mnmat(self.B,Nperiods=self.Nperiods)
 
-
-
   def disp(self):
         frm='{:8.4f}'
         print '----------------------------------------------------------------------------------'
