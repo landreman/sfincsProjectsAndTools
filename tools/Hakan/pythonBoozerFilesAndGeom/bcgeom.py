@@ -312,8 +312,8 @@ class bcgeom:
          self.FSAB2=abs(4*np.pi**2*self.psi_a/self.Nperiods*
                         (self.Bphi+self.iota*self.Btheta)/self.dVdsoverNper)
          self.nmodes=no_of_modes
-         self.m=modesm
-         self.n=modesn #sign is switched below
+         self.m=[e.astype(int) for e in modesm]
+         self.n=[e.astype(int) for e in modesn] #sign is switched below
          self.B=modesb
          self.Bnorm=modesbnorm
          self.B00=B00
@@ -500,8 +500,8 @@ class bcgeom:
            self.Bphi=Bphi
            self.Btheta=Btheta*rthetazeta_righthanded
            self.nmodes=no_of_modes
-           self.m=modesm
-           self.n=modesn #sign is switched below
+           self.m=[e.astype(int) for e in modesm]
+           self.n=[e.astype(int) for e in modesn] #sign is switched below
            self.B=modesb
            self.Bnorm=modesbnorm
            self.B00=B00

@@ -250,7 +250,7 @@ for inputind=1:Ninput
         =-fliplr(flipud(Fmnsin(2:mmax+1-Nu_even,n0ind+1:end-Nv_even)));
     Fmnsin(mmax+2:end,n0ind+1:end-Nv_even)       ...
         =-fliplr(flipud(Fmnsin(2:mmax+1-Nu_even,1:n0ind-1)));
-    
+    format long
     F=Nu*Nv/2*(Fmncos-i*Fmnsin);
     f=real(ifft2(ifftshift(fliplr(F),2)));
   end

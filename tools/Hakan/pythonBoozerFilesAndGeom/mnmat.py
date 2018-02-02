@@ -303,7 +303,8 @@ class mnmat:
         Fmnsin[0,n0ind] =0.0
         Fmnsin[0,:n0ind]=-Fmnsin[0,:n0ind:-1]
         
-        Fmncos[maxm+1:,-1]=Fmncos[maxm:0:-1,-1]
+        #Fmncos[maxm+1:,-1]=Fmncos[maxm:0:-1,-1]
+        Fmncos[maxm+1:,n0ind]= Fmncos[maxm:0:-1,n0ind]
         Fmnsin[maxm+1:,n0ind]=-Fmnsin[maxm:0:-1,n0ind]
 
         Fmncos[maxm+1:,0:n0ind]  = Fmncos[maxm:0:-1,:n0ind:-1]
@@ -312,7 +313,7 @@ class mnmat:
         Fmnsin[maxm+1:,n0ind+1:] =-Fmnsin[maxm:0:-1,n0ind-1::-1]
 
         F=self.Ntheta*self.Nzeta/2.0*(Fmncos-1j*Fmnsin);
-        #print(F)
+        #print(np.real(F))
 
         f=np.real(np.fft.ifft2(np.fft.ifftshift(F[:,::-1],1)));
 
