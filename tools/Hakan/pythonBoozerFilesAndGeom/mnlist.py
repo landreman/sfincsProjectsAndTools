@@ -25,7 +25,10 @@ class mnlist:
             self.m=geometry.m[rind]
             self.n=geometry.n[rind]
             data=getattr(geometry,quantity)
-            self.data=data[rind]
+            if quantity=='Dphi':
+                self.data=data[rind]*2*np.pi/self.Nperiods
+            else:
+                self.data=data[rind]
             if geometry.StelSym:
                 if quantity=='B' or quantity=='R':
                     self.cosparity=np.ones(len(self.m))
