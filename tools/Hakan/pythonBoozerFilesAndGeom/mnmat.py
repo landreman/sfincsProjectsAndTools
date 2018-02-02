@@ -20,7 +20,7 @@ class mnmat:
                 Ntheta=5 #default small number
             if Nzeta is None:
                 Nzeta=5 #default small number
-            if Ntheta%2==0 or Nzeta%2==0:
+            if Ntheta%2 != 1 or Nzeta%2 != 1:
                 sys.exit('sizes must be odd')
             self.Ntheta=Ntheta
             self.Nzeta=Nzeta
@@ -64,6 +64,9 @@ class mnmat:
             else:
                 Nzeta=Nzeta_size
             self.Nzeta=Nzeta
+            
+            if self.Ntheta%2 != 1 or self.Nzeta%2 != 1:
+                sys.exit('sizes must be odd')
 
             if Nperiods is None:
                  sys.exit('Nperiods is needed, not for the fft but for later use!')
@@ -114,7 +117,7 @@ class mnmat:
                 Ntheta=max(input.m)*2+1
             if Nzeta is None:
                 Nzeta=max(abs(input.n))*2+1
-            if Ntheta%2==0 or Nzeta%2==0:
+            if self.Ntheta%2 != 1 or self.Nzeta%2 != 1:
                 sys.exit('sizes must be odd')
             self.Ntheta=Ntheta
             self.Nzeta=Nzeta
