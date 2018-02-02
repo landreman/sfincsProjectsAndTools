@@ -76,17 +76,17 @@ class mnlist:
                 elif quantity=='R':
                     self.m   =wout.xm
                     self.n   =wout.xn*signchange/self.Nperiods
-                    self.data=(wout.rmnc[rindf_L]+wout.rmnc[rindf_R])/2
+                    self.data=(wout.rmnc[rindf_L]+wout.rmnc[rindf_R])/2.0
                     self.cosparity=np.ones(len(self.m))
                 elif quantity=='Z':
                     self.m   =wout.xm
                     self.n   =wout.xn*signchange/self.Nperiods
-                    self.data=(wout.zmns[rindf_L]+wout.zmns[rindf_R])/2
+                    self.data=(wout.zmns[rindf_L]+wout.zmns[rindf_R])/2.0
                     self.cosparity=np.zeros(len(self.m))
                 elif quantity=='lambda':
                     self.m   =wout.xm
                     self.n   =wout.xn*signchange/self.Nperiods
-                    self.data=(wout.lmns[rindf_L]+wout.lmns[rindf_R])/2
+                    self.data=(wout.lmns[rindf_L]+wout.lmns[rindf_R])/2.0
                     self.cosparity=np.zeros(len(self.m))
                 elif quantity=='B_u':
                     self.m   =wout.xm_nyq
@@ -109,20 +109,20 @@ class mnlist:
                 elif quantity=='R':
                     self.m   =np.concatenate((wout.xm,wout.xm))
                     self.n   =np.concatenate((wout.xn,wout.xn))*signchange/self.Nperiods
-                    self.data=np.concatenate(((wout.rmnc[rindf_L]+wout.rmnc[rindf_R])/2,
-                                              (wout.rmns[rindf_L]+wout.rmns[rindf_R])/2))
+                    self.data=np.concatenate(((wout.rmnc[rindf_L]+wout.rmnc[rindf_R])/2.0,
+                                              (wout.rmns[rindf_L]+wout.rmns[rindf_R])/2.0))
                     self.cosparity=np.concatenate((np.ones(wout.mnmax),np.zeros(wout.mnmax)))
                 elif quantity=='Z':
                     self.m   =np.concatenate((wout.xm,wout.xm))
                     self.n   =np.concatenate((wout.xn,wout.xn))*signchange/self.Nperiods
-                    self.data=np.concatenate(((wout.zmns[rindf_L]+wout.zmns[rindf_R])/2,
-                                              (wout.zmnc[rindf_L]+wout.zmnc[rindf_R])/2))                    
+                    self.data=np.concatenate(((wout.zmns[rindf_L]+wout.zmns[rindf_R])/2.0,
+                                              (wout.zmnc[rindf_L]+wout.zmnc[rindf_R])/2.0))                    
                     self.cosparity=np.concatenate((np.zeros(wout.mnmax),np.ones(wout.mnmax)))
                 elif quantity=='lambda':
                     self.m   =np.concatenate((wout.xm,wout.xm))
                     self.n   =np.concatenate((wout.xn,wout.xn))*signchange/self.Nperiods
-                    self.data=np.concatenate(((wout.lmns[rindf_L]+wout.lmns[rindf_R])/2,
-                                              (wout.lmnc[rindf_L]+wout.lmnc[rindf_R])/2))
+                    self.data=np.concatenate(((wout.lmns[rindf_L]+wout.lmns[rindf_R])/2.0,
+                                              (wout.lmnc[rindf_L]+wout.lmnc[rindf_R])/2.0))
                     self.cosparity=np.concatenate((np.zeros(wout.mnmax),np.ones(wout.mnmax)))
                 elif quantity=='B_u':
                     self.m   =np.concatenate((wout.xm_nyq,wout.xm_nyq))

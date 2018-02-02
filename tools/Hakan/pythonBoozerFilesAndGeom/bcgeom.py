@@ -161,8 +161,8 @@ class bcgeom:
            surfheader=sscan(f.readline()) #fscanf(fid,'%f',6)
            torfluxnorm=np.append(torfluxnorm, surfheader[0])
            iota =np.append(iota,surfheader[1])
-           Bphi=np.append(Bphi,surfheader[2]*self.Nperiods/2/np.pi*(4*np.pi*1e-7)) #Tesla*meter
-           Btheta=np.append(Btheta,surfheader[3]/2/np.pi*(4*np.pi*1e-7))              #Tesla*meter
+           Bphi=np.append(Bphi,surfheader[2]*self.Nperiods/2.0/np.pi*(4*np.pi*1e-7)) #Tesla*meter
+           Btheta=np.append(Btheta,surfheader[3]/2.0/np.pi*(4*np.pi*1e-7))              #Tesla*meter
            dpds=np.append(dpds,surfheader[4])
            dVdsoverNper=np.append(dVdsoverNper,surfheader[5])
 
@@ -300,7 +300,7 @@ class bcgeom:
            sys.exit('The coordinate system in the Boozer file was right handed')
 
          self.torfluxtot=self.torfluxtot*rthetazeta_righthanded  
-         self.psi_a=self.torfluxtot/2/np.pi
+         self.psi_a=self.torfluxtot/2.0/np.pi
          self.rnorm=np.sqrt(torfluxnorm)
          self.s=torfluxnorm
          self.Bphi=Bphi*rthetazeta_righthanded**2 #amperes law minus sign and direction switch sign
@@ -557,7 +557,7 @@ class bcgeom:
         self.nsurf= np.nan      #number of radial surfaces, Set this below
         self.Nperiods=wout.ns   #%!< number of field periods
         self.torfluxtot = wout.phi[wout.ns-1]*signchange
-        self.psi_a=self.torfluxtot/2/np.pi
+        self.psi_a=self.torfluxtot/2.0/np.pi
         self.minorradiusVMEC      = wout.Aminor_p  #minor plasma radius
         self.majorradiusLastbcR00 = np.nan         #Calculate this below (not necessary)
         self.minorradiusW7AS      = np.nan         #Calculate this below (not necessary)
@@ -569,7 +569,7 @@ class bcgeom:
 
         skip=wout.skip #=1,this is how many elements are skipped at low radii when going to half grid
 
-        self.s      = (fullgrid_s[skip-1:-1]+fullgrid_s[skip:])/2  #half grid
+        self.s      = (fullgrid_s[skip-1:-1]+fullgrid_s[skip:])/2.0  #half grid
         self.rnorm  = np.sqrt(self.s) #half grid
         self.nsurf  = len(self.s)
         self.dpds   = np.array(np.diff(wout.presf[skip-1:])/np.diff(fullgrid_s[skip-1:]))
@@ -587,14 +587,14 @@ class bcgeom:
 
         if max_m==np.inf:
           Ntheta = 1+2*max(abs(wout.xm))
-          self.Bfilter.max_m    = (Ntheta-1)/2
+          self.Bfilter.max_m    = (Ntheta-1)//2
         else:
           Ntheta = max_m*2+1
           self.Bfilter.max_m    = max_m
           
         if maxabs_n==np.inf:
           Nzeta=1+2*max(abs(wout.xn))
-          self.Bfilter.maxabs_n = (Nzeta-1)/2
+          self.Bfilter.maxabs_n = (Nzeta-1)//2
         else:
           Nzeta = maxabs_n*2+1
           self.Bfilter.maxabs_n = maxabs_n
@@ -622,7 +622,7 @@ class bcgeom:
             self.B00[rind]=Booz.B00
             self.R00[rind]=Booz.R00
             if self.StelSym:
-                self.nmodes[rind]=int((Ntheta*Nzeta+1)/2)
+                self.nmodes[rind]=int((Ntheta*Nzeta+1)//2)
             else:
                 self.nmodes[rind]=int(Ntheta*Nzeta)
             self.dVdsoverNper[rind]=4*np.pi**2/self.Nperiods*abs(
@@ -646,20 +646,20 @@ class bcgeom:
 
             #NOTA BENE: The following works because Bmn.mnlist() gives first cos, then sin components of Bmn
             if self.StelSym:
-                self.m[rind]   =np.append(self.m[rind],Blist.m[:(Ntheta*Nzeta+1)/2])
-                self.n[rind]   =np.append(self.n[rind],Blist.n[:(Ntheta*Nzeta+1)/2])
-                self.B[rind]   =np.append(self.B[rind],Blist.data[:(Ntheta*Nzeta+1)/2])
-                self.R[rind]   =np.append(self.R[rind],Rlist.data[:(Ntheta*Nzeta+1)/2])
-                self.Z[rind]   =np.append(self.Z[rind],Zlist.data[(Ntheta*Nzeta+1)/2:])
-                self.Dphi[rind]=np.append(self.Dphi[rind],Dphilist.data[(Ntheta*Nzeta+1)/2:])
+                self.m[rind]   =np.append(self.m[rind],Blist.m[:(Ntheta*Nzeta+1)//2])
+                self.n[rind]   =np.append(self.n[rind],Blist.n[:(Ntheta*Nzeta+1)//2])
+                self.B[rind]   =np.append(self.B[rind],Blist.data[:(Ntheta*Nzeta+1)//2])
+                self.R[rind]   =np.append(self.R[rind],Rlist.data[:(Ntheta*Nzeta+1)//2])
+                self.Z[rind]   =np.append(self.Z[rind],Zlist.data[(Ntheta*Nzeta+1)//2:])
+                self.Dphi[rind]=np.append(self.Dphi[rind],Dphilist.data[(Ntheta*Nzeta+1)//2:])
             else:
                 self.m[rind]=np.append(self.m[rind],Blist.m)
                 self.n[rind]=np.append(self.n[rind],Blist.n)
                 self.parity[rind]=np.append(self.parity[rind],Blist.cosparity)
                 self.B[rind]=np.append(self.B[rind],Blist.data)
                 self.R[rind]=np.append(self.R[rind],Rlist.data)
-                self.Z[rind]=np.append(self.Z[rind],np.concatenate((Zlist.data[(Ntheta*Nzeta+1)/2:],Zlist.data[1:(Ntheta*Nzeta+1)/2])))
-                self.Dphi[rind]=np.append(self.Dphi[rind],np.concatenate((Dphilist.data[(Ntheta*Nzeta+1)/2:],Dphilist.data[1:(Ntheta*Nzeta+1)/2])))
+                self.Z[rind]=np.append(self.Z[rind],np.concatenate((Zlist.data[(Ntheta*Nzeta+1)//2:],Zlist.data[1:(Ntheta*Nzeta+1)//2])))
+                self.Dphi[rind]=np.append(self.Dphi[rind],np.concatenate((Dphilist.data[(Ntheta*Nzeta+1)//2:],Dphilist.data[1:(Ntheta*Nzeta+1)//2])))
                    
             self.Bnorm[rind]=np.append(self.Bnorm[rind],self.B[rind]/Booz.B00)
 
@@ -678,7 +678,7 @@ class bcgeom:
             first_mode=ii[0]
             last_mode =ii[-1]
             ns=np.expand_dims(wout.xn[ii[0]:ii[-1]]/wout.nfp, axis=1) #row vector
-            nnmat=(1+(-1)**ns-ns.T)/2
+            nnmat=(1.0+(-1.0)**ns-ns.T)/2.0
             accum=accum+m*np.sum((np.expand_dims(wout.rmnc[-1][ii[0]:ii[-1]], axis=1)*
                                   np.expand_dims(wout.zmns[-1][ii[0]:ii[-1]], axis=0))*nnmat)
 

@@ -25,16 +25,16 @@ class mnmat:
             self.Ntheta=Ntheta
             self.Nzeta=Nzeta
 
-            maxm=(Ntheta-1)/2
+            maxm=(Ntheta-1)//2
             Nm=maxm+1
-            maxabsn=(Nzeta-1)/2
+            maxabsn=(Nzeta-1)//2
             Nn=Nzeta
             [self.m,self.n]=np.mgrid[0:Nm,-maxabsn:maxabsn+1]
             #print self.m
             #print self.n 
             
             m0ind=0
-            n0ind=(Nzeta-1)/2
+            n0ind=(Nzeta-1)//2
             self.m0ind=m0ind
             self.n0ind=n0ind
             self.Nperiods=Nperiods
@@ -71,16 +71,16 @@ class mnmat:
             if Nperiods is None:
                  sys.exit('Nperiods is needed, not for the fft but for later use!')
             
-            maxm=(Ntheta-1)/2
+            maxm=(Ntheta-1)//2
             Nm=maxm+1
-            maxabsn=(Nzeta-1)/2
+            maxabsn=(Nzeta-1)//2
             Nn=Nzeta
             self.m,self.n=np.mgrid[0:Nm,-maxabsn:maxabsn+1]
             
             self.m0ind=0
-            self.n0ind=(Nzeta-1)/2
+            self.n0ind=(Nzeta-1)//2
             self.Nperiods=Nperiods
-            maxm=(self.Ntheta-1)/2
+            maxm=(self.Ntheta-1)//2
             n0ind=self.n0ind
 
             Fflip=np.fft.fftshift(np.fft.fft2(input),1)
@@ -117,18 +117,18 @@ class mnmat:
                 Ntheta=max(input.m)*2+1
             if Nzeta is None:
                 Nzeta=max(abs(input.n))*2+1
-            if self.Ntheta%2 != 1 or self.Nzeta%2 != 1:
+            if Ntheta%2 != 1 or Nzeta%2 != 1:
                 sys.exit('sizes must be odd')
             self.Ntheta=Ntheta
             self.Nzeta=Nzeta
-            maxm=(Ntheta-1)/2
+            maxm=(Ntheta-1)//2
             Nm=maxm+1
-            maxabsn=(Nzeta-1)/2
+            maxabsn=(Nzeta-1)//2
             Nn=Nzeta
             self.m,self.n=np.mgrid[0:Nm,-maxabsn:maxabsn+1]
             
             m0ind=0
-            n0ind=(Nzeta-1)/2
+            n0ind=(Nzeta-1)//2
             self.m0ind=m0ind
             self.n0ind=n0ind
             self.c=np.zeros((Nm,Nn))
@@ -172,9 +172,9 @@ class mnmat:
             self.Ntheta  =tmp.Ntheta
             self.Nzeta   =tmp.Nzeta
 
-            maxm=(self.Ntheta-1)/2
+            maxm=(self.Ntheta-1)//2
             Nm=maxm+1
-            maxabsn=(self.Nzeta-1)/2
+            maxabsn=(self.Nzeta-1)//2
             Nn=self.Nzeta
             self.m,self.n=np.mgrid[0:Nm,-maxabsn:maxabsn+1]
              
@@ -195,9 +195,9 @@ class mnmat:
             self.Ntheta  =tmp.Ntheta
             self.Nzeta   =tmp.Nzeta
 
-            maxm=(self.Ntheta-1)/2
+            maxm=(self.Ntheta-1)//2
             Nm=maxm+1
-            maxabsn=(self.Nzeta-1)/2
+            maxabsn=(self.Nzeta-1)//2
             Nn=self.Nzeta
             self.m,self.n=np.mgrid[0:Nm,-maxabsn:maxabsn+1]
              
@@ -250,9 +250,9 @@ class mnmat:
         return out
 
     def mnlist(self):
-        maxm=(self.Ntheta-1)/2
+        maxm=(self.Ntheta-1)//2
         Nn=self.Nzeta
-        Ns=Nn*maxm+(Nn-1)/2
+        Ns=Nn*maxm+(Nn-1)//2
         Nc=Ns+1
         m_flat=self.m.flatten()
         n_flat=self.n.flatten()
@@ -292,7 +292,7 @@ class mnmat:
         return (c+s).sum((1,2)).reshape(u.shape)
        
     def ifft(self):
-        maxm=(self.Ntheta-1)/2
+        maxm=(self.Ntheta-1)//2
         n0ind=self.n0ind
         Nm=maxm+1
         Nn=self.Nzeta

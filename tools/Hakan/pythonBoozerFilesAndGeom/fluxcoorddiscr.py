@@ -229,7 +229,7 @@ class fluxcoorddiscr:
           halfgrid_Bphi   = Geom.bvco[skip:]*signchange
           halfgrid_Btheta = Geom.buco[skip:]
           halfgrid_dpds   = np.diff(Geom.presf[skip-1:])/np.diff(fullgrid_s[skip-1:])
-          psi_a=Geom.phi[Geom.ns-1]*signchange/2/np.pi
+          psi_a=Geom.phi[Geom.ns-1]*signchange/2.0/np.pi
           
           Nperiods = Geom.nfp
           iota=halfgrid_iota[rind]
