@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import division
 import numpy as np
 import sys, copy
 import datetime
@@ -7,6 +8,7 @@ import mnlist
 import mnmat
 from vmecgeom import vmecgeom
 import fluxcoorddiscr
+
 
 class headertxt:
   def __init__(self):
