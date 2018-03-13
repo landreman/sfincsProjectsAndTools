@@ -652,7 +652,7 @@ class bcgeom:
             self.dVdsoverNper[rind]=4*np.pi**2/self.Nperiods*abs(
                 self.psi_a*(self.Bphi[rind]+self.iota[rind]*self.Btheta[rind]))/Booz.FSAB2
 
-            FSAB2[rind]=Booz.FSAB2
+            self.FSAB2[rind]=Booz.FSAB2
             self.m.append(np.array([]))
             self.n.append(np.array([]))
             self.B.append(np.array([]))
