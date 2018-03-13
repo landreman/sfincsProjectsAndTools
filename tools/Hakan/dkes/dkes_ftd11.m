@@ -467,9 +467,15 @@ for rind=1:dkdata.Nradii
         d11fits.ex_er(rind)=ex_er;
         d11fits.er_u(rind)=er_u;
         
-        acc=input(['Do you accept the fit (return=yes, n=no, ',...
-                   'x=make no fit) ? '],'s');
+        askthequestion=0;
+        if askthequestion
+          acc=input(['Do you accept the fit (return=yes, n=no, ',...
+                     'x=make no fit) ? '],'s');
+        else
+          acc='';
+        end
         acceptedfit=isempty(acc);
+
         if not(acceptedfit)
           do_input=1;
         end

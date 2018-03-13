@@ -10,9 +10,8 @@ from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
 from matplotlib.ticker import LinearLocator, FormatStrFormatter
 
-import bcgeom
-import vmecgeom
-import mnmat
+import geomlib
+import mnFourierlib
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # This class contains for one flux surface uniformly discretised flux coordinates (Boozer, Hamada or Pest)
@@ -108,7 +107,7 @@ class fluxcoorddiscr:
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   # Constructor function 
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  def __init__(self,Geom,rind,Ntheta,Nzeta,name='Boozer'):
+  def __init__(self,Geom,rind,Ntheta,Nzeta,name='Boozer',u_zeroout_Deltaiota=-1.0):
 
       #first a general function to interpolate 2d cyclic on regular grids
       def interp2_cyclic(uin,vin,F,ueval,veval,N):
@@ -187,7 +186,7 @@ class fluxcoorddiscr:
         sys.exit('The coordinate name must be one of Boozer, Hamada, Pest or Cylindrical!')
 
       mu0=1.256637061e-06
-      if isinstance(Geom,bcgeom.bcgeom):
+      if isinstance(Geom,geomlib.bcgeom):
           if rind > Geom.nsurf-1:
               sys.exit('Error in input to fluxcoorddiscr.py: The radius index rind = '+
                        str(rind)+' is greater than max rind = '+str(Geom.nsurf-1))
@@ -206,16 +205,16 @@ class fluxcoorddiscr:
           Dzeta=2*np.pi/Nzeta/Geom.Nperiods
           theta, zeta = np.mgrid[0.0:2.0*np.pi-Dtheta:1j*Ntheta,0.0:2.0*np.pi/Geom.Nperiods-Dzeta:1j*Nzeta]
 
-          Bmn=mnmat.mnmat(Geom,Ntheta=Ntheta,Nzeta=Nzeta,rind=rind,quantity='B')
-          Rmn=mnmat.mnmat(Geom,Ntheta=Ntheta,Nzeta=Nzeta,rind=rind,quantity='R')
-          Zmn=mnmat.mnmat(Geom,Ntheta=Ntheta,Nzeta=Nzeta,rind=rind,quantity='Z')
-          Dzetacylphimn=mnmat.mnmat(Geom,Ntheta=Ntheta,Nzeta=Nzeta,rind=rind,quantity='Dphi')
+          Bmn=mnFourierlib.mnmat(Geom,Ntheta=Ntheta,Nzeta=Nzeta,rind=rind,quantity='B')
+          Rmn=mnFourierlib.mnmat(Geom,Ntheta=Ntheta,Nzeta=Nzeta,rind=rind,quantity='R')
+          Zmn=mnFourierlib.mnmat(Geom,Ntheta=Ntheta,Nzeta=Nzeta,rind=rind,quantity='Z')
+          Dzetacylphimn=mnFourierlib.mnmat(Geom,Ntheta=Ntheta,Nzeta=Nzeta,rind=rind,quantity='Dphi')
           Dzetacylphi=Dzetacylphimn.ifft()
           B=Bmn.ifft()
           R=Rmn.ifft()
           Z=Zmn.ifft()
 
-      elif isinstance(Geom,vmecgeom.vmecgeom):
+      elif isinstance(Geom,geomlib.vmecgeom):
           #VMEC LH coords: (u,v,s). Let w=-v => RH coords (u,w,s)
           #PEST coords pzeta=w=cylphi, ptheta=u+lambda. Here lambda is stored in the VMEC file.
 
@@ -237,12 +236,12 @@ class fluxcoorddiscr:
           I=halfgrid_Btheta[rind]
           mu0dpdpsi=halfgrid_dpds[rind]/psi_a*mu0
 
-          uw_Bmn=mnmat.mnmat(Geom,Ntheta=Ntheta,Nzeta=Nzeta,rind=rind,quantity='B')
-          uw_Rmn=mnmat.mnmat(Geom,Ntheta=Ntheta,Nzeta=Nzeta,rind=rind,quantity='R')
-          uw_Zmn=mnmat.mnmat(Geom,Ntheta=Ntheta,Nzeta=Nzeta,rind=rind,quantity='Z')
-          uw_B_umntilde=mnmat.mnmat(Geom,Ntheta=Ntheta,Nzeta=Nzeta,rind=rind,quantity='B_u').remove00()
-          uw_B_wmntilde=mnmat.mnmat(Geom,Ntheta=Ntheta,Nzeta=Nzeta,rind=rind,quantity='B_w').remove00()
-          uw_lmn=mnmat.mnmat(Geom,Ntheta=Ntheta,Nzeta=Nzeta,rind=rind,quantity='lambda')
+          uw_Bmn=mnFourierlib.mnmat(Geom,Ntheta=Ntheta,Nzeta=Nzeta,rind=rind,quantity='B')
+          uw_Rmn=mnFourierlib.mnmat(Geom,Ntheta=Ntheta,Nzeta=Nzeta,rind=rind,quantity='R')
+          uw_Zmn=mnFourierlib.mnmat(Geom,Ntheta=Ntheta,Nzeta=Nzeta,rind=rind,quantity='Z')
+          uw_B_umntilde=mnFourierlib.mnmat(Geom,Ntheta=Ntheta,Nzeta=Nzeta,rind=rind,quantity='B_u').remove00()
+          uw_B_wmntilde=mnFourierlib.mnmat(Geom,Ntheta=Ntheta,Nzeta=Nzeta,rind=rind,quantity='B_w').remove00()
+          uw_lmn=mnFourierlib.mnmat(Geom,Ntheta=Ntheta,Nzeta=Nzeta,rind=rind,quantity='lambda')
     
           #alphamn1=uw_B_umntilde.invgrad(uw_B_wmntilde,method=1)
           alphamn2=uw_B_umntilde.invgrad(uw_B_wmntilde,method=2)
@@ -289,10 +288,10 @@ class fluxcoorddiscr:
           R=interp2_cyclic(uw_u,uw_w,uw_R,Booz_u,Booz_w,Nperiods)
           Z=interp2_cyclic(uw_u,uw_w,uw_Z,Booz_u,Booz_w,Nperiods)
     
-          Bmn=mnmat.mnmat(B,Nperiods=Nperiods)
-          Rmn=mnmat.mnmat(R,Nperiods=Nperiods)
-          Zmn=mnmat.mnmat(Z,Nperiods=Nperiods)
-          Dzetacylphimn=mnmat.mnmat(Dzetacylphi,Nperiods=Nperiods)
+          Bmn=mnFourierlib.mnmat(B,Nperiods=Nperiods)
+          Rmn=mnFourierlib.mnmat(R,Nperiods=Nperiods)
+          Zmn=mnFourierlib.mnmat(Z,Nperiods=Nperiods)
+          Dzetacylphimn=mnFourierlib.mnmat(Dzetacylphi,Nperiods=Nperiods)
 
           B00=Bmn.get00()
           
@@ -487,10 +486,10 @@ class fluxcoorddiscr:
       FSAB2=4*np.pi**2/VPrimeHat
       #h00=VPrimeHat/(4*pi**2);
 
-      umn=mnmat.mnmat(h,Nperiods=Nperiods).calcu(G,I,iota) 
+      umn=mnFourierlib.mnmat(h,Nperiods=Nperiods).calcu(G,I,iota,zeroout_Deltaiota=u_zeroout_Deltaiota) 
       u=umn.ifft()
 
-      Dzetaphimn=mnmat.mnmat(1-h*FSAB2,Nperiods=Nperiods).invJacBdotgrad(iota)
+      Dzetaphimn=mnFourierlib.mnmat(1-h*FSAB2,Nperiods=Nperiods).invJacBdotgrad(iota)
       Dzetaphi=Dzetaphimn.ifft()
       
       dDzetaphidthetamn,dDzetaphidzetamn=Dzetaphimn.grad()
@@ -599,11 +598,11 @@ class fluxcoorddiscr:
           #            self.parity=Geom.parity{rind}
           #end
 
+          #self.gradpsidotgradBmn=mnFourierlib.fft(Booz_gradpsidotgradB)
           #self.gradpsidotgradBmn=mnmat.fft(Booz_gradpsidotgradB)
-          #self.gradpsidotgradBmn=mnmat.fft(Booz_gradpsidotgradB)
-          #self.dBpsidthetamn=mnmat.fft(Booz_dBpsidtheta)
+          #self.dBpsidthetamn=mnFourierlib.fft(Booz_dBpsidtheta)
           #self.dBpsidzetamn=mnmat.fft(Booz_dBpsidzeta)
-          #self.hmn=mnmat.fft(h)
+          #self.hmn=mnFourierlib.fft(h)
 
       #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       #% Interpolate to a phi vthet or a pzeta ptheta grid 
@@ -676,7 +675,7 @@ class fluxcoorddiscr:
 
         self.B00=np.mean(self.B)
 
-        self.Bmn=mnmat.mnmat(self.B,Nperiods=self.Nperiods)
+        self.Bmn=mnFourierlib.mnmat(self.B,Nperiods=self.Nperiods)
 
   def disp(self):
         frm='{:8.4f}'
@@ -779,7 +778,7 @@ class fluxcoorddiscr:
 
         #help routine to plot routine
         def makefulltordata(input,N=0,type='periodic'):
-          if isinstance(input,mnmat.mnmat):
+          if isinstance(input,mnFourierlib.mnmat):
             if N!=0 and input.Nperiods!=N:
                 sys.exit('Incompatible number of periods')
             inp=input.ifft()
