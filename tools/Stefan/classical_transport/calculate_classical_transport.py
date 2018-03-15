@@ -49,11 +49,8 @@ if __name__ == "__main__":
     # debug against mass ratio expanded expression previously calculated
     import sys, os
     import numpy
-    print __file__
-    print os.path.dirname(__file__)
-
-    sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'Hakan/pythonBoozerFilesAndGeom'))
-    from bcgeom import bcgeom
+    #sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'Hakan/pythonBoozerFilesAndGeom'))
+    from geomlib import bcgeom
     from fluxcoorddiscr import fluxcoorddiscr
 
     # can artificially increase mass and Z to try to match Z>>1, mC/mD >> 1 asymptotic results
@@ -71,7 +68,7 @@ if __name__ == "__main__":
     
     pi = numpy.pi
 
-    geom = bcgeom('w7x-sc1.bc',1e-16,float("inf"),float("inf"),'StelSym',1)
+    geom = bcgeom('w7x-sc1.bc',1e-16,float("inf"),float("inf"),'StelSym',1,verbose=0)
 
     rind=34
     Ntheta = 91

@@ -47,7 +47,7 @@ class Bfiltr:
 class bcgeom:
     
   def __init__(self,input,min_Bmn=0,max_m=np.inf,maxabs_n=np.inf,
-               symmetry='unknown',signcorr=2):
+               symmetry='unknown',signcorr=2,verbose=1):
     if isinstance(input,netCDF4.Group) or isinstance(input,netCDF4.Dataset):
         readfromnc(input,self)
         if not(hasattr(self,'nsurf')):
@@ -177,8 +177,9 @@ class bcgeom:
 
       
          while not endoffile:
-           rind=rind+1        
-           print '\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b%5i/%5i'% (rind+1,self.nsurf),
+           rind=rind+1
+           if verbose>0:
+             print '\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b%5i/%5i'% (rind+1,self.nsurf),
            if not(YTstyle): #%isempty(strfind(self.headertext.surfvars,'[A]'))
                self.headertext.surfvarunits=f.readline() #unit line only in JG files
            #print surfvarunits: '+self.headertext.surfvarunits
@@ -298,7 +299,8 @@ class bcgeom:
 
          #end while loop over radii
          f.close()
-         print '' #go to new line
+         if verbose>0:
+           print '' #go to new line
          
          if any([a>0 for a in dVdsoverNper]):
            sys.exit('The coordinate system in the Boozer '+
@@ -639,9 +641,11 @@ class bcgeom:
         self.Dphi=[]
 
         #print 'Nzeta,Ntheta = '+str(Nzeta)+', '+str(Ntheta)
-        print 'Converting VMEC to Boozer coordinates...'
+        if verbose>0:
+          print 'Converting VMEC to Boozer coordinates...'
         for rind in range(len(self.s)):
-            print '\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\bRadius%5i/%5i'% (rind+1,len(self.s)),
+            if verbose>0:
+              print '\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\bRadius%5i/%5i'% (rind+1,len(self.s)),
             Booz=fluxcoorddiscr.fluxcoorddiscr(wout,rind=rind,Ntheta=Ntheta,Nzeta=Nzeta,name='Boozer')
             #(fig, ax)=Booz.plot('B')
             #fig.show()
@@ -691,7 +695,8 @@ class bcgeom:
             self.Bnorm[rind]=np.append(self.Bnorm[rind],self.B[rind]/Booz.B00)
 
         #end radius loop
-        print '' #carriage return
+        if verbose>0:
+          print '' #carriage return
 
         self.dVdsoverNper=np.abs(self.psi_a*4*np.pi**2.0/self.Nperiods*
                                  (self.Bphi+self.iota*self.Btheta)/self.FSAB2)

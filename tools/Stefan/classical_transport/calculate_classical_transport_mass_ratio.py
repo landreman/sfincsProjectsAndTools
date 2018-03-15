@@ -31,11 +31,7 @@ def calculate_classical_transport(Zs,mHats,nHats,THats,ddpsiHat_nHats, ddpsiHat_
 if __name__ == "__main__":
     # debug against mass ratio expanded expression previously calculated
     import sys, os
-    print __file__
-    print os.path.dirname(__file__)
-
-    sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'Hakan/pythonBoozerFilesAndGeom'))
-    from bcgeom import bcgeom
+    from geomlib import bcgeom
     from fluxcoorddiscr import fluxcoorddiscr
 
     e =  1.6021766208e-19
@@ -44,7 +40,7 @@ if __name__ == "__main__":
     me = 9.10938356e-31
     mC = 1.9926467051999998e-26
 
-    geom = bcgeom('w7x-sc1.bc',1e-16,float("inf"),float("inf"),'StelSym',1)
+    geom = bcgeom('w7x-sc1.bc',1e-16,float("inf"),float("inf"),'StelSym',1,verbose=0)
 
     rind=34
     Ntheta = 91
