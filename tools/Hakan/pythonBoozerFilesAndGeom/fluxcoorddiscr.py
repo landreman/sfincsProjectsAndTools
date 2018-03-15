@@ -243,19 +243,19 @@ class fluxcoorddiscr:
           uw_B_umntilde=mnFourierlib.mnmat(Geom,Ntheta=Ntheta,Nzeta=Nzeta,rind=rind,quantity='B_u').remove00()
           uw_B_wmntilde=mnFourierlib.mnmat(Geom,Ntheta=Ntheta,Nzeta=Nzeta,rind=rind,quantity='B_w').remove00()
           uw_lmn=mnFourierlib.mnmat(Geom,Ntheta=Ntheta,Nzeta=Nzeta,rind=rind,quantity='lambda')
-    
+          #print uw_lmn.ifft()
           #alphamn1=uw_B_umntilde.invgrad(uw_B_wmntilde,method=1)
           alphamn2=uw_B_umntilde.invgrad(uw_B_wmntilde,method=2)
           #if B_umn and B_wmn are good, then alphamn1 should equal alphamn2 (any problem here would be due to vmec)
           
-          uw_pmn=(alphamn2-I*uw_lmn)*(1/(G+iota*I))
+          uw_pmn=(alphamn2-I*uw_lmn)*(1.0/(G+iota*I))
           uw_Dthetau=(uw_lmn+iota*uw_pmn).ifft()
           uw_Dzetaw =uw_pmn.ifft()
           uw_Dpthetau=uw_lmn.ifft()
       
           #u,w discretisation
-          Dtheta=2*np.pi/Ntheta
-          Dzeta=2*np.pi/Nzeta/Nperiods
+          Dtheta=2.0*np.pi/Ntheta
+          Dzeta=2.0*np.pi/Nzeta/Nperiods
           uniform_pol,uniform_tor = np.mgrid[0.0:2.0*np.pi-Dtheta:1j*Ntheta,0.0:2.0*np.pi/Nperiods-Dzeta:1j*Nzeta]
           uw_u = uniform_pol
           uw_w = uniform_tor
@@ -263,7 +263,8 @@ class fluxcoorddiscr:
           uw_zeta =uw_Dzetaw +uw_w
           #uw_pzeta=uw_w
           #uw_ptheta=uw_u+uw_Dpthetau
-      
+          #print 'uw_Dthetau='+str(uw_Dthetau)
+          #print 'uw_Dzetaw='+str(uw_Dthetau)
           #Pest discretisation
           #Pest_ptheta=uniform_pol
           #Pest_pzeta =uniform_tor
@@ -547,7 +548,10 @@ class fluxcoorddiscr:
       self.dsdrGraz  =self.FSAsqrtgpsipsi/abs(psi_a)
       self.r_eff=np.sqrt(self.FSAg_phiphi*self.FSAgpsipsi)/abs(self.G)
       self.r_eff_appr1=np.sqrt(sum(sum(gpsipsi*h/B**2))/sum(sum(h)))
-      self.r_eff_appr2=np.sqrt((self.FSAg_phiphi-self.FSAu2B2-self.G**2/FSAB2)/iota**2)
+      if (self.FSAg_phiphi-self.FSAu2B2-self.G**2/FSAB2)>=0:
+          self.r_eff_appr2=np.sqrt((self.FSAg_phiphi-self.FSAu2B2-self.G**2/FSAB2)/iota**2)
+      else:
+          self.r_eff_appr2=0.0
       self.Ntor=Nzeta
       self.Npol=Ntheta
       self.Dtor=Dzeta
@@ -771,9 +775,11 @@ class fluxcoorddiscr:
         ax.set_ylabel(self.name+' poloidal coordinate')
         if title!='':
             ax.set_title(title)
+        else:
+            ax.set_title(toshow)
         plt.colorbar()
         #plt.show()
-        return fig, plt
+        return fig, ax
         
   def plot3d(self,toshow,title='',torstride=1,polstride=1,cmap=None):
 
@@ -876,5 +882,5 @@ class fluxcoorddiscr:
             ax.set_title(title)
             
         #plt.show()
-        return fig, plt
+        return fig, ax
 

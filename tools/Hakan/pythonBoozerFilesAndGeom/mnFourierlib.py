@@ -400,20 +400,20 @@ class mnmat:
         if isinstance(other, mnmat):
             summa=mnmat(0,Ntheta=self.Ntheta,Nzeta=self.Nzeta,Nperiods=self.Nperiods)
             summa.c=self.c+other.c            
-            summa.s=self.c+other.s            
+            summa.s=self.s+other.s            
             return summa
 
     def __sub__(self,other):
         if isinstance(other, mnmat):
             difference=mnmat(0,Ntheta=self.Ntheta,Nzeta=self.Nzeta,Nperiods=self.Nperiods)
             difference.c=self.c-other.c            
-            difference.s=self.c-other.s            
+            difference.s=self.s-other.s            
             return difference
         
     def __neg__(self):
         difference=mnmat(0,Ntheta=self.Ntheta,Nzeta=self.Nzeta,Nperiods=self.Nperiods)
         difference.c=-self.c
-        difference.s=-self.c
+        difference.s=-self.s
         return difference
 
     def __mul__(self,other):

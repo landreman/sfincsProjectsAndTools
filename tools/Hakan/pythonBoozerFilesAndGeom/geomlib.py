@@ -638,11 +638,14 @@ class bcgeom:
         self.Bnorm=[]
         self.Dphi=[]
 
+        #print 'Nzeta,Ntheta = '+str(Nzeta)+', '+str(Ntheta)
         print 'Converting VMEC to Boozer coordinates...'
         for rind in range(len(self.s)):
             print '\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\bRadius%5i/%5i'% (rind+1,len(self.s)),
             Booz=fluxcoorddiscr.fluxcoorddiscr(wout,rind=rind,Ntheta=Ntheta,Nzeta=Nzeta,name='Boozer')
-
+            #(fig, ax)=Booz.plot('B')
+            #fig.show()
+            #print Booz.B.shape
             self.B00[rind]=Booz.B00
             self.R00[rind]=Booz.R00
             if self.StelSym:
@@ -874,12 +877,14 @@ class bcgeom:
             f.write(selfie.headertext.maincomment+'\n')
 
          if selfie.StelSym: #JG includes a little more info in this case
-            if not(np.isnan(selfie.minorradiusVMEC)) and np.isnan(selfie.majorradiusVMEC) and np.isnan(selfie.volumeVMEC):
+            if (not(np.isnan(selfie.minorradiusVMEC)) and np.isnan(selfie.majorradiusVMEC)
+                and np.isnan(selfie.volumeVMEC)):
                 f.write(' m0b  n0b nsurf nper  flux/[Tm^2]     a/[m]     R/[m]   avol/[m]\n')
                 f.write('%3d%5d%6d%4d%16.6E%10.5f%10.5f%11.5f\n' %
                         (selfie.m0b,selfie.n0b,selfie.nsurf,selfie.Nperiods,torfluxtot,
                          selfie.minorradiusW7AS,selfie.majorradiusLastbcR00,selfie.minorradiusVMEC))
-            elif not(np.isnan(selfie.minorradiusVMEC)) and not(np.isnan(selfie.majorradiusVMEC)) and np.isnan(selfie.volumeVMEC):
+            elif (not(np.isnan(selfie.minorradiusVMEC)) and not(np.isnan(selfie.majorradiusVMEC))
+                  and np.isnan(selfie.volumeVMEC)):
                 f.write(' m0b  n0b nsurf nper  flux/[Tm^2]     a/[m]     R/[m]   avol/[m]  '+
                         'Rvol/[m]\n')
                 f.write('%3d%5d%6d%4d%16.6E%10.5f%10.5f%11.5f%11.5f%11.5f\n' %
@@ -887,7 +892,8 @@ class bcgeom:
                          selfie.minorradiusW7AS,selfie.majorradiusLastbcR00,
                          selfie.minorradiusVMEC,selfie.majorradiusVMEC,
                          np.pi*selfie.minorradiusVMEC**2.0*2.0*np.pi*selfie.majorradiusVMEC))
-            elif not(np.isnan(selfie.minorradiusVMEC)) and not(np.isnan(selfie.majorradiusVMEC)) and not(np.isnan(selfie.volumeVMEC)):
+            elif (not(np.isnan(selfie.minorradiusVMEC)) and not(np.isnan(selfie.majorradiusVMEC))
+                  and not(np.isnan(selfie.volumeVMEC))):
                 f.write(' m0b  n0b nsurf nper  flux/[Tm^2]     a/[m]     R/[m]   avol/[m]  '+
                         'Rvol/[m] Vol/[m^3]\n')
                 f.write('%3d%5d%6d%4d%16.6E%10.5f%10.5f%11.5f%11.5f%11.5f\n' %
@@ -1604,9 +1610,12 @@ class vmecgeom:
     self.version_         =float(dataset.variables['version_'][:])
     self.input_extension  =''.join(dataset.variables['input_extension'][:])
     self.mgrid_file       =''.join(dataset.variables['mgrid_file'][:])
-    self.pcurr_type       =''.join(dataset.variables['pcurr_type'][:])
-    self.pmass_type       =''.join(dataset.variables['pmass_type'][:])
-    self.piota_type       =''.join(dataset.variables['piota_type'][:])
+    if 'pcurr_type'.encode('utf-8') in nc_vars:
+        self.pcurr_type       =''.join(dataset.variables['pcurr_type'][:])
+    if 'pmass_type'.encode('utf-8') in nc_vars:
+        self.pmass_type       =''.join(dataset.variables['pmass_type'][:])
+    if 'piota_type'.encode('utf-8') in nc_vars:
+        self.piota_type       =''.join(dataset.variables['piota_type'][:])
     self.wb               =float(dataset.variables['wb'][:])
     self.wp               =float(dataset.variables['wp'][:])
     self.gamma            =float(dataset.variables['gamma'][:])
@@ -1624,7 +1633,8 @@ class vmecgeom:
     self.lasym__logical__ =bool(dataset.variables['lasym__logical__'][:])
     self.lrecon__logical__=bool(dataset.variables['lrecon__logical__'][:])
     self.lfreeb__logical__=bool(dataset.variables['lfreeb__logical__'][:])
-    self.lrfp__logical__  =bool(dataset.variables['lrfp__logical__'][:])
+    if 'lrfp__logical__'.encode('utf-8') in nc_vars:
+        self.lrfp__logical__  =bool(dataset.variables['lrfp__logical__'][:])
     self.ier_flag         =int(dataset.variables['ier_flag'][:])
     self.aspect           =float(dataset.variables['aspect'][:])
     self.betatotal        =float(dataset.variables['betatotal'][:])
@@ -1641,10 +1651,14 @@ class vmecgeom:
     self.Aminor_p         =float(dataset.variables['Aminor_p'][:])
     self.Rmajor_p         =float(dataset.variables['Rmajor_p'][:])
     self.volume_p         =float(dataset.variables['volume_p'][:])
-    self.ftolv            =float(dataset.variables['ftolv'][:])
-    self.fsql             =float(dataset.variables['fsql'][:])
-    self.fsqr             =float(dataset.variables['fsqr'][:])
-    self.fsqz             =float(dataset.variables['fsqz'][:])
+    if 'ftolv'.encode('utf-8') in nc_vars:
+        self.ftolv            =float(dataset.variables['ftolv'][:])
+    if 'fsql'.encode('utf-8') in nc_vars:
+        self.fsql             =float(dataset.variables['fsql'][:])
+    if 'fsqr'.encode('utf-8') in nc_vars:
+        self.fsqr             =float(dataset.variables['fsqr'][:])
+    if 'fsqz'.encode('utf-8') in nc_vars:
+        self.fsqz             =float(dataset.variables['fsqz'][:])
     self.nextcur          =float(dataset.variables['nextcur'][:])
     self.extcur           =np.array(dataset.variables['extcur'][:]).astype(float)
     self.mgrid_mode       =''.join(dataset.variables['mgrid_mode'][:])
@@ -1660,15 +1674,24 @@ class vmecgeom:
     else:
         self.raxis_cs=np.nan
         self.zaxis_cc=np.nan
-    self.am               =np.array(dataset.variables['am'][:]).astype(float)
-    self.ac               =np.array(dataset.variables['ac'][:]).astype(float)
-    self.ai               =np.array(dataset.variables['ai'][:]).astype(float)
-    self.am_aux_s         =np.array(dataset.variables['am_aux_s'][:]).astype(float)
-    self.am_aux_f         =np.array(dataset.variables['am_aux_f'][:]).astype(float)
-    self.ai_aux_s         =np.array(dataset.variables['ai_aux_s'][:]).astype(float)
-    self.ai_aux_f         =np.array(dataset.variables['ai_aux_f'][:]).astype(float)
-    self.ac_aux_s         =np.array(dataset.variables['ac_aux_s'][:]).astype(float)
-    self.ac_aux_f         =np.array(dataset.variables['ac_aux_f'][:]).astype(float)
+    if 'am'.encode('utf-8') in nc_vars:
+        self.am               =np.array(dataset.variables['am'][:]).astype(float)
+    if 'ac'.encode('utf-8') in nc_vars:
+        self.ac               =np.array(dataset.variables['ac'][:]).astype(float)
+    if 'ai'.encode('utf-8') in nc_vars:
+        self.ai               =np.array(dataset.variables['ai'][:]).astype(float)
+    if 'am_aux_s'.encode('utf-8') in nc_vars:
+        self.am_aux_s         =np.array(dataset.variables['am_aux_s'][:]).astype(float)
+    if 'am_aux_f'.encode('utf-8') in nc_vars:
+        self.am_aux_f         =np.array(dataset.variables['am_aux_f'][:]).astype(float)
+    if 'am_aux_s'.encode('utf-8') in nc_vars:
+        self.ai_aux_s         =np.array(dataset.variables['ai_aux_s'][:]).astype(float)
+    if 'ai_aux_f'.encode('utf-8') in nc_vars:
+        self.ai_aux_f         =np.array(dataset.variables['ai_aux_f'][:]).astype(float)
+    if 'ac_aux_s'.encode('utf-8') in nc_vars:
+        self.ac_aux_s         =np.array(dataset.variables['ac_aux_s'][:]).astype(float)
+    if 'ac_aux_f'.encode('utf-8') in nc_vars:
+        self.ac_aux_f         =np.array(dataset.variables['ac_aux_f'][:]).astype(float)
     self.iotaf            =np.array(dataset.variables['iotaf'][:]).astype(float)
     if 'q_factor' in dataset.variables:
       self.q_factor         =np.array(dataset.variables['q_factor'][:]).astype(float)
