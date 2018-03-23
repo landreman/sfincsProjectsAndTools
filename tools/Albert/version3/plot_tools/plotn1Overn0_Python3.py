@@ -33,7 +33,17 @@ print ("This is "+ inspect.getfile(inspect.currentframe()))
 ##INPUT##
 #########
 
-quantityToPlot = "Phi1Hat"
+quantityToPlotDenominator = "totalDensity"
+quantityToPlotNumerator = "densityPerturbation"
+
+species = 0
+
+xLabel = r'$\zeta$' + " " + r'$\mathrm{[rad]}$'
+yLabel = r'$\theta$'+ " " + r'$\mathrm{[rad]}$'
+#zLabel = r'$n_{1 \mathrm{He}}$'
+zLabel = r'$n_{1 e} / n_{0 e}$'
+#zUnits = r'$[10^{20} \mathrm{m}^{-3}]$'
+zUnits = r''
 
 filename = 'sfincsOutput.h5'
 
@@ -47,11 +57,12 @@ matplotlib.rc('axes',linewidth=1.5)
 matplotlib.rcParams['mathtext.default'] = 'it'
 matplotlib.rcParams['text.usetex'] = True
 
-zFactor = 1000 ##kV -> V
+#zFactor = 1000 ##kV -> V
+zFactor = 1.0
 ##W7-X##
-xAxisTicks = [r'$0$', r'$\pi/10$', r'$2\pi/10$', r'$3\pi/10$', r'$4\pi/10$']
+#xAxisTicks = [r'$0$', r'$\pi/10$', r'$2\pi/10$', r'$3\pi/10$', r'$4\pi/10$']
 ##LHD
-#xAxisTicks = [r'$0$', r'$\pi/20$', r'$2\pi/20$', r'$3\pi/20$', r'$4\pi/20$']
+xAxisTicks = [r'$0$', r'$\pi/20$', r'$2\pi/20$', r'$3\pi/20$', r'$4\pi/20$']
 
 yAxisTicks = [r'$0$', r'$\pi/2$', r'$\pi$', r'$3\pi/2$', r'$2\pi$']
 
@@ -74,7 +85,7 @@ numLevels = 5
 def fmt_cbar(x, pos):
    if x == 0.0:
       return r'${}$'.format(x)
-   a, b = '{:.1e}'.format(x).split('e')
+   a, b = '{:.4e}'.format(x).split('e')
    b = int(b)
    return r'${} \cdot 10^{{{}}}$'.format(a, b)
 
@@ -86,7 +97,7 @@ print ("Processing file ",filename)
 f = h5py.File(filename,'r')
 theta = f["theta"][()]
 zeta = f["zeta"][()]
-Phi1Hat = f[quantityToPlot][()]
+OutputQuantity = numpy.divide(f[quantityToPlotNumerator][()], f[quantityToPlotDenominator][()] - f[quantityToPlotNumerator][()])
 iteration = f["NIterations"][()] - 1 #Results from last iteration
 rN = f["rN"][()]
 f.close()
@@ -94,27 +105,29 @@ f.close()
 print ("theta max: " + str(numpy.amax(theta)))
 print ("zeta max: " + str(numpy.amax(zeta)))
 
-zMinData = zFactor*numpy.amin(Phi1Hat[:,:,iteration])
-zMaxData = zFactor*numpy.amax(Phi1Hat[:,:,iteration])
+zMinData = zFactor*numpy.amin(OutputQuantity[:,:,species,iteration])
+zMaxData = zFactor*numpy.amax(OutputQuantity[:,:,species,iteration])
 print ("zMin = " + str(zMinData))
 print ("zMax = " + str(zMaxData))
 
 
-delta = (numpy.amax(Phi1Hat[:,:,iteration]) - numpy.amin(Phi1Hat[:,:,iteration])) / numLevels
-ContourLevels = numpy.arange(numpy.amin(Phi1Hat[:,:,iteration]), numpy.amax(Phi1Hat[:,:,iteration]) + delta/2.0, delta)
+delta = (numpy.amax(OutputQuantity[:,:,species,iteration]) - numpy.amin(OutputQuantity[:,:,species,iteration])) / numLevels
+ContourLevels = numpy.arange(numpy.amin(OutputQuantity[:,:,species,iteration]), numpy.amax(OutputQuantity[:,:,species,iteration]) + delta/2.0, delta)
 ContourLevels = zFactor*ContourLevels
     
 ax = plt.subplot(numRows,numCols,1)
-    #plt.contourf(zeta,theta,1000*numpy.fliplr(Phi1Hat[:,:,iteration].transpose()),numContours)
-Phi1Plot = plt.contourf(zeta,theta,zFactor*Phi1Hat[:,:,iteration].transpose(),numContours, cmap=plt.get_cmap('gist_rainbow'))
+    #plt.contourf(zeta,theta,1000*numpy.fliplr(OutputQuantity[:,:,species,iteration].transpose()),numContours)
+Phi1Plot = plt.contourf(zeta,theta,zFactor*OutputQuantity[:,:,species,iteration].transpose(),numContours, cmap=plt.get_cmap('gist_rainbow'))
 #Phi1Plot2 = plt.contour(Phi1Plot,levels=ContourLevels, colors='k', hold='on')
 Phi1Plot2 = plt.contour(Phi1Plot,levels=ContourLevels, colors='k')
 #Phi1Plot2 = plt.contour(Phi1Plot,levels=Phi1Plot.levels[::2], colors='k', hold='on')
 #plt.xlabel(r'$\zeta$' + ' [rad]')
-plt.xlabel(r'$\zeta$' + " " + r'$\mathrm{[rad]}$')
+#plt.xlabel(r'$\zeta$' + " " + r'$\mathrm{[rad]}$')
 #plt.ylabel(r'$\theta$'+ ' [rad]')
-plt.ylabel(r'$\theta$'+ " " + r'$\mathrm{[rad]}$')
+#plt.ylabel(r'$\theta$'+ " " + r'$\mathrm{[rad]}$')
 #plt.zlabel(r'$\Phi_1$'+ ' [V]')
+plt.xlabel(xLabel)
+plt.ylabel(yLabel)
 
 plt.xticks([0,max(zeta)/4,max(zeta)/2,3*max(zeta)/4,max(zeta)])
 plt.yticks([0.0,max(theta)/4,max(theta)/2,3*max(theta)/4,max(theta)])
@@ -136,20 +149,25 @@ plt.gca().axes.yaxis.set_label_coords(-0.09,0.5)
 if show_rN:
     plt.title('rN = '+str(rN))
 
+zLabel = zLabel + " " + zUnits
+    
 #cbar = plt.colorbar(Phi1Plot, label=r'$\Phi_1$'+ ' [V]', ticks=ContourLevels)
 #cbar = plt.colorbar(Phi1Plot, label=r'$\Phi_1$'+ ' [V]', ticks=Phi1Plot.levels[::2])
 #cbar.add_lines(Phi1Plot2)
 cbar = plt.colorbar(Phi1Plot, format=ticker.FuncFormatter(fmt_cbar), ticks=ContourLevels)
-cbar.ax.set_ylabel(r'$\Phi_1$'+ " " + r'$\mathrm{[V]}$', rotation=0, labelpad=10)
+#cbar = plt.colorbar(Phi1Plot, format=ticker.FuncFormatter(fmt_xy_axis), ticks=ContourLevels)
+#cbar.ax.set_ylabel(r'$\Phi_1$'+ " " + r'$\mathrm{[V]}$', rotation=0, labelpad=10)
+cbar.ax.set_ylabel(zLabel, rotation=0, labelpad=-70, fontsize=30)
 
 #with warnings.catch_warnings():
 #    warnings.simplefilter("always")
 #plt.clabel(Phi1Plot2, fmt='%2.1f', colors='k', fontsize=14)
 plt.clabel(Phi1Plot2, fmt=ticker.FuncFormatter(fmt_cbar), colors='k', fontsize=18, inline=False)
+#plt.clabel(Phi1Plot2, fmt=ticker.FuncFormatter(fmt_xy_axis), colors='k', fontsize=18, inline=False)
 
 #plt.subplots_adjust(wspace=0.27)
 
-print (Phi1Hat.shape)
+print (OutputQuantity.shape)
 
 if makePDF:
     print ("Saving PDF")
