@@ -548,17 +548,19 @@ class bcgeom:
                self.Bphi=-self.Bphi
                self.Btheta=-self.Btheta
                
-    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  
+    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  
     #% Turn a loaded vmec dataset vmecgeom into a bcgeom
-    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  
+    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  
     elif isinstance(input,vmecgeom):
         wout=input
         signchange=float(wout.signgs) #is -1, because vmec is left handed
         self.StelSym=input.StelSym
         self.newsigncorr=True
         self.headertext=headertxt()
-        # Note that the following are only comments to what would appear in a file stored with .write()
-        # The internal representation in python is right handed and psi_a>0 in the direction of phi!
+        # Note that the following are only comments to what would appear in
+        # a file stored with .write()
+        # The internal representation in python is right handed and psi_a>0
+        # in the direction of phi!
         if self.StelSym:
             # Use Joachim Geiger's JMC convention as default for stellarator symmetric files:
             # Toroidal flux is counted positive in the direction opposite to the toroidal coordinate.
@@ -701,9 +703,9 @@ class bcgeom:
         self.dVdsoverNper=np.abs(self.psi_a*4*np.pi**2.0/self.Nperiods*
                                  (self.Bphi+self.iota*self.Btheta)/self.FSAB2)
 
-        #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         #% Calculate minorradiusW7AS
-        #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         accum=0;
         for m in range(1,wout.xm[-1]+1):
             ii=[i for i,x in enumerate(wout.xm) if x==m]
@@ -716,18 +718,18 @@ class bcgeom:
 
         self.minorradiusW7AS=np.sqrt(np.abs(accum))
         
-        #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         # Calculate majorradiusLastbcR00
-        #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         # Joachim defined his major radius to be
         # R00 in Boozer coordinates at s=0.995
         # which in his case is at the last half mesh radius
         # I choose to always take it at the last half mesh radius
         self.majorradiusLastbcR00=self.R00[-1]
 
-  ####################################################################
+  ##############################################################################
   # Calculate Volume-averaged beta
-  ####################################################################
+  ##############################################################################
   def averagebeta(self):
       p=integrate.cumtrapz(self.dpds,self.s,initial=0.0)
       p=p-p[-1]
@@ -746,9 +748,9 @@ class bcgeom:
           beta=0.0
       return beta
 
-  ####################################################################
+  ##############################################################################
   # filter a bcgeom
-  ####################################################################
+  ##############################################################################
   def filter(self,varinput,max_m=np.inf,maxabs_n=np.inf,makecopy=True):
       #This can be called in the following ways:
       #out=self.filter(min_Bmn)
@@ -813,9 +815,9 @@ class bcgeom:
       else:
           return self
       
-  ####################################################################
+  ##############################################################################
   # Write a bcgeom to a file
-  ####################################################################
+  ##############################################################################
   def write(self,filename,Nradii=None,min_Bmn=0,nsortstyle='ascend',printheadercomment=True):
       #argument Nradii is only used for .dat files.
       #First check which type of file the user wants.
