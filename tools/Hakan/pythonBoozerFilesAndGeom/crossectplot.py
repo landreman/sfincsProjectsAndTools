@@ -38,6 +38,7 @@ from fluxcoorddiscr import fluxcoorddiscr
 # figures   : A list with the handles to the produced figures
 #
 ##########################################################################
+
 def crossectplot(toshow,rNs,Geom,coordname='Boozer',Pest_zetas=0.0,
                  rNmin=0.0,rNmax=np.inf,rNcontours=None,savefilename=None):
 
@@ -63,14 +64,12 @@ def crossectplot(toshow,rNs,Geom,coordname='Boozer',Pest_zetas=0.0,
       sys.exit('Increase rNmax! No surfaces below it found in Geom.')
   if np.isscalar(Pest_zetas):
       Pest_zetas=np.array([Pest_zetas])
-
       
   Npol=toshow[0].shape[0]
   Ntor=toshow[0].shape[1]
   for rind in range(1,len(toshow)):
       Npol=max(toshow[rind].shape[0],Npol)
       Ntor=max(toshow[rind].shape[1],Ntor)
-
 
   #Now expand all toshow[i]'s to this resolution
   tmpquant=np.zeros((len(toshow),Npol,Ntor)) #make an expanded copy
@@ -81,10 +80,8 @@ def crossectplot(toshow,rNs,Geom,coordname='Boozer',Pest_zetas=0.0,
           tmpquant[rind]=mnFourierlib.mnmat(toshow[rind],Npol,Ntor,Nperiods).ifft()
 
   ridxs=np.zeros((len(toshow)),dtype=int)
-  #myrNs=np.zeros((len(toshow)))
   for rind in range(len(toshow)):
       ridxs[rind] = (np.abs(rNs[rind]-Geom.rnorm)).argmin()
-      #myrNs[rind] = Geom.rnorm[ridxs[rind]]
 
   #check for myrNs outside rNmin,rNmax
   ridxs[np.where(ridxs<rnormminind)[0]]=rnormminind
@@ -97,10 +94,6 @@ def crossectplot(toshow,rNs,Geom,coordname='Boozer',Pest_zetas=0.0,
   mask[np.where(np.diff(myrNs)==0)[0]]=False
   myrNs=myrNs[mask]
   ridxs=ridxs[mask]
-
-
-      
-  #myquant=np.zeros((len(myrNs),Npol,Ntor)) #make an interpolated copy
 
   interpfun=interpolate.interp1d(rNs,tmpquant,axis=0,kind='quadratic')
 
@@ -143,11 +136,6 @@ def crossectplot(toshow,rNs,Geom,coordname='Boozer',Pest_zetas=0.0,
   quantPestext=np.append(quantPest,quantPest[:,:,[0]],axis=2)
 
   rNM=np.outer(myrNs,np.ones((R.shape[2])))
-  #rNMext=np.outer(myrNs,np.ones((Rext.shape[2])))
-  #rNM=np.zeros((len(myrNs),Rext.shape[2]))
-  #for thind in range(Rext.shape[2]):
-  #    rNM[:,thind]=myrNs
-
 
   figures=[None]*len(Pest_zetas)
   
