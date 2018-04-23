@@ -48,7 +48,7 @@ def H(y):
     #a = a + exp(-b**2 * y) * (b**2 * y + 1)/(2*y**2)
     if y<1:
         a,err = quad(h,0,float("inf"),args=(y,))
-        a = y*0.5*a
+        a = y**2*0.5*a
     else:
         a,err = quad(h2,0,float("inf"),args=(y,))
         a = 0.5*a
@@ -69,12 +69,31 @@ def K(y):
         a = 0.5*a
     return a + y*3/(8*(1+y)**(5/2))
 
+def Fa(y):
+    #analytical form of F(y), derived by H.M. Smith 2018-04-20
+    return 1/(4*(1+y)**(3/2))
+
+def Ha(y):
+    #analytical form of H(y), derived by H.M. Smith 2018-04-20
+    return (5*y+2)/(8*(1+y)**(5/2))
+
+def Ka(y):
+    #analytical form of H(y) - 3 F(y)/2
+    return (2*y-1)/(8*(1+y)**(5/2))
+
+def F2a(y):
+    return y/(4*(1+y)**(5/2))
+
+def Ka2(y):
+    #analytical form of H(y) - 3 F(y)/2
+    return 3 *F2a(y)/2 - Fa(y)/2
 
 if __name__ == "__main__":
     # visualize the above functions
     # and test against known as asymptotes
     
-    test1 = True
+    test1 = False
+    test2 = True
     import matplotlib.pyplot as plt
     import numpy as np
 
@@ -183,3 +202,39 @@ if __name__ == "__main__":
         axarr[2].legend()
 
         plt.savefig("FHKasym2")
+        
+    if test2:
+        y0 = np.linspace(0.5,4)
+
+        # since the functions are not properly
+        # vectorized
+        _F0 = [F(yi) for yi in y0]
+        _H0 = [H(yi) for yi in y0]
+        _K0 = [K(yi) for yi in y0]
+
+
+        Fa0 = Fa(y0)
+        Ha0 = Ha(y0)
+        Ka0 = Ka(y0)
+
+        
+        f, axarr = plt.subplots(3, sharex=True)
+        plt.ticklabel_format(style='sci', axis='x', scilimits=(0,0))
+        plt.xlabel("y")
+
+        axarr[0].plot(y0,_F0,'r',label='F')
+        axarr[0].plot(y0,Fa0,'k--',label='Fa')
+        axarr[0].ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+        axarr[0].legend()
+
+        axarr[1].plot(y0,_H0,'r',label='H')
+        axarr[1].plot(y0,Ha0,'k--',label=r'Ha')
+        axarr[1].ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+        axarr[1].legend()
+
+        axarr[2].plot(y0,_K0,'r',label='K')
+        axarr[2].plot(y0,Ka0,'k--',label=r'Ka')
+        axarr[2].ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+        axarr[2].legend()
+
+        plt.savefig("FHK_analytic.pdf")

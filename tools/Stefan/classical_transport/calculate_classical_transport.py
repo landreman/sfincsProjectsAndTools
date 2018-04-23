@@ -1,10 +1,10 @@
 from __future__ import division
 
 from numpy import sum,sqrt,array,zeros,exp
-from integrals import F,K
+from integrals import Fa as F, F2a as F2
 from FSA import FSA
 
-def calculate_classical_transport(Zs,mHats,NHats,THats,ddpsiHat_NHats, ddpsiHat_THats, ddpsiHat_PhiHat,Delta,alpha,nu_n,nablaPsiHat2,BHat,Phi1Hat=None):
+def calculate_classical_transport(Zs,mHats,NHats,THats,ddpsiHat_NHats, ddpsiHat_THats, Delta,alpha,nu_n,nablaPsiHat2,BHat,Phi1Hat=None,verbose=0):
     """Calculates the classical transport given masses, charge and profiles of all the species, and a geometric factor |\nabla \psi|^2. Everything should be given in terms of the internal normalization in SFINCS, and the species dependent quantities should be passed as a list, tuple or numpy.array where Zs[i] and mHats[i] is charge-number and mass of species i, and so on."""
 
     # get number of species
@@ -12,6 +12,7 @@ def calculate_classical_transport(Zs,mHats,NHats,THats,ddpsiHat_NHats, ddpsiHat_
     # check that the number of species is consistent
     assert(all([len(x) == Nspecies for x in [Zs,NHats,THats,ddpsiHat_NHats, ddpsiHat_THats]]))
 
+    #Phi1Hat=None
     nHats = NHats[:]
     #include Phi1Hat in nHats if appropriate
     if Phi1Hat is None:
@@ -20,27 +21,31 @@ def calculate_classical_transport(Zs,mHats,NHats,THats,ddpsiHat_NHats, ddpsiHat_
         includePhi1 = True
         for i in range(Nspecies):
             nHats[i] = nHats[i] * exp(-Zs[i]*alpha*Phi1Hat/THats[i])
-    
+
     #print (Zs,mHats,NHats,THats,ddpsiHat_NHats, ddpsiHat_THats, ddpsiHat_PhiHat,Delta,alpha,nu_n,nablaPsiHat2,BHat,Phi1Hat)
     
     classical_fluxes = zeros(Nspecies)
 
+
+    tmp = 0
     for a in range(0,Nspecies):
         for b in range(0,Nspecies):
+            if a==b:
+                # everything cancels
+                continue;
+            
             y = THats[a] * mHats[b]/(THats[b] * mHats[a])
 
-            classical_fluxes[a] += Zs[b]*FSA(nablaPsiHat2 * nHats[a] * nHats[b]/BHat**2,BHat) *( \
-                                                                                               + Zs[a] * sqrt(mHats[b]/THats[b]) * (1 + mHats[b]/mHats[a]) * F(y) * (ddpsiHat_NHats[b]/NHats[b] + Zs[b] * alpha * ddpsiHat_PhiHat/THats[b]) \
-                                                                                               + Zs[a] * sqrt(mHats[b]/THats[b]) * (1 + mHats[b]/mHats[a]) * K(y) * ddpsiHat_THats[b]/THats[b] \
-                                                                                               - Zs[b] * sqrt(mHats[a]/THats[a]) * (1 + mHats[a]/mHats[b]) * F(1/y) * (ddpsiHat_NHats[a]/NHats[a] + Zs[a] * alpha * ddpsiHat_PhiHat/THats[a]) \
-                                                                                                 - Zs[b] * sqrt(mHats[a]/THats[a]) * (1 + mHats[a]/mHats[b]) * K(1/y) * ddpsiHat_THats[a]/THats[a] \
+            classical_fluxes[a] += Zs[b]*FSA(nablaPsiHat2 * nHats[a] * nHats[b]/BHat**2,BHat) *sqrt(mHats[b]/THats[b]) * (1 + mHats[b]/mHats[a]) *( \
+                                                                                               +  F(y) * (Zs[a] * (ddpsiHat_NHats[b]/NHats[b] - ddpsiHat_THats[b]/THats[b]/2)- Zs[b] * (THats[a]/THats[b]) *  (ddpsiHat_NHats[a]/NHats[a] - ddpsiHat_THats[a]/THats[a]/2)) \
+                                                                                               + 1.5 * F2(y) * (Zs[a] * ddpsiHat_THats[b]/THats[b] - (mHats[a]/mHats[b])  * Zs[b] * ddpsiHat_THats[a]/THats[a]) \
             )
+                
+                
             if includePhi1:
-                classical_fluxes[a] += alpha*Zs[a] *Zs[b]**2 * FSA(nablaPsiHat2 * nHats[a] * nHats[b] *Phi1Hat/BHat**2,BHat) * (\
-                                                                                                            sqrt(mHats[b]/THats[b]) * (1 + mHats[b]/mHats[a]) * F(y) * ddpsiHat_THats[b]/(THats[b]**2) \
-                                                                                                            - sqrt(mHats[a]/THats[a]) * (1 + mHats[a]/mHats[b]) * F(1/y) * ddpsiHat_THats[a]/(THats[a]**2) \
-                )
-            
+                classical_fluxes[a] += alpha*Zs[a] *Zs[b]**2 * FSA(nablaPsiHat2 * nHats[a] * nHats[b] *Phi1Hat/BHat**2,BHat) * sqrt(mHats[b]/THats[b]) * (1 + mHats[b]/mHats[a]) * F(y) * (ddpsiHat_THats[b]/(THats[b]**2) -THats[a]/THats[b]  * ddpsiHat_THats[a]/(THats[a]**2))
+                                                                                            
+
     classical_fluxes = 2*Delta**2 * nu_n * classical_fluxes
 
     return classical_fluxes
@@ -95,9 +100,8 @@ if __name__ == "__main__":
     THats = array([1, 1, 1])
     ddpsiHat_nHats = -2 * nHats
     ddpsiHat_THats = -2 * THats
-    ddpsiHat_PhiHat = 0
 
-    normalized_classical_transport = calculate_classical_transport(Zs,mHats,nHats,THats,ddpsiHat_nHats, ddpsiHat_THats, ddpsiHat_PhiHat,Delta,alpha,nu_n, nablaPsiHat2,BHat)
+    normalized_classical_transport = calculate_classical_transport(Zs,mHats,nHats,THats,ddpsiHat_nHats, ddpsiHat_THats ,Delta,alpha,nu_n, nablaPsiHat2,BHat)
     classical_transport = (nBar*sqrt(2*TBar/mBar)/RBar) * normalized_classical_transport/Z_increase
     print classical_transport
     quasi_neutrality = sum(Zs*normalized_classical_transport)

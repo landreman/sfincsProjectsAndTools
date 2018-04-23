@@ -39,7 +39,7 @@ def classical_flux(namelist_filename,max_m,maxabs_n,symmetry,signcorr,BBar=1,RBa
     dTHatdrHats =[conversion_factor*e for e in dTHatdrHats]
     dPhiHatdrHat = conversion_factor*dPhiHatdrHat
 
-    return calculate_classical_transport(Zs,mHats,nHats,THats,dNHatdrHats, dTHatdrHats, dPhiHatdrHat,Delta,alpha,nu_n, nablaPsiHat2,BHat,Phi1Hat)
+    return calculate_classical_transport(Zs,mHats,nHats,THats,dNHatdrHats, dTHatdrHats,Delta,alpha,nu_n, nablaPsiHat2,BHat,Phi1Hat)
 
 if __name__=="__main__":
     argv = sys.argv

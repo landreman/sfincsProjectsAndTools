@@ -26,5 +26,9 @@ Calculate the ratio of classical/neoclassical and prints to STDOUT:
 
 Note that the neoclassical_flux.py and nc_c_ratio.py scripts requires that the output specified in the SFINCS input.namelist exists and contains the neoclassical particle flux; the scripts do not actually calculate the neoclassical flux, but merely read it from an already existing SFINCS calculation. The ratio calculation does nothing clever, and is equivalent to running the other two scripts and taking the ratio.
 
+UPDATE 2018-04-23:
+• All speed integrals are now evaluated analytically, thanks to Håkan Smith. See the 'a' (=analytic) versions of F, H and K in integrals.py.
+• The contribution from the radial electric field is explicitly zero, and this is also reflected in the interface to 'calculate_classical_transport', which no longer takes the radial electric field as an input. 
+
 TODOs/improvements:
-Signcorr could probably be automatically calculated from the input.namelist.
+• Signcorr could probably be automatically calculated from the input.namelist.
