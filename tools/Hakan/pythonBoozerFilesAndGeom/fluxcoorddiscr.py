@@ -23,18 +23,18 @@ import mnFourierlib
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Typical usage:
 #
-# Booz=fluxcoorddiscr(Geom,rind,Ntheta,Nzeta,name='Boozer')
-# Hamada=fluxcoorddiscr(Geom,rind,Ntheta,Nzeta,name='Hamada')
-# Pest=fluxcoorddiscr(Geom,rind,Ntheta,Nzeta,name='Pest')
+# Booz   = fluxcoorddiscr(Geom,rind,Npol,Ntor,name='Boozer')
+# Hamada = fluxcoorddiscr(Geom,rind,Npol,Ntor,name='Hamada')
+# Pest   = fluxcoorddiscr(Geom,rind,Npol,Ntor,name='Pest')
 #
 # Inputs:
-# Geom: An equilibrium loaded with the constructor to the bcgeom class.
+# Geom: An equilibrium loaded with the constructor to the bcgeom or vmecgeom classes.
 #
 # rind: Index of the chosen flux surface
 #
-# Ntheta and Nzeta: The resolution of the spatial grid. Ntheta and Nzeta must both be odd!
+# Npol and Ntor: The resolution of the spatial grid. Npol and Ntor must both be odd!
 # Typical values are 101 - 151. Larger values make the calculation of Hamada coordinates heavy.
-# Ntheta and Nzeta should be chosen to resolve the necessary toroidal
+# Npol and Ntor should be chosen to resolve the necessary toroidal
 # and poloidal mode numbers of the magnetic field.
 #
 # name: one of ('Boozer','Hamada','Pest'). The output is a uniform discretisation on these coordinates.
@@ -78,7 +78,16 @@ import mnFourierlib
 #                                             the "major radius cylinder"
 # (X,Y,Z) : Cartesian coordinates of discretisation points
 # For the full list, use the function disp()
-# 
+#
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# interp2FromOtherCoords() function 
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Interpolate a quantity given on a uniform grid in another set of coordinates to
+# this set.
+#
+# Typical usage (from Booz to Pest):
+# Pest.interpFromOtherCoords(quant_in_boozcoord,'Booz')
+#
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # disp() function 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -105,40 +114,40 @@ import mnFourierlib
 
 class fluxcoorddiscr:
 
+  @staticmethod
+  def interp2_cyclic(uin,vin,F,ueval,veval,N):#general function to interpolate 2d cyclic on regular grids
+      # u must be a 2*pi periodic column vector.
+      # v must be a 2*pi/N periodic row vector.
+
+      if uin.ndim==2 and vin.ndim==2:
+            v=vin[0,:]
+            u=uin[:,0]
+      elif uin.ndim==1 and vin.ndim==1:
+            v=vin
+            u=uin
+      else:
+            sys.exit('Not foreseen case!')
+            
+      vDirection=np.sign(v[1]-v[0])
+      uDirection=np.sign(u[1]-u[0])
+      
+      vbig=np.append(v,np.array([v[0]+vDirection*2*np.pi/N]),axis=0)
+      ubig=np.append(u,np.array([u[0]+uDirection*2*np.pi]),axis=0)
+      Fbig=np.append(F,np.array([F[:,0]]).T,axis=1)
+      Fbig=np.append(Fbig,np.array([Fbig[0,:]]),axis=0)
+      vmod=np.mod(veval,2*np.pi/N)
+      umod=np.mod(ueval,2*np.pi)
+
+      ip=interpolate.RectBivariateSpline(ubig,vbig,Fbig)
+      shp=umod.shape
+
+      return ip(umod.flatten(),vmod.flatten(),grid=False).reshape(shp)
+  
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   # Constructor function 
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  def __init__(self,Geom,rind,Ntheta,Nzeta,name='Boozer',u_zeroout_Deltaiota=-1.0):
+  def __init__(self,Geom,rind,Npol,Ntor,name='Boozer',u_zeroout_Deltaiota=-1.0):
 
-      #first a general function to interpolate 2d cyclic on regular grids
-      def interp2_cyclic(uin,vin,F,ueval,veval,N):
-          # u must be a 2*pi periodic column vector.
-          # v must be a 2*pi/N periodic row vector.
-
-          if uin.ndim==2 and vin.ndim==2:
-                v=vin[0,:]
-                u=uin[:,0]
-          elif uin.ndim==1 and vin.ndim==1:
-                v=vin
-                u=uin
-          else:
-                sys.exit('Not foreseen case!')
-                
-          vDirection=np.sign(v[1]-v[0])
-          uDirection=np.sign(u[1]-u[0])
-          
-          vbig=np.append(v,np.array([v[0]+vDirection*2*np.pi/N]),axis=0)
-          ubig=np.append(u,np.array([u[0]+uDirection*2*np.pi]),axis=0)
-          Fbig=np.append(F,np.array([F[:,0]]).T,axis=1)
-          Fbig=np.append(Fbig,np.array([Fbig[0,:]]),axis=0)
-          vmod=np.mod(veval,2*np.pi/N)
-          umod=np.mod(ueval,2*np.pi)
-
-          ip=interpolate.RectBivariateSpline(ubig,vbig,Fbig)
-          shp=umod.shape
-
-          return ip(umod.flatten(),vmod.flatten(),grid=False).reshape(shp)
-  
       #A function for interpolating on a nonuniform grid
       def griddatacyclic(unoneq,vnoneq,Fnoneq,Nperiods):
           # u must be 2*pi periodic.
@@ -147,7 +156,6 @@ class fluxcoorddiscr:
           # (u,v) is the equidistant grid generated with ndgrid which to interpolate to.
           Nu=Fnoneq.shape[0]
           Nv=Fnoneq.shape[1]
-
           Dv=2*np.pi/Nv/Nperiods
           Du=2*np.pi/Nu
           u, v = np.mgrid[0.0:2.0*np.pi-Du:1j*Nu,0.0:2.0*np.pi/Nperiods-Dv:1j*Nv]
@@ -186,6 +194,9 @@ class fluxcoorddiscr:
       if not((name=='Boozer') or (name=='Hamada') or (name=='Pest') or (name=='Cylindrical')):
         sys.exit('The coordinate name must be one of Boozer, Hamada, Pest or Cylindrical!')
 
+      Ntheta=Npol
+      Nzeta=Ntor
+      
       mu0=1.256637061e-06
       if isinstance(Geom,geomlib.bcgeom):
           if rind > Geom.nsurf-1:
@@ -640,11 +651,13 @@ class fluxcoorddiscr:
 
         if name=='Hamada':
           self.Dzetaphi=New_Dzetanewtor
-          self.Dzetapzeta=interp2_cyclic(theta,zeta,Booz_Dzetapzeta,self.theta,self.zeta,self.Nperiods)
+          self.Dzetapzeta=fluxcoorddiscr.interp2_cyclic(theta,zeta,Booz_Dzetapzeta,
+                                                        self.theta,self.zeta,self.Nperiods)
           self.pzeta =self.zeta-self.Dzetapzeta
           self.ptheta=self.theta-iota*self.Dzetapzeta
         elif name=='Pest':
-          self.Dzetaphi=interp2_cyclic(theta,zeta,Booz_Dzetaphi,self.theta,self.zeta,self.Nperiods)
+          self.Dzetaphi=fluxcoorddiscr.interp2_cyclic(theta,zeta,Booz_Dzetaphi,
+                                                      self.theta,self.zeta,self.Nperiods)
           self.Dzetapzeta=New_Dzetanewtor
           self.phi  =self.zeta-self.Dzetaphi
           self.vthet=self.theta-iota*self.Dzetaphi
@@ -652,37 +665,68 @@ class fluxcoorddiscr:
         #Now we come to the interpolation of a lot of stuff...
       
 
-        self.R=interp2_cyclic(theta,zeta,R,self.theta,self.zeta,self.Nperiods)
-        self.Z=interp2_cyclic(theta,zeta,Z,self.theta,self.zeta,self.Nperiods)
+        self.R=fluxcoorddiscr.interp2_cyclic(theta,zeta,R,self.theta,self.zeta,self.Nperiods)
+        self.Z=fluxcoorddiscr.interp2_cyclic(theta,zeta,Z,self.theta,self.zeta,self.Nperiods)
         self.cylphi=self.pzeta
         self.R00=np.mean(self.R)
         if not(Geom.StelSym):
           self.Z00=np.mean(self.Z)
-        self.X=interp2_cyclic(theta,zeta,X,self.theta,self.zeta,self.Nperiods)
-        self.Y=interp2_cyclic(theta,zeta,Y,self.theta,self.zeta,self.Nperiods)
-        self.B=interp2_cyclic(theta,zeta,B,self.theta,self.zeta,self.Nperiods)
-        self.u_chi=interp2_cyclic(theta,zeta,u,self.theta,self.zeta,self.Nperiods)
-        self.u_psi=interp2_cyclic(theta,zeta,u/iota,self.theta,self.zeta,self.Nperiods)
-        self.h=interp2_cyclic(theta,zeta,h,self.theta,self.zeta,self.Nperiods)
-        self.Bpsitilde=interp2_cyclic(theta,zeta,Booz_B_psi_tilde,self.theta,self.zeta,self.Nperiods)# Boozer specific
-        self.dBpsidtheta=interp2_cyclic(theta,zeta,Booz_dBpsidtheta,self.theta,self.zeta,self.Nperiods) #Boozer specific
-        self.dBpsidzeta =interp2_cyclic(theta,zeta,Booz_dBpsidzeta,self.theta,self.zeta,self.Nperiods) #Boozer specific
-        self.Jacob_psi_theta_zeta=interp2_cyclic(theta,zeta,Booz_Jacob_psi_theta_zeta,self.theta,self.zeta,self.Nperiods) #Boozer specific
-        self.g_thetatheta   =interp2_cyclic(theta,zeta,g_thetatheta,self.theta,self.zeta,self.Nperiods)
-        self.g_thetazeta    =interp2_cyclic(theta,zeta,g_thetazeta,self.theta,self.zeta,self.Nperiods)
-        self.g_zetazeta     =interp2_cyclic(theta,zeta,g_zetazeta,self.theta,self.zeta,self.Nperiods)
-        self.g_phiphi       =interp2_cyclic(theta,zeta,g_phiphi,self.theta,self.zeta,self.Nperiods)
-        self.g_vthetvthet   =interp2_cyclic(theta,zeta,g_vthetvthet,self.theta,self.zeta,self.Nperiods)
-        self.g_vthetphi     =interp2_cyclic(theta,zeta,g_vthetphi,self.theta,self.zeta,self.Nperiods)
-        self.gpsipsi        =interp2_cyclic(theta,zeta,gpsipsi,self.theta,self.zeta,self.Nperiods)
-        self.gradpsidotgradB=interp2_cyclic(theta,zeta,Booz_gradpsidotgradB,self.theta,self.zeta,self.Nperiods)
-        self.curv_normal    =interp2_cyclic(theta,zeta,Booz_curv_normal,self.theta,self.zeta,self.Nperiods)
+        self.X=fluxcoorddiscr.interp2_cyclic(theta,zeta,X,self.theta,self.zeta,self.Nperiods)
+        self.Y=fluxcoorddiscr.interp2_cyclic(theta,zeta,Y,self.theta,self.zeta,self.Nperiods)
+        self.B=fluxcoorddiscr.interp2_cyclic(theta,zeta,B,self.theta,self.zeta,self.Nperiods)
+        self.u_chi=fluxcoorddiscr.interp2_cyclic(theta,zeta,u,self.theta,self.zeta,self.Nperiods)
+        self.u_psi=fluxcoorddiscr.interp2_cyclic(theta,zeta,u/iota,self.theta,self.zeta,self.Nperiods)
+        self.h=fluxcoorddiscr.interp2_cyclic(theta,zeta,h,self.theta,self.zeta,self.Nperiods)
+        self.Bpsitilde=fluxcoorddiscr.interp2_cyclic(theta,zeta,Booz_B_psi_tilde,
+                                                     self.theta,self.zeta,self.Nperiods)# Boozer specific
+        self.dBpsidtheta=fluxcoorddiscr.interp2_cyclic(theta,zeta,Booz_dBpsidtheta,
+                                                       self.theta,self.zeta,self.Nperiods) #Boozer specific
+        self.dBpsidzeta =fluxcoorddiscr.interp2_cyclic(theta,zeta,Booz_dBpsidzeta,
+                                                       self.theta,self.zeta,self.Nperiods) #Boozer specific
+        self.Jacob_psi_theta_zeta=fluxcoorddiscr.interp2_cyclic(theta,zeta,Booz_Jacob_psi_theta_zeta,
+                                                                self.theta,self.zeta,self.Nperiods) #Boozer specific
+        self.g_thetatheta   =fluxcoorddiscr.interp2_cyclic(theta,zeta,g_thetatheta,self.theta,self.zeta,self.Nperiods)
+        self.g_thetazeta    =fluxcoorddiscr.interp2_cyclic(theta,zeta,g_thetazeta,self.theta,self.zeta,self.Nperiods)
+        self.g_zetazeta     =fluxcoorddiscr.interp2_cyclic(theta,zeta,g_zetazeta,self.theta,self.zeta,self.Nperiods)
+        self.g_phiphi       =fluxcoorddiscr.interp2_cyclic(theta,zeta,g_phiphi,self.theta,self.zeta,self.Nperiods)
+        self.g_vthetvthet   =fluxcoorddiscr.interp2_cyclic(theta,zeta,g_vthetvthet,self.theta,self.zeta,self.Nperiods)
+        self.g_vthetphi     =fluxcoorddiscr.interp2_cyclic(theta,zeta,g_vthetphi,self.theta,self.zeta,self.Nperiods)
+        self.gpsipsi        =fluxcoorddiscr.interp2_cyclic(theta,zeta,gpsipsi,self.theta,self.zeta,self.Nperiods)
+        self.gradpsidotgradB=fluxcoorddiscr.interp2_cyclic(theta,zeta,Booz_gradpsidotgradB,self.theta,self.zeta,self.Nperiods)
+        self.curv_normal    =fluxcoorddiscr.interp2_cyclic(theta,zeta,Booz_curv_normal,self.theta,self.zeta,self.Nperiods)
 
         self.B00=np.mean(self.B)
 
         self.Bmn=mnFourierlib.mnmat(self.B,Nperiods=self.Nperiods)
 
+  #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  def interpFromOtherCoords(self,quant_in_oldcoord,oldcoordname):
+  #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+      #u,v are th old coordinates
+      Nu=quant_in_oldcoord.shape[0]
+      Nv=quant_in_oldcoord.shape[1]
+      Dv=2.0*np.pi/Nv/self.Nperiods
+      Du=2.0*np.pi/Nu
+      #make a uniform grid in u,v
+      u, v = np.mgrid[0.0:2.0*np.pi-Du:1j*Nu,0.0:2.0*np.pi/self.Nperiods-Dv:1j*Nv]
+
+      if self.name==oldcoordname:
+          return quant_in_oldcoord
+      
+      if oldcoordname=='Pest': #u,v=ptheta,pzeta
+          return fluxcoorddiscr.interp2_cyclic(u,v,quant_in_oldcoord,self.ptheta,self.pzeta,self.Nperiods)
+      elif oldcoordname=='Hamada':  #u,v=vthet,phi
+          return fluxcoorddiscr.interp2_cyclic(u,v,quant_in_oldcoord,self.vthet,self.phi,self.Nperiods)
+      elif oldcoordname=='Boozer':  #u,v=theta,zeta
+          return fluxcoorddiscr.interp2_cyclic(u,v,quant_in_oldcoord,self.theta,self.zeta,self.Nperiods)
+      else:
+          sys.exit('Unknown coordinates '+oldcoordname+' !')
+
+
+                
+  #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   def disp(self):
+  #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         frm='{:8.4f}'
         print '----------------------------------------------------------------------------------'
         print 'Discretisation on a uniform '+self.name+' coordinate grid of the magnetic field'
@@ -741,7 +785,9 @@ class fluxcoorddiscr:
         print 'Bmn'
         print '------------------------------------------------------------------------------'
 
+  #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   def plot(self,toshow,title='',cmap=None):
+  #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         if cmap==None:
            #cmap='coolwarm'
            #cmap='RdBu'
@@ -781,7 +827,9 @@ class fluxcoorddiscr:
         #plt.show()
         return fig, ax
         
+  #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   def plot3d(self,toshow,title='',torstride=1,polstride=1,cmap=None):
+  #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
         #help routine to plot routine
         def makefulltordata(input,N=0,type='periodic'):

@@ -33,7 +33,7 @@ exec(open(sfincsProjectsAndToolsHome + "/tools/Albert/version3/plot_tools"  + "/
 
 ##INPUTS##
 
-species = 1
+species = 4
 
 withExternal = True
 externalDataFileType = '.dat'

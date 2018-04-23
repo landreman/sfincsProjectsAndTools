@@ -228,24 +228,31 @@ class mnmat:
             #print('float input: '+str(self.c))
 
         elif isinstance(input, np.ndarray): #This is the fft routine, Nperiods is required input
+            do_expand=False
             Ntheta_size=input.shape[0]
-            if Ntheta is None:
-                Ntheta=Ntheta_size
-            elif Ntheta_size!=Ntheta:
+            newNtheta=Ntheta
+            Ntheta=Ntheta_size
+            if newNtheta is None:
+                newNtheta=Ntheta_size
+            elif newNtheta<Ntheta_size:
                 print 'Ntheta size of input: '+str(Ntheta_size)
-                print 'Ntheta parameter: '+str(Ntheta)
-                sys.exit('Ntheta differs from input size in mnmat fft routine for ndarrays! Not implemented yet.')
-            else:
-                Ntheta=Ntheta_size
+                print 'Ntheta parameter: '+str(newNtheta)
+                sys.exit('Ntheta is smaller than input size in mnmat fft routine for ndarrays! Not implemented yet.')
+            elif newNtheta>Ntheta_size:
+                do_expand=True
             self.Ntheta=Ntheta
             
             Nzeta_size=input.shape[1]
-            if Nzeta is None:
-                Nzeta=Nzeta_size
-            elif Nzeta_size!=Nzeta:
-                sys.exit('Nzeta differs from input in mnmat fft routine for ndarrays! Not implemented yet.')
-            else:
-                Nzeta=Nzeta_size
+            newNzeta=Nzeta
+            Nzeta=Nzeta_size
+            if newNzeta is None:
+                newNzeta=Nzeta_size
+            elif newNzeta<Nzeta_size:
+                print 'Nzeta size of input: '+str(Nzeta_size)
+                print 'Nzeta parameter: '+str(newNzeta)
+                sys.exit('Nzeta is smaller than input size in mnmat fft routine for ndarrays! Not implemented yet.')
+            elif newNzeta>Nzeta_size:
+                do_expand=True
             self.Nzeta=Nzeta
             
             if self.Ntheta%2 != 1 or self.Nzeta%2 != 1:
@@ -274,7 +281,20 @@ class mnmat:
             self.c[0,0:n0ind]=None
             self.s[0,0:n0ind+1]=None
             self.c[0,n0ind]=self.c[0,n0ind]/2.0
-            
+
+            if do_expand:
+                tmp = mnmat(self.mnlist(),Ntheta,Nzeta)
+                self.Ntheta   = tmp.Ntheta
+                self.Nzeta    = tmp.Nzeta
+                self.m0ind    = tmp.m0ind
+                self.n0ind    = tmp.n0ind
+                self.Nperiods = tmp.Nperiods
+                self.m        = tmp.m
+                self.n        = tmp.n
+                self.c        = tmp.c
+                self.s        = tmp.s
+
+                
             #print('ndarray input:')
             #print(self.c)
             #print(self.s)
@@ -431,6 +451,28 @@ class mnmat:
         out.c=self.c*other
         out.s=self.s*other
         return out
+
+    def expand(self,Ntheta,Nzeta,copy='True'): #Pad with zeros to a new larger size
+        if Ntheta==self.Ntheta and Nzeta==self.Nzeta:
+            if copy:
+                return copy.deepcopy(self)
+        elif Ntheta<self.Ntheta or Nzeta<self.Nzeta:
+            sys.exit('In expand, the new Ntheta and Nzeta cannot be smaller than the originals!')
+        else:
+            if copy:
+                return mnmat(self.mnlist(),Ntheta,Nzeta)
+            else:
+                tmp = mnmat(self.mnlist(),Ntheta,Nzeta)
+                self.Ntheta   = tmp.Ntheta
+                self.Nzeta    = tmp.Nzeta
+                self.m0ind    = tmp.m0ind
+                self.n0ind    = tmp.n0ind
+                self.Nperiods = tmp.Nperiods
+                self.m        = tmp.m
+                self.n        = tmp.n
+                self.c        = tmp.c
+                self.s        = tmp.s
+
 
     def mnlist(self):
         maxm=(self.Ntheta-1)//2

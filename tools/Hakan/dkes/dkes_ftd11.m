@@ -143,6 +143,7 @@ for rind=1:dkdata.Nradii
       disp('----------------------------------------------')
       fprintf(1,'\n')
       
+      %set(0, 'DefaultFigureVisible', 'off');
       fig(fignr)
       makeafit=1;
       acceptedfit=0;
@@ -197,6 +198,10 @@ for rind=1:dkdata.Nradii
                                                              %', g_{11,ft}=',num2str(y0,'%5.2e')])
         legend([num2str(y0,'%5.2e'),'+y_1(\nu/v)^{',num2str(exp_fit),'}'],2)
         drawnow
+        %set(0, 'DefaultFigureVisible', 'on');
+        %figHandles = findall(0, 'Type', 'figure');
+        %set(figHandles(:), 'visible', 'on')
+        
         disp(['fit of g11 = cmul*D_11 with y0+y1*cmul^',num2str(exp_fit)])
         disp(['up to cmul =',num2str(cmul_E0(fitinds(1)))])
         disp(['--> effective helical ripple: ',...
@@ -232,6 +237,7 @@ for rind=1:dkdata.Nradii
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       
       %First make a plot so that the used can decide a range of cmuls and efields
+
       figure(fignr)
       subplot(122)
       colorsandstyle={'ro','go','bo','co','mo','ko',...
