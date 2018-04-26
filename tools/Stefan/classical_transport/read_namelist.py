@@ -1,5 +1,5 @@
 import sys, os
-from numpy import exp, swapaxes
+from numpy import exp, swapaxes, log10, sqrt, pi
 import string
 import h5py
 
@@ -125,6 +125,17 @@ def read_namelist(inputFilename):
     Delta = readVariable("Delta",inputFilename, "float", required=True)
     alpha = readVariable("alpha",inputFilename, "float", required=True)
     nu_n = readVariable("nu_n",inputFilename, "float", required=True)
+    
+    if nu_n < 0:
+        if (abs(Delta-4.5694e-3) /4.5694e-3) > 0.1:
+            raise ValueError("nu_n will be calculated with standard bars, but Delta is wrong.")
+        lnLambda = (25.3e+0) - (1.15e+0)*log10(nHats[0]*(1e14)) + (2.30e+0)*log10(THats[0]*1000)
+        eC = 1.6022e-19
+        epsilon0 = 8.8542e-12
+        mproton = 1.6726e-27
+        nu_n = sqrt(mproton/(2*1000*eC)) * 4*sqrt(2*pi)*(1e20)*(eC**4)*lnLambda / (3*((4*pi*epsilon0)**2)*sqrt(mproton)*((1000*eC)**(1.5e+0)))
+    
+            
     # Er probably incorrect
 
     inputRadialCoordinate = readVariable("inputRadialCoordinate",inputFilename, "int", required=True)

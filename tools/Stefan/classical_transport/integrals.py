@@ -2,10 +2,25 @@ from __future__ import division
 
 from scipy.special import erf
 from scipy import exp,sqrt
+from scipy.constants import pi
 from scipy.integrate import quad
 
+def Chandrasehkar(x):
+    return (erf(x) - 2*x*exp(-x**2)/sqrt(pi))/(2*x**2)
 
-b = 5
+def fC1(x,y):
+    return y * x**3 * Chandrasehkar(x) * exp(-y*x**2)
+
+def fC2(x,y):
+    return (y**2 * x**5 - y* x**3) * Chandrasehkar(x) * exp(-y*x**2)
+
+def FC1(y):
+    a,err = quad(fC1,0,float("inf"),args=(y,))
+    return a
+
+def FC2(y):
+    a,err = quad(fC2,0,float("inf"),args=(y,))
+    return a
 
 def f(x,y):
     return erf(x) * x * exp(-y*x**2)
@@ -82,18 +97,19 @@ def Ka(y):
     return (2*y-1)/(8*(1+y)**(5/2))
 
 def F2a(y):
-    return y/(4*(1+y)**(5/2))
+    return 3*y/(8*(1+y)**(5/2))
 
 def Ka2(y):
     #analytical form of H(y) - 3 F(y)/2
-    return 3 *F2a(y)/2 - Fa(y)/2
+    return F2a(y) - Fa(y)/2
 
 if __name__ == "__main__":
     # visualize the above functions
     # and test against known as asymptotes
     
     test1 = False
-    test2 = True
+    test2 = False
+    test3 = True
     import matplotlib.pyplot as plt
     import numpy as np
 
@@ -238,3 +254,33 @@ if __name__ == "__main__":
         axarr[2].legend()
 
         plt.savefig("FHK_analytic.pdf")
+    if test3:
+        y0 = np.linspace(0.5,4)
+
+        # since the functions are not properly
+        # vectorized
+        _FC1 = [FC1(yi) for yi in y0]
+        _F1 = [F(yi) for yi in y0]
+        _FC2 = [FC2(yi) for yi in y0]
+
+        F1 = Fa(y0)
+        F2 = F2a(y0)
+
+        
+        f, axarr = plt.subplots(2, sharex=True)
+        plt.ticklabel_format(style='sci', axis='x', scilimits=(0,0))
+        plt.xlabel("y")
+
+        axarr[0].plot(y0,_FC1,'r',label='FC1')
+        axarr[0].plot(y0,F1,'k--',label='F1')
+        axarr[0].plot(y0,_F1,'b:',label='F')
+        axarr[0].ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+        axarr[0].legend()
+
+        axarr[1].plot(y0,_FC2,'r',label='FC2')
+        axarr[1].plot(y0,F2,'k--',label=r'F2')
+        axarr[1].ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+        axarr[1].legend()
+
+       
+        plt.savefig("F1F2_Chandrasehkar.pdf")

@@ -23,28 +23,23 @@ def calculate_classical_transport(Zs,mHats,NHats,THats,ddpsiHat_NHats, ddpsiHat_
             nHats[i] = nHats[i] * exp(-Zs[i]*alpha*Phi1Hat/THats[i])
 
     #print (Zs,mHats,NHats,THats,ddpsiHat_NHats, ddpsiHat_THats, ddpsiHat_PhiHat,Delta,alpha,nu_n,nablaPsiHat2,BHat,Phi1Hat)
-    
+
     classical_fluxes = zeros(Nspecies)
 
-
-    tmp = 0
     for a in range(0,Nspecies):
         for b in range(0,Nspecies):
             if a==b:
                 # everything cancels
                 continue;
-            
-            y = THats[a] * mHats[b]/(THats[b] * mHats[a])
 
-            classical_fluxes[a] += Zs[b]*FSA(nablaPsiHat2 * nHats[a] * nHats[b]/BHat**2,BHat) *sqrt(mHats[b]/THats[b]) * (1 + mHats[b]/mHats[a]) *( \
-                                                                                               +  F(y) * (Zs[a] * (ddpsiHat_NHats[b]/NHats[b] - ddpsiHat_THats[b]/THats[b]/2)- Zs[b] * (THats[a]/THats[b]) *  (ddpsiHat_NHats[a]/NHats[a] - ddpsiHat_THats[a]/THats[a]/2)) \
-                                                                                               + 1.5 * F2(y) * (Zs[a] * ddpsiHat_THats[b]/THats[b] - (mHats[a]/mHats[b])  * Zs[b] * ddpsiHat_THats[a]/THats[a]) \
+            classical_fluxes[a] += Zs[b]*FSA(nablaPsiHat2 * nHats[a] * nHats[b]/BHat**2,BHat) *sqrt(mHats[b]/THats[b]) * (1 + mHats[b]/mHats[a]) *F(THats[a] * mHats[b]/(THats[b] * mHats[a])) *( \
+                                                                                               +   (Zs[a] * (ddpsiHat_NHats[b]/NHats[b] - ddpsiHat_THats[b]/THats[b]/2)- Zs[b] * (THats[a]/THats[b]) *  (ddpsiHat_NHats[a]/NHats[a] - ddpsiHat_THats[a]/THats[a]/2)) \
+                                                                                               + 1.5* (THats[a] * mHats[b])/(THats[b] * mHats[a]+THats[a] * mHats[b])*(Zs[a] * ddpsiHat_THats[b]/THats[b] - (mHats[a]/mHats[b])  * Zs[b] * ddpsiHat_THats[a]/THats[a]) \
             )
                 
                 
             if includePhi1:
-                classical_fluxes[a] += alpha*Zs[a] *Zs[b]**2 * FSA(nablaPsiHat2 * nHats[a] * nHats[b] *Phi1Hat/BHat**2,BHat) * sqrt(mHats[b]/THats[b]) * (1 + mHats[b]/mHats[a]) * F(y) * (ddpsiHat_THats[b]/(THats[b]**2) -THats[a]/THats[b]  * ddpsiHat_THats[a]/(THats[a]**2))
-                                                                                            
+                classical_fluxes[a] += alpha*Zs[a] *Zs[b]**2 * FSA(nablaPsiHat2 * nHats[a] * nHats[b] *Phi1Hat/BHat**2,BHat) * sqrt(mHats[b]/THats[b]) * (1 + mHats[b]/mHats[a]) * F(THats[a] * mHats[b]/(THats[b] * mHats[a]))/THats[b] * (ddpsiHat_THats[b]/THats[b] -  ddpsiHat_THats[a]/THats[a])
 
     classical_fluxes = 2*Delta**2 * nu_n * classical_fluxes
 

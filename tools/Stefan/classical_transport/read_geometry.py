@@ -26,29 +26,37 @@ def read_geometry(inputRadialCoordinate,rN_wish,Ntheta,Nzeta,equilibriumFile,min
     psiAHat = psiA/(BBar*RBar**2)
 
     a = geom.minorradiusVMEC
+    if a is np.nan:
+        a = geom.minorradiusW7AS
+
+    if a is np.nan:
+        raise ValueError("minor radius from geom object is NaN!")
+    
     aHat = a/RBar
 
     # find which flux surface the use wants to look at
     if inputRadialCoordinate == 0:
         # wish coordinate is psiHat
-        psiN_wish = rN_wish/psiAHat
+        rN_wish = np.sqrt(rN_wish/psiAHat)
     elif inputRadialCoordinate == 1:
         # wish coordinate is psiN
-        psiN_wish = rN_wish
+        rN_wish = np.sqrt(rN_wish)
     elif inputRadialCoordinate == 2:
         # wish coordinate is rHat
-        psiN_wish = rN_wish**2/aHat**2
+        rN_wish = rN_wish/aHat
     elif inputRadialCoordinate == 3:
         # wish coordinate is rN
-        psiN_wish = rN_wish**2
+        rN_wish = rN_wish
+    elif inputRadialCoordinate == 4:
+        # wish coordinate is rHat
+        rN_wish = rN_wish/aHat
+    else:
+        raise ValueError("inputRadialCoordinate should be 0,1,2,3,4; it is" + str(inputRadialCoordinate))
 
-    rind = np.argmin(np.abs(geom.s-psiN_wish))
+
+    rind = np.argmin(np.abs(np.sqrt(geom.s)-rN_wish))
     psiN = geom.s[rind]
-
-
-    #print psiN
-    #print rind
-
+    
     Booz = fluxcoorddiscr(geom,rind,Ntheta,Nzeta,name='Boozer')
     Booz.s = psiN
     Booz.r = np.sqrt(psiN)
