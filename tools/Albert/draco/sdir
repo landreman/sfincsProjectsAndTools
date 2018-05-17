@@ -5,7 +5,7 @@
 import os, inspect, math, subprocess, sys
 from sys import argv
 
-command = 'squeue -u almo --states=pending,running --start'
+command = 'squeue -u ${USER} --states=pending,running --start'
 result = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
 jobs = result.stdout.read().split('\n')
 
