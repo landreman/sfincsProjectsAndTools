@@ -73,6 +73,8 @@ dVdpsiN=abs(runs.VPrimeHat*Rbar/Bbar.*runs.psiAHat);
 %runs.VPrimeHat*Rbar/Bbar.*runs.psiAHat
 
 partFluxpers= runs.particleFlux_vm_psiN*vbar*nbar/Rbar.*(ones(Nspec,1)*dVdpsiN)';
+partFluxpers_spec1and2=partFluxpers(:,1:2)
+partFluxpers_spec3=partFluxpers(:,3)
 partFluxpers_f0= runs.particleFlux_vm0_psiN*vbar*nbar/Rbar.*(ones(Nspec,1)*dVdpsiN)';
 partFluxpers_df=partFluxpers-partFluxpers_f0;
 heatFluxMW=runs.heatFlux_vm_psiN*vbar^3*nbar*mbar/Rbar.*(ones(Nspec,1)*dVdpsiN)'/1e6;
@@ -81,17 +83,21 @@ heatFluxMW_df=heatFluxMW-heatFluxMW_f0;
 flowpersm2=runs.FSABFlow*vbar*nbar*Bbar./B00;
 
 runs.rN(find(runs.rN<0.1))=NaN;
+sumZpartFluxpers=runs.Zs(1,:)*partFluxpers';
 
 fig(1)
 if 1
-  plot(runs.rN,partFluxpers,'-')%,runs.rN,partFluxpers_df,'--')
+  plot(runs.rN,runs.Zs.*partFluxpers,'-',...
+       runs.rN,sumZpartFluxpers,'k--')%,runs.rN,partFluxpers_df,'--')
+  ylabel('Z \Gamma [1/s]')
 else
   plot(runs.rN,partFluxpers(:,1),...
       runs.rN,partFluxpers(:,2)*100)
   legend('\Gamma_1','\Gamma_2*100')
+  ylabel('\Gamma [1/s]')
 end
 xlabel('r/a')
-ylabel('\Gamma [1/s]')
+
 
 %axis([0,1,-2e20,3e21])
 

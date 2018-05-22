@@ -1,6 +1,13 @@
-function [runs,miss,dPhiHatdpsiNroots]=plot_Erscanresults(directory)
+function [runs,miss,ErVarroots]=plot_Erscanresults(directory,varargin)
 
-if directory(end-3:end)=='.dat'
+isdirlistfile=0;
+if length(directory)>4
+  if directory(end-3:end)=='.dat'
+    isdirlistfile=1;
+  end
+end
+
+if isdirlistfile
   dirlist={};
   if not(exist(directory,'file'))
     if directory(1)=='/'
@@ -26,6 +33,13 @@ end
 if runs.NumElements==0
   error('Nothing found!')
 end
+
+if nargin>1
+  ErVarStr=varargin{1};
+else 
+  ErVarStr='dPhiHatdpsiN';ErVar
+end
+ErVar=getfield(runs,ErVarStr);
 
 e=1.6022e-19;
 mp=1.6726e-27;
@@ -129,57 +143,87 @@ end
 
 fig(1)
 if Nspec==2
-  semilogy(runs.dPhiHatdpsiN,runs.particleFlux_vm_psiN(:,1),...
-       runs.dPhiHatdpsiN,runs.particleFlux_vm_psiN(:,2))
+  semilogy(ErVar,runs.particleFlux_vm_psiN(:,1),...
+           ErVar,runs.particleFlux_vm_psiN(:,2))
   legend('e','i')
+elseif Nspec==3
+  semilogy(ErVar,runs.particleFlux_vm_psiN(:,1),...
+           ErVar,runs.particleFlux_vm_psiN(:,2),...
+           ErVar,runs.particleFlux_vm_psiN(:,3))
+  legend('e','i','Z')
 else
-  plot(runs.dPhiHatdpsiN,runs.particleFlux_vm_psiN(:,1))
+  plot(ErVar,runs.particleFlux_vm_psiN(:,1))
 end
 title('particleFlux')
-xlabel('d\Phi/d\psi_N')
+if strcmp(ErVarStr,'dPhiHatdpsiN')
+  xlabel('d\Phi/d\psi_N')
+else
+  xlabel(ErVarStr)
+end
 
-if Nspec==2
-   jnorm=runs.particleFlux_vm_psiN(:,1).*runs.Zs(:,1)+...
-        runs.particleFlux_vm_psiN(:,2).*runs.Zs(:,2);   
-   %dPhiHatdpsiNroots=rootfind(runs.dPhiHatdpsiN,jnorm);
+if Nspec>1
+   jnorm=sum(runs.particleFlux_vm_psiN.*runs.Zs,2);
    if any(diff(sign(jnorm)))
-     dPhiHatdpsiNroots=interp1(jnorm,runs.dPhiHatdpsiN,0,'pchip')
+     ErVarroots=interp1(jnorm,ErVar,0,'pchip')
    else
-     dPhiHatdpsiNroots=NaN;
-     dPhiHatdpsiNroots_extrap=interp1(jnorm,runs.dPhiHatdpsiN,0,'pchip','extrap')
+     ErVarroots=NaN;
+     ErVarroots_extrap=interp1(jnorm,ErVar,0,'pchip','extrap')
    end
    
    fig(7)
-   plot(runs.dPhiHatdpsiN,jnorm,'b-',...
-        dPhiHatdpsiNroots,zeros(size( dPhiHatdpsiNroots)),'r+')
+   plot(ErVar,jnorm,'b-',...
+        ErVarroots,zeros(size(ErVarroots)),'r+')
    title('sum_{spec} (particleFlux*Z)')
-   xlabel('d\Phi/d\psi_N')
+   if strcmp(ErVarStr,'dPhiHatdpsiN')
+     xlabel('d\Phi/d\psi_N')
+   else
+     xlabel(ErVarStr)
+   end
    
 end
 
 
 fig(2)
 if Nspec==2
-  plot(runs.dPhiHatdpsiN,runs.heatFlux_vm_psiN(:,1),...
-       runs.dPhiHatdpsiN,runs.heatFlux_vm_psiN(:,2))
+  plot(ErVar,runs.heatFlux_vm_psiN(:,1),...
+       ErVar,runs.heatFlux_vm_psiN(:,2))
   legend('e','i')
+elseif Nspec==3
+  plot(ErVar,runs.heatFlux_vm_psiN(:,1),...
+       ErVar,runs.heatFlux_vm_psiN(:,2),...
+       ErVar,runs.heatFlux_vm_psiN(:,3))
+  legend('e','i','Z')
 else
-  plot(runs.dPhiHatdpsiN,runs.heatFlux_vm_psiN(:,1))
+  plot(ErVar,runs.heatFlux_vm_psiN(:,1))
 end
 title('heatFlux')
-xlabel('d\Phi/d\psi_N')
+if strcmp(ErVarStr,'dPhiHatdpsiN')
+  xlabel('d\Phi/d\psi_N')
+else
+  xlabel(ErVarStr)
+end
 
 
 fig(3)
 if Nspec==2
-  plot(runs.dPhiHatdpsiN,runs.FSABFlow(:,1),...
-       runs.dPhiHatdpsiN,runs.FSABFlow(:,2))
+  plot(ErVar,runs.FSABFlow(:,1),...
+       ErVar,runs.FSABFlow(:,2))
   legend('e','i')
+elseif Nspec==3
+  plot(ErVar,runs.FSABFlow(:,1),...
+       ErVar,runs.FSABFlow(:,2),...
+       ErVar,runs.FSABFlow(:,3))
+  legend('e','i','Z')
 else
-  plot(runs.dPhiHatdpsiN,runs.FSABFlow(:,1))
+  plot(ErVar,runs.FSABFlow(:,1))
 end
 title('FSABFlow')
-xlabel('d\Phi/d\psi_N')
+if strcmp(ErVarStr,'dPhiHatdpsiN')
+  xlabel('d\Phi/d\psi_N')
+else
+  xlabel(ErVarStr)
+end
+
 
 
 

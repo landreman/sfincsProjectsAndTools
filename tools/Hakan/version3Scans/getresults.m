@@ -156,6 +156,7 @@ for hind=1:length(H)
       out.dnHatdpsiN(ind,:)  =H{hind}.dnHatdpsiN;
       out.dTHatdpsiN(ind,:)  =H{hind}.dTHatdpsiN;      
       out.dPhiHatdpsiN(ind)  =H{hind}.dPhiHatdpsiN;
+      out.dPhiHatdrHat(ind)  =H{hind}.dPhiHatdrHat;
       out.EParallelHat(ind)  =H{hind}.EParallelHat;
     end
     if out.RHSMode(ind)==2
@@ -183,26 +184,52 @@ for hind=1:length(H)
     if out.RHSMode(ind)==1
       if out.finished(ind)
         if isfield(H{hind},'NTV')
-          out.NTV(ind,:)                  =H{hind}.NTV';
-          out.particleFlux_vm_psiN(ind,:) =H{hind}.particleFlux_vm_psiN';
-          out.particleFlux_vm0_psiN(ind,:) =H{hind}.particleFlux_vm0_psiN';
-          out.heatFlux_vm_psiN(ind,:)     =H{hind}.heatFlux_vm_psiN';
-          out.heatFlux_vm0_psiN(ind,:)     =H{hind}.heatFlux_vm0_psiN';
-          out.momentumFlux_vm_psiN(ind,:) =H{hind}.momentumFlux_vm_psiN';
-          out.FSABFlow(ind,:)             =H{hind}.FSABFlow';
-          out.FSABjHat(ind,1)             =H{hind}.FSABjHat';
-          if Nsp>1
-            out.flow{ind}                    =permute(H{hind}.flow,[3,2,1]);
-            out.densityPerturbation{ind}     =permute(H{hind}.densityPerturbation,[3,2,1]);
-            out.pressurePerturbation{ind}    =permute(H{hind}.pressurePerturbation,[3,2,1]);
-            out.pressureAnisotropy{ind}      =permute(H{hind}.pressureAnisotropy,[3,2,1]);
-            out.NTVBeforeSurfaceIntegral{ind}=permute(H{hind}.NTVBeforeSurfaceIntegral,[3,2,1]);
-          else
-            out.flow{ind}                    =H{hind}.flow';
-            out.densityPerturbation{ind}     =H{hind}.densityPerturbation';
-            out.pressurePerturbation{ind}    =H{hind}.pressurePerturbation';
-            out.pressureAnisotropy{ind}      =H{hind}.pressureAnisotropy';
-            out.NTVBeforeSurfaceIntegral{ind}=H{hind}.NTVBeforeSurfaceIntegral';
+          if H{hind}.includePhi1==0
+            out.NTV(ind,:)                  =H{hind}.NTV';
+            out.particleFlux_vm_rHat(ind,:) =H{hind}.particleFlux_vm_rHat';
+            out.particleFlux_vm_psiN(ind,:) =H{hind}.particleFlux_vm_psiN';
+            out.particleFlux_vm0_psiN(ind,:) =H{hind}.particleFlux_vm0_psiN';
+            out.heatFlux_vm_psiN(ind,:)     =H{hind}.heatFlux_vm_psiN';
+            out.heatFlux_vm0_psiN(ind,:)     =H{hind}.heatFlux_vm0_psiN';
+            out.momentumFlux_vm_psiN(ind,:) =H{hind}.momentumFlux_vm_psiN';
+            out.FSABFlow(ind,:)             =H{hind}.FSABFlow';
+            out.FSABjHat(ind,1)             =H{hind}.FSABjHat';
+            if Nsp>1
+              out.flow{ind}                    =permute(H{hind}.flow,[3,2,1]);
+              out.densityPerturbation{ind}     =permute(H{hind}.densityPerturbation,[3,2,1]);
+              out.pressurePerturbation{ind}    =permute(H{hind}.pressurePerturbation,[3,2,1]);
+              out.pressureAnisotropy{ind}      =permute(H{hind}.pressureAnisotropy,[3,2,1]);
+              out.NTVBeforeSurfaceIntegral{ind}=permute(H{hind}.NTVBeforeSurfaceIntegral,[3,2,1]);
+            else
+              out.flow{ind}                    =H{hind}.flow';
+              out.densityPerturbation{ind}     =H{hind}.densityPerturbation';
+              out.pressurePerturbation{ind}    =H{hind}.pressurePerturbation';
+              out.pressureAnisotropy{ind}      =H{hind}.pressureAnisotropy';
+              out.NTVBeforeSurfaceIntegral{ind}=H{hind}.NTVBeforeSurfaceIntegral';
+            end
+          else %includePhi1=1
+            out.NTV(ind,:)                  =H{hind}.NTV(:,end)';
+            out.particleFlux_vm_rHat(ind,:) =H{hind}.particleFlux_vm_rHat(:,end)';
+            out.particleFlux_vm_psiN(ind,:) =H{hind}.particleFlux_vm_psiN(:,end)';
+            out.particleFlux_vm0_psiN(ind,:) =H{hind}.particleFlux_vm0_psiN(:,end)';
+            out.heatFlux_vm_psiN(ind,:)     =H{hind}.heatFlux_vm_psiN(:,end)';
+            out.heatFlux_vm0_psiN(ind,:)     =H{hind}.heatFlux_vm0_psiN(:,end)';
+            out.momentumFlux_vm_psiN(ind,:) =H{hind}.momentumFlux_vm_psiN(:,end)';
+            out.FSABFlow(ind,:)             =H{hind}.FSABFlow(:,end)';
+            out.FSABjHat(ind,1)             =H{hind}.FSABjHat(end)';
+            if Nsp>1
+              out.flow{ind}                    =permute(squeeze(H{hind}.flow(:,:,:,end)),[3,2,1]);
+              out.densityPerturbation{ind}     =permute(squeeze(H{hind}.densityPerturbation(:,:,:,end)),[3,2,1]);
+              out.pressurePerturbation{ind}    =permute(squeeze(H{hind}.pressurePerturbation(:,:,:,end)),[3,2,1]);
+              out.pressureAnisotropy{ind}      =permute(squeeze(H{hind}.pressureAnisotropy(:,:,:,end)),[3,2,1]);
+              out.NTVBeforeSurfaceIntegral{ind}=permute(squeeze(H{hind}.NTVBeforeSurfaceIntegral(:,:,:,end)),[3,2,1]);
+            else
+              out.flow{ind}                    =squeeze(H{hind}.flow(:,:,end))';
+              out.densityPerturbation{ind}     =squeeze(H{hind}.densityPerturbation(:,:,end))';
+              out.pressurePerturbation{ind}    =squeeze(H{hind}.pressurePerturbation(:,:,end))';
+              out.pressureAnisotropy{ind}      =squeeze(H{hind}.pressureAnisotropy(:,:,end))';
+              out.NTVBeforeSurfaceIntegral{ind}=squeeze(H{hind}.NTVBeforeSurfaceIntegral(:,:,end))';
+            end
           end
         else
           out.finished(ind)=-1;
@@ -210,6 +237,7 @@ for hind=1:length(H)
                    ' in the directory ',out.run(ind).dir ,...
                    ' says ''finished'' but output results are missing']);
           out.NTV(ind,:)                 =NaN*zeros(Nsp,1);
+          out.particleFlux_vm_rHat(ind,:)=NaN*zeros(Nsp,1);
           out.particleFlux_vm_psiN(ind,:)=NaN*zeros(Nsp,1);
           out.particleFlux_vm0_psiN(ind,:)=NaN*zeros(Nsp,1);
           out.heatFlux_vm_psiN(ind,:)    =NaN*zeros(Nsp,1);
@@ -225,6 +253,7 @@ for hind=1:length(H)
         end
       else
         out.NTV(ind,:)                  =NaN*ones(out.Nspecies(ind),1);
+        out.particleFlux_vm_rHat(ind,:) =NaN*ones(out.Nspecies(ind),1);
         out.particleFlux_vm_psiN(ind,:) =NaN*ones(out.Nspecies(ind),1);
         out.particleFlux_vm0_psiN(ind,:) =NaN*ones(out.Nspecies(ind),1);
         out.heatFlux_vm_psiN(ind,:)     =NaN*ones(out.Nspecies(ind),1);
