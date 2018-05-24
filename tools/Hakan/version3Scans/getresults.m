@@ -81,6 +81,7 @@ for hind=1:length(H)
     out.Nzeta(ind)             =double(H{hind}.Nzeta);
     out.Nxi(ind)               =double(H{hind}.Nxi);
     out.NL(ind)                =double(H{hind}.NL);
+    out.includePhi1(ind)                =double(H{hind}.includePhi1);
 
     out.theta{ind}             =H{hind}.theta;
     out.theta{ind}             =H{hind}.theta;
@@ -186,6 +187,8 @@ for hind=1:length(H)
         if isfield(H{hind},'NTV')
           if H{hind}.includePhi1==0
             out.NTV(ind,:)                  =H{hind}.NTV';
+            out.particleFlux_vd_rHat(ind,:) =H{hind}.particleFlux_vd_rHat';
+            out.particleFlux_vd_psiN(ind,:) =H{hind}.particleFlux_vd_psiN';
             out.particleFlux_vm_rHat(ind,:) =H{hind}.particleFlux_vm_rHat';
             out.particleFlux_vm_psiN(ind,:) =H{hind}.particleFlux_vm_psiN';
             out.particleFlux_vm0_psiN(ind,:) =H{hind}.particleFlux_vm0_psiN';
@@ -210,13 +213,17 @@ for hind=1:length(H)
           else %includePhi1=1
             out.NTV(ind,:)                  =H{hind}.NTV(:,end)';
             out.particleFlux_vm_rHat(ind,:) =H{hind}.particleFlux_vm_rHat(:,end)';
+            out.particleFlux_vd_psiN(ind,:) =H{hind}.particleFlux_vd_psiN(:,end)';
+            out.particleFlux_vd_rHat(ind,:) =H{hind}.particleFlux_vd_rHat(:,end)';
             out.particleFlux_vm_psiN(ind,:) =H{hind}.particleFlux_vm_psiN(:,end)';
+            out.particleFlux_vm_rHat(ind,:) =H{hind}.particleFlux_vm_rHat(:,end)';
             out.particleFlux_vm0_psiN(ind,:) =H{hind}.particleFlux_vm0_psiN(:,end)';
             out.heatFlux_vm_psiN(ind,:)     =H{hind}.heatFlux_vm_psiN(:,end)';
             out.heatFlux_vm0_psiN(ind,:)     =H{hind}.heatFlux_vm0_psiN(:,end)';
             out.momentumFlux_vm_psiN(ind,:) =H{hind}.momentumFlux_vm_psiN(:,end)';
             out.FSABFlow(ind,:)             =H{hind}.FSABFlow(:,end)';
             out.FSABjHat(ind,1)             =H{hind}.FSABjHat(end)';
+            out.Phi1Hat{ind}                =squeeze(H{hind}.Phi1Hat(:,:,end));
             if Nsp>1
               out.flow{ind}                    =permute(squeeze(H{hind}.flow(:,:,:,end)),[3,2,1]);
               out.densityPerturbation{ind}     =permute(squeeze(H{hind}.densityPerturbation(:,:,:,end)),[3,2,1]);
@@ -257,6 +264,7 @@ for hind=1:length(H)
         out.particleFlux_vm_psiN(ind,:) =NaN*ones(out.Nspecies(ind),1);
         out.particleFlux_vm0_psiN(ind,:) =NaN*ones(out.Nspecies(ind),1);
         out.heatFlux_vm_psiN(ind,:)     =NaN*ones(out.Nspecies(ind),1);
+        out.heatFlux_vm_rHat(ind,:)     =NaN*ones(out.Nspecies(ind),1);
         out.heatFlux_vm0_psiN(ind,:)     =NaN*ones(out.Nspecies(ind),1);
         out.momentumFlux_vm_psiN(ind,:) =NaN*ones(out.Nspecies(ind),1);
         out.FSABFlow(ind,:)             =NaN*ones(out.Nspecies(ind),1);

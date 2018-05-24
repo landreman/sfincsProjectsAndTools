@@ -72,7 +72,11 @@ dVdpsiN=abs(runs.VPrimeHat*Rbar/Bbar.*runs.psiAHat);
 
 %runs.VPrimeHat*Rbar/Bbar.*runs.psiAHat
 
-partFluxpers= runs.particleFlux_vm_psiN*vbar*nbar/Rbar.*(ones(Nspec,1)*dVdpsiN)';
+if runs.includePhi1
+   partFluxpers= runs.particleFlux_vd_psiN*vbar*nbar/Rbar.*(ones(Nspec,1)*dVdpsiN)';
+else
+   partFluxpers= runs.particleFlux_vm_psiN*vbar*nbar/Rbar.*(ones(Nspec,1)*dVdpsiN)';
+end
 partFluxpers_spec1and2=partFluxpers(:,1:2)
 partFluxpers_spec3=partFluxpers(:,3)
 partFluxpers_f0= runs.particleFlux_vm0_psiN*vbar*nbar/Rbar.*(ones(Nspec,1)*dVdpsiN)';
