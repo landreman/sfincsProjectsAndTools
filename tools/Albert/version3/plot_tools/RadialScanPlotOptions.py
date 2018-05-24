@@ -39,8 +39,12 @@ matplotlib.rcParams['text.usetex'] = True
 #PlotLineColors = ['r', 'b', 'm', 'c', 'g', 'y', 'k', '0.75'] #LHD113208t4640
 #PlotLinespecs = ['rD-', 'mv-.', 'gx--', 'y*--'] #W7-X NBI case
 #PlotLineColors = ['r', 'm', 'g', '#AAAA00'] #W7-X NBI case
-PlotLinespecs = ['mD-', 'cv-.', 'gx--'] #TEMPORARY
-PlotLineColors = ['m', 'c', 'g'] #TEMPORARY
+#PlotLinespecs = ['mD-', 'cv-.', 'gx--'] #TEMPORARY
+#PlotLineColors = ['m', 'c', 'g'] #TEMPORARY
+PlotLinespecs = ['cv-.', 'bx--'] #TEMPORARY
+PlotLineColors = ['c', 'b'] #TEMPORARY
+PlotLinespecs = ['cv', 'b--', 'r-'] #TEMPORARY
+PlotLineColors = ['c', 'b', 'r'] #TEMPORARY
 #PlotLinespecs = ['rD-', 'mv-.']
 #PlotLineColors = ['r', 'm']
 #PlotLinespecs = ['r-', 'b--', 'g-.', 'y:']
@@ -49,7 +53,8 @@ PlotLineColors = ['m', 'c', 'g'] #TEMPORARY
 #PlotLineColors = ['#555555']
 #PlotMarkerEdgeWidth = [3, 3, 3, 0, 3, 3, 3, 3]
 PlotMarkerEdgeWidth = [3, 3, 3, 2] 
-PlotMarkerSize = 10
+#PlotMarkerSize = 10
+PlotMarkerSize = 15
 PlotLineWidth=5.0
 
 xAxisScale = 'linear' #'linear', 'log' or 'symlog'
@@ -65,20 +70,22 @@ xAxisLabel = r'$r/a$'
 #yAxisLabel = r'$\nu_{ss}^{\prime}$'
 #yAxisLabel = r'$\nu_{s}^{\prime}$'
 # e   i   \mathrm{He}^{2+}   \mathrm{C}^{6+}   \mathrm{Ne}^{10+}
-yAxisLabel = r'$<\mathbf{\Gamma}_{\mathrm{C}^{6+}} \cdot \nabla r> $ $[10^{20} \mathrm{m}^{-2} \mathrm{s}^{-1}]$' 
-#yAxisLabel = r'$E_r$ $[\mathrm{kV/m}]$'
+#yAxisLabel = r'$<\mathbf{\Gamma}_{\mathrm{C}^{6+}} \cdot \nabla r> $ $[10^{20} \mathrm{m}^{-2} \mathrm{s}^{-1}]$' 
+yAxisLabel = r'$E_r$ $[\mathrm{kV/m}]$'
 #yAxisLabel = r'$Z_{\mathrm{eff}}$'
 AxesLabelSize = 40
 
 TickSize = 35
 
-AxisLimAuto = True
-#AxisLimAuto = False
+#AxisLimAuto = True
+AxisLimAuto = False
 #xAxisLim = [0.18, 0.92] #LHD113208t4640 Er scan
 #yAxisLim = [-4.5, 0.0]
 #yAxisLim = [-3.2, 0.0] #LHD113208t4640 Er scan
-xAxisLim = [0.10, 1.02] #W7-X NBI case Er scan
-yAxisLim = [-25.0, 0.0] #W7-X NBI case Er scan
+#xAxisLim = [0.10, 1.02] #W7-X NBI case Er scan
+#yAxisLim = [-25.0, 0.0] #W7-X NBI case Er scan
+xAxisLim = [0.0, 1.02] #TEMPORARY
+yAxisLim = [-30.0, 30.0] #TEMPORARY
 #xAxisLim = [0.0, 1.0]
 #yAxisLim = [0.00007, 0.15]
 #yAxisLim = [0.00004, 0.40]
@@ -90,7 +97,7 @@ yAxisLim = [-25.0, 0.0] #W7-X NBI case Er scan
 
 xAxisLabelCoords = [0.5,-0.09]
 #yAxisLabelCoords = [-0.11,0.5] #LHD113208t4640, W7-X NBI case, Er scan, Flux scan
-yAxisLabelCoords = [-0.125,0.5] #TEMPORARY
+yAxisLabelCoords = [-0.115,0.5] #TEMPORARY
 #yAxisLabelCoords = [-0.09,0.5] #CONTOUR PLOT WITHOUT COLORBAR
 
 LeftMargin = 0.15 #LHD113208t4640, W7-X NBI case, Er scan, Flux scan
@@ -105,12 +112,12 @@ TopMargin = 0.95 #LHD113208t4640, W7-X NBI case, Er scan, Flux scan
 BottomMargin = 0.15 #LHD113208t4640, W7-X NBI case, Er scan, Flux scan
 #BottomMargin = 0.17 #CONTOUR PLOT WITHOUT COLORBAR
 
-ShowLegend = False
+ShowLegend = True
 
 #PlotLegendLabels = [r'SFINCS Fokker-Planck w/o $\Phi_1$', r'SFINCS Pitch-angle scattering w/o $\Phi_1$', r'SFINCS Fokker-Planck w/ $\Phi_1$', r'SFINCS Pitch-angle scattering w/ $\Phi_1$']
 #PlotLegendLabels = [r'SFINCS Fokker-Planck w/o $\Phi_1$', r'SFINCS Pitch-angle scattering w/o $\Phi_1$', r'SFINCS Fokker-Planck w/ $\Phi_1$', r'SFINCS Pitch-angle scattering w/ $\Phi_1$', r'DKES + momentum correction', r'DKES (no momentum correction)']
 #PlotLegendLabels = [r'SFINCS Fokker-Planck w/o $\Phi_1$', r'SFINCS Fokker-Planck w/ $\Phi_1$']
-PlotLegendLabels = [r'SFINCS Fokker-Planck w/o $\Phi_1$', r'SFINCS Fokker-Planck w/ $\Phi_1$', r'DKES + momentum correction', r'DKES (no momentum correction)']
+#PlotLegendLabels = [r'SFINCS Fokker-Planck w/o $\Phi_1$', r'SFINCS Fokker-Planck w/ $\Phi_1$', r'DKES + momentum correction', r'DKES (no momentum correction)']
 #PlotLegendLabels = [r'$n_e$', r'$n_i$', r'$n_{\mathrm{He}^{2+}}$', r'$n_{\mathrm{C}^{6+}}$']
 #PlotLegendLabels = [r'$n_e$', r'$n_i$', r'$n_{\mathrm{He}^{2+}}$', r'$10 \times n_{\mathrm{C}^{6+}}$']
 #PlotLegendLabels = [r'$T_e$', r'$T_i$', r'$T_{\mathrm{He}^{2+}}$', r'$T_{\mathrm{C}^{6+}}$']
@@ -122,6 +129,7 @@ PlotLegendLabels = [r'SFINCS Fokker-Planck w/o $\Phi_1$', r'SFINCS Fokker-Planck
 #PlotLegendLabels = [r'$\nu_{e}^{\prime}$', r'$\nu_{i}^{\prime}$', r'$\nu_{Ne}^{\prime}$']
 #PlotLegendLabels = [r'SFINCS Fokker-Planck w/o $\Phi_1$', r'SFINCS Fokker-Planck w/ $\Phi_1$']
 #PlotLegendLabels = [r'LHD113208t4640 Fokker-Planck w/o $\Phi_1$', r'Inward-shifted Fokker-Planck w/o $\Phi_1$', r'LHD113208t4640 Fokker-Planck w/ $\Phi_1$', r'Inward-shifted Fokker-Planck w/ $\Phi_1$']
+PlotLegendLabels = [r'SFINCS Fokker-Planck w/o $\Phi_1$', r'DKES', r'XICS']
 
 #PlotLegendLabels = []
 
@@ -177,3 +185,9 @@ SubPlotLabelYcoord = -0.00071 #W7-X NBI case Neon scan
 #SubPlotLabelYcoord = 2.422
 #SubPlotLabelYcoord = 0.1
 #SubPlotLabelYcoord = 0.248
+
+ErrorBars = [False, False, True]
+ErrorBarAlpha = 0.3
+
+ShowLineAtXzero = True
+ShowLineAtYzero = False
