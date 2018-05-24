@@ -39,6 +39,7 @@ if size(s,1)>size(s,2)
 end
 
 out.StelSym=Geom.StelSym;
+out.newsigncorr=Geom.newsigncorr;
 if isfield(Geom,'headertext')
   out.headertext=Geom.headertext;
 end
@@ -276,12 +277,12 @@ if strcmp(interptype,'linear') %This is the default case
           else
             error('this is impossible')
           end
-        end
-      end
-    end
+        end %for mind
+      end %for nind
+    end %if not(StelSym)
     out.Bnorm{surfind}=out.Bmn{surfind}/out.B00(surfind);
     out.nmodes(surfind)=mode;
-  end
+  end %surfind loop
   fprintf(1,'\n')
 
   
@@ -300,6 +301,7 @@ elseif strcmp(interptype,'nearest')
   end
   
   out.rnorm=Geom.rnorm(inds);
+  out.s=Geom.s(inds);
   out.iota=Geom.iota(inds);
   out.Bphi=Geom.Bphi(inds);
   out.Btheta=Geom.Btheta(inds);

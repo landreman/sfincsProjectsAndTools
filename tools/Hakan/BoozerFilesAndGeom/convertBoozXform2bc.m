@@ -75,8 +75,7 @@ else
     s_wish=0.995;
     Nu=128;
     Nv=128;
-    min_Bmn=0;
-    Booz=makeBoozfromVmec(wout,s_wish,Nu,Nv,min_Bmn);
+    Booz=makeBoozfromVmec(wout,s_wish,Nu,Nv);
     Geomxf.majorradiusLastbcR00=Booz.R00;
   end
   

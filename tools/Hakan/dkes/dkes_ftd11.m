@@ -1,8 +1,29 @@
-function d11fits=dkes_ftd11(Geomdat,dkdata);
-close all
+function d11fits=dkes_ftd11(Geomdat,dkdata,varargin);
 
+if nargin>=3
+  fignr=varargin{1};
+else
+  fignr=1;
+end
+if nargin==4
+  dkesoutputpath=varargin{2};
+  if not(exist([dkesoutputpath,'ps'],'dir'))
+    success=mkdir(dkesoutputpath,'ps');
+    if not(success)
+      error(['Could not create the directory ',dkesoutputpath,'ps'])
+    end
+  end
+else
+  dkesoutputpath='';
+end
+if ishandle(fignr)
+  close(fignr)
+end
 
 for rind=1:dkdata.Nradii
+  %fignr=1+mod(floor((rind-1)/2),4)+((-1)^rind+1)/2*4;
+  %fignr=rind;
+  
   %Check if it is a tokamak first
   if all(Geomdat.n{rind}==0)
       d11fits.eps_efh(rind)=-1;%NaN;
@@ -38,9 +59,9 @@ for rind=1:dkdata.Nradii
     
     [~,E0inds]=find(dkdata.efld{rind}==0);
     if length(E0inds)>0
-      cmul_E0=dkdata.cmul{rind}(E0inds); %HM: anu
-      d11_E0 =abs(dkdata.d11{rind}(E0inds));  %HM: a110  
-      d11e_E0=dkdata.d11e{rind}(E0inds); %HM: a110e    
+      [cmul_E0,srti]=sort(dkdata.cmul{rind}(E0inds),'descend'); %HM: anu
+      d11_E0 =abs(dkdata.d11{rind}(E0inds(srti)));  %HM: a110  
+      d11e_E0=dkdata.d11e{rind}(E0inds(srti)); %HM: a110e    
     else
       warning('There were no runs for Er = 0 !')
       disp('Using the lowest Er for extrapolation!')
@@ -81,106 +102,124 @@ for rind=1:dkdata.Nradii
     %y4g_l=min(1e5,g11_u);
     %y4e_l=min(ype(4,:));
     
-    ask_for_exp_fit=0;
-    if ask_for_exp_fit
-      disp('Please give the exp in the fit of g11 = cmul*D_11 with y0+y1*cmul^exp')
-      exp_fit=input('exp=? (default is 0.5):');
-      if isempty(exp_fit)
+    if length(cmul_E0)<2
+      disp(['Warning: There was < 2 runs for Er = 0 at radius #',num2str(rind)])
+      makeafit=0;
+      acceptedfit=1;
+    else
+      ask_for_exp_fit=0;
+      if ask_for_exp_fit
+        disp('Please give the exp in the fit of g11 = cmul*D_11 with y0+y1*cmul^exp')
+        exp_fit=input('exp=? (default is 0.5):');
+        if isempty(exp_fit)
+          exp_fit=0.5;
+        end
+      else
         exp_fit=0.5;
       end
-    else
-      exp_fit=0.5;
-    end
-    
-    % try to estimate how many points that are needed in the fit 
-    % by finding the inflection point
-    Nconsider=min(9,length(cmul_E0)-1);
-    cmulexp_10=cmul_E0(end-Nconsider+1:end).^exp_fit;
-    g11_10=g11(end-Nconsider+1:end);
-    dfdx=diff(g11_10)./diff(cmulexp_10);
-    x1=(cmulexp_10(1:end-1)+cmulexp_10(2:end))/2;
-    d2fdx2=diff(dfdx)./diff(x1);
-    x2=(x1(1:end-1)+x1(2:end))/2;
-    inflectionpoint=interp1(d2fdx2,x2,0);
-    if not(isempty(inflectionpoint))
-      indx=find(diff(sign(cmulexp_10-inflectionpoint(1))));
-      Ndataforfit=max(4,Nconsider-indx(1)+1);
-    else
-      Ndataforfit=5;
-    end
-    
-    fignr=1;
-    %fignr=1+mod(floor((rind-1)/2),4)+((-1)^rind+1)/2*4;
-    %fignr=rind;
-    fprintf(1,'\n')
-    disp('----------------------------------------------')
-    disp(['Radius ',num2str(rind),'/',num2str(dkdata.Nradii),...
-          ': r=',num2str(Geomdat.minorradiusW7AS*Geomdat.rnorm(rind)),...
-          ' m, Figure nr ',num2str(fignr)])
-    disp('----------------------------------------------')
-    fprintf(1,'\n')
-    fig(fignr)
 
-    makeafit=1;
-    acceptedfit=0;
-    while not(acceptedfit)
-      close(fignr)
-      fig(fignr)    
-      pos=get(gcf,'Position');
-      pos(3)=840;
-      set(gcf,'Position',pos);
-      
-      fitinds=length(g11)-Ndataforfit+1:length(g11);
-      g11_part=g11(fitinds);              %HM: awk(:,1)
-      cmulexp_part=cmul_E0(fitinds).^exp_fit; %HM: awk(:,2)
-      weights = min(1e4,(d11e_E0(fitinds)./d11_E0(fitinds)).^(-2));
-      
-      F0=fit(cmulexp_part',g11_part','poly1','weight',weights);
-      y1=F0.p1;
-      y0=F0.p2; %HM: g11_ft ???
-      g11fit=F0.p1*cmul_E0.^exp_fit+F0.p2;
-      %g11_part_fit=F0.p1*cmulexp_part+F0.p2;
-      eps_efh=(4.9982*y0*R^2*b0dk^2).^(2/3);
-      
-      subplot(121)    
-      showinds=max(1,length(g11)-Ndataforfit-1):length(g11);
-      %       cmul_E0(fitinds).^exp_fit,g11(fitinds),'rx',...
-      hold off
-      plot(cmul_E0(showinds).^exp_fit,g11fit(showinds),'r-',...
-           cmul_E0(showinds).^exp_fit,g11(showinds),'rs',...
-           cmul_E0(fitinds).^exp_fit,g11(fitinds),'r*',...
-           cmul_E0(fitinds).^exp_fit,g11(fitinds),'rd',...
-           cmul_E0(fitinds).^exp_fit,g11(fitinds),'r+',...
-           cmul_E0(fitinds).^exp_fit,g11_l(fitinds),'r^',...
-           cmul_E0(fitinds).^exp_fit,g11_u(fitinds),'rv')%,...
-                                                         %     inflectionpoint*[1,1],[min(g11(showinds)),max(g11(showinds))],'r:')
-                                                         %xlim([cmul_E0(end).^exp_fit,cmul_E0(end-Ndataforfit-1).^exp_fit])
-                                                         %text(inflectionpoint,max(g11(showinds)),'inflection point');
-      xlabel(['(\nu/v)^{',num2str(exp_fit),'}'])
-      ylabel('g_{11} = (\nu/v) * |\Gamma_{11}|')
-      title(['r=',num2str(100*Geomdat.minorradiusW7AS*Geomdat.rnorm(rind)),...
-             'cm: ',num2str(rind),'/',num2str(dkdata.Nradii),...
-             ', \epsilon_{eff}=',num2str(eps_efh,'%5.5f')])%,...
-                                                           %', g_{11,ft}=',num2str(y0,'%5.2e')])
-      legend([num2str(y0,'%5.2e'),'+y_1(\nu/v)^{',num2str(exp_fit),'}'],2)
-      drawnow
-      disp(['fit of g11 = cmul*D_11 with y0+y1*cmul^',num2str(exp_fit)])
-      disp(['up to cmul =',num2str(cmul_E0(fitinds(1)))])
-      disp(['--> effective helical ripple: ',...
-            'eps_efh=(4.9982*y0*R^2*B0^2)^(2/3)= ',num2str(eps_efh)])
-      if y0<0
-        disp(' WARNING, y0 < 0! Choose another number of points!')
-      end
-      newNdataforfit=...
-          input('If you accept the fit press return, otherwise give the number of points (0=make no fit):');
-      if isempty(newNdataforfit)
-        acceptedfit=1;
-      elseif newNdataforfit==0
-        acceptedfit=1;
-        makeafit=0;
+      % try to estimate how many points that are needed in the fit 
+      % by finding the inflection point
+      Nconsider=min(9,length(cmul_E0)-1);
+      cmulexp_10=cmul_E0(end-Nconsider+1:end).^exp_fit;
+      g11_10=g11(end-Nconsider+1:end);
+      dfdx=diff(g11_10)./diff(cmulexp_10);
+      x1=(cmulexp_10(1:end-1)+cmulexp_10(2:end))/2;
+      d2fdx2=diff(dfdx)./diff(x1);
+      x2=(x1(1:end-1)+x1(2:end))/2;
+      inflectionpoint=interp1(d2fdx2,x2,0);
+      if not(isempty(inflectionpoint))
+        indx=find(diff(sign(cmulexp_10-inflectionpoint(1))));
+        Ndataforfit=max(4,Nconsider-indx(1)+1);
       else
-        Ndataforfit=newNdataforfit;
+        Ndataforfit=5;
       end
+      
+      fprintf(1,'\n')
+      disp('----------------------------------------------')
+      disp(['Radius ',num2str(rind),'/',num2str(dkdata.Nradii),...
+            ': r=',num2str(Geomdat.minorradiusW7AS*Geomdat.rnorm(rind)),...
+            ' m, Figure nr ',num2str(fignr)])
+      disp('----------------------------------------------')
+      fprintf(1,'\n')
+      
+      %set(0, 'DefaultFigureVisible', 'off');
+      fig(fignr)
+      makeafit=1;
+      acceptedfit=0;
+      
+      iters=1;
+      while not(acceptedfit)
+        close(fignr)
+        fig(fignr)    
+        pos=get(gcf,'Position');
+        pos(3)=840;
+        set(gcf,'Position',pos);
+        
+        while 1
+          fitinds=length(g11)-Ndataforfit+1:length(g11);
+          g11_part=g11(fitinds);              %HM: awk(:,1)
+          cmulexp_part=cmul_E0(fitinds).^exp_fit; %HM: awk(:,2)
+          weights = min(1e4,(d11e_E0(fitinds)./d11_E0(fitinds)).^(-2));
+          
+          F0=fit(cmulexp_part',g11_part','poly1','weight',weights);
+          y1=F0.p1;
+          y0=F0.p2; %HM: g11_ft ???
+          g11fit=F0.p1*cmul_E0.^exp_fit+F0.p2;
+          %g11_part_fit=F0.p1*cmulexp_part+F0.p2;
+          eps_efh=(4.9982*y0*R^2*b0dk^2).^(2/3);
+          if iters<2 && g11(fitinds(1)-1)<g11fit(fitinds(1)-1)
+            Ndataforfit=Ndataforfit+1;
+            iters=iters+1; 
+          else
+            break
+          end
+        end
+        
+        subplot(121)    
+        showinds=max(1,length(g11)-Ndataforfit-1):length(g11);
+        %       cmul_E0(fitinds).^exp_fit,g11(fitinds),'rx',...
+        hold off
+        plot(cmul_E0(showinds).^exp_fit,g11fit(showinds),'r-',...
+             cmul_E0(showinds).^exp_fit,g11(showinds),'rs',...
+             cmul_E0(fitinds).^exp_fit,g11(fitinds),'r*',...
+             cmul_E0(fitinds).^exp_fit,g11(fitinds),'rd',...
+             cmul_E0(fitinds).^exp_fit,g11(fitinds),'r+',...
+             cmul_E0(fitinds).^exp_fit,g11_l(fitinds),'r^',...
+             cmul_E0(fitinds).^exp_fit,g11_u(fitinds),'rv')%,...
+                                                           %     inflectionpoint*[1,1],[min(g11(showinds)),max(g11(showinds))],'r:')
+                                                           %xlim([cmul_E0(end).^exp_fit,cmul_E0(end-Ndataforfit-1).^exp_fit])
+                                                           %text(inflectionpoint,max(g11(showinds)),'inflection point');
+        xlabel(['(\nu/v)^{',num2str(exp_fit),'}'])
+        ylabel('g_{11} = (\nu/v) * |\Gamma_{11}|')
+        title(['r=',num2str(100*Geomdat.minorradiusW7AS*Geomdat.rnorm(rind)),...
+               'cm: ',num2str(rind),'/',num2str(dkdata.Nradii),...
+               ', \epsilon_{eff}=',num2str(eps_efh,'%5.5f')])%,...
+                                                             %', g_{11,ft}=',num2str(y0,'%5.2e')])
+        legend([num2str(y0,'%5.2e'),'+y_1(\nu/v)^{',num2str(exp_fit),'}'],2)
+        drawnow
+        %set(0, 'DefaultFigureVisible', 'on');
+        %figHandles = findall(0, 'Type', 'figure');
+        %set(figHandles(:), 'visible', 'on')
+        
+        disp(['fit of g11 = cmul*D_11 with y0+y1*cmul^',num2str(exp_fit)])
+        disp(['up to cmul =',num2str(cmul_E0(fitinds(1)))])
+        disp(['--> effective helical ripple: ',...
+              'eps_efh=(4.9982*y0*R^2*B0^2)^(2/3)= ',num2str(eps_efh)])
+        if y0<0
+          disp(' WARNING, y0 < 0! Choose another number of points!')
+        end
+        newNdataforfit=...
+            input('If you accept the fit press return, otherwise give the number of points (0=make no fit):');
+        if isempty(newNdataforfit)
+          acceptedfit=1;
+        elseif newNdataforfit==0
+          acceptedfit=1;
+          makeafit=0;
+        else
+          Ndataforfit=newNdataforfit;
+        end
+      end  
     end  
     
     if not(makeafit)
@@ -198,6 +237,7 @@ for rind=1:dkdata.Nradii
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       
       %First make a plot so that the used can decide a range of cmuls and efields
+
       figure(fignr)
       subplot(122)
       colorsandstyle={'ro','go','bo','co','mo','ko',...
@@ -237,90 +277,99 @@ for rind=1:dkdata.Nradii
 
       do_input=1;
       acceptedfit=0;
+      iters=0;
       while not(acceptedfit)
+        iters=iters+1;
         
         if not(do_input)
           cmul_ftl=[];cmul_ftu=[];er_l=[];er_u=[];      
         else
-          problemreading=1;
-          while problemreading
-            cmul_ftl_str=input(['lower cmul limit for E_r fit (deafult=',...
-                                num2str(cmul_ftl_def),'): '],'s');
-            if strcmp(cmul_ftl_str,'')
-              problemreading=0;
-              cmul_ftl=cmul_ftl_def;
-            else
-              cmul_ftl=str2num(cmul_ftl_str);
-              if isempty(cmul_ftl)
-                disp('INPUT NOT UNDERSTANDABLE')
-              else
+          if iters == 1 %use defaults the first time
+            cmul_ftl=cmul_ftl_def;
+            cmul_ftu=cmul_ftu_def;
+            er_l=er_l_def;
+            er_u=er_u_def;
+          else
+            problemreading=1;
+            while problemreading
+              cmul_ftl_str=input(['lower cmul limit for E_r fit (deafult=',...
+                                  num2str(cmul_ftl_def),'): '],'s');
+              if strcmp(cmul_ftl_str,'')
                 problemreading=0;
-              end
-            end
-          end
-          
-          problemreading=1;
-          while problemreading
-            cmul_ftu_str=input(['upper cmul limit for E_r fit (deafult=',...
-                                num2str(cmul_ftu_def),'): '],'s');
-            if strcmp(cmul_ftu_str,'')
-              problemreading=0;
-              cmul_ftu=cmul_ftu_def;
-            else
-              cmul_ftu=str2num(cmul_ftu_str);
-              if isempty(cmul_ftu)
-                disp('INPUT NOT UNDERSTANDABLE')
+                cmul_ftl=cmul_ftl_def;
               else
-                problemreading=0;
-              end
-            end
-          end
-          
-          problemreading=1;
-          while problemreading
-            er_l_str=input(['lower efield limit for E_r fit (deafult=',...
-                            num2str(er_l_def),'): '],'s');
-            if strcmp(er_l_str,'')
-              problemreading=0;
-              er_l=er_l_def;
-            else
-              er_l=str2num(er_l_str);
-              if isempty(er_l)
-                Ercolorind=find(strcmp(colorsandstyle,er_l_str));
-                if isempty(Ercolorind)
+                cmul_ftl=str2num(cmul_ftl_str);
+                if isempty(cmul_ftl)
                   disp('INPUT NOT UNDERSTANDABLE')
                 else
                   problemreading=0;
-                  er_l=dkdata.efldfirst{rind}.efld(Ercolorind);
                 end
-              else
-                problemreading=0;
               end
             end
-          end
-          
-          problemreading=1;
-          while problemreading
-            er_u_str=input(['upper efield limit for E_r fit (deafult=',...
-                            num2str(er_u_def),'): '],'s');
-            if strcmp(er_u_str,'')
-              problemreading=0;
-              er_u=er_u_def;
-            else
-              er_u=str2num(er_u_str);
-              if isempty(er_u)
-                if length(er_u_str)==1
-                  er_u_str=[er_u_str,'o'];
-                end
-                Ercolorind=find(strcmp(colorsandstyle,er_u_str));
-                if isempty(Ercolorind)
+            
+            problemreading=1;
+            while problemreading
+              cmul_ftu_str=input(['upper cmul limit for E_r fit (deafult=',...
+                                  num2str(cmul_ftu_def),'): '],'s');
+              if strcmp(cmul_ftu_str,'')
+                problemreading=0;
+                cmul_ftu=cmul_ftu_def;
+              else
+                cmul_ftu=str2num(cmul_ftu_str);
+                if isempty(cmul_ftu)
                   disp('INPUT NOT UNDERSTANDABLE')
                 else
                   problemreading=0;
-                  er_u=dkdata.efldfirst{rind}.efld(Ercolorind);
                 end
-              else
+              end
+            end
+            
+            problemreading=1;
+            while problemreading
+              er_l_str=input(['lower efield limit for E_r fit (deafult=',...
+                              num2str(er_l_def),'): '],'s');
+              if strcmp(er_l_str,'')
                 problemreading=0;
+                er_l=er_l_def;
+              else
+                er_l=str2num(er_l_str);
+                if isempty(er_l)
+                  Ercolorind=find(strcmp(colorsandstyle,er_l_str));
+                  if isempty(Ercolorind)
+                    disp('INPUT NOT UNDERSTANDABLE')
+                  else
+                    problemreading=0;
+                    er_l=dkdata.efldfirst{rind}.efld(Ercolorind);
+                  end
+                else
+                  problemreading=0;
+                end
+              end
+            end
+            
+            problemreading=1;
+            while problemreading
+              er_u_str=input(['upper efield limit for E_r fit (deafult=',...
+                              num2str(er_u_def),'): '],'s');
+              if strcmp(er_u_str,'')
+                problemreading=0;
+                er_u=er_u_def;
+              else
+                er_u=str2num(er_u_str);
+                if isempty(er_u)
+                  if length(er_u_str)==1
+                    er_u_str=[er_u_str,'o'];
+                  end
+                  Ercolorind=find(strcmp(colorsandstyle,er_u_str));
+                  if isempty(Ercolorind)
+                    disp('INPUT NOT UNDERSTANDABLE')
+                  else
+                    problemreading=0;
+                    er_u=dkdata.efldfirst{rind}.efld(Ercolorind);
+                  end
+                else
+                  problemreading=0;
+                end
               end
             end
           end
@@ -424,9 +473,15 @@ for rind=1:dkdata.Nradii
         d11fits.ex_er(rind)=ex_er;
         d11fits.er_u(rind)=er_u;
         
-        acc=input(['Do you accept the fit (return=yes, n=no, ',...
-                   'x=make no fit) ? '],'s');
+        askthequestion=0;
+        if askthequestion
+          acc=input(['Do you accept the fit (return=yes, n=no, ',...
+                     'x=make no fit) ? '],'s');
+        else
+          acc='';
+        end
         acceptedfit=isempty(acc);
+
         if not(acceptedfit)
           do_input=1;
         end
@@ -445,8 +500,11 @@ for rind=1:dkdata.Nradii
       figurefile=['fits_for_radius',num2str(rind),'of',num2str(dkdata.Nradii),'.eps'];
       disp(['Printing figure file: ',figurefile])
       pwd
-      print('-depsc',figurefile)
-      
+      if strcmp(dkesoutputpath,'')
+        print('-depsc',figurefile)
+      else
+        print('-depsc',[dkesoutputpath,'ps/',figurefile])
+      end
     end
   end
 end

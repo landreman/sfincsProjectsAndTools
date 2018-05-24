@@ -1,0 +1,240 @@
+#!/usr/bin/env python 
+
+import matplotlib 
+import h5py
+import numpy 
+import numpy as np 
+import os, sys, inspect, math
+import warnings  
+import matplotlib.ticker as ticker  
+import subprocess
+import matplotlib.pyplot as plt
+
+print "This is "+ inspect.getfile(inspect.currentframe())
+
+sfincsHome = os.environ.get('SFINCS_HOME') 
+sfincsProjectsAndToolsHome = os.environ.get('SFINCS_PROJECTS_AND_TOOLS_HOME')
+
+##INPUTS##
+
+##NORMALIZATION FACTORS FOR SI UNITS##
+######################################
+qe = 1.6021766208*10**(-19) #Electron charge
+mbar = 1.672621777*10**(-27) #Proton mass 
+nbar = 10.0**20 # in 10^20 
+Tbar = 1000*qe 
+Rbar = 1.0  
+Bbar = 1.0  
+vbar = np.sqrt(2.0 * Tbar / mbar)  
+######################################
+
+QuantitiesToExtract = ['rN', 'Er', 'nHats', 'THats', 'dnHatdrHat', 'dTHatdrHat', 'particleFlux_vd_rHat']
+#QuantitiesToExtract = ['rN', 'Er', 'nHats', 'THats', 'dnHatdrN', 'dTHatdrN']
+#QuantitiesToExtract = ['rN', 'Er'] 
+#QuantitiesToExtract = ['rN', 'dPhiHatdrN']
+#QuantitiesToExtract = ['particleFlux_vd_rHat', 'rN', 'ErD', 'THats'] ##TEMPORARY TEST
+
+OutputQuantitiesFactors = [1, 1, 1, 1, 1, 1, vbar]
+#OutputQuantitiesFactors = [1, 1, 1, 1, 1, 1]
+#OutputQuantitiesFactors = [1, 1] 
+#OutputQuantitiesFactors = [vbar, 1, 10, 0.1]  ##TEMPORARY TEST 
+
+OutputQuantitiesLabels = ['r/a', 'Er[kV/m]', 'n[10^20/m^3]', 'T[keV]', 'dn/dr[10^20/m^4]', 'dT/dr[keV/m]', 'ParticleFlux[10^20/(m^2*s)]']
+#OutputQuantitiesLabels = ['r/a', 'Er[kV/m]', 'n[10^20/m^3]', 'T[keV]', 'dn/d(r/a)[10^20/m^3]', 'dT/d(r/a)[keV]'] 
+#OutputQuantitiesLabels = ['r/a', 'Er[kV/m]']
+#OutputQuantitiesLabels = ['r/a', 'dPhiHatdrN[kV]']
+#OutputQuantitiesLabels = ['ParticleFlux[10^20/(m^2*s)]', 'r/a', 'Er[kV/m]', 'T[keV]'] ##TEMPORARY TEST
+
+filename = 'sfincsOutput.h5' ##Name for SFINCS output HDF5 files.
+
+outputFilename = "radialScanData.dat" ##Name of output file to which the data is written.
+
+MinFloat = pow(10, -sys.float_info.dig) 
+##############################
+##########END INPUTS##########
+##############################
+
+##READ THE DATA##
+originalDirectory = os.getcwd() 
+
+print "Extracting data from radial scan in " + originalDirectory
+
+# Get a list of the subdirectories:
+DataDirectories = sorted(filter(os.path.isdir, os.listdir("."))) 
+
+if len(DataDirectories) < 1:
+    print "Error! Could not find any directories in " + originalDirectory 
+    sys.exit(1)
+
+OutputData = np.array([])
+
+OutputLabels = []
+
+Nspecies = 0
+
+counter = 0
+
+for Quantity in QuantitiesToExtract :
+    QuantityLabel = OutputQuantitiesLabels[counter]
+    QuantityFactor = OutputQuantitiesFactors[counter]
+    QuantityOutputData = []
+
+    NumberOfReadValues = 0
+    NumberOfElements = 0
+
+    print "######################################################"
+    print "Reading " + Quantity
+    print "######################################################" 
+
+    for directory in DataDirectories:
+        try:
+            TmpQuantity = Quantity
+            print "*************************************************" 
+            print "Processing directory "+directory
+            print "*************************************************"
+
+            fullDirectory = originalDirectory + "/" + directory
+            os.chdir(fullDirectory)
+            
+            file = h5py.File(fullDirectory + "/" + filename,'r') 
+
+            finished = file["finished"][()] 
+            integerToRepresentTrue = file["integerToRepresentTrue"][()]
+            includePhi1 = file["includePhi1"][()] 
+            didNonlinearCalculationConverge = integerToRepresentTrue
+
+            if includePhi1 == integerToRepresentTrue:
+                didNonlinearCalculationConverge = file["didNonlinearCalculationConverge"][()]
+
+            if Nspecies == 0:
+                Nspecies = file["Nspecies"][()]
+            else:
+                if Nspecies != file["Nspecies"][()]:
+                    print "Error! Number of species not consistent among runs."
+                    sys.exit(1)
+
+            if NumberOfElements == 0:
+                NumberOfElements = Nspecies
+
+            if finished != integerToRepresentTrue or didNonlinearCalculationConverge != integerToRepresentTrue:
+                #raise
+                print "The solver (linear or nonlinear) did not converge in " + fullDirectory + "/" + filename
+                print "Continuing with next directory."
+                QuantityOutputData.append(np.nan*np.ones(NumberOfElements))
+                continue
+
+            if (Quantity.find('Flux_vd') != -1 or Quantity.find('Flux_vE') != -1) and (includePhi1 != integerToRepresentTrue):
+                print Quantity + " only exists in nonlinear runs, but this is a linear run."
+                #TmpQuantity = Quantity
+                Quantity = Quantity.replace('Flux_vd', 'Flux_vm').replace('Flux_vE', 'Flux_vm')
+                print "Replaced " + TmpQuantity + " with " + Quantity + "."
+
+
+            try :
+                QuantityData = file[Quantity][()]
+            except :
+                print "Cannot read " + Quantity + " from " + fullDirectory + "/" + filename
+                print "Continuing with next directory."
+                QuantityOutputData.append(np.nan*np.ones(NumberOfElements))
+                Quantity = TmpQuantity
+                continue
+
+            #print Quantity
+            #print QuantityData
+            #print ''
+            QuantityData = QuantityFactor*QuantityData
+            #print QuantityData
+            #print ''
+
+            if QuantityData.ndim == 2:
+                QuantityData = QuantityData[:, -1]
+            #print QuantityData
+            
+            if QuantityData.ndim == 0:
+                NumberOfElements = 1
+                QuantityOutputData.append(QuantityData)
+            elif QuantityData.ndim == 1:
+                if len(QuantityData) != Nspecies : 
+                    print "Warning!  " + Quantity + " array dimensions is not equal to number of species."
+                    print "Continuing with next directory."
+                    QuantityOutputData.append(np.nan*np.ones(NumberOfElements)) 
+                    Quantity = TmpQuantity
+                    continue
+                else:
+                    QuantityOutputData.append(QuantityData)
+            else:
+                print "Warning!  " + Quantity + " dimensions cannot be interpreted by this script."
+                print "Continuing with next directory."
+                QuantityOutputData.append(np.nan*np.ones(NumberOfElements))
+                Quantity = TmpQuantity
+                continue
+
+            print "Read " + Quantity + " = " + str(QuantityData)
+            Quantity = TmpQuantity
+        except SystemExit: 
+            sys.exit(1)
+        except:
+            print "Error when reading from " + fullDirectory + "/" + filename
+            print "Maybe the SFINCS run did not finish or converge"
+            print "Continuing with next directory."
+            QuantityOutputData.append(np.nan*np.ones(NumberOfElements))
+            Quantity = TmpQuantity
+            continue
+
+        NumberOfReadValues += 1 
+    if NumberOfReadValues < 1:
+        print "Could not read any data for " + Quantity + " in " +  originalDirectory
+    else:
+        print "Read " + str(NumberOfReadValues) + " data points for " + Quantity + " in " +  originalDirectory
+    try:
+        QuantityOutputData = np.array(QuantityOutputData)
+    except: ##The array contains data of variable length. The true length must be in NumberOfElements
+        print "Warning! Read data of variable length in between runs. Fixing this by reshaping."
+        for idx, item in enumerate(QuantityOutputData) :
+            if np.size(item) > NumberOfElements: ##The length can only be longer or equal to NumberOfElements
+                QuantityOutputData[idx] = (QuantityOutputData[idx])[:NumberOfElements]
+        
+    print ""
+    print "QuantityOutputData = " + str(QuantityOutputData)
+    print ""
+    #OutputData.append(QuantityOutputData)
+    #print OutputData.shape
+    #print OutputData.ndim
+    #print QuantityOutputData.shape
+    #print QuantityOutputData.ndim
+
+    if QuantityOutputData.ndim == 1:
+        QuantityOutputData = np.array([QuantityOutputData]).transpose()
+
+    if OutputData.size == 0:
+        OutputData = QuantityOutputData
+    else:
+        #print ""
+        #print str(OutputData)
+        #print ""
+        #print str(QuantityOutputData)
+        #print ""
+        OutputData = np.concatenate((OutputData, QuantityOutputData), axis=1)
+        #print OutputData
+    
+    if NumberOfElements == 1:
+        OutputLabels.append(QuantityLabel)
+    else:
+        for ii in range(NumberOfElements):
+            OutputLabels.append(QuantityLabel + "(species_" + str(ii+1) + ")")
+
+    counter += 1                                                                                                                                                                                    
+os.chdir(originalDirectory)
+
+print ""
+print "OutputData = " + str(OutputData)
+print ""
+
+print ""
+print "OutputLabels = " + str(OutputLabels)
+print ""
+
+print "Writing data to " + outputFilename
+np.savetxt(outputFilename, OutputData, delimiter='\t', newline='\n', header='\t'.join(OutputLabels))
+
+sys.exit(0)

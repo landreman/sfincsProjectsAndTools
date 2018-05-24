@@ -6,7 +6,9 @@ Nu_even=isnan(Fmn.s(end,Fmn.n0ind));
 if nargin==2
   %Only one argument given. Calculate two outputs whose u resp v derivatives equal Fmn.
   Nperiods=varargin{1};
-  
+  if length(Nperiods)>1
+    error('invgrad.m: Nperiods must be a scalar!')
+  end
   if get00(F)~=0
     error('There is a 00 component in an mnmat to be integrated!')
   end
@@ -91,21 +93,25 @@ elseif nargin>=3 %Both dduGmn and ddvGmn are given and Gmn is sought
   Gmn.c=zeros(size(dduGmn.c));
   Gmn.s=zeros(size(dduGmn.s));
   
-  nnon0=Gmn.n0ind+1:size(Gmn.c,2);
+  nnon0_form0=Gmn.n0ind+1:size(Gmn.c,2);
+  nnon0=[1:Gmn.n0ind-1,Gmn.n0ind+1:size(Gmn.c,2)];
+  %nnon0=nnon0_form0; %old wrong version
   
   %Two options that should be equivalent
-  if method
+  if method==1
     Gmn.s(2:end,:) =  dduGmn.c(2:end,:)./dduGmn.m(2:end,:);
     Gmn.c(2:end,:) = -dduGmn.s(2:end,:)./dduGmn.m(2:end,:);
 
-    Gmn.s(1,nnon0) = -ddvGmn.c(1,nnon0)./(ddvGmn.n(1,nnon0)*Nperiods);
-    Gmn.c(1,nnon0) =  ddvGmn.s(1,nnon0)./(ddvGmn.n(1,nnon0)*Nperiods);
-  else
+    Gmn.s(1,nnon0_form0) = -ddvGmn.c(1,nnon0_form0)./(ddvGmn.n(1,nnon0_form0)*Nperiods);
+    Gmn.c(1,nnon0_form0) =  ddvGmn.s(1,nnon0_form0)./(ddvGmn.n(1,nnon0_form0)*Nperiods);
+  elseif method==2
     Gmn.s(:,nnon0) = -ddvGmn.c(:,nnon0)./(ddvGmn.n(:,nnon0)*Nperiods);
     Gmn.c(:,nnon0) =  ddvGmn.s(:,nnon0)./(ddvGmn.n(:,nnon0)*Nperiods);
     
     Gmn.s(2:end,Gmn.n0ind) =  dduGmn.c(2:end,Gmn.n0ind)./dduGmn.m(2:end,Gmn.n0ind);
-    Gmn.c(2:end,Gmn.n0ind) = -dduGmn.s(2:end,Gmn.n0ind)./dduGmn.m(2:end,Gmn.n0ind);    
+    Gmn.c(2:end,Gmn.n0ind) = -dduGmn.s(2:end,Gmn.n0ind)./dduGmn.m(2:end,Gmn.n0ind);  
+  else
+    error('Unrecognised method (4th input) in @mnmat/invgrad.m!')
   end
   
   Gmn.c(Gmn.m0ind,Gmn.n0ind)=0;

@@ -1,6 +1,9 @@
 function out=minus(A,B)
 
-if compatible(A,B)
+if isnumeric(B)
+  out=A;
+  out.c(out.m0ind,out.n0ind)=get00(A)-B;
+elseif compatible(A,B)
   out.m=A.m;
   out.n=A.n;
   out.m0ind=A.m0ind;

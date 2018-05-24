@@ -1,6 +1,9 @@
 function summa=plus(A,B)
 
-if compatible(A,B)
+if isnumeric(B)
+  summa=A;
+  summa.c(summa.m0ind,summa.n0ind)=get00(A)+B;
+elseif compatible(A,B)
   summa.m=A.m;
   summa.n=A.n;
   summa.m0ind=A.m0ind;

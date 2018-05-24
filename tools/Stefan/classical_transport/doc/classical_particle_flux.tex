@@ -1,0 +1,525 @@
+\documentclass[12pt, a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath}
+%\usepackage{relsize}
+
+%\usepackage{fixmath}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage[usenames,dvipsnames]{color}
+%\usepackage[small,font=it]{caption}
+\usepackage{amssymb}
+%\usepackage{icomma}
+%\usepackage{hyperref}
+%\usepackage{mcode}
+\usepackage{verbatim}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{units}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\lhead{\footnotesize \parbox{11cm}{Classical transport from linearized Fokker-Planck collision operator}}
+\rhead{\footnotesize \parbox{2cm}{Stefan Buller}}
+\renewcommand\headheight{24pt}
+%\usepackage{dirtytalk} \say{} command for quotations
+
+\makeatletter
+\newenvironment{tablehere}
+  {\def\@captype{table}}
+  {}
+
+\newenvironment{figurehere}
+  {\def\@captype{figure}}
+  {}
+
+\newsavebox\myboxA
+\newsavebox\myboxB
+\newlength\mylenA
+
+\newcommand*\obar[2][0.75]{% OverBAR, adds bar over an element
+    \sbox{\myboxA}{$\m@th#2$}%
+    \setbox\myboxB\null% Phantom box
+    \ht\myboxB=\ht\myboxA%
+    \dp\myboxB=\dp\myboxA%
+    \wd\myboxB=#1\wd\myboxA% Scale phantom
+    \sbox\myboxB{$\m@th\overline{\copy\myboxB}$}%  Overlined phantom
+    \setlength\mylenA{\the\wd\myboxA}%   calc width diff
+    \addtolength\mylenA{-\the\wd\myboxB}%
+    \ifdim\wd\myboxB<\wd\myboxA%
+       \rlap{\hskip 0.5\mylenA\usebox\myboxB}{\usebox\myboxA}%
+    \else
+        \hskip -0.5\mylenA\rlap{\usebox\myboxA}{\hskip 0.5\mylenA\usebox\myboxB}%
+    \fi}
+
+\makeatother
+
+
+%\def\equationautorefname{ekvation}
+%\def\tableautorefname{tabell}
+%\def\figureautorefname{figur}
+%\def\sectionautorefname{sektion}
+%\def\subsectionautorefname{sektion}
+
+\DeclareMathOperator\erf{erf}
+%\DeclareMathOperator\mod{mod}
+
+\newcommand{\ordo}[1]{{\cal O}\left( #1 \right)}
+\DeclareMathOperator{\sgn}{sgn}
+%\renewcommand{\vec}[1]{\boldsymbol{#1}}
+\newcommand{\im}{\ensuremath{\mathrm{i}}}
+\newcommand{\e}{\ensuremath{\mathrm{e}}}
+\newcommand{\E}{\ensuremath{\mathcal{E}}}
+\newcommand{\p}{\ensuremath{\partial}}
+\newcommand{\Z}{\ensuremath{\mathbb{Z}}}
+
+\newcommand{\bra}[1]{\langle #1 \mid}
+\newcommand{\ket}[1]{\mid #1 \rangle}
+\newcommand\matris[4]{\ensuremath{\begin{pmatrix} #1 & #2 \\ #3 & #4\end{pmatrix}}}
+\renewcommand{\d}{\ensuremath{\mathrm{d}}}
+%\DeclareMathOperator*{\sgn}{sgn}
+\newcommand{\todo}[1]{\textcolor{red}{#1}}
+\newcommand{\lang}{\left\langle}
+\newcommand{\rang}{\right\rangle}
+
+
+
+%to get leftrightarrow over tensors of rank-2.
+\def\shrinkage{2.1mu}
+\def\vecsign{\mathchar"017E}
+\def\dvecsign{\smash{\stackon[-1.95pt]{\mkern-\shrinkage\vecsign}{\rotatebox{180}{$\mkern-\shrinkage\vecsign$}}}}
+\def\dvec#1{\def\useanchorwidth{T}\stackon[-4.2pt]{#1}{\,\dvecsign}}
+\usepackage{stackengine}
+\stackMath
+\def\perfect{\textsc{Perfect}}
+
+
+\lstset{language=[90]Fortran,
+  basicstyle=\ttfamily,
+  keywordstyle=\color{red},
+  commentstyle=\color{green},
+  morecomment=[l]{!\ }% Comment only with space after !
+   frame=single,
+   breaklines=true,
+   postbreak=\raisebox{0ex}[0ex][0ex]{\ensuremath{\color{blue}\hookrightarrow\space}}
+}
+
+\usepackage[
+    backend=biber,
+    style=alphabetic,
+    citestyle=authoryear,
+    natbib=true,
+    url=false,
+    doi=false,
+    isbn=false,
+    eprint=false,
+    sorting=none,
+    maxcitenames=2,
+    maxbibnames=3
+]{biblatex} 
+
+\AtEveryBibitem{\clearfield{month}}
+\AtEveryCitekey{\clearfield{month}}
+\AtEveryBibitem{\clearfield{issue}}
+\AtEveryCitekey{\clearfield{issue}}
+
+\bibliography{../../../plasma-bib} 
+
+%=================================================================
+\begin{document}
+\section{Drift-Kinetic Classical transport}
+For a mass-ratio expanded ion-impurity collision operator, we found that the classical transport of impurities in a stellarator can be comparable to the neoclassical transport. Thus, it would be of interest to have a general numerical tool to calculate the classical transport alongside the neoclassical transport from a drift-kinetic solver such as SFINCS.
+
+In many ways, this is simpler than calculating the neoclassical transport, as the gyrophase dependent part of the distribution function is smaller than the gyrophase-independent in the expansion parameter $\rho/L$, and the gyrophase dependent part to required order is given entirely by the zeroth order gyrophase independent distribution. When $f_{a0}$ is a Maxwellian, the gyrophase dependent part is given by
+\begin{equation}
+\tilde{f}_{a1} = -\vec{\rho}_a(\gamma) \cdot \nabla f_{a0} = -\vec{\rho}(\gamma) \cdot \nabla \psi  \frac{\p f_{a0}}{\p \psi}, \label{eq:tildeF}
+\end{equation}
+where $\gamma$ is the gyrophase, $\psi$ a flux-label and $\vec{\rho}$ the gyroradius vector
+\begin{equation}
+\vec{\rho}_a = \rho_a (\vec{e}_2 \sin \gamma + \vec{e}_3 \cos\gamma),
+\end{equation}
+and we follow the same notation as in [Hazeltine \& Meiss, \emph{Plasma Confinement}, Dover Edition, chapter 4.2]. Note that $\tilde{f}_{a1}$ is highly anisotropic in velocity space, as $\rho_a = v_\perp/\Omega_a$ and $\gamma$ is a velocity space coordinate. 
+
+The perpendicular friction force is calculated as
+\begin{equation}
+  \vec{R}_{a\perp} = \int \d^3 v m_a \vec{v}_\perp C[f_a]
+\end{equation}
+where
+\begin{equation}
+  \vec{v}_\perp = v_\perp \left(\vec{e}_2 \cos\gamma - \vec{e}_3 \sin \gamma\right),
+\end{equation}
+and $C[f_a] = \sum_b C[f_a,f_b]$ is the sum of of collisions with $a$ and all species, including self collisions $a=b$. We can rewrite the velocity space average above as
+\begin{equation}
+  \vec{R}_{a\perp} = \int \d v_\| v_\perp \d v_\perp\, \int \d\gamma m_a \vec{v}_\perp C[f_a].
+\end{equation}
+Splitting $C[f_a]$ into a gyrophase independent and dependent part $C[f_a]  = \bar{C[f_a]} + \tilde{C[f_a]}$, we see that only the latter contributes, and so
+\begin{equation}
+  \vec{R}_{a\perp} = \int \d v_\| v_\perp \d v_\perp\, \int \d\gamma m_a \vec{v}_\perp \tilde{C[f_a]}.
+\end{equation}
+We thus need to know $\tilde{C[f_a]}$.
+
+\section{Linearized collision operator}
+In drift-kinetics, $\tilde{f} \approx \tilde{f}_{a1} \sim \frac{\rho}{L} f_{a0} \ll f_{a0}$, and so we can linearize the collision operators as
+\begin{equation}
+C_l[f_a,f_b] = C[f_{a0},f_{b0}] +  C[f_{1a},f_{b0}] + C[f_{a0},f_{1b}],
+\end{equation}
+so that
+\begin{equation}
+C_l[f_a] = \sum_b \left(C[f_{a0},f_{b0}] +  C[f_{1a},f_{b0}] + C[f_{a0},f_{1b}]\right)
+\end{equation}
+is now a linear operator in terms of its actions on $f_{a1}$. The gyrophase dependent part of $C_l$ is now given by
+\begin{equation}
+\tilde{C_l[f_a]} = \sum_b \left(C[\tilde{f}_{1a},f_{b0}] + C[f_{a0},\tilde{f}_{1b}]\right),
+\end{equation}
+where we need to evaluate collisions with a Maxwellian background and inversely. 
+
+\section{Fokker-Planck operator}
+For the Fokker-Planck operator, we have [eq. 3.40 in Helander \& Sigmar, \emph{Collisional transport magnetized plasmas}] that
+\begin{equation}
+C[f_{a},f_{b0}] = \nu_D^{ab} + \frac{1}{v^2} \frac{\p}{\p v} \left[v^3 \left( \frac{m_a}{m_a + m_b} \nu_s^{ab} f_a + \frac{1}{2} \nu_\|^{ab} v \frac{\p f_a}{\p v}\right)\right]
+\end{equation}
+where the collision frequencies are known. The resulting contribution to the friction force is
+\begin{equation}
+  \int m_a \vec{v} C[f_{a},f_{b0}] = - \int m_a \vec{v} \nu_s^{ab} f_{a} \d^3 v.
+\end{equation}
+
+The field-particle term would be more complicated, but its contribution to the friction force can be obtained from momentum conservation
+\begin{equation}
+\int m_a \vec{v} C[f_{a0},f_{b}] = -\int m_b \vec{v} C[f_{b},f_{a0}] = \int m_b \vec{v} \nu_s^{ba} f_{b1} \d^3 v.
+\end{equation}
+The total perpendicular friction force from the linearized operator is thus
+\begin{equation}
+  \vec{R}_{a\perp} = -\sum_b \left( \int  \d^3 v \, \nu_s^{ab} m_a \vec{v}_\perp \tilde{f}_{a1} - \int  \d^3 v\, \nu_s^{ba}m_b  \vec{v}_\perp  \tilde{f}_{b1} \right),
+\end{equation}
+where
+\begin{align}
+  \nu_s^{ab}(v) = \hat{\nu}_{ab} \frac{2 T_a}{T_b} \left(1 + \frac{m_b}{m_a} \right) \frac{G(x_b)}{x_a}
+\end{align}
+only depends on $v$. Here $G(x)$ is the Chandrasekhar function,
+\begin{equation}
+G(x) = \frac{\erf{(x)}  - x \erf'{(x)}}{2x^2} = \frac{\erf{(x)}  - \frac{2}{\sqrt{\pi}}x \e^{-x^2}}{2x^2},
+\end{equation}
+and $x_a = v/v_{Ta}$ with $v_{Ta} = \sqrt{2T_a/m_a}$. The collision frequency $\hat{\nu}_{ab}$ is
+\begin{equation}
+\hat{\nu}_{ab} = \frac{n_b Z_a Z_b e^4 \ln \Lambda}{4\pi \epsilon_0^2 m_a^2 v_{Ta}^3}.
+\end{equation}
+
+Using $\{v,v_\|, \gamma\}$ as our velocity space coordinates, we have
+\begin{align}
+m_a \int_0^\infty v  \d v \, \nu_s^{ab} \int_{-v}^v \d v_\| \, \oint \d\gamma\,  \vec{v}_\perp \tilde{f}_{a1},
+\end{align}
+and inserting our expression for $\tilde{f}_{a1}$, we get
+\begin{align}
+-\frac{m_a}{\Omega_a} \int_0^\infty \d v \, v \nu_s^{ab} \frac{\p f_{a0}}{\p \psi} \int_{-v}^v \d v_\|\, (v^2 - v_\|^2) \oint \d\gamma\,   \hat{v}_\perp \hat{\rho} \cdot \nabla \psi.
+\end{align}
+
+The $\gamma$ integral does not depend on any other velocity space coordinate, and gives
+\begin{equation}
+\oint \d\gamma \, \hat{v}_\perp \hat{\rho} \cdot \nabla \psi = - \pi\vec{b} \times \nabla \psi.
+\end{equation}
+The $v_\|$ integral gives
+\begin{align}
+ \int_{-v}^v \d v_\|\, (v^2 - v_\|^2) = \frac{4v^3}{3},
+\end{align}
+and thus
+\begin{align}
+m_a \int_0^\infty v  \d v \, \nu_s^{ab} \int_{-v}^v \d v_\| \, \oint \d\gamma\,  \vec{v}_\perp \tilde{f}_{a1} = \vec{b} \times \nabla \psi \frac{4\pi m_a}{3\Omega_a} \int_0^\infty \d v \, v^4 \nu_s^{ab} \frac{\p f_{a0}}{\p \psi}.
+\end{align}
+The $\psi$-derivative is
+\begin{equation}
+\frac{\p f_{a0}}{\p \psi} = f_{a0} \left[A_{1a} - \frac{5}{2} A_{2a} + \frac{m_av^2}{2T_a}  A_{2a}\right], \label{eq:dpsifM}
+\end{equation}
+and so
+\begin{equation}
+\begin{aligned}
+  &m_a \int_0^\infty v  \d v \, \nu_s^{ab} \int_{-v}^v \d v_\| \, \oint \d\gamma\,  \vec{v}_\perp \tilde{f}_{a1} \\
+  =& \vec{b} \times \nabla \psi \frac{4\pi m_a}{3\Omega_a} \left[\left(A_{1a} - \frac{5}{2} A_{2a}\right) \int_0^\infty \d v \, v^4 \nu_s^{ab}  f_{a0} + \frac{m_a}{2T_a} A_{2a} \int_0^\infty \d v \, v^6 \nu_s^{ab}  f_{a0}  \right].
+\end{aligned}
+\end{equation}
+
+Introducing
+\begin{align}
+  D^1_{ab} = \frac{4\pi m_a^2}{3 Z_a e} \int_0^\infty \d v \, v^4 \nu_s^{ab}  f_{a0} \\
+  D^2_{ab} = \frac{4\pi m_a^2}{3 Z_a e} \frac{m_a}{2T_a} \int_0^\infty \d v \, v^6 \nu_s^{ab}  f_{a0},
+\end{align}
+the perpendicular friction becomes
+\begin{equation}
+ \vec{R}_{a\perp} = \frac{\vec{B} \times \nabla \psi}{B^2} \sum_b \left[D^1_{ba}\left(A_{1b} - \frac{5}{2} A_{2b}\right) + D^2_{ba}A_{2b}  -D^1_{ab}\left(A_{1a} - \frac{5}{2} A_{2a}\right) - D^2_{ab}A_{2a}\right].
+\end{equation}
+The resulting classical transport is thus
+\begin{equation}
+  \begin{aligned}
+    \Gamma_a^{\text{C}} = &\frac{1}{Z_a e} \lang B^{-2} \left(\vec{B} \times \nabla \psi\right) \cdot \vec{R}_a \rang \\
+    = & 
+  \frac{1}{Z_a e}\lang \frac{|\nabla \psi|^2}{B^2} \sum_b \left[D^1_{ba}\left(A_{1b} - \frac{5}{2} A_{2b}\right) + D^2_{ba}A_{2b}  -D^1_{ab}\left(A_{1a} - \frac{5}{2} A_{2a}\right) - D^2_{ab}A_{2a}\right] \rang.
+\end{aligned}
+\end{equation}
+
+All that now remains is to evaluate the $D^1_{ab}$ and $D^2_{ab}$ coefficients. Using
+\begin{align}
+  f_{a0} &= n_a \frac{1}{\pi^{3/2} v_{Ta}^3} \e^{-v^2/v_{Ta}^2} = n_a \frac{1}{\pi^{3/2} v_{Ta}^3} \e^{-x_b^2 \frac{T_b m_a}{T_a m_b}} \\
+  \nu_{s}^{ab} &= \frac{n_b Z_b^2 Z_a^2 \ln \Lambda}{4 \pi \epsilon_0^2 m_a^2 v_{Ta}^3} \frac{2T_a}{T_b} \left(1 + \frac{m_b}{m_a}\right) \frac{G(x_b)}{x_a} \\
+  x_b &= \frac{v}{v_{Tb}} \\
+  v_{Ta} &= \sqrt{2T_a/m_a},
+\end{align}
+we find that
+\begin{align}
+  D^1_{ab} = \frac{\sqrt{2}}{3\pi^{3/2}} \frac{n_a n_b  e^3 \ln \Lambda}{\epsilon_0^2 } Z_b^2 Z_a \frac{T_b}{T_a^{3/2}} \frac{m_a^{3/2}}{m_b}\left(1 + \frac{m_a}{m_b} \right) \int \d x_b\, x_b^3 G(x_b) \e^{-x_b^2 \frac{T_b m_a}{T_a m_b}} \\
+  D^2_{ab} = \frac{\sqrt{2}}{3\pi^{3/2}} \frac{n_a n_b e^3 \ln \Lambda}{\epsilon_0^2 } Z_b^2 Z_a  \frac{T_b^2}{T_a^{5/2}} \frac{m_a^{5/2}}{m_b^2} \left(1 + \frac{m_a}{m_b}\right) \int \d x_b\, x_b^5 G(x_b) \e^{-x_b^2 \frac{T_b m_a}{T_a m_b}} \\
+  D^1_{ba} = \frac{\sqrt{2}}{3\pi^{3/2}} \frac{n_a n_b  e^3 \ln \Lambda}{\epsilon_0^2 } Z_a^2 Z_b \frac{T_a}{T_b^{3/2}} \frac{m_b^{3/2}}{m_a}\left(1 + \frac{m_b}{m_a} \right) \int \d x_a\, x_a^3 G(x_a) \e^{-x_a^2 \frac{T_a m_b}{T_b m_a}} \\
+D^2_{ba} = \frac{\sqrt{2}}{3\pi^{3/2}} \frac{n_a n_b e^3 \ln \Lambda}{\epsilon_0^2 }  Z_a^2 Z_b \frac{T_a^2}{T_b^{5/2}} \frac{m_b^{5/2}}{m_a^2} \left(1 + \frac{m_b}{m_a}\right) \int \d x_a\, x_a^5 G(x_a) \e^{-x_a^2 \frac{T_a m_b}{T_b m_a}} 
+\end{align}
+where the integrals have to be evaluated numerically for each $\frac{T_b m_a}{T_a m_b}$. 
+
+Defining
+\begin{align}
+  F(y) &= y\int_0^{\infty} \d x\, x^3 G(x) \e^{-yx^2}  = \frac{1}{4(1+y)^{3/2}} \\
+  H(y) &= y^2\int_0^{\infty} \d x\, x^5 G(x) \e^{-yx^2} =  \frac{5y + 2}{8(1+y)^{5/2}}\\
+  F_2(y) &= H(y)-F(y) =  \frac{3y}{8(1+y)^{5/2}} = \frac{3y}{2(1+y)} F(y)\\
+\end{align}
+we have
+\begin{align}
+  D^1_{ab} = \frac{\sqrt{2}}{3\pi^{3/2}} \frac{n_a n_b  e^3 \ln \Lambda}{\epsilon_0^2 }  Z_a Z_b^2\frac{m_a^{1/2}}{T_a^{1/2}}\left(1 + \frac{m_a}{m_b} \right) F\left(\frac{T_b m_a}{T_a m_b}\right) \\
+  D^2_{ab} = \frac{\sqrt{2}}{3\pi^{3/2}} \frac{n_a n_b e^3 \ln \Lambda}{\epsilon_0^2 }  Z_a Z_b^2 \frac{m_a^{1/2}}{T_a^{1/2}} \left(1 + \frac{m_a}{m_b}\right) H\left(\frac{T_b m_a}{T_a m_b}\right) \\
+  D^1_{ba} = \frac{\sqrt{2}}{3\pi^{3/2}} \frac{n_a n_b  e^3 \ln \Lambda}{\epsilon_0^2 } Z_a^2 Z_b \frac{m_b^{1/2}}{T_b^{1/2}} \left(1 + \frac{m_b}{m_a} \right)  F\left(\frac{T_a m_b}{T_b m_a}\right) \\
+D^2_{ba} = \frac{\sqrt{2}}{3\pi^{3/2}} \frac{n_a n_b e^3 \ln \Lambda}{\epsilon_0^2 }  Z_a^2 Z_b \frac{m_b^{1/2}}{T_b^{1/2}}  \left(1 + \frac{m_b}{m_a}\right) H\left(\frac{T_a m_b}{T_b m_a}\right)
+\end{align}
+
+Thus, the classical flux is given by
+\begin{equation}
+  \begin{aligned}
+   \Gamma_a^{\text{C}} = \frac{\sqrt{2}}{3\pi^{3/2}} \frac{ e^2 \ln \Lambda}{\epsilon_0^2 } 
+    \lang \frac{|\nabla \psi|^2}{B^2} n_a \sum_b Z_b n_b \right.\left[\phantom{\frac{m_b^{3/2}}{m_a}} \right.
+      &+ Z_a  \frac{m_b^{1/2}}{T_b^{1/2}} \left(1 + \frac{m_b}{m_a} \right)  F\left(\frac{T_a m_b}{T_b m_a}\right) \left(A_{1b} - \frac{5}{2} A_{2b}\right) \\
+      &+ Z_a  \frac{m_b^{1/2}}{T_b^{1/2}} \left(1 + \frac{m_b}{m_a}\right) H\left(\frac{T_a m_b}{T_b m_a}\right) A_{2b} \\
+      &-Z_b\frac{m_a^{1/2}}{T_a^{1/2}}\left(1 + \frac{m_a}{m_b} \right) F\left(\frac{T_b m_a}{T_a m_b}\right) \left(A_{1a} - \frac{5}{2} A_{2a}\right) \\ &\left.\left.
+      - Z_b \frac{m_a^{1/2}}{T_a^{1/2}}  \left(1 + \frac{m_a}{m_b}\right) H\left(\frac{T_b m_a}{T_a m_b}\right)A_{2a} \right] \rang.
+\end{aligned}
+\end{equation}
+
+To see that the radial electric field does not contribute for any mass-ratio, we note that
+\begin{equation}
+F(y^{-1}) = y^{3/2} F(y).
+\end{equation}
+This allows us to combine $D^1_{ab}$ and $D^1_{ba}$ in a way that makes it explicit that the radial electric field does not contribute. We can treat the $H(y)$ terms in a similar way by writing $H(y) = F(y) + F_2(y)$ and noting that
+\begin{equation}
+F_2(y^{-1}) = y^{1/2} F_2(y).
+\end{equation}
+Thus
+\begin{equation}
+  \begin{aligned}
+   \Gamma_a^{\text{C}} = \frac{\sqrt{2}}{3\pi^{3/2}} \frac{ e^2 \ln \Lambda}{\epsilon_0^2 } 
+    \lang \frac{|\nabla \psi|^2}{B^2} n_a \sum_b Z_b n_b \right.\left[\phantom{\frac{m_b^{3/2}}{m_a}} \right.
+      &+ Z_a  \frac{m_b^{1/2}}{T_b^{1/2}} \left(1 + \frac{m_b}{m_a} \right)  F\left(\frac{T_a m_b}{T_b m_a}\right) \left(A_{1b} - \frac{3}{2} A_{2b}\right) \\
+      &+ Z_a  \frac{m_b^{1/2}}{T_b^{1/2}} \left(1 + \frac{m_b}{m_a}\right) F_2\left(\frac{T_a m_b}{T_b m_a}\right) A_{2b} \\
+      &-Z_b\frac{m_b^{1/2}}{T_b^{1/2}}\left(1 + \frac{m_b}{m_a} \right) F\left(\frac{T_a m_b}{T_b m_a}\right) \frac{T_a}{T_b}\left(A_{1a} - \frac{3}{2} A_{2a}\right) \\ &\left.\left.
+      - Z_b \frac{m_b^{1/2}}{T_b^{1/2}}  \left(1 + \frac{m_b}{m_a}\right) F_2\left(\frac{T_a m_b}{T_b m_a}\right) \frac{m_a}{m_b} A_{2a} \right] \rang,
+\end{aligned}
+\end{equation}
+or
+\begin{equation}
+  \begin{aligned}
+   \Gamma_a^{\text{C}} = \frac{\sqrt{2}}{3\pi^{3/2}} \frac{ e^2 \ln \Lambda}{\epsilon_0^2 } 
+    \lang \frac{|\nabla \psi|^2}{B^2} n_a \sum_b Z_b n_b \frac{m_b^{1/2}}{T_b^{1/2}} \left(1 + \frac{m_b}{m_a} \right) F\left(\frac{T_a m_b}{T_b m_a}\right)\right.\left[\vphantom{\frac{T_am_b}{T_bm_a}} \right.
+      + &Z_a     \left(A_{1b} - \frac{3}{2} A_{2b}\right) \\
+      + &Z_a  \frac{3}{2} \frac{T_a m_b}{T_b m_a + T_a m_b} A_{2b} \\
+      - &Z_b  \frac{T_a}{T_b}\left(A_{1a} - \frac{3}{2} A_{2a}\right) \\ 
+      - &\left.\left.Z_b \frac{3}{2} \frac{T_a m_a}{T_b m_a + T_a m_b}  A_{2a} \right] \rang,
+\end{aligned} \label{eq:fluxg}
+\end{equation}
+where we have factored out all the common factors and used $F_2(y) = 3y F(y)/(2+2y)$.
+
+
+\clearpage
+\subsection{Heavy, $Z\gg 1$ impurity}
+We check our general expression \eqref{eq:fluxg} against the flux of a heavy, high-$Z$ impurity. Taking $T_a \sim T_b$ and assuming $m_a \gg m_b$, we have that
+\begin{equation}
+F\left(\frac{T_a m_b}{T_b m_a}\right) = \frac{1}{4},
+\end{equation}
+and thus
+\begin{equation}
+  \begin{aligned}
+   \Gamma_a^{\text{C}} = \frac{\sqrt{2}}{12\pi^{3/2}} \frac{ e^2 \ln \Lambda}{\epsilon_0^2 } 
+    \lang \frac{|\nabla \psi|^2}{B^2} n_a \sum_b Z_b n_b \frac{m_b^{1/2}}{T_b^{1/2}} \right.\left[\vphantom{\frac{T_am_b}{T_bm_a}} \right.
+      &\left.\left.Z_a     \left(A_{1b} - \frac{3}{2} A_{2b}\right)  - Z_b  \frac{T_a}{T_b}A_{1a} \right] \rang.
+\end{aligned} \label{eq:fluxheavy}
+\end{equation}
+Using $Z_a \gg 1$ to drop terms in $A_{1a}$ that are $Z_a^0$, we thus get
+\begin{equation}
+  \begin{aligned}
+     \Gamma_a^{\text{C}} = \frac{1}{6\pi^{3/2}} \frac{  Z_a e^2 \ln \Lambda}{\epsilon_0^2 } 
+    \lang n_a \frac{|\nabla \psi|^2}{B^2} \sum_b \frac{Z_b n_b }{v_{Tb}} \left[ A_{1b} - \frac{3}{2} A_{2b} - \frac{Z_b e}{T_b}\frac{\d \Phi}{\d \psi}\right] \rang,
+\end{aligned}
+\end{equation}
+which for a single ion $b = i$ with flux-function density gives
+\begin{equation}
+  \begin{aligned}
+\Gamma_a^{\text{C}} = \frac{1}{6\pi^{3/2}} \frac{ Z_a Z_i n_i e^2 \ln \Lambda}{\epsilon_0^2 v_{Ti}} 
+    \lang n_a  \frac{|\nabla \psi|^2}{B^2} \rang \left[ A_{1i} - \frac{3}{2} A_{2i} - \frac{Z_i e}{T_b} \frac{\d \Phi}{\d \psi}\right].
+  \end{aligned}
+\end{equation}
+Introducing $\tau_{ia}^{-1} = \frac{Z_a^2 Z_i^2 n_a e^4 \ln \Lambda}{3\pi^{3/2} m_i^2 \epsilon_0^2 v_{Ti}^3}$, we find
+\begin{equation}
+  \begin{aligned}
+\Gamma_a^{\text{C}} =  \frac{m_i n_i}{Z_a e n_a\tau_{ia}}
+    \lang n_a  \frac{|\nabla \psi|^2}{B^2} \rang \frac{T_i}{Z_i e}\left[ A_{1i} - \frac{3}{2} A_{2i} - \frac{Z_i e}{T_i} \frac{\d \Phi}{\d \psi}\right],
+  \end{aligned}
+\end{equation}
+which agrees with the expression we obtained from a mass-ratio expanded collision operator in the $Z\gg 1$ limit.
+
+\subsection{Gradients instead of thermodynamic forces}
+The thermodynamic forces are defined so that the gradients of the Maxwellian satisfies \eqref{eq:dpsifM}. As a result, different thermodynamic forces are obtained depending on both what we include in the Maxwellian, and what coordinates we keep fixed when performing the partial derivatives.
+
+For compatibility with SFINCS notation, we define $f_0$ containing potential variation on the flux-surface, and $f_M$ without.
+\begin{align}
+  f_{aM} &= N_a(\psi) \left(\frac{m_a}{2\pi T_a} \right)^{3/2} \exp{\left(-\frac{m_a v^2}{2T_a} -\frac{Z_a e\lang \Phi \rang}{T_a}\right)} \\
+  f_{a0} &= N_a(\psi) \left(\frac{m_a}{2\pi T_a} \right)^{3/2} \exp{\left(-\frac{m_a v^2}{2T_a} - \frac{Z_a e(\lang \Phi \rang + \tilde{\Phi})}{T_a}\right)} = f_{aM} \e^{- \frac{Z_a e\tilde{\Phi}}{T_a}}.
+\end{align}
+When the appropriate flags are set in SFINCS, $f_{a0}$ will be used instead of $f_{aM}$. As the $f_{aM}$ case can be recovered from the $f_{a0}$ case by setting $\tilde{\Phi} = 0$, we will calculate the thermodynamic forces for $f_{a0}$ only. 
+
+The gradients in \eqref{eq:tildeF} are performed with the total energy fixed, including $Z_a e\tilde{\Phi}$. Thus
+\begin{equation}
+ \frac{\p_\psi f_{a0}}{f_{a0}} = \frac{\d_\psi N_a}{N_a} - \frac{3}{2}\frac{\d_\psi T_a}{T_a} + \frac{1}{T_a}\left(\frac{m_a v^2}{2} + Z_a e (\lang \Phi \rang + \tilde{\Phi})\right) \frac{\d_\psi T_a}{T_a}, \label{eq:dpsifM2}
+\end{equation}
+where
+\begin{align}
+  N_a = n_a \exp{\left(\frac{Z_a e(\lang \Phi \rang + \tilde{\Phi})}{T_a} \right)}
+\end{align}
+and
+\begin{align}
+  \frac{\d_\psi N_a}{N_a} = \frac{\p_\psi n_a}{n_a} + \frac{Z_a e \p_\psi (\lang \Phi \rang + \tilde{\Phi})}{T_a} - \frac{Z_a e (\lang \Phi \rang + \tilde{\Phi})}{T_a} \frac{\d_\psi T_a}{T_a},
+\end{align}
+so that
+\begin{equation}
+\frac{\p_\psi f_{a0}}{f_{a0}} = \frac{\p_\psi n_a}{n_a} + \frac{Z_a e \p_\psi (\lang \Phi \rang + \tilde{\Phi})}{T_a} - \frac{3}{2}\frac{\d_\psi T_a}{T_a} + \frac{m_a v^2}{2T_a}  \frac{\d_\psi T_a}{T_a},
+\end{equation}
+from which we identify
+\begin{align}
+  A_{1a} &= \frac{\p_\psi p_a}{p_a} + \frac{Z_a e}{T_a} \p_\psi (\lang \Phi \rang + \tilde{\Phi}) \\
+  A_{2a} &= \frac{\d_\psi T_a}{T_a},
+\end{align}
+as expected. From this and the form of the classical flux in \eqref{eq:fluxg}, we can see that the radial electric field does not contribute to the classical flux, since $A_{1}$ only enters as
+\begin{equation}
+Z_a A_{1b} - Z_b \frac{T_a}{T_b} A_{1a}.
+\end{equation}
+Furthermore, as expected, when expressed in terms of physical densities, the thermodynamic forces do not depend on the value of $\Phi$, so is gauge-invariant, as they should be. 
+
+However, in SFINCS, we specify $\d_\psi n_a \e^{\left(\frac{Z_a e \tilde{\Phi}}{T_a} \right)}$ rather than the density gradient $\p_\psi n_a$. Defining
+\begin{equation}
+h_a =   n_a \e^{\left(\frac{Z_a e \tilde{\Phi}}{T_a} \right)},
+\end{equation}
+we get $A_{1a}$ in terms of SFINCS inputs as
+\begin{align}
+  A_{1a} = \frac{\d_\psi h_a}{h_a} + \frac{Z_a e}{T_a} \p_\psi \tilde{\Phi} + \frac{\p_\psi T_a}{T_a} + \frac{Z_a e \tilde{\Phi}}{T_a} \frac{\d_\psi T_a}{T_a},
+\end{align}
+with the resulting classical particle flux
+\begin{equation}
+  \begin{aligned}
+    &\Gamma_a^{\text{C}} \frac{3\pi^{3/2}} {\sqrt{2}}\frac{\epsilon_0^2 }{ e^2 \ln \Lambda} \\
+    =&  
+    \sum_b Z_b \frac{m_b^{1/2}}{T_b^{1/2}} \left(1 + \frac{m_b}{m_a} \right) F\left(\frac{T_a m_b}{T_b m_a}\right) \left( \vphantom{ \lang \frac{|\nabla \psi|^2}{B^2} n_a n_b \rang}\right.\\
+      &  \lang \frac{|\nabla \psi|^2}{B^2} n_a n_b \rang \left[Z_a     \left(\frac{\d_\psi h_b}{h_b}  - \frac{1}{2} \frac{\p_\psi T_b}{T_b}\right) 
+      + Z_a  \frac{3}{2} \frac{T_a m_b}{T_b m_a + T_a m_b} \frac{\d_\psi T_b}{T_b} \right.\\
+      & - Z_b  \frac{T_a}{T_b}\left(\frac{\d_\psi h_a}{h_a}  - \frac{1}{2} \frac{\p_\psi T_a}{T_a}\right) 
+      - \left.Z_b \frac{3}{2} \frac{T_a m_a}{T_b m_a + T_a m_b}  \frac{\d_\psi T_a}{T_a} \right] \\
+      & +\left. \lang \frac{|\nabla \psi|^2}{B^2} n_a n_b \tilde{\Phi}\rang Z_a Z_b \frac{e}{T_b} \left( \frac{\d_\psi T_b}{T_b} - \frac{\d_\psi T_a}{T_a} \right)\right),
+\end{aligned} \label{eq:fluxgS}
+\end{equation}
+where the radial electric field has been cancelled, as anticipated.
+
+For $\tilde{\Phi} = 0$, we get that $h_a = n_a$, the last term disappears, and $n_a$ and $n_b$ will be flux-functions, resulting in
+
+\begin{equation}
+  \begin{aligned}
+    &\Gamma_a^{\text{C}} \frac{3\pi^{3/2}} {\sqrt{2}}\frac{\epsilon_0^2 }{ e^2 \ln \Lambda} \\
+    =&  
+    \sum_b Z_b  n_a n_b \frac{m_b^{1/2}}{T_b^{1/2}} \left(1 + \frac{m_b}{m_a} \right) F\left(\frac{T_a m_b}{T_b m_a}\right) \lang \frac{|\nabla \psi|^2}{B^2} \rang\\
+      &   \left[Z_a     \left(\frac{\d_\psi n_b}{n_b}  - \frac{1}{2} \frac{\p_\psi T_b}{T_b}\right) \right.
+      + Z_a  \frac{3}{2} \frac{T_a m_b}{T_b m_a + T_a m_b} \frac{\d_\psi T_b}{T_b} \\
+      & - Z_b  \frac{T_a}{T_b}\left(\frac{\d_\psi n_a}{n_a}  - \frac{1}{2} \frac{\p_\psi T_a}{T_a}\right) 
+      - \left.Z_b \frac{3}{2} \frac{T_a m_a}{T_b m_a + T_a m_b}  \frac{\d_\psi T_a}{T_a} \right] 
+\end{aligned} \label{eq:fluxgSff}
+\end{equation}
+
+% \section{Kinetic definition}
+% The transport in SFICNS is not defined in terms of parallel or perpendicular friction forces, but in terms of moments of a distribution function. It would thus be nice to have a kinetic definition of classical fluxes.
+
+% One can attempt to define
+% \begin{equation}
+% \Gamma^C_a = \lang \int \d^3 v \tilde{f}_a \vec{v} \cdot \nabla \psi \rang.
+% \end{equation}
+
+% However, using
+% Using $\tilde{f}_a = -\vec{\rho}_a \cdot \nabla \psi \frac{\p f_{a0}}{\p \psi}$, we have that
+% \begin{equation}
+% \Gamma^C_a = -\frac{1}{\Omega_a}\lang \int_0^\infty v  \d v \, \frac{\p f_{a0}}{\p \psi} \int_{-v}^v \d v_\| (v^2 - v_\|^2)\, \left [ \oint \d\gamma\   \hat{\rho}_a  \hat{v}_\perp \right] : \nabla \psi \nabla \psi \rang,
+% \end{equation}
+% which can be seen to be exactly zero, 
+% \begin{equation}
+% \Gamma^C_a = -\frac{1}{\Omega_a}\lang \int_0^\infty v  \d v \, \frac{\p f_{a0}}{\p \psi} \int_{-v}^v \d v_\| (v^2 - v_\|^2)\, \pi [\vec{e}_2 \vec{e}_3 - \vec{e}_3 \vec{e}_2]  : \nabla \psi \nabla \psi \rang = 0
+% \end{equation}
+% since the "magnetization flow" is in the diamagnetic direction. Thus: no kinetic version yet.
+
+\section{Implementation in SFINCS}
+\todo{Note: flux-label normalization in eq.\ 165 in the technical SFINCS documentation lacks a factor $\bar{R}$?}
+
+Returning to the \eqref{eq:fluxgS}, we need to translate it to the dimensionless quantities used in SFINCS. The dimensionless quantities in SFINCS are
+\begin{align}
+  \hat{T}_a \equiv \frac{T_a}{\bar{T}} \\
+  \hat{m}_a \equiv \frac{m_a}{\bar{m}} \\
+  \hat{n}_a \equiv \frac{n_a}{\bar{n}} \\
+  \hat{B} \equiv \frac{B}{\bar{B}} \\
+  \hat{\psi} \equiv \frac{\psi}{\bar{R}^2\bar{B}} \\
+  \hat{\Phi} \equiv \frac{\Phi}{\bar{\Phi}} \\
+  \bar{v} \equiv \sqrt{\frac{2\bar{T}}{\bar{m}}} \\
+  \alpha \equiv \frac{e\bar{\Phi}}{\bar{T}},
+\end{align}
+and we wish to introduce a normalized classical flux as
+\begin{equation}
+\hat{\Gamma}_a^{\text{C}} = \frac{\Gamma_a^{\text{C}} }{\bar{n} \bar{v}\bar{R}\bar{B}} = \frac{\bar{R}}{\bar{n}\bar{v}} \frac{1}{Z_a e} \lang B^{-2} \left(\vec{B} \times \nabla \hat{\psi}\right) \cdot \vec{R}_a \rang.
+\end{equation}
+With this, we obtain
+\begin{equation}
+  \begin{aligned}
+    &\hat{\Gamma}_a^{\text{C}} 
+    =  \frac{\sqrt{2}}{3\pi^{3/2}}\frac{ e^2 \ln \Lambda}{\epsilon_0^2 } \frac{1}{\bar{v} \bar{R} \bar{B}^2} \frac{\sqrt{\bar{m}}}{\sqrt{\bar{T}}} \bar{n}
+    \sum_b Z_b \frac{\hat{m}_b^{1/2}}{\hat{T}_b^{1/2}} \left(1 + \frac{m_b}{m_a} \right) F\left(\frac{T_a m_b}{T_b m_a}\right) \left( \vphantom{ \lang \frac{\bar{R}^2|\nabla \hat{\psi}|^2}{\hat{B}^2} \hat{n}_a \hat{n}_b \rang}\right.\\
+      &  \lang \frac{\bar{R}^2|\nabla \hat{\psi}|^2}{\hat{B}^2} \hat{n}_a \hat{n}_b \rang \left[Z_a     \left(\frac{\d_{\hat{\psi}} h_b}{h_b}  - \frac{1}{2} \frac{\p_{\hat{\psi}} T_b}{T_b}\right) 
+      + Z_a  \frac{3}{2} \frac{T_a m_b}{T_b m_a + T_a m_b} \frac{\d_{\hat{\psi}} T_b}{T_b}\right. \\
+      & - Z_b  \frac{T_a}{T_b}\left(\frac{\d_{\hat{\psi}} h_a}{h_a}  - \frac{1}{2} \frac{\p_{\hat{\psi}} T_a}{T_a}\right) 
+      - \left.Z_b \frac{3}{2} \frac{T_a m_a}{T_b m_a + T_a m_b}  \frac{\d_{\hat{\psi}} T_a}{T_a} \right] \\
+      & +\left. \lang \frac{\bar{R}^2|\nabla \hat{\psi}|^2}{\hat{B}^2} \hat{n}_a \hat{n}_b \hat{\tilde{\Phi}}\rang Z_a Z_b \frac{\alpha}{\hat{T_b}} \left[ \frac{\d_{\hat{\psi}} T_b}{T_b} - \frac{\d_{\hat{\psi}} T_a}{T_a} \right]\right),
+\end{aligned} 
+\end{equation}
+where the prefactor of all the dimensional quantities is simplified by introducing
+\begin{align}
+  \bar{\nu} &\equiv \frac{\sqrt{2}}{12 \pi^{3/2}} \frac{\bar{n} e^4 \ln \Lambda}{\epsilon_0^2 \bar{m}^{1/2} \bar{T}^{3/2}}  \\
+  \nu_n &\equiv \bar{\nu} \frac{\bar{R}}{\bar{v}} \implies \frac{e^2 \ln \Lambda}{\epsilon_0^2} = \frac{12 \pi^{3/2} \sqrt{\bar{m}} \bar{T}^{3/2}}{\sqrt{2} e^2 \bar{n}}\frac{\bar{v}}{\bar{R}} \nu_n
+\end{align}
+so that
+\begin{equation}
+  \frac{\sqrt{2}}{3\pi^{3/2}}\frac{ e^2 \ln \Lambda}{\epsilon_0^2 } \frac{1}{\bar{v} \bar{R} \bar{B}^2} \frac{\sqrt{\bar{m}}}{\sqrt{\bar{T}}} \bar{n}  =
+  \frac{4\bar{m} \bar{T}}{e^2 \bar{B}^2}\frac{1}{\bar{R}^2} \nu_n.
+\end{equation}
+With $\Delta \equiv \frac{\sqrt{2\bar{m}\bar{T}}}{e\bar{R}\bar{B}}$, the prefactor finally becomes
+  \begin{equation}
+\frac{4\bar{m} \bar{T}}{e^2 \bar{B}^2}\frac{1}{\bar{R}^2} \nu_n = 2 \Delta^2 \nu_n,
+\end{equation}
+and the classical particle flux in SFINCS is thus
+\begin{equation}
+  \begin{aligned}
+    &\hat{\Gamma}_a^{\text{C}}  
+    =  2 \Delta \nu_n
+    \sum_b Z_b \frac{\hat{m}_b^{1/2}}{\hat{T}_b^{1/2}} \left(1 + \frac{m_b}{m_a} \right) F\left(\frac{T_a m_b}{T_b m_a}\right) \left( \vphantom{ \lang \frac{\bar{R}^2|\nabla \hat{\psi}|^2}{\hat{B}^2} \hat{n}_a \hat{n}_b \rang}\right.\\
+      &  \lang \frac{\bar{R}^2|\nabla \hat{\psi}|^2}{\hat{B}^2} \hat{n}_a \hat{n}_b \rang \left[Z_a     \left(\frac{\d_{\hat{\psi}} h_b}{h_b}  - \frac{1}{2} \frac{\p_{\hat{\psi}} T_b}{T_b}\right) 
+      + Z_a  \frac{3}{2} \frac{T_a m_b}{T_b m_a + T_a m_b} \frac{\d_{\hat{\psi}} T_b}{T_b}\right. \\
+      & - Z_b  \frac{T_a}{T_b}\left(\frac{\d_{\hat{\psi}} h_a}{h_a}  - \frac{1}{2} \frac{\p_{\hat{\psi}} T_a}{T_a}\right) 
+      - \left.Z_b \frac{3}{2} \frac{T_a m_a}{T_b m_a + T_a m_b}  \frac{\d_{\hat{\psi}} T_a}{T_a} \right] \\
+      & +\left. \lang \frac{\bar{R}^2|\nabla \hat{\psi}|^2}{\hat{B}^2} \hat{n}_a \hat{n}_b \hat{\tilde{\Phi}}\rang Z_a Z_b \frac{\alpha}{\hat{T_b}} \left[ \frac{\d_{\hat{\psi}} T_b}{T_b} - \frac{\d_{\hat{\psi}} T_a}{T_a} \right]\right).
+\end{aligned} \label{eq:fluxgS2}
+\end{equation}
+
+Note that the only part of the above calculation that depends on SFINCS output is the perturbed potential $\tilde{\Phi}$. If $\tilde{\Phi}$ is not included in the SFINCS calculation, we are thus be able to calculate the classical flux directly from the inputs.
+\end{document}

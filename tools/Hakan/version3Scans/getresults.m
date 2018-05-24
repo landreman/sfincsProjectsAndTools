@@ -1,9 +1,16 @@
-function [out,missing]=getresults(directory,sortafter)
+function [out,missing]=getresults(directory,sortafter,varargin)
 % Retrieves the output from the sfincs runs with the same discretisation
 % in the numbered subdirectories in "directory". 
 % Only succesful runs are loaded. The output struct "out"
 % is sorted after the vaiable with the name in the input "sortafter"
 %directory
+
+load_unfinished_too=0;
+if nargin>2
+  if strcmp(varargin{1},'load unfinished too')
+    load_unfinished_too=1;
+  end
+end
 
 if nargin==2
   H=loadallh5(directory,sortafter);
@@ -159,6 +166,23 @@ for hind=1:length(H)
       out.dPhiHatdpsiN(ind)  =H{hind}.dPhiHatdpsiN;
       out.dPhiHatdrHat(ind)  =H{hind}.dPhiHatdrHat;
       out.EParallelHat(ind)  =H{hind}.EParallelHat;
+      out.withAdiabatic(ind) =(H{hind}.withAdiabatic==H{hind}.integerToRepresentTrue);
+      if out.withAdiabatic(ind)
+        out.adiabaticZ(ind)=H{hind}.adiabaticZ;
+        out.adiabaticMHat(ind)=H{hind}.adiabaticMHat;
+        out.adiabaticNHat(ind)=H{hind}.adiabaticNHat;
+        out.adiabaticTHat(ind)=H{hind}.adiabaticTHat;
+      end
+      if isfield(H{hind},'withNBIspec')
+        out.withNBIspec(ind)   =(H{hind}.withNBIspec==H{hind}.integerToRepresentTrue);
+        if out.withNBIspec(ind)
+          out.NBIspecZ(ind)=H{hind}.NBIspecZ;
+          out.NBIspecNHat(ind)=H{hind}.NBIspecNHat;
+        end
+      else
+        out.withNBIspec(ind)=0;
+      end
+      out.includePhi1(ind)   =(H{hind}.includePhi1==H{hind}.integerToRepresentTrue);
     end
     if out.RHSMode(ind)==2
        out.transportMatrix(ind,:,:)=H{hind}.transportMatrix;
@@ -183,7 +207,7 @@ for hind=1:length(H)
     end
     
     if out.RHSMode(ind)==1
-      if out.finished(ind)
+      if out.finished(ind) || (load_unfinished_too && out.includePhi1(ind))
         if isfield(H{hind},'NTV')
           if H{hind}.includePhi1==0
             out.NTV(ind,:)                  =H{hind}.NTV';
@@ -209,6 +233,8 @@ for hind=1:length(H)
               out.pressurePerturbation{ind}    =H{hind}.pressurePerturbation';
               out.pressureAnisotropy{ind}      =H{hind}.pressureAnisotropy';
               out.NTVBeforeSurfaceIntegral{ind}=H{hind}.NTVBeforeSurfaceIntegral';
+              out.dPhi1Hatdtheta{ind}          =squeeze(H{hind}.dPhi1Hatdtheta(:,:,end))';
+              out.dPhi1Hatdzeta{ind}           =squeeze(H{hind}.dPhi1Hatdzeta(:,:,end))';
             end
           else %includePhi1=1
             out.NTV(ind,:)                  =H{hind}.NTV(:,end)';
@@ -236,6 +262,8 @@ for hind=1:length(H)
               out.pressurePerturbation{ind}    =squeeze(H{hind}.pressurePerturbation(:,:,end))';
               out.pressureAnisotropy{ind}      =squeeze(H{hind}.pressureAnisotropy(:,:,end))';
               out.NTVBeforeSurfaceIntegral{ind}=squeeze(H{hind}.NTVBeforeSurfaceIntegral(:,:,end))';
+              out.dPhi1Hatdtheta{ind}          =squeeze(H{hind}.dPhi1Hatdtheta(:,:,end))';
+              out.dPhi1Hatdzeta{ind}           =squeeze(H{hind}.dPhi1Hatdzeta(:,:,end))';
             end
           end
         else

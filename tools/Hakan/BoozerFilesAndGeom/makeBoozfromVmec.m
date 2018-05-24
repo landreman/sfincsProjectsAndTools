@@ -1,10 +1,26 @@
-function Booz=makeBoozfromVmec(woutin,s_wish,Nu,Nw,min_Bmn)
-
-%This routine has been tested and compared to jmc and/or booz2xform to find that B00
-%and R00 coincides.
-
-%woutin is the wout file name or just the netcdf variables from the wout file
+function Booz=makeBoozfromVmec(woutin,s_wish,Nu,Nw)
+% This function takes a vmec output file and produces a spatial 
+% discretisation of one flux surface in Boozer coordinates
+%
+% woutin is the wout file name or just the netcdf variables from the 
+% wout file loaded with readVMECstruct.m
 %(Too old matlab versions do not have the necessary netcdf routines.)
+%
+% s_wish is the normalised toroidal flux of the wanted surface. 
+% The Boozer discretisation for the surface with the closest value 
+% of s to s_wish will be given as output.
+%
+% Nu,Nw are the number of discretisation points in space in the 
+% poloidal and toroidal directions, respectively. 
+% Nota Bene! Nu and Nw have to be odd numbers!
+% If you choose them too small you might loose some Fourier modes.
+% Much higher than ~151 or so tends to make the Fouriertransformations slow
+% on some systems. 
+% 
+
+% This routine has been tested and compared to jmc and/or booz2xform to
+% find that B00 and R00 coincides.
+
 
 if isstruct(woutin)
   wout=woutin;
@@ -206,10 +222,12 @@ end
 %%%%% This is the transformation. See th notes by Hirshman
 %%%%% 'Transformation from VMEC to Boozer Coordinates', April 1995
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-alphamn1=invgrad(w.B_umntilde,w.B_wmntilde,Geom.Nperiods,1);
+alphamn1=invgrad(w.B_umntilde,w.B_wmntilde,Geom.Nperiods,1); 
 alphamn2=invgrad(w.B_umntilde,w.B_wmntilde,Geom.Nperiods,2);
+%if B_umn and B_wmn are good, then alphamn1 should equal alphamn2
+%I SHOULD TEST THIS
 
-w.pmn=(alphamn2-I*w.lmn)*(1/(G+iota*I));
+w.pmn=(alphamn1-I*w.lmn)*(1/(G+iota*I));
 
 w.Dw=2*pi/w.Nw/Geom.Nperiods;
 w.Du=2*pi/w.Nu;
