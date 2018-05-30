@@ -4,18 +4,22 @@
 %input
 Boozerfile='~/Forskning/Stellarator/sfincs/gitsfincs/equilibria/w7x-sc1.bc';
 rnormwish=0.9;
-Ntheta=100;
-Nzeta=100;
+Ntheta=101; %must be odd
+Nzeta=101;  %must be odd
+min_Bmn=0;
+max_m=inf;
+maxabs_n=inf;
 
 %Do this only once, if it takes a lot of time
-Geom=readBoozerfile(Boozerfile);
+Geom=readBoozerfile(Boozerfile,min_Bmn,max_m,maxabs_n,'StelSym','signcorr2');
 
 rind=findnearest(Geom.rnorm,rnormwish);
 
-[Ham,Booz,Cyl]=makeHamada(Geom,rind,Ntheta,Nzeta);
+[Ham,Booz,Cyl,Pest]=makeHamada(Geom,rind,Ntheta,Nzeta);
 
 %CoordPlots(Ham)
-CoordPlots(Booz)
+CoordPlots(Booz);
+%CoordPlots(Pest)
 %CoordPlots(Cyl)
 
 if 0

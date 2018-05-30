@@ -80,10 +80,10 @@ class bcgeom:
            sys.exit('Sign correction method for JG files not recognised!')
 
 
-       if filename[-4:-1]=='.dat':
+       if filename[-4:]=='.dat':
            #Henning Maassberg type file
            filetype='HM'
-       elif filename[-3:-1]=='.bc':
+       elif filename[-3:]=='.bc':
            #Joachim Geiger (or Erika Strumberger) type file
            filetype='JG'
        else: #default to JG
@@ -406,16 +406,22 @@ class bcgeom:
        if filetype=='HM': 
            self.StelSym=1
            self.newsigncorr=newsigncorrectionmethod
-     
-           f = open(filename, 'r')
-           f.seek(-1,2)     # go to the file end.
-           eof = f.tell()   # get the end of file location
-           f.seek(0,0)      # go back to file beginning
-           tmp_str=f.readline()
-           while tmp_str[1]=='c' or tmp_str[1]=='C':  #Skip comment line
-               tmp_str=f.readline() 
 
+           with open(filename) as f:
+               flines = f.readlines()
+           
+           #f = open(filename, 'r')
+           #f.seek(-1,2)     # go to the file end.
+           #eof = f.tell()   # get the end of file location
+           #f.seek(0,0)      # go back to file beginning
+           ind=0
+           tmp_str=flines[ind]
+           ind+=1
+           while tmp_str[1]=='c' or tmp_str[1]=='C':  #Skip comment line
+               tmp_str=flines[ind]#tmp_str=f.readline() 
+               ind+=1
            torfluxnorm=np.array([])
+           radii=np.array([])
            iota=np.array([])
            Bphi=np.array([])
            Btheta=np.array([])
@@ -431,6 +437,7 @@ class bcgeom:
            modesp=[]
            modesb=[]
            modesbnorm=[]
+           modesdbdrnorm=[]
            modespar=[]
              
            endoffile=False
@@ -439,7 +446,7 @@ class bcgeom:
            while not endoffile:
                rind=rind+1
                surfheader1     = sscan(tmp_str,count=8)
-               radii           = np.append(radii,surfheader1[0]/100) #(cm)
+               radii           = np.append(radii,surfheader1[0]/100) #(cm->m)
                iota            = np.append(iota,surfheader1[1])
                Nperiods        = surfheader1[2]
                minorradiusW7AS = surfheader1[3]/100 #(cm)
@@ -450,15 +457,18 @@ class bcgeom:
                else:
                    torfluxnorm = np.append(torfluxnorm,np.nan)
                    R00         = np.append(R00,np.nan)
-       
-               tmp_str=f.readline()
+
+                   
+               tmp_str=flines[ind]
+               ind+=1
                if tmp_str[1]=='>':
                    surfheader2=sscan(tmp_str[2:],count=3)
            
-                   Bphi      = np.append(Bphi,surfheader2[0]*1.0e6*Nperiods/2.0/pi*(4*pi*1e-7)) #Tesla*meter
-                   Btheta    = np.append(Btheta,surfheader2[1]*1.0e6/2.0/pi*(4*pi*1e-7))        #Tesla*meter
+                   Bphi      = np.append(Bphi,surfheader2[0]*1.0e6*Nperiods/2.0/np.pi*(4*np.pi*1e-7)) #Tesla*meter
+                   Btheta    = np.append(Btheta,surfheader2[1]*1.0e6/2.0/np.pi*(4*np.pi*1e-7))        #Tesla*meter
                    B00       = np.append(B00,surfheader2[2]) #Tesla
-                   tmp_str=f.readline()
+                   tmp_str=flines[ind]
+                   ind+=1
                else:
                    Bphi   = np.append(Bphi,np.nan)
                    Btheta = np.append(Btheta,np.nan)
@@ -472,6 +482,7 @@ class bcgeom:
                modesp.append(np.array([]))
                modesb.append(np.array([]))
                modesbnorm.append(np.array([]))
+               modesdbdrnorm.append(np.array([]))
                modespar.append(np.array([]))
     
                proceed=True
@@ -492,19 +503,21 @@ class bcgeom:
                            modesdbdrnorm[rind]= np.append(modesdbdrnorm[rind],tmp[4]*100) #conv. cm^-1 to m^-1
                            modesr[rind]= np.append(modesr[rind],tmp[5])
                            modesz[rind]= np.append(modesz[rind],tmp[6])
-         
-                   tmp_str=f.readline() #get the next line or surface header line
+
+                   if ind<len(flines):
+                       tmp_str=flines[ind]
+                       ind+=1 #get the next line or surface header line
                #end while proceed
                if modeind==-1:
                    sys.exit('no modes found for rind='+str(rind))
 
                no_of_modes.append(int(modeind+1))
 
-               if f.tell() == eof:
+               if ind>=len(flines): #f.tell() == eof:
                    endoffile=True
 
            #end while not endoffile
-           f.close()
+           #f.close()
            
            #self.torfluxtot is not stored in Henning Maassberg's files. Because they are 
            #based on Joachim Geiger's .bc files, however, they are left-handed (r,pol,tor) and
@@ -1138,7 +1151,7 @@ class bcgeom:
   ####################################################################
   # Interpolate a bcgeom to a set of new radii
   ####################################################################
-  def interp(self,invar,invarname='rnorm',interptype='linear'):
+  def interp(self,invar,invarname='rnorm',interptype='linear',padding=None):
       # This function interpolates the bcgeom to a new
       # set of radii. The chosen new values invar of the flux label 
       # given by the string invarname ('s', 'rnorm', 'rW7AS', 'rVMEC') are interpolated.
@@ -1158,19 +1171,19 @@ class bcgeom:
       #Decide which variable to interpolate over
       if invarname=='s':
           s=invar
-          if np.any(s<smin) or np.any(s>smax):
+          if (padding is None) and (np.any(s<smin) or np.any(s>smax)):
             sys.exit('Chosen s out of range!')
       elif invarname=='rnorm':
           s=invar**2
-          if np.any(s<smin) or np.any(s>smax):
+          if (padding is None) and (np.any(s<smin) or np.any(s>smax)):
             sys.exit('Chosen rnorm out of range!')
       elif invarname=='rW7AS':
           s=(invar/self.minorradiusW7AS)**2
-          if np.any(s<smin) or np.any(s>smax):
+          if (padding is None) and (np.any(s<smin) or np.any(s>smax)):
             sys.exit('Chosen rW7AS out of range!')
       elif invarname=='rVMEC':
           s=(invar/self.minorradiusVMEC)**2
-          if np.any(s<smin) or np.any(s>smax):
+          if (padding is None) and (np.any(s<smin) or np.any(s>smax)):
             sys.exit('Chosen rVMEC out of range!')
       elif invarname=='index':
           if np.any(invar<0) or np.any(invar>(len(self.s)-1)):
@@ -1180,7 +1193,10 @@ class bcgeom:
           interptype='nearest'
       else:
           sys.exit('invarname not recognised!')
-        
+      if padding=='end values' and not(invarname=='index'):
+          s=np.where(s<smin,smin,s)
+          s=np.where(s>smax,smax,s)
+          
       out=copy.deepcopy(self)
 
       s=np.sort(s)
@@ -1442,14 +1458,14 @@ class bcgeom:
         out.dVdsoverNper = self.dVdsoverNper[inds]
         out.B00    = self.B00[inds]
         out.R00    = self.R00[inds]
-        out.nmodes = self.nmodes[inds]
-        out.B      = self.B[inds]
-        out.R      = self.R[inds]
-        out.Z      = self.Z[inds]
-        out.Dphi   = self.Dphi[inds]
-        out.Bnorm  = self.Bnorm[inds]
-        out.m      = self.m[inds]
-        out.n      = self.n[inds]
+        out.nmodes = np.array(self.nmodes)[inds]
+        out.B      = np.array(self.B)[inds]
+        out.R      = np.array(self.R)[inds]
+        out.Z      = np.array(self.Z)[inds]
+        out.Dphi   = np.array(self.Dphi)[inds]
+        out.Bnorm  = np.array(self.Bnorm)[inds]
+        out.m      = np.array(self.m)[inds]
+        out.n      = np.array(self.n)[inds]
         if not(self.StelSym):
            out.parity = self.parity[inds]
 
