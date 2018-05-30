@@ -313,11 +313,6 @@ d2geomangdthetadzeta=d2Dzetacylphi_dthetadzeta;
 X=R.*cos(geomang);
 Y=R.*sin(geomang);
 
-geomang
-dgeomangdtheta
-dgeomangdzeta
-mnmats.Dzetacylphi
-
 dXdtheta=dRdtheta.*cos(geomang)-R.*dgeomangdtheta.*sin(geomang);
 dXdzeta =dRdzeta .*cos(geomang)-R.*dgeomangdzeta .*sin(geomang);
 dYdtheta=dRdtheta.*sin(geomang)+R.*dgeomangdtheta.*cos(geomang);
