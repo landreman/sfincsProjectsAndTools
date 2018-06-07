@@ -113,7 +113,9 @@ for directory in PlotDirectories:
 
                 finished = file["finished"][()] 
                 integerToRepresentTrue = file["integerToRepresentTrue"][()]
-                includePhi1 = file["includePhi1"][()] 
+                includePhi1 = file["includePhi1"][()]
+
+                nHats = file["nHats"][()]
 
                 if includePhi1 == integerToRepresentTrue:
                     didNonlinearCalculationConverge = file["didNonlinearCalculationConverge"][()]
@@ -145,6 +147,10 @@ for directory in PlotDirectories:
                 print ("Maybe the SFINCS run did not finish")
                 print ("Continuing with next sub directory.")
                 continue
+
+            #print("nHat: " + str(nHats[species -1]))
+
+            VariableValue = VariableValue / nHats[species -1]
 
             Nradii += 1
             radii.append(radiusValue)
