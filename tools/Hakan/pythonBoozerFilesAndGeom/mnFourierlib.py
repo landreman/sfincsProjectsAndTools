@@ -195,10 +195,9 @@ class mnmat:
                  quantity='B',vmecgrid='half',warnings='off'):
         #Note that rind and quantity are only needed if input is a bcgeom
 
-        if isinstance(input, int):
-            input=float(input)
-            
-        if isinstance(input, float):
+        if isinstance(input, float) or isinstance(input, int):
+            if isinstance(input, int):
+                input=float(input)
             if Ntheta is None:
                 Ntheta=5 #default small number
             if Nzeta is None:
@@ -224,6 +223,8 @@ class mnmat:
             
             self.c=np.zeros((Nm,Nn))
             self.s=np.zeros((Nm,Nn))
+            self.c[0,:n0ind]=np.nan
+            self.s[0,:n0ind+1]=np.nan
             self.c[0,n0ind]=input
             #print('float input: '+str(self.c))
 
@@ -278,8 +279,8 @@ class mnmat:
             self.c =  2.0/(Ntheta*Nzeta) * np.real(Fflip[0:maxm+1,::-1]);
             self.s = -2.0/(Ntheta*Nzeta) * np.imag(Fflip[0:maxm+1,::-1]);
 
-            self.c[0,0:n0ind]=None
-            self.s[0,0:n0ind+1]=None
+            self.c[0,:n0ind]=np.nan
+            self.s[0,:n0ind+1]=np.nan
             self.c[0,n0ind]=self.c[0,n0ind]/2.0
 
             if do_expand:
@@ -365,6 +366,8 @@ class mnmat:
                             self.c[input.m[ind],n0ind+input.n[ind]]+=input.data[ind]
                         else: #sinus component
                             self.s[input.m[ind],n0ind+input.n[ind]]+=input.data[ind]
+            self.c[0,:n0ind]=None
+            self.s[0,:n0ind+1]=None
             #print('list input:')
             #print(self.c)
             #print(self.s)
@@ -513,6 +516,9 @@ class mnmat:
             
         c=self.c*np.cos(ufl[:,np.newaxis,np.newaxis]*self.m - vfl[:,np.newaxis,np.newaxis]*self.n*self.Nperiods)
         s=self.s*np.sin(ufl[:,np.newaxis,np.newaxis]*self.m - vfl[:,np.newaxis,np.newaxis]*self.n*self.Nperiods)
+
+        c[:,0,:self.n0ind]=0
+        s[:,0,:self.n0ind+1]=0
         
         return (c+s).sum((1,2)).reshape(u.shape)
        
@@ -656,6 +662,9 @@ class mnmat:
 
     def get00(self):
         return self.c[self.m0ind,self.n0ind]
+    
+    def set00(self,value):
+        self.c[self.m0ind,self.n0ind]=value
             
     def remove00(self):
         outmn=copy.deepcopy(self)
