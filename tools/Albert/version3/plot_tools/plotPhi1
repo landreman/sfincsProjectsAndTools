@@ -39,16 +39,17 @@ matplotlib.rc('font', **font)
 matplotlib.rc('lines',markeredgewidth=0,markersize=3,linewidth=2.5)
 matplotlib.rc('axes',linewidth=1.5)
 
-matplotlib.rcParams['mathtext.default'] = 'it'
-matplotlib.rcParams['text.usetex'] = True
+#matplotlib.rcParams['mathtext.default'] = 'it'
+#matplotlib.rcParams['text.usetex'] = True
 
 zFactor = 1000 ##kV -> V
-##W7-X##
-xAxisTicks = [r'$0$', r'$\pi/10$', r'$2\pi/10$', r'$3\pi/10$', r'$4\pi/10$']
-##LHD
-#xAxisTicks = [r'$0$', r'$\pi/20$', r'$2\pi/20$', r'$3\pi/20$', r'$4\pi/20$']
-
-yAxisTicks = [r'$0$', r'$\pi/2$', r'$\pi$', r'$3\pi/2$', r'$2\pi$']
+##Don't use ticks anymore because not general to all machines
+###W7-X##
+#xAxisTicks = [r'$0$', r'$\pi/10$', r'$2\pi/10$', r'$3\pi/10$', r'$4\pi/10$']
+###LHD
+##xAxisTicks = [r'$0$', r'$\pi/20$', r'$2\pi/20$', r'$3\pi/20$', r'$4\pi/20$']
+#
+#yAxisTicks = [r'$0$', r'$\pi/2$', r'$\pi$', r'$3\pi/2$', r'$2\pi$']
 
 fig = plt.figure(figsize=FigSize)
 fig.patch.set_facecolor('white')
@@ -101,20 +102,20 @@ ContourLevels = zFactor*ContourLevels
     
 ax = plt.subplot(numRows,numCols,1)
     #plt.contourf(zeta,theta,1000*numpy.fliplr(Phi1Hat[:,:,iteration].transpose()),numContours)
-Phi1Plot = plt.contourf(zeta,theta,zFactor*Phi1Hat[:,:,iteration].transpose(),numContours, cmap=plt.get_cmap('gist_rainbow'))
+Phi1Plot = plt.contourf(zeta,theta,zFactor*Phi1Hat[:,:,iteration].transpose(),numContours, cmap=plt.get_cmap('rainbow'))
 #Phi1Plot2 = plt.contour(Phi1Plot,levels=ContourLevels, colors='k', hold='on')
 Phi1Plot2 = plt.contour(Phi1Plot,levels=ContourLevels, colors='k')
 #Phi1Plot2 = plt.contour(Phi1Plot,levels=Phi1Plot.levels[::2], colors='k', hold='on')
-#plt.xlabel(r'$\zeta$' + ' [rad]')
+# plt.xlabel(r'$\zeta$' + ' [rad]')
 plt.xlabel(r'$\zeta$' + " " + r'$\mathrm{[rad]}$')
-#plt.ylabel(r'$\theta$'+ ' [rad]')
+# plt.ylabel(r'$\theta$'+ ' [rad]')
 plt.ylabel(r'$\theta$'+ " " + r'$\mathrm{[rad]}$')
 #plt.zlabel(r'$\Phi_1$'+ ' [V]')
 
 plt.xticks([0,max(zeta)/4,max(zeta)/2,3*max(zeta)/4,max(zeta)])
 plt.yticks([0.0,max(theta)/4,max(theta)/2,3*max(theta)/4,max(theta)])
-plt.gca().axes.xaxis.set_ticklabels(xAxisTicks)
-plt.gca().axes.yaxis.set_ticklabels(yAxisTicks)
+#plt.gca().axes.xaxis.set_ticklabels(xAxisTicks)
+#plt.gca().axes.yaxis.set_ticklabels(yAxisTicks)
 
 #plt.gca().axes.xaxis.set_label_coords(0.5,-0.09)
 #plt.gca().axes.yaxis.set_label_coords(-0.09,0.5)
@@ -134,12 +135,17 @@ if show_rN:
 #cbar = plt.colorbar(Phi1Plot, label=r'$\Phi_1$'+ ' [V]', ticks=ContourLevels)
 #cbar = plt.colorbar(Phi1Plot, label=r'$\Phi_1$'+ ' [V]', ticks=Phi1Plot.levels[::2])
 #cbar.add_lines(Phi1Plot2)
-cbar = plt.colorbar(Phi1Plot, format=ticker.FuncFormatter(fmt_cbar), ticks=ContourLevels)
+#cbar = plt.colorbar(Phi1Plot, format=ticker.FuncFormatter(fmt_cbar), ticks=ContourLevels)
+cbar = plt.colorbar(Phi1Plot, ticks=ContourLevels) 
 cbar.ax.set_ylabel(r'$\Phi_1$'+ " " + r'$\mathrm{[V]}$', rotation=0, labelpad=10)
+#cbar.ax.set_ylabel(r'$\Phi_1$'+ " " + r'$\mathrm{[V]}$', rotation=0, labelpad=10) 
 
 #with warnings.catch_warnings():
 #    warnings.simplefilter("always")
-#plt.clabel(Phi1Plot2, fmt='%2.1f', colors='k', fontsize=14)
+
+#plt.clabel(Phi1Plot2, fmt='%2.1f', colors='k', fontsize=18, inline=False)
+
+#plt.clabel(Phi1Plot2, colors='k', fontsize=18, inline=False)
 plt.clabel(Phi1Plot2, fmt=ticker.FuncFormatter(fmt_cbar), colors='k', fontsize=18, inline=False)
 
 #plt.subplots_adjust(wspace=0.27)

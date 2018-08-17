@@ -35,16 +35,16 @@ matplotlib.rcParams['text.usetex'] = True
 #matplotlib.style.use('grayscale')
 
 
-#PlotLinespecs = ['rD-', 'bo-', 'mv-.', 'cs-.', 'gx--', 'y+--', 'kp:', 'k*:'] #LHD113208t4640
-#PlotLineColors = ['r', 'b', 'm', 'c', 'g', 'y', 'k', '0.75'] #LHD113208t4640
+PlotLinespecs = ['rD-', 'bo-', 'mv-.', 'cs-.', 'gx--', 'y+--', 'kp:', 'k*:'] #LHD113208t4640
+PlotLineColors = ['r', 'b', 'm', 'c', 'g', 'y', 'k', '0.75'] #LHD113208t4640
 #PlotLinespecs = ['rD-', 'mv-.', 'gx--', 'y*--'] #W7-X NBI case
 #PlotLineColors = ['r', 'm', 'g', '#AAAA00'] #W7-X NBI case
 #PlotLinespecs = ['mD-', 'cv-.', 'gx--'] #TEMPORARY
 #PlotLineColors = ['m', 'c', 'g'] #TEMPORARY
-PlotLinespecs = ['cv-.', 'bx--'] #TEMPORARY
-PlotLineColors = ['c', 'b'] #TEMPORARY
-PlotLinespecs = ['cv', 'b--', 'r-'] #TEMPORARY
-PlotLineColors = ['c', 'b', 'r'] #TEMPORARY
+#PlotLinespecs = ['cv-.', 'bx--'] #TEMPORARY
+#PlotLineColors = ['c', 'b'] #TEMPORARY
+#PlotLinespecs = ['cv', 'b--', 'r-'] #TEMPORARY
+#PlotLineColors = ['c', 'b', 'r'] #TEMPORARY
 #PlotLinespecs = ['rD-', 'mv-.']
 #PlotLineColors = ['r', 'm']
 #PlotLinespecs = ['r-', 'b--', 'g-.', 'y:']
@@ -70,22 +70,25 @@ xAxisLabel = r'$r/a$'
 #yAxisLabel = r'$\nu_{ss}^{\prime}$'
 #yAxisLabel = r'$\nu_{s}^{\prime}$'
 # e   i   \mathrm{He}^{2+}   \mathrm{C}^{6+}   \mathrm{Ne}^{10+}
-#yAxisLabel = r'$<\mathbf{\Gamma}_{\mathrm{C}^{6+}} \cdot \nabla r> $ $[10^{20} \mathrm{m}^{-2} \mathrm{s}^{-1}]$' 
-yAxisLabel = r'$E_r$ $[\mathrm{kV/m}]$'
+#yAxisLabel = r'$<\mathbf{\Gamma}_{\mathrm{C}^{6+}} \cdot \nabla r> $ $[10^{20} \mathrm{m}^{-2} \mathrm{s}^{-1}]$'
+#yAxisLabel = r'$<\mathbf{\Gamma}_{\mathrm{Ar}^{16+}} \cdot \nabla r> $ $[10^{20} \mathrm{m}^{-2} \mathrm{s}^{-1}]$'
+yAxisLabel = r'$<\mathbf{\Gamma}_{\mathrm{Ar}^{16+}} \cdot \nabla r> / n_{\mathrm{Ar}^{16+}} $ $[\mathrm{m} \, \mathrm{s}^{-1}]$'
+#yAxisLabel = r'$E_r$ $[\mathrm{kV/m}]$'
 #yAxisLabel = r'$Z_{\mathrm{eff}}$'
 AxesLabelSize = 40
 
 TickSize = 35
 
-#AxisLimAuto = True
-AxisLimAuto = False
+AxisLimAuto = True
+#AxisLimAuto = False
 #xAxisLim = [0.18, 0.92] #LHD113208t4640 Er scan
 #yAxisLim = [-4.5, 0.0]
 #yAxisLim = [-3.2, 0.0] #LHD113208t4640 Er scan
 #xAxisLim = [0.10, 1.02] #W7-X NBI case Er scan
 #yAxisLim = [-25.0, 0.0] #W7-X NBI case Er scan
 xAxisLim = [0.0, 1.02] #TEMPORARY
-yAxisLim = [-30.0, 30.0] #TEMPORARY
+#yAxisLim = [-30.0, 30.0] #TEMPORARY
+yAxisLim = [0.0, 0.4] #TEMPORARY
 #xAxisLim = [0.0, 1.0]
 #yAxisLim = [0.00007, 0.15]
 #yAxisLim = [0.00004, 0.40]
@@ -97,7 +100,7 @@ yAxisLim = [-30.0, 30.0] #TEMPORARY
 
 xAxisLabelCoords = [0.5,-0.09]
 #yAxisLabelCoords = [-0.11,0.5] #LHD113208t4640, W7-X NBI case, Er scan, Flux scan
-yAxisLabelCoords = [-0.115,0.5] #TEMPORARY
+yAxisLabelCoords = [-0.105,0.5] #TEMPORARY
 #yAxisLabelCoords = [-0.09,0.5] #CONTOUR PLOT WITHOUT COLORBAR
 
 LeftMargin = 0.15 #LHD113208t4640, W7-X NBI case, Er scan, Flux scan
@@ -129,15 +132,19 @@ ShowLegend = True
 #PlotLegendLabels = [r'$\nu_{e}^{\prime}$', r'$\nu_{i}^{\prime}$', r'$\nu_{Ne}^{\prime}$']
 #PlotLegendLabels = [r'SFINCS Fokker-Planck w/o $\Phi_1$', r'SFINCS Fokker-Planck w/ $\Phi_1$']
 #PlotLegendLabels = [r'LHD113208t4640 Fokker-Planck w/o $\Phi_1$', r'Inward-shifted Fokker-Planck w/o $\Phi_1$', r'LHD113208t4640 Fokker-Planck w/ $\Phi_1$', r'Inward-shifted Fokker-Planck w/ $\Phi_1$']
-PlotLegendLabels = [r'SFINCS Fokker-Planck w/o $\Phi_1$', r'DKES', r'XICS']
+#PlotLegendLabels = [r'SFINCS Fokker-Planck w/o $\Phi_1$', r'DKES', r'XICS']
+#PlotLegendLabels = [r'SFINCS Fokker-Planck w/o $\Phi_1$', r'SFINCS Pitch-angle scattering w/o $\Phi_1$']
+
+PlotLegendLabels = [r'SFINCS Fokker-Planck w/o $\Phi_1$', r'SFINCS Pitch-angle scattering w/o $\Phi_1$', r'EUTERPE mom. conservation w/o $\Phi_1$', r'EUTERPE Pitch-angle scattering w/o $\Phi_1$']
 
 #PlotLegendLabels = []
 
 #LegendFontSize = 15
 #LegendProperties = {'weight':'bold'}
 #LegendProperties ={'size':'20', 'weight':'heavy'}
-LegendProperties ={'size':'30', 'weight':'heavy'} #LHD113208t4640, W7-X NBI case, Er scan
-#LegendProperties ={'size':'25', 'weight':'heavy'} #LHD113208t4640 Helium scan
+#LegendProperties ={'size':'30', 'weight':'heavy'} #LHD113208t4640, W7-X NBI case, Er scan
+LegendProperties ={'size':'25', 'weight':'heavy'} #LHD113208t4640 Helium scan
+#LegendProperties ={'size':'27', 'weight':'heavy'} #TEMPORARY
 LegendPosition = 3
 LegendNumberColumns = 1
 #LegendBBoxToAnchor = [0.01, 0.01, 1., .102]
@@ -155,7 +162,9 @@ LegendNumberColumns = 1
 #LegendBBoxToAnchor = [0.005, 0.58, 1., .102]
 #LegendBBoxToAnchor = [0.777, 0.005, 1., .102]
 #LegendBBoxToAnchor = [0.32, 0.005, 1., .102]
-LegendBBoxToAnchor = [0.165, 0.005, 1., .102] #W7-X NBI case Electron scan
+#LegendBBoxToAnchor = [0.165, 0.005, 1., .102] #W7-X NBI case Electron scan
+#LegendBBoxToAnchor = [0.005, 0.005, 1., .102] #TEMPORARY
+LegendBBoxToAnchor = [0.28, 0.005, 1., .102] #TEMPORARY
 
 ShowSubPlotLabel = False
 SubPlotLabel = '(c)'
@@ -191,3 +200,5 @@ ErrorBarAlpha = 0.3
 
 ShowLineAtXzero = True
 ShowLineAtYzero = False
+
+NoScientificAxes = True
