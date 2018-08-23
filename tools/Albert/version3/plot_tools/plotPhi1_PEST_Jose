@@ -1,0 +1,232 @@
+#!/usr/bin/env python
+
+import os, sys, inspect
+import warnings
+import matplotlib
+
+#show_rN = True
+show_rN = False
+
+#makePDF = True
+makePDF = False
+makeEPS = False
+for arg in sys.argv:
+   if arg.lower()=='pdf':
+      makePDF = True
+   elif arg.lower()=='eps':
+      makeEPS = True
+
+if makePDF:
+   matplotlib.use('PDF')
+if makeEPS:
+   matplotlib.use('Agg')
+
+
+import matplotlib.pyplot as plt
+import h5py
+import numpy
+
+import matplotlib.ticker as ticker
+from math import pi
+
+from matplotlib.ticker import MultipleLocator
+from matplotlib.ticker import AutoMinorLocator
+from matplotlib.ticker import LinearLocator, FixedLocator, FormatStrFormatter
+
+from VMECtoPEST_functions import interp2_cyclic, griddatacyclic
+from transformVMECtoPEST import transformVMECtoPEST
+
+
+
+print "This is "+ inspect.getfile(inspect.currentframe())
+
+#########
+##INPUT##
+#########
+
+quantityToPlot = "Phi1Hat"
+
+filename = 'sfincsOutput.h5'
+
+ncFilename = "/draco/u/almo/Phi1/LHD/lhd2_A_III/Input/wout_lhd2.nc"
+
+#FigSize = (15.0,12.5)
+
+#font = {'size':35}
+#matplotlib.rc('font', **font)
+#matplotlib.rc('lines',markeredgewidth=0,markersize=3,linewidth=2.5)
+#matplotlib.rc('axes',linewidth=1.5)
+plt.rcParams.update({'font.size': 20})
+plt.rcParams['lines.linewidth'] = 2
+
+zFactor = 1000 ##kV -> V
+##W7-X##
+#xAxisTicks = [r'$0$', r'$\pi/10$', r'$2\pi/10$', r'$3\pi/10$', r'$4\pi/10$']
+##LHD
+nfp = 10
+#xAxisTicks = [r'$0$', r'$\pi/20$', r'$2\pi/20$', r'$3\pi/20$', r'$4\pi/20$']
+
+#yAxisTicks = [r'$0$', r'$\pi/2$', r'$\pi$', r'$3\pi/2$', r'$2\pi$']
+
+#fig = plt.figure(figsize=FigSize)
+fig = plt.figure(num=None, figsize=(7.0,6.0), dpi=100)
+fig.patch.set_facecolor('white')
+plt.subplots_adjust(left=0.2, bottom=0.2, right=0.895, top=0.9,wspace=0.00, hspace=0.00)
+numRows = 1
+numCols = 1
+#iteration = 0
+numContours = 128
+#ContourLevels = numpy.array([-9.0, -6.0, -3.0, 0.0, 3.0, 6.0, 9.0])/zFactor
+#ContourLevels = numpy.array([-12.0, -8.0, -4.0, 0.0, 4.0, 8.0])/zFactor
+ContourLevels = numpy.array([-12.0, -8.0, -4.0, 0.0, 4.0])/zFactor
+#ContourLevels = numpy.array([-16.0, -12.0, -8.0, -4.0, 0.0, 4.0])/zFactor
+#numLevels = 5
+
+ScientificTicks = False
+#cbarTicks = [-10.0, -7.5, -5.0, -2.5, 0.0, 2.5, 5.0, 7.5, 10.0]
+#cbarTicks = [-12, -9, -6, -3, 0, 3, 6, 9]
+#cbarTicks = [-15, -12, -9, -6, -3, 0, 3, 6, 9]
+cbarTicks = [-18, -15, -12, -9, -6, -3, 0, 3, 6]
+#cbarTicks = [-18.0, -15.0, -12.0, -9.0, -6.0, -3.0, 0.0, 3.0, 6.0]
+#TickFontSize = 25
+
+
+#############
+##END INPUT##
+#############
+
+
+
+#def fmt_cbar(x, pos):
+#   if x == 0.0:
+#      return r'${}$'.format(x)
+#   a, b = '{:.1e}'.format(x).split('e')
+#   b = int(b)
+#   return r'${} \cdot 10^{{{}}}$'.format(a, b)
+
+#def fmt_xy_axis(x, pos):
+#   return r'${}$'.format(x)
+
+#for i in range(6):
+print "Processing file ",filename
+f = h5py.File(filename,'r')
+theta = f["theta"][()]
+zeta = f["zeta"][()]
+iteration = f["NIterations"][()] - 1 #Results from last iteration
+Phi1Hat = ((f[quantityToPlot][()])[:,:,iteration]).transpose()
+rN = f["rN"][()]
+
+############################################
+##Transform to PEST grid
+Ntheta = f["Ntheta"][()]
+Nzeta = f["Nzeta"][()]
+psiN = f["psiN"][()]
+f.close()
+Pest_vmecu, Pest_vmecw, Vmec_vmecu, Vmec_vmecw, Geom_Nperiods = transformVMECtoPEST(ncFilename, psiN, theta, zeta, -1)
+
+Pest_Phi1 = interp2_cyclic(Vmec_vmecu, Vmec_vmecw, Phi1Hat, Pest_vmecu, Pest_vmecw, Geom_Nperiods)
+############################################
+
+print "psiN: " + str(psiN)
+print "theta max: " + str(numpy.amax(theta))
+print "theta min: " + str(numpy.amin(theta))
+print "zeta max: " + str(numpy.amax(zeta))
+print "zeta min: " + str(numpy.amin(zeta))
+print "Pest_vmecu max: " + str(numpy.amax(Pest_vmecu))
+print "Pest_vmecu min: " + str(numpy.amin(Pest_vmecu))
+print "Pest_vmecw max: " + str(numpy.amax(Pest_vmecw))
+print "Pest_vmecw min: " + str(numpy.amin(Pest_vmecw))
+
+print "Phi1 max: " + str(numpy.amax(Phi1Hat))
+print "Phi1 min: " + str(numpy.amin(Phi1Hat))
+print "PEST_Phi1 max: " + str(numpy.amax(Pest_Phi1))
+print "PEST_Phi1 min: " + str(numpy.amin(Pest_Phi1))
+
+
+#delta = (numpy.amax(Pest_Phi1) - numpy.amin(Pest_Phi1)) / numLevels
+#ContourLevels = numpy.arange(numpy.amin(Pest_Phi1), numpy.amax(Pest_Phi1) + delta/2.0, delta)
+ContourLevels = zFactor*ContourLevels
+    
+ax = plt.subplot(numRows,numCols,1)
+
+Phi1Plot = plt.contourf(Vmec_vmecw.transpose(), Vmec_vmecu.transpose(), zFactor*Pest_Phi1.transpose(),numContours)
+Phi1Plot2 = plt.contour(Phi1Plot,levels=ContourLevels, colors='k', hold='on', linewidths = 1.5)
+#Phi1Plot2 = plt.contour(Phi1Plot,levels=Phi1Plot.levels[::2], colors='k', hold='on')
+#plt.xlabel(r'$\zeta$' + ' [rad]')
+#plt.xlabel(r'$\phi$' + " " + r'$\mathrm{[rad]}$')
+plt.xlabel('$\phi$ [rad]')
+#plt.ylabel(r'$\theta$'+ ' [rad]')
+#plt.ylabel(r'$\theta$'+ " " + r'$\mathrm{[rad]}$')
+plt.ylabel('$\\theta$ [rad]')
+#plt.zlabel(r'$\Phi_1$'+ ' [V]')
+
+#plt.xticks([0,max(zeta)/4,max(zeta)/2,3*max(zeta)/4,max(zeta)])
+#plt.yticks([0.0,max(theta)/4,max(theta)/2,3*max(theta)/4,max(theta)])
+#plt.xticks([0,numpy.amax(Vmec_vmecw)/4,numpy.amax(Vmec_vmecw)/2,3*numpy.amax(Vmec_vmecw)/4,numpy.amax(Vmec_vmecw)])
+#plt.yticks([0,numpy.amax(Vmec_vmecu)/4,numpy.amax(Vmec_vmecu)/2,3*numpy.amax(Vmec_vmecu)/4,numpy.amax(Vmec_vmecu)])
+#plt.gca().axes.xaxis.set_ticklabels(xAxisTicks)
+#plt.gca().axes.yaxis.set_ticklabels(yAxisTicks)
+
+#plt.gca().axes.xaxis.set_label_coords(0.5,-0.09)
+#plt.gca().axes.yaxis.set_label_coords(-0.09,0.5)
+#plt.gca().axes.xaxis.set_label_coords(0.5,-0.07)
+#plt.gca().axes.yaxis.set_label_coords(-0.09,0.5)
+
+#ax.xaxis.set_major_formatter( ticker.FuncFormatter(fmt_xy_axis))
+#ax.xaxis.set_minor_formatter( ticker.FuncFormatter(fmt_xy_axis))
+#ax.yaxis.set_major_formatter( ticker.FuncFormatter(fmt_xy_axis)) 
+#ax.yaxis.set_minor_formatter( ticker.FuncFormatter(fmt_xy_axis))
+
+#plt.tight_layout(pad=0.4, w_pad=0.5, h_pad=1.0)
+
+if show_rN:
+    plt.title('rN = '+str(rN))
+
+#cbar = plt.colorbar(Phi1Plot, label=r'$\Phi_1$'+ ' [V]', ticks=ContourLevels)
+#cbar = plt.colorbar(Phi1Plot, label=r'$\Phi_1$'+ ' [V]', ticks=Phi1Plot.levels[::2])
+#cbar.add_lines(Phi1Plot2)
+#if ScientificTicks:
+#   cbar = plt.colorbar(Phi1Plot, format=ticker.FuncFormatter(fmt_cbar))
+#else:
+#   #cbar = plt.colorbar(Phi1Plot, ticks=cbarTicks)
+#   cbar = plt.colorbar(Phi1Plot, ticks=cbarTicks, format=ticker.FuncFormatter(fmt_xy_axis))
+cbar = plt.colorbar(Phi1Plot, ticks=cbarTicks)
+#cbar.ax.set_ylabel(r'$\Phi_1$'+ "" + r'$\mathrm{[V]}$', rotation=90, labelpad=28)
+cbar.set_label('${\Phi}_1$ [V]')
+
+
+#with warnings.catch_warnings():
+#    warnings.simplefilter("always")
+plt.clabel(Phi1Plot2, inline=1, fmt='%1.1f', colors='k', fontsize=14)
+#if ScientificTicks:
+#   plt.clabel(Phi1Plot2, fmt=ticker.FuncFormatter(fmt_cbar), colors='k', fontsize=TickFontSize, inline=False)
+#else:
+#   #plt.clabel(Phi1Plot2, fmt='%2.1f', colors='k', fontsize=TickFontSize, inline=False)
+#   plt.clabel(Phi1Plot2, fmt=ticker.FuncFormatter(fmt_xy_axis), colors='k', fontsize=TickFontSize, inline=False)
+
+#plt.subplots_adjust(wspace=0.27)
+#plt.axis([0, 2*pi/nfp, 0, 2*pi])
+
+print "PEST_Phi1 shape: " + str(Pest_Phi1.shape)
+
+if makePDF:
+    print "Saving PDF"
+
+    if len(sys.argv)>2 : #Use the substituted name as file name
+       print "Writing plot to " + os.getcwd() + "/" + sys.argv[2] + ".pdf."
+       plt.savefig(sys.argv[2] + ".pdf", orientation = 'landscape', papertype='letter')
+    else :
+       head, tail = os.path.split(inspect.getfile(inspect.currentframe()))
+       print "Writing plot to " + os.getcwd() + "/" + tail + ".pdf."
+       plt.savefig(tail+'.pdf', orientation = 'landscape', papertype='letter')
+elif makeEPS:
+    print "Saving eps"
+    if len(sys.argv)>2 : #Use the substituted name as file name
+       print "Writing plot to " + os.getcwd() + "/" + sys.argv[2] + ".eps."
+       plt.savefig(sys.argv[2] + ".eps")
+    else :
+       head, tail = os.path.split(inspect.getfile(inspect.currentframe()))
+       print "Writing plot to " + os.getcwd() + "/" + tail + ".eps."
+       plt.savefig(tail+'.eps')    
+else:
+    plt.show()
