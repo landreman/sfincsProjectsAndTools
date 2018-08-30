@@ -674,8 +674,6 @@ class fluxcoorddiscr:
       if not(makeSmith):
           if name=='Smith':
             sys.exit('Could not generate Smith coordinates.')
-          else:
-            print 'Could not generate Smith coordinates.'
             
       if makeSmith:
         Bmaxs=Bmn.evalpoint(ths,zes)

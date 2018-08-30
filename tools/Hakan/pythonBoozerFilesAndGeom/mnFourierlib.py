@@ -575,25 +575,32 @@ class mnmat:
  
         return dduFmn, ddvFmn
 
-    def calcu(self,G,I,iota,radialvariable='poloidal flux',zeroout_Deltaiota=-1.0):
-        #% This solves the equation
-        #%
-        #%   B\cdot\nabla u = - B\times\nabla\chi\cdot\nabla h
-        #%
-        #% given that <B^2 u> = 0
-        #%
-        #% Very often we are interested to solve the equation with 
-        #% h=1/B^2, in which case one puts fftmn(1./B.^2) as the 
-        #% first argument.
-        #%
-        #% The optional 6th argument zeroout_Deltaiota can be used 
-        #% to zero out mn components of wmn
-        #% which have abs(n/m*NPeriods - iota) < zeroout_Deltaiota.
-        #%
-        #% The optional 7th argument can be used to change from the
-        #% poloidal flux \chi as the flux surface label in the above
-        #% equation to the toroidal flux \psi by giving the strings
-        #% 'poloidal flux' (default) or 'toroidal flux'.
+    def calcu(self,G,I,iota,radialvariable='poloidal flux',
+              zeroout_Deltaiota=-1.0, reference_theta=None,reference_zeta=None):
+        # This solves the equation
+        #
+        #   B\cdot\nabla u = - B\times\nabla\chi\cdot\nabla h
+        #
+        # given that <B^2 u> = 0
+        #
+        # Very often we are interested to solve the equation with 
+        # h=1/B^2, in which case one puts fftmn(1./B.^2) as the 
+        # first argument. For bootstrap coefficient calculations
+        # one instead often solves the equation with h=1/sqrt(1-lambda B).
+        #
+        # The optional argument zeroout_Deltaiota can be used 
+        # to zero out mn components of wmn
+        # which have abs(n/m*NPeriods - iota) < zeroout_Deltaiota.
+        #
+        # The optional argument radialvariablecan be used to change from the
+        # poloidal flux \chi as the flux surface label in the above
+        # equation to the toroidal flux \psi by giving the strings
+        # 'poloidal flux' (default) or 'toroidal flux'.
+        #
+        # The optional arguments reference_theta,reference_zeta can be used to set
+        # u_00 so that u(reference_theta,reference_zeta)=0. If a reference point
+        # is not given, then u_00=0.
+        
         if radialvariable=='poloidal flux':
             iotaexp=1
         elif radialvariable=='toroidal flux':
@@ -616,6 +623,9 @@ class mnmat:
         umn.c = np.where(np.logical_and(umn.m>0,abs(umn.n/m_tmp*N - iota)<zeroout_Deltaiota),0,umn.c)
         umn.s = np.where(np.logical_and(umn.m>0,abs(umn.n/m_tmp*N - iota)<zeroout_Deltaiota),0,umn.s)
 
+        if not(reference_theta is None) and not(reference_zeta is None):
+            umn.set00(-umn.evalpoint(reference_theta,reference_zeta))
+                
         return umn
         
     def invJacBdotgrad(self,iota):

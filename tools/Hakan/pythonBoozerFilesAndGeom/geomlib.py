@@ -634,7 +634,7 @@ class bcgeom:
           self.Bfilter.max_m    = max_m
           
         if maxabs_n==np.inf:
-          Nzeta=1+2*max(abs(wout.xn))
+          Nzeta=1+2*max(abs(wout.xn))/self.Nperiods
           self.Bfilter.maxabs_n = (Nzeta-1)//2
         else:
           Nzeta = maxabs_n*2+1

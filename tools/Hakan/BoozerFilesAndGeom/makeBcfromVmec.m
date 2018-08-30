@@ -117,7 +117,7 @@ else
 end
 if Nw==inf
   %Use the Vmec mpol and mtor
-  Nw=1+2*max(abs(double(wout.xn))); 
+  Nw=1+2*max(abs(double(wout.xn)))/Geom.Nperiods;
 else
   Nw=2*floor(Nw/2)+1; %force to be odd
 end
@@ -151,12 +151,13 @@ for sind=1:length(Geom.s)
   Dzetawmnlist=mnlist(Booz.mnmat.Dzetaw);
   
   if Geom.StelSym
-    Geom.nmodes(1,sind)=length(Bmnlist.m);
-    Geom.m{sind}  =Bmnlist.m;
-    Geom.n{sind}  =Bmnlist.n;
-    Geom.parity{sind}=Bmnlist.cosparity;
-    Geom.Bmn{sind}=Bmnlist.data;
-    Geom.R{sind}  =Rmnlist.data;
+    goodinds=find(Bmnlist.cosparity);
+    Geom.nmodes(1,sind)=length(goodinds);
+    Geom.m{sind}  =Bmnlist.m(goodinds);
+    Geom.n{sind}  =Bmnlist.n(goodinds);
+    Geom.parity{sind}=Bmnlist.cosparity(goodinds);
+    Geom.Bmn{sind}=Bmnlist.data(goodinds);
+    Geom.R{sind}  =Rmnlist.data(goodinds);
   else
     Geom.nmodes(1,sind)=length(Bmnlist.m)+1;
     Geom.m{sind}  =[Bmnlist.m,0];
@@ -193,7 +194,7 @@ for sind=1:length(Geom.s)
     Geom.Z{sind}(ind)=0; %These are NaN, but I set them to zero to avoid making .bc
                          %files with NaNs in them. 
   %end
-  
+
   if axisymm
     good=find(Geom.n{sind}==0);
     Geom.nmodes(1,sind)=length(good);

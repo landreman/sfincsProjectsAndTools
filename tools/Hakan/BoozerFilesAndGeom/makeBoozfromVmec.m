@@ -255,15 +255,22 @@ Booz_w=Booz.zeta-Booz.Dzetaw;
 Booz.B=interp2_cyclic(w.u,w.w,w.B,Booz_u,Booz_w,Geom.Nperiods);
 Booz.R=interp2_cyclic(w.u,w.w,w.R,Booz_u,Booz_w,Geom.Nperiods);
 Booz.Z=interp2_cyclic(w.u,w.w,w.Z,Booz_u,Booz_w,Geom.Nperiods);
-Booz.cylR=Booz.R;
-Booz.cylZ=Booz.Z;
-Booz.cylphi=Booz_w;
-
 
 Booz.mnmat.B=fftmn(Booz.B);
 Booz.mnmat.R=fftmn(Booz.R);
 Booz.mnmat.Z=fftmn(Booz.Z);
 Booz.mnmat.Dzetaw=fftmn(Booz.Dzetaw);
+
+if Geom.StelSym %Make sure this is fulfilled
+  Booz.mnmat.B=removesin(Booz.mnmat.B);
+  Booz.mnmat.R=removesin(Booz.mnmat.B);
+  Booz.mnmat.Z=removecos(Booz.mnmat.Z);
+  Booz.mnmat.Dzetaw=removecos(Booz.mnmat.Dzetaw);
+  Booz.B=ifftmn(Booz.mnmat.B);
+  Booz.R=ifftmn(Booz.mnmat.R);
+  Booz.Z=ifftmn(Booz.mnmat.Z);
+  Booz.Dzetaw=ifftmn(Booz.mnmat.Dzetaw);
+end
 
 Booz.R00=mean(mean(Booz.R));
 Booz.B00=mean(mean(Booz.B));
@@ -272,10 +279,9 @@ if not(Geom.StelSym)
 end
 Booz.FSAB2=Nu*Nw/sum(sum(1./Booz.B.^2));
 
-
-%[mean(mean(Booz.R)),5.5170]
-%[mean(mean(Booz.B)),2.8234]
-
+Booz.cylR=Booz.R;
+Booz.cylZ=Booz.Z;
+Booz.cylphi=Booz.zeta-Booz.Dzetaw;
 
 
 if 0
