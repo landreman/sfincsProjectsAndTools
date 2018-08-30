@@ -16,8 +16,6 @@ for arg in sys.argv:
 
 if makePDF:
     matplotlib.use('PDF')
-else:
-   matplotlib.use('qt5agg')
 
 import matplotlib.pyplot as plt
 
@@ -50,12 +48,11 @@ filename = 'sfincsOutput.h5' ##Name for SFINCS output HDF5 files.
 
 radiusName = "rN" ##Radial coordinate to use on x-axis. Must be "psiHat", "psiN", "rHat" or "rN".
 
-NumberSpecies = 3
-
 #plotVariableName = "Er" ##Parameter to plot on y-axis. In this version it must be "Er", "dPhiHatdpsiHat", "dPhiHatdpsiN", "dPhiHatdrHat" or "dPhiHatdrN" .
-plotVariableName = "nHats"
-
-TransformPlotVariableToOutputUnitsFactor = 1.0
+plotVariableName = "particleFlux_vd_rHat"
+whichClassical = "classicalParticleFlux_rHat"
+species = 3
+TransformPlotVariableToOutputUnitsFactor = vbar
 
 MinFloat = pow(10, -sys.float_info.dig) 
 
@@ -75,7 +72,7 @@ print ("Starting to create a plot from directories in " + originalDirectory)
 PlotDirectories = sorted(filter(os.path.isdir, os.listdir("."))) 
 
 if len(PlotDirectories) < 1:
-    print ("Error! Could not find any directories in " + originalDirectory )
+    print ("Error! Could not find any directories in " + originalDirectory)
     sys.exit(1)
 
 fig = plt.figure(figsize=FigSize) 
@@ -83,7 +80,7 @@ fig.patch.set_facecolor('white')
 
 ax = plt.subplot(1, 1, 1)
 
-#linenumber = 0
+linenumber = 0
 
 for directory in PlotDirectories:
     try:
@@ -117,7 +114,15 @@ for directory in PlotDirectories:
 
                 finished = file["finished"][()] 
                 integerToRepresentTrue = file["integerToRepresentTrue"][()]
-                includePhi1 = file["includePhi1"][()] 
+                includePhi1 = file["includePhi1"][()]
+
+                nHats = file["nHats"][()]
+
+                classicalParticleFlux = file[whichClassical][()]
+                classicalParticleFlux = classicalParticleFlux[:, -1]
+                classicalParticleFlux = classicalParticleFlux[species -1]
+                #classicalParticleFlux = TransformPlotVariableToOutputUnitsFactor * classicalParticleFlux
+                #classicalParticleFlux = classicalParticleFlux / nHats[species -1]
 
                 if includePhi1 == integerToRepresentTrue:
                     didNonlinearCalculationConverge = file["didNonlinearCalculationConverge"][()]
@@ -131,37 +136,14 @@ for directory in PlotDirectories:
                 else:
                     VariableValue = file[plotVariableName][()]
 
-                Zs = file["Zs"][()]
-                mHats = file["mHats"][()]
-                THats = file["THats"][()]
-                nHats = file["nHats"][()]
-                B0OverBBar = file["B0OverBBar"][()]
-                GHat = file["GHat"][()]
-                IHat = file["IHat"][()]
-                iota = file["iota"][()]
-                nu_n = file["nu_n"][()]
-
-                DensityToNuFactor = np.absolute((GHat + iota*IHat)*nu_n*Zs**4 / (B0OverBBar*THats**2))
-
                 file.close()
                 
                 #if plotVariableName == "particleFlux_vm_rHat":
-                #if plotVariableName.find('Flux_v') != -1:
-                #    VariableValue = VariableValue[:, -1]
-                #    VariableValue = VariableValue[species -1]
+                if plotVariableName.find('Flux_v') != -1:
+                    VariableValue = VariableValue[:, -1]
+                    VariableValue = VariableValue[species -1] 
 
-                VariableValue = VariableValue * DensityToNuFactor
-
-                #INSTEAD OF PLOTTING nu_{aa}' WE PLOT nu_{a}' = SUM_{b} (nu_{ab}')
-                #print(Zs)
-                #print(nHats)
-                #print(Zs**2 * nHats)
-                #print(sum(Zs**2 * nHats))
-                #print(VariableValue)
-                #print(VariableValue * sum(Zs**2 * nHats) / (Zs**2 * nHats))
-                VariableValue = VariableValue * sum(Zs**2 * nHats) / (Zs**2 * nHats)
-
-                VariableValue = TransformPlotVariableToOutputUnitsFactor * VariableValue
+                #VariableValue = TransformPlotVariableToOutputUnitsFactor * VariableValue
                 if includePhi1 == integerToRepresentTrue:
                     if didNonlinearCalculationConverge != integerToRepresentTrue:
                         print ("The nonlinear solver did not converge in " + fullSubDirectory)
@@ -172,6 +154,11 @@ for directory in PlotDirectories:
                 print ("Maybe the SFINCS run did not finish")
                 print ("Continuing with next sub directory.")
                 continue
+
+            #print("nHat: " + str(nHats[species -1]))
+
+            #VariableValue = VariableValue / nHats[species -1]
+            VariableValue = classicalParticleFlux / VariableValue
 
             Nradii += 1
             radii.append(radiusValue)
@@ -201,14 +188,14 @@ for directory in PlotDirectories:
         print ("")
         print (np.array(ydata_sorted))
 
-        for linenumber in range(0, NumberSpecies):
-            try:
-                LegendLabel = PlotLegendLabels[linenumber]
-            except:
-                LegendLabel = directory
+        try:
+            LegendLabel = PlotLegendLabels[linenumber]
+        except:
+            LegendLabel = directory
 
-            plt.plot(np.array(radii_sorted), np.array(ydata_sorted)[:, linenumber], PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel, linewidth=PlotLineWidth)
-        #linenumber += 1
+        plt.plot(np.array(radii_sorted), np.array(ydata_sorted), PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel, linewidth=PlotLineWidth)
+        linenumber += 1
+
 
     except:
         os.chdir(originalDirectory)
@@ -252,7 +239,7 @@ if NoScientificAxes :
         ax.get_yaxis().get_major_formatter().set_scientific(False)
     except:
         pass
-    
+
 os.chdir(originalDirectory) 
 
 if makePDF: 
