@@ -1,8 +1,9 @@
-function Geom=makeBcfromVmec(woutin,Nu,Nw,min_Bmn)
+function Geom=makeBcfromVmec(woutin,Nu,Nw,min_Bmn,do_sort)
 if nargin==1
   Nu=inf;
   Nw=inf;
   min_Bmn=0;
+  do_sort=1;
 end
 
 %The result can be saved with writeBoozerfile.m
@@ -139,6 +140,9 @@ Geom.Bfilter.maxabs_n=(Nw-1)/2;
 %  error('Stellarator symmetric case not implemented yet!')
 %end
 
+%do_sort=1; %Sort the Bmns
+do_sort
+
 tic
 for sind=1:length(Geom.s)
   fprintf(1,'\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b radius %i / %i',...
@@ -151,13 +155,34 @@ for sind=1:length(Geom.s)
   Dzetawmnlist=mnlist(Booz.mnmat.Dzetaw);
   
   if Geom.StelSym
-    goodinds=find(Bmnlist.cosparity);
-    Geom.nmodes(1,sind)=length(goodinds);
-    Geom.m{sind}  =Bmnlist.m(goodinds);
-    Geom.n{sind}  =Bmnlist.n(goodinds);
-    Geom.parity{sind}=Bmnlist.cosparity(goodinds);
-    Geom.Bmn{sind}=Bmnlist.data(goodinds);
-    Geom.R{sind}  =Rmnlist.data(goodinds);
+    good=find(Bmnlist.cosparity);
+    Geom.nmodes(1,sind)=length(good);
+    if do_sort
+       [ms,sortminds]=sort(Bmnlist.m(good));
+       Geom.m{sind} = ms;
+       Geom.n{sind}     = zeros(size(ms));
+       Geom.parity{sind}= zeros(size(ms));
+       Geom.Bmn{sind}   = zeros(size(ms));
+       Geom.R{sind}     = zeros(size(ms));
+       mstarts=[1,find(diff(ms)>0)+1];
+       mends=[mstarts(2:end)-1,length(ms)];
+       for ii=1:length(mstarts)
+         minds_thism=sortminds(mstarts(ii):mends(ii));
+         [ns,sortninds]=sort(Bmnlist.n(good(minds_thism)));
+
+         Geom.n{sind}(mstarts(ii):mends(ii))=ns;
+         Geom.parity{sind}(mstarts(ii):mends(ii))=Bmnlist.cosparity(good(minds_thism(sortninds)));
+         Geom.Bmn{sind}(mstarts(ii):mends(ii))   =Bmnlist.data(good(minds_thism(sortninds)));
+         Geom.R{sind}(mstarts(ii):mends(ii))     =Rmnlist.data(good(minds_thism(sortninds)));
+       end
+       %[ms',Bmnlist.n(good(sortminds))',Geom.n{sind}',Geom.Bmn{sind}',Bmnlist.m(good)',Bmnlist.n(good)',Bmnlist.data(good)']
+    else
+      Geom.m{sind}  =Bmnlist.m(good);
+      Geom.n{sind}  =Bmnlist.n(good);
+      Geom.parity{sind}=Bmnlist.cosparity(good);
+      Geom.Bmn{sind}=Bmnlist.data(good);
+      Geom.R{sind}  =Rmnlist.data(good);
+    end
   else
     Geom.nmodes(1,sind)=length(Bmnlist.m)+1;
     Geom.m{sind}  =[Bmnlist.m,0];

@@ -47,7 +47,7 @@ class Bfiltr:
 class bcgeom:
     
   def __init__(self,input,min_Bmn=0,max_m=np.inf,maxabs_n=np.inf,
-               symmetry='unknown',signcorr=2,verbose=1):
+               symmetry='unknown',signcorr=1,verbose=1):
     if isinstance(input,netCDF4.Group) or isinstance(input,netCDF4.Dataset):
         readfromnc(input,self)
         if not(hasattr(self,'nsurf')):
@@ -179,10 +179,10 @@ class bcgeom:
          while not endoffile:
            rind=rind+1
            if verbose>0:
-             print '\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b%5i/%5i'% (rind+1,self.nsurf),
-           if not(YTstyle): #%isempty(strfind(self.headertext.surfvars,'[A]'))
+             sys.stdout.write('\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b%5i/%5i'% (rind+1,self.nsurf))
+           if not(YTstyle): #isempty(strfind(self.headertext.surfvars,'[A]'))
                self.headertext.surfvarunits=f.readline() #unit line only in JG files
-           #print surfvarunits: '+self.headertext.surfvarunits
+           #print(surfvarunits: '+self.headertext.surfvarunits)
            surfheader=sscan(f.readline()) #fscanf(fid,'%f',6)
            torfluxnorm=np.append(torfluxnorm, surfheader[0])
            iota =np.append(iota,surfheader[1])
@@ -191,7 +191,7 @@ class bcgeom:
            dpds=np.append(dpds,surfheader[4])
            dVdsoverNper=np.append(dVdsoverNper,surfheader[5])
 
-           #f.readline() #%just skip the return character
+           #f.readline() #just skip the return character
            tmpstrunits=f.readline() #units line
            if rind==0:
                self.headertext.datavars=tmpstrunits
@@ -239,15 +239,15 @@ class bcgeom:
            while proceed:
                tmp_str=f.readline()
                if f.tell() == eof+1:
-                   #print 'eof found '+tmp_str
+                   #print('eof found '+tmp_str)
                    proceed=False
                    endoffile=True
-                   #print 'found end of file'
+                   #print('found end of file')
                if ('s' in tmp_str): #Next flux surface has been reached
                    proceed=False
-                   #print 'found next surface'
+                   #print('found next surface')
                else:
-                   #print tmp_str
+                   #print(tmp_str)
                    if self.StelSym:
                        tmp=sscan(tmp_str,count=6)
                        if ((abs(tmp[5])/B00[rind]>min_Bmn) and
@@ -300,7 +300,7 @@ class bcgeom:
          #end while loop over radii
          f.close()
          if verbose>0:
-           print '' #go to new line
+           print('') #go to new line
          
          if any([a>0 for a in dVdsoverNper]):
            sys.exit('The coordinate system in the Boozer '+
@@ -568,7 +568,8 @@ class bcgeom:
         wout=input
         signchange=float(wout.signgs) #is -1, because vmec is left handed
         self.StelSym=input.StelSym
-        self.newsigncorr=True
+        #self.newsigncorr=True
+        self.newsigncorr=False
         self.headertext=headertxt()
         # Note that the following are only comments to what would appear in
         # a file stored with .write()
@@ -596,7 +597,7 @@ class bcgeom:
         self.m0b=wout.mpol
         self.n0b=wout.ntor
         self.nsurf= np.nan      #number of radial surfaces, Set this below
-        self.Nperiods=wout.nfp   #%!< number of field periods
+        self.Nperiods=int(wout.nfp)   #%!< number of field periods
         self.torfluxtot = wout.phi[wout.ns-1]*signchange
         self.psi_a=self.torfluxtot/2.0/np.pi
         self.minorradiusVMEC      = wout.Aminor_p  #minor plasma radius
@@ -627,18 +628,18 @@ class bcgeom:
         #Use a RH coordinate system (u,w,s) with w=-v. Here, (u,v) are the VMEC coordinates
 
         if max_m==np.inf:
-          Ntheta = 1+2*max(abs(wout.xm))
-          self.Bfilter.max_m    = (Ntheta-1)//2
+          Ntheta = int(1+2*max(abs(wout.xm)))
+          self.Bfilter.max_m    = int((Ntheta-1)//2)
         else:
-          Ntheta = max_m*2+1
-          self.Bfilter.max_m    = max_m
+          Ntheta = int(max_m*2+1)
+          self.Bfilter.max_m    = int(max_m)
           
         if maxabs_n==np.inf:
-          Nzeta=1+2*max(abs(wout.xn))/self.Nperiods
-          self.Bfilter.maxabs_n = (Nzeta-1)//2
+          Nzeta=int(1+2*max(abs(wout.xn))/self.Nperiods)
+          self.Bfilter.maxabs_n = int((Nzeta-1)//2)
         else:
-          Nzeta = maxabs_n*2+1
-          self.Bfilter.maxabs_n = maxabs_n
+          Nzeta = int(maxabs_n*2+1)
+          self.Bfilter.maxabs_n = int(maxabs_n)
 
         self.dVdsoverNper = np.zeros(len(self.s)) 
         self.B00          = np.zeros(len(self.s))
@@ -655,16 +656,16 @@ class bcgeom:
         self.Bnorm=[]
         self.Dphi=[]
 
-        #print 'Nzeta,Ntheta = '+str(Nzeta)+', '+str(Ntheta)
+        #print('Nzeta,Ntheta = '+str(Nzeta)+', '+str(Ntheta)
         if verbose>0:
-          print 'Converting VMEC to Boozer coordinates...'
+          print('Converting VMEC to Boozer coordinates...')
         for rind in range(len(self.s)):
             if verbose>0:
-              print '\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\bRadius%5i/%5i'% (rind+1,len(self.s)),
-            Booz=fluxcoorddiscr.fluxcoorddiscr(wout,rind=rind,Ntheta=Ntheta,Nzeta=Nzeta,name='Boozer')
+              sys.stdout.write('\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\bRadius%5i/%5i'% (rind+1,len(self.s)))
+            Booz=fluxcoorddiscr.fluxcoorddiscr(wout,rind=rind,Npol=Ntheta,Ntor=Nzeta,name='Boozer')
             #(fig, ax)=Booz.plot('B')
             #fig.show()
-            #print Booz.B.shape
+            #print(Booz.B.shape)
             self.B00[rind]=Booz.B00
             self.R00[rind]=Booz.R00
             if self.StelSym:
@@ -711,7 +712,7 @@ class bcgeom:
 
         #end radius loop
         if verbose>0:
-          print '' #carriage return
+          print('') #carriage return
 
         self.dVdsoverNper=np.abs(self.psi_a*4*np.pi**2.0/self.Nperiods*
                                  (self.Bphi+self.iota*self.Btheta)/self.FSAB2)
@@ -769,7 +770,7 @@ class bcgeom:
       #out=self.filter(min_Bmn)
       #out=self.filter(min_Bmn,max_m,maxabs_n)
       #out=self.filter(Bfilter)
-      # if makecopy=True the output is a copy of the input
+      # if makecopy=True the output is a new instance, and the input is untouched
 
       if makecopy:
          out=copy.deepcopy(self)
@@ -783,6 +784,11 @@ class bcgeom:
           max_m    = min(max_m,self.Bfilter.max_m)
           maxabs_n = min(maxabs_n,self.Bfilter.maxabs_n)
 
+      if max_m < np.inf:
+          max_m=int(max_m)
+      if maxabs_n < np.inf:
+          maxabs_n=int(maxabs_n)
+          
       if makecopy:
           out.Bfilter.min_Bmn  = min_Bmn
           out.Bfilter.max_m    = max_m
@@ -798,6 +804,7 @@ class bcgeom:
                                        np.logical_and(self.m[rind]<=max_m,
                                                       np.abs(self.n[rind])<=maxabs_n)))[0]
           if makecopy:
+              out.nmodes[rind]=len(inds)
               out.m[rind]=self.m[rind][inds]
               out.n[rind]=self.n[rind][inds]
               out.B[rind]=self.B[rind][inds]
@@ -808,12 +815,13 @@ class bcgeom:
               if not(self.StelSym):
                   out.parity[rind]=self.parity[rind][inds]
 
-              #print self.Bnorm[rind]
-              #print out.Bnorm[rind]
-              #print out.m[rind]
-              #print out.n[rind]
+              #print(self.Bnorm[rind])
+              #print(out.Bnorm[rind])
+              #print(out.m[rind])
+              #print(out.n[rind])
               #sys.exit('stop')
           else:
+              self.nmodes[rind]=len(inds)
               self.m[rind]=self.m[rind][inds]
               self.n[rind]=self.n[rind][inds]
               self.B[rind]=self.B[rind][inds]
@@ -831,7 +839,7 @@ class bcgeom:
   ##############################################################################
   # Write a bcgeom to a file
   ##############################################################################
-  def write(self,filename,Nradii=None,min_Bmn=0,nsortstyle='ascend',printheadercomment=True):
+  def write(self,filename,Nradii=None,min_Bmn=0.0,nsortstyle='ascend',printheadercomment=True):
       #argument Nradii is only used for .dat files.
       #First check which type of file the user wants.
       if filename[-3:]=='.bc':
@@ -864,7 +872,7 @@ class bcgeom:
       f = open(filename, 'w')
       now = datetime.datetime.now()
       
-      signchange=-1; #sign changer
+      signchange=-1 #sign changer
       psi_a      = selfie.psi_a*signchange
       torfluxtot = selfie.torfluxtot*signchange
       Bphi=selfie.Bphi
@@ -876,6 +884,7 @@ class bcgeom:
          else:
             torfluxtot=-torfluxtot
 
+      print 'In write: torfluxtot='+str(torfluxtot)
       iota=selfie.iota*signchange
       dVdsoverNper=selfie.dVdsoverNper*signchange
       Dphi=[]
@@ -1007,7 +1016,7 @@ class bcgeom:
                   vmns=0.0
                   bmnc=0.0
                   bmns=0.0
-                  #print thism, thisn, j, selfie.nmodes[rind], selfie.parity[rind][inds[j]]
+                  #print(thism, thisn, j, selfie.nmodes[rind], selfie.parity[rind][inds[j]])
                   if selfie.parity[rind][inds[j]]==1: #j is cosinus components
                        rmnc=selfie.R[rind][inds[j]]
                        zmns=selfie.Z[rind][inds[j]]
@@ -1020,18 +1029,18 @@ class bcgeom:
                       vmnc=Dphi[rind][inds[j]]
                       bmns=selfie.B[rind][inds[j]]
                       if j+1==selfie.nmodes[rind]:
-                          #print 'A '+str(j)
+                          #print('A '+str(j))
                           j+=1
                       else: 
                           if thism==m[rind][inds[j+1]] and thisn==n[rind][inds[j+1]] and selfie.parity[rind][inds[j+1]]==1:
-                              #print 'B1 '+str(j)
+                              #print('B1 '+str(j))
                               rmnc=selfie.R[rind][inds[j+1]]
                               zmns=selfie.Z[rind][inds[j+1]]
                               vmns=Dphi[rind][inds[j+1]]
                               bmnc=selfie.B[rind][inds[j+1]]
                               j+=2
                           else:
-                              #print 'B2 '+str(j)
+                              #print('B2 '+str(j))
                               j+=1 
                   f.write('%5d%5d%17.8E%17.8E%17.8E%17.8E%17.8E%17.8E%17.8E%17.8E\n' %
                           (thism,thisn,rmnc,rmns,zmnc,zmns,vmnc,vmns,bmnc,bmns))
@@ -1234,7 +1243,7 @@ class bcgeom:
           out.Dphi=[]
 
           for surfind in range(out.nsurf):
-              #print '\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b%4i/%4i'% (surfind+1,out.nsurf)
+              #print('\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b%4i/%4i'% (surfind+1,out.nsurf))
               if not(s[surfind] in self.s):
                   Rind=np.where(np.sign(self.s-s[surfind])==1)[0][0]
               else:
@@ -1429,7 +1438,7 @@ class bcgeom:
               out.Bnorm[surfind] = out.B[surfind]/out.B00[surfind]
               out.nmodes[surfind]= mode+1
           #end for surfind
-          #print '\n'
+          #print('\n')
       elif interptype=='nearest': #Pick the nearest existing surface
         actualinterpolation=True
         if len(s)==len(self.s):
@@ -1481,55 +1490,55 @@ class bcgeom:
   
   def disp(self,verbose=0):
 
-    print '-----------------------------------------------'
-    print 'Comment lines: headertext.maincomment='
-    #print '-----------------------------------------------'
+    print('-----------------------------------------------')
+    print('Comment lines: headertext.maincomment=')
+    #print('-----------------------------------------------')
 
-    print self.headertext.maincomment
-    print '-----------------------------------------------'
-    print 'Scalars:'
-    #print '-----------------------------------------------'
-    print 'nsurf                = '+str(self.nsurf)
-    print 'Nperiods             = '+str(self.Nperiods)
-    print 'psi_a                = '+str(self.psi_a)
-    print 'torfluxtot           = '+str(self.torfluxtot)
-    print 'minorradiusW7AS      = '+str(self.minorradiusW7AS)
-    print 'majorradiusLastbcR00 = '+str(self.majorradiusLastbcR00)
-    print 'minorradiusVMEC      = '+str(self.minorradiusVMEC)
-    print 'majorradiusVMEC      = '+str(self.majorradiusVMEC)
-    print 'volumeVMEC           = '+str(self.volumeVMEC)
-    print 'Bfilter.min_Bmn      = '+str(self.Bfilter.min_Bmn)
-    print 'Bfilter.max_m        = '+str(self.Bfilter.max_m)
-    print 'Bfilter.maxabs_n     = '+str(self.Bfilter.maxabs_n)
+    print(self.headertext.maincomment)
+    print('-----------------------------------------------')
+    print('Scalars:')
+    #print('-----------------------------------------------')
+    print('nsurf                = '+str(self.nsurf))
+    print('Nperiods             = '+str(self.Nperiods))
+    print('psi_a                = '+str(self.psi_a))
+    print('torfluxtot           = '+str(self.torfluxtot))
+    print('minorradiusW7AS      = '+str(self.minorradiusW7AS))
+    print('majorradiusLastbcR00 = '+str(self.majorradiusLastbcR00))
+    print('minorradiusVMEC      = '+str(self.minorradiusVMEC))
+    print('majorradiusVMEC      = '+str(self.majorradiusVMEC))
+    print('volumeVMEC           = '+str(self.volumeVMEC))
+    print('Bfilter.min_Bmn      = '+str(self.Bfilter.min_Bmn))
+    print('Bfilter.max_m        = '+str(self.Bfilter.max_m))
+    print('Bfilter.maxabs_n     = '+str(self.Bfilter.maxabs_n))
 
-    print '-----------------------------------------------'
-    print 'Radial arrays:'
-    #print '-----------------------------------------------'
+    print('-----------------------------------------------')
+    print('Radial arrays:')
+    #print('-----------------------------------------------')
     if verbose==1:
-      print 'rnorm='+str(self.rnorm)
-      print 's='+str(self.s)
-      print 'Bphi='+str(self.Bphi)
-      print 'Btheta='+str(self.Btheta)
-      print 'iota='+str(self.iota)
-      print 'dpds='+str(self.dpds)
+      print('rnorm='+str(self.rnorm))
+      print('s='+str(self.s))
+      print('Bphi='+str(self.Bphi))
+      print('Btheta='+str(self.Btheta))
+      print('iota='+str(self.iota))
+      print('dpds='+str(self.dpds))
   
-      print 'dVdsoverNper='+str(self.dVdsoverNper)
-      print 'FSAB2='+str(self.FSAB2)
-      print 'nmodes='+str(self.nmodes)
-      print 'B00='+str(self.B00)
-      print 'R00='+str(self.R00)
+      print('dVdsoverNper='+str(self.dVdsoverNper))
+      print('FSAB2='+str(self.FSAB2))
+      print('nmodes='+str(self.nmodes))
+      print('B00='+str(self.B00))
+      print('R00='+str(self.R00))
     elif verbose==0:
-      print 'rnorm, s, Bphi, Btheta, iota, dpds, dVdsoverNper, '
-      print 'FSAB2, nmodes, B00, R00'
+      print('rnorm, s, Bphi, Btheta, iota, dpds, dVdsoverNper, ')
+      print('FSAB2, nmodes, B00, R00')
 
-    print '-----------------------------------------------'
+    print('-----------------------------------------------')
     if self.StelSym:
-       print 'Fourier indexes:    m, n'
+       print('Fourier indexes:    m, n')
     else:
-       print 'Fourier indexes:    m, n, parity'
+       print('Fourier indexes:    m, n, parity')
 
-    print 'Fourier quantities: B, R, Z, Dphi'
-    print '-----------------------------------------------'
+    print('Fourier quantities: B, R, Z, Dphi')
+    print('-----------------------------------------------')
 
 
 
@@ -1588,36 +1597,36 @@ class vmecgeom:
                 a valid netCDF4.Dataset.variables key
             """
             try:
-                print "\t\ttype:", repr(nc_fid.variables[key].dtype)
+                print("\t\ttype:", repr(nc_fid.variables[key].dtype))
                 for ncattr in nc_fid.variables[key].ncattrs():
-                    print '\t\t%s:' % ncattr,\
-                          repr(nc_fid.variables[key].getncattr(ncattr))
+                    print('\t\t%s:' % ncattr,\
+                          repr(nc_fid.variables[key].getncattr(ncattr)))
             except KeyError:
-                print "\t\tWARNING: %s does not contain variable attributes" % key
+                print("\t\tWARNING: %s does not contain variable attributes" % key)
 
         # NetCDF global attributes
         nc_attrs = nc_fid.ncattrs()
         if verb:
-            print "NetCDF Global Attributes:"
+            print("NetCDF Global Attributes:")
             for nc_attr in nc_attrs:
-                print '\t%s:' % nc_attr, repr(nc_fid.getncattr(nc_attr))
+                print('\t%s:' % nc_attr, repr(nc_fid.getncattr(nc_attr)))
         nc_dims = [dim for dim in nc_fid.dimensions]  # list of nc dimensions
         # Dimension shape information.
         if verb:
-            print "NetCDF dimension information:"
+            print("NetCDF dimension information:")
             for dim in nc_dims:
-                print "\tName:", dim 
-                print "\t\tsize:", len(nc_fid.dimensions[dim])
+                print("\tName:", dim )
+                print("\t\tsize:", len(nc_fid.dimensions[dim]))
                 print_ncattr(dim)
         # Variable information.
         nc_vars = [var for var in nc_fid.variables]  # list of nc variables
         if verb:
-            print "NetCDF variable information:"
+            print("NetCDF variable information:")
             for var in nc_vars:
                 if var not in nc_dims:
-                    print '\tName:', var
-                    print "\t\tdimensions:", nc_fid.variables[var].dimensions
-                    print "\t\tsize:", nc_fid.variables[var].size
+                    print('\tName:', var)
+                    print("\t\tdimensions:", nc_fid.variables[var].dimensions)
+                    print("\t\tsize:", nc_fid.variables[var].size)
                     print_ncattr(var)
         return nc_attrs, nc_dims, nc_vars
 
@@ -1625,7 +1634,7 @@ class vmecgeom:
     
     dataset=Dataset(filename)
     nc_attrs, nc_dims, nc_vars = ncdump(dataset)
-    #print nc_vars
+    #print(nc_vars
     
     self.StelSym=not('bmns' in dataset.variables)
     self.skip = 1 #=1,this is how many elements are skipped at low radii when going to half grid
@@ -1796,154 +1805,154 @@ class vmecgeom:
     frmi='{:8d}'
     frs='{:11s}'
     if verbose:
-        print '-----------------------------------------------'
-        print 'File info'
-        print '-----------------------------------------------'
-        print 'filename       = '+self.filename
-        print 'version_       = '+str(self.version_)
-        print 'input_extension= '+self.input_extension
-        print 'mgrid_file     = '+self.mgrid_file
-        print 'pcurr_type     = '+self.pcurr_type
-        print 'pmass_type     = '+self.pmass_type
-        print 'piota_type     = '+self.piota_type
-        print 'mgrid_mode     = '+self.mgrid_mode
-        print ' ' 
-    print '-----------------------------------------------'
-    print 'Scalars:'
-    print '-----------------------------------------------'
+        print('-----------------------------------------------')
+        print('File info')
+        print('-----------------------------------------------')
+        print('filename       = '+self.filename)
+        print('version_       = '+str(self.version_))
+        print('input_extension= '+self.input_extension)
+        print('mgrid_file     = '+self.mgrid_file)
+        print('pcurr_type     = '+self.pcurr_type)
+        print('pmass_type     = '+self.pmass_type)
+        print('piota_type     = '+self.piota_type)
+        print('mgrid_mode     = '+self.mgrid_mode)
+        print(' ' )
+    print('-----------------------------------------------')
+    print('Scalars:')
+    print('-----------------------------------------------')
     if verbose:
-        print 'wb                   = '+frm.format(self.wb)+' :'
-        print 'wp                   = '+frm.format(self.wp)+' :'
-        print 'gamma                = '+frm.format(self.gamma)+' :'
-        print 'rmax_surf            = '+frm.format(self.rmax_surf)+' :'
-        print 'rmin_surf            = '+frm.format(self.rmin_surf)+' :'
-        print 'zmax_surf            = '+frm.format(self.zmax_surf)+' :'
-    print 'StelSym              =    '+str(self.StelSym)
-    print 'nfp                  = '+frm.format(self.nfp)+' : Number of field periods'
-    print 'ns                   = '+frmi.format(self.ns)+' : Number of flux surfaces'
-    print 'mpol                 = '+frmi.format(self.mpol)+' :'
-    print 'ntor                 = '+frmi.format(self.ntor)+' :'
-    print 'mnmax                = '+frmi.format(self.mnmax)+' :'
-    print 'mnmax_nyq            = '+frmi.format(self.mnmax_nyq)+' :'
+        print('wb                   = '+frm.format(self.wb)+' :')
+        print('wp                   = '+frm.format(self.wp)+' :')
+        print('gamma                = '+frm.format(self.gamma)+' :')
+        print('rmax_surf            = '+frm.format(self.rmax_surf)+' :')
+        print('rmin_surf            = '+frm.format(self.rmin_surf)+' :')
+        print('zmax_surf            = '+frm.format(self.zmax_surf)+' :')
+    print('StelSym              =    '+str(self.StelSym))
+    print('nfp                  = '+frm.format(self.nfp)+' : Number of field periods')
+    print('ns                   = '+frmi.format(self.ns)+' : Number of flux surfaces')
+    print('mpol                 = '+frmi.format(self.mpol)+' :')
+    print('ntor                 = '+frmi.format(self.ntor)+' :')
+    print('mnmax                = '+frmi.format(self.mnmax)+' :')
+    print('mnmax_nyq            = '+frmi.format(self.mnmax_nyq)+' :')
     if verbose:
-        print 'niter                = '+frmi.format(self.niter)+' :'
-        print 'itfsq                = '+frm.format(self.itfsq)+' :'
-        print 'lasym__logical__     =     '+str(self.lasym__logical__)+' :'
-        print 'lrecon__logical__    =    '+str(self.lrecon__logical__)+' :'
-        print 'lfreeb__logical__    =    '+str(self.lfreeb__logical__)+' :'
-        print 'lrfp__logical__      =    '+str(self.lrfp__logical__)+' :'
-        print 'ier_flag             = '+frmi.format(self.ier_flag)+' :'
-        print 'aspect               = '+frm.format(self.aspect)+' :'
-    print 'betatotal            = '+frm.format(self.betatotal)+' :'
-    print 'betapol              = '+frm.format(self.betapol)+' :'
-    print 'betator              = '+frm.format(self.betator)+' :'
-    print 'betaxis              = '+frm.format(self.betaxis)+' :'
-    print 'b0                   = '+frm.format(self.b0)+' :'
+        print('niter                = '+frmi.format(self.niter)+' :')
+        print('itfsq                = '+frm.format(self.itfsq)+' :')
+        print('lasym__logical__     =     '+str(self.lasym__logical__)+' :')
+        print('lrecon__logical__    =    '+str(self.lrecon__logical__)+' :')
+        print('lfreeb__logical__    =    '+str(self.lfreeb__logical__)+' :')
+        print('lrfp__logical__      =    '+str(self.lrfp__logical__)+' :')
+        print('ier_flag             = '+frmi.format(self.ier_flag)+' :')
+        print('aspect               = '+frm.format(self.aspect)+' :')
+    print('betatotal            = '+frm.format(self.betatotal)+' :')
+    print('betapol              = '+frm.format(self.betapol)+' :')
+    print('betator              = '+frm.format(self.betator)+' :')
+    print('betaxis              = '+frm.format(self.betaxis)+' :')
+    print('b0                   = '+frm.format(self.b0)+' :')
     if verbose:
-        print 'rbtor0               = '+frm.format(self.rbtor0)+' :'
-        print 'rbtor                = '+frm.format(self.rbtor)+' :'
-        print 'signgs               = '+frmi.format(self.signgs)+' :'
-        print 'IonLarmor            = '+frm.format(self.IonLarmor)+' :'
-        print 'volavgB              = '+frm.format(self.volavgB)+' :'
-        print 'ctor                 = '+frm.format(self.ctor)+' :'
-    print 'Aminor_p             = '+frm.format(self.Aminor_p)+' : Minor radius'
-    print 'Rmajor_p             = '+frm.format(self.Rmajor_p)+' : Major radius'
-    print 'volume_p             = '+frm.format(self.volume_p)+' :'
+        print('rbtor0               = '+frm.format(self.rbtor0)+' :')
+        print('rbtor                = '+frm.format(self.rbtor)+' :')
+        print('signgs               = '+frmi.format(self.signgs)+' :')
+        print('IonLarmor            = '+frm.format(self.IonLarmor)+' :')
+        print('volavgB              = '+frm.format(self.volavgB)+' :')
+        print('ctor                 = '+frm.format(self.ctor)+' :')
+    print('Aminor_p             = '+frm.format(self.Aminor_p)+' : Minor radius')
+    print('Rmajor_p             = '+frm.format(self.Rmajor_p)+' : Major radius')
+    print('volume_p             = '+frm.format(self.volume_p)+' :')
     if verbose:
-        print 'ftolv                = '+frm.format(self.ftolv)+' :'
-        print 'fsql                 = '+frm.format(self.fsql)+' :'
-        print 'fsqr                 = '+frm.format(self.fsqr)+' :'
-        print 'fsqz                 = '+frm.format(self.fsqz)+' :'
-        print 'nextcur              = '+frm.format(self.nextcur)+' :'
+        print('ftolv                = '+frm.format(self.ftolv)+' :')
+        print('fsql                 = '+frm.format(self.fsql)+' :')
+        print('fsqr                 = '+frm.format(self.fsqr)+' :')
+        print('fsqz                 = '+frm.format(self.fsqz)+' :')
+        print('nextcur              = '+frm.format(self.nextcur)+' :')
 
-    print ' '
+    print(' ')
     if verbose:
-        print '-----------------------------------------------'
-        print 'Arrays:'
-        print '-----------------------------------------------'
-        print 'raxis_cc        '+frs.format(self.xm_nyq.shape)+  ': raxis (cosnv)'
-        print 'zaxis_cs        '+frs.format(self.zaxis_cs.shape)+': zaxis (sinnv)'
-        print 'raxis_cs        '+frs.format(self.raxis_cs.shape)+': raxis (sinnv)'
-        print 'zaxis_cc        '+frs.format(self.zaxis_cc.shape)+': zaxis (cosnv)'
-        print 'am              '+frs.format(self.am.shape)+':'
-        print 'ac              '+frs.format(self.ac.shape)+':'
-        print 'ai              '+frs.format(self.ai.shape)+':'
-        print 'am_aux_s        '+frs.format(self.am_aux_s.shape)+':'
-        print 'am_aux_f        '+frs.format(self.am_aux_f.shape)+':'
-        print 'ai_aux_s        '+frs.format(self.ai_aux_s.shape)+':'
-        print 'ai_aux_f        '+frs.format(self.ai_aux_f.shape)+':'
-        print 'ac_aux_s        '+frs.format(self.ac_aux_s.shape)+':'
-        print 'ac_aux_f        '+frs.format(self.ac_aux_f.shape)+':'
-        print 'fsqt            '+frs.format(self.fsqt.shape)+':'
-        print 'wdot            '+frs.format(self.wdot.shape)+':'
-        print 'extcur          '+frs.format(self.extcur.shape)+':'
+        print('-----------------------------------------------')
+        print('Arrays:')
+        print('-----------------------------------------------')
+        print('raxis_cc        '+frs.format(self.xm_nyq.shape)+  ': raxis (cosnv)')
+        print('zaxis_cs        '+frs.format(self.zaxis_cs.shape)+': zaxis (sinnv)')
+        print('raxis_cs        '+frs.format(self.raxis_cs.shape)+': raxis (sinnv)')
+        print('zaxis_cc        '+frs.format(self.zaxis_cc.shape)+': zaxis (cosnv)')
+        print('am              '+frs.format(self.am.shape)+':')
+        print('ac              '+frs.format(self.ac.shape)+':')
+        print('ai              '+frs.format(self.ai.shape)+':')
+        print('am_aux_s        '+frs.format(self.am_aux_s.shape)+':')
+        print('am_aux_f        '+frs.format(self.am_aux_f.shape)+':')
+        print('ai_aux_s        '+frs.format(self.ai_aux_s.shape)+':')
+        print('ai_aux_f        '+frs.format(self.ai_aux_f.shape)+':')
+        print('ac_aux_s        '+frs.format(self.ac_aux_s.shape)+':')
+        print('ac_aux_f        '+frs.format(self.ac_aux_f.shape)+':')
+        print('fsqt            '+frs.format(self.fsqt.shape)+':')
+        print('wdot            '+frs.format(self.wdot.shape)+':')
+        print('extcur          '+frs.format(self.extcur.shape)+':')
         
-    print '-----------------------------------------------'
-    print 'Radial arrays:'
-    print '-----------------------------------------------'
-    print 'iotaf        '+frs.format(self.iotaf.shape)+   ': q-factor on full mesh'
+    print('-----------------------------------------------')
+    print('Radial arrays:')
+    print('-----------------------------------------------')
+    print('iotaf        '+frs.format(self.iotaf.shape)+   ': q-factor on full mesh')
     if not((np.isnan(self.q_factor)).all()):
-      print 'q_factor     '+frs.format(self.q_factor.shape)+':'
-    print 'presf        '+frs.format(self.presf.shape)+': pressure on full mesh [Pa]'
-    print 'phi          '+frs.format(self.phi.shape)+  ': Toroidal flux on full mesh [Wb]'
-    print 'phipf        '+frs.format(self.phipf.shape)+': d(phi)/ds: Toroidal flux deriv on full mesh'
+      print('q_factor     '+frs.format(self.q_factor.shape)+':')
+    print('presf        '+frs.format(self.presf.shape)+': pressure on full mesh [Pa]')
+    print('phi          '+frs.format(self.phi.shape)+  ': Toroidal flux on full mesh [Wb]')
+    print('phipf        '+frs.format(self.phipf.shape)+': d(phi)/ds: Toroidal flux deriv on full mesh')
     if not((np.isnan(self.chi)).all()):
-      print 'chi          '+frs.format(self.chi.shape)+  ': Poloidal flux on full mesh [Wb]'
-      print 'chipf        '+frs.format(self.chipf.shape)+': d(chi)/ds: Poroidal flux deriv on full mesh'
-    print 'jcuru        '+frs.format(self.jcuru.shape)+':'
-    print 'jcurv        '+frs.format(self.jcurv.shape)+':'
-    print 'iotas        '+frs.format(self.iotas.shape)+': iota half'
-    print 'mass         '+frs.format(self.mass.shape)+ ': mass half'
-    print 'pres         '+frs.format(self.pres.shape)+ ': pressure half [Pa]'
-    print 'beta_vol     '+frs.format(self.beta_vol.shape)+':'
-    print 'buco         '+frs.format(self.buco.shape)+':'
-    print 'bvco         '+frs.format(self.bvco.shape)+':'
-    print 'vp           '+frs.format(self.vp.shape)+':'
-    print 'specw        '+frs.format(self.specw.shape)+':'
-    print 'phips        '+frs.format(self.phips.shape)+':'
-    print 'over_r       '+frs.format(self.over_r.shape)+':'
-    print 'jdotb        '+frs.format(self.jdotb.shape)+':'
-    print 'bdotgradv    '+frs.format(self.bdotgradv.shape)+':'
+      print('chi          '+frs.format(self.chi.shape)+  ': Poloidal flux on full mesh [Wb]')
+      print('chipf        '+frs.format(self.chipf.shape)+': d(chi)/ds: Poroidal flux deriv on full mesh')
+    print('jcuru        '+frs.format(self.jcuru.shape)+':')
+    print('jcurv        '+frs.format(self.jcurv.shape)+':')
+    print('iotas        '+frs.format(self.iotas.shape)+': iota half')
+    print('mass         '+frs.format(self.mass.shape)+ ': mass half')
+    print('pres         '+frs.format(self.pres.shape)+ ': pressure half [Pa]')
+    print('beta_vol     '+frs.format(self.beta_vol.shape)+':')
+    print('buco         '+frs.format(self.buco.shape)+':')
+    print('bvco         '+frs.format(self.bvco.shape)+':')
+    print('vp           '+frs.format(self.vp.shape)+':')
+    print('specw        '+frs.format(self.specw.shape)+':')
+    print('phips        '+frs.format(self.phips.shape)+':')
+    print('over_r       '+frs.format(self.over_r.shape)+':')
+    print('jdotb        '+frs.format(self.jdotb.shape)+':')
+    print('bdotgradv    '+frs.format(self.bdotgradv.shape)+':')
     if verbose:
-        print 'DMerc        '+frs.format(self.DMerc.shape)+':'
-        print 'DShear       '+frs.format(self.DShear.shape)+':'
-        print 'DWell        '+frs.format(self.DWell.shape)+':'
-        print 'DCurr        '+frs.format(self.DCurr.shape)+':'
-        print 'DGeod        '+frs.format(self.DGeod.shape)+':'
-        print 'equif        '+frs.format(self.equif.shape)+':'
+        print('DMerc        '+frs.format(self.DMerc.shape)+':')
+        print('DShear       '+frs.format(self.DShear.shape)+':')
+        print('DWell        '+frs.format(self.DWell.shape)+':')
+        print('DCurr        '+frs.format(self.DCurr.shape)+':')
+        print('DGeod        '+frs.format(self.DGeod.shape)+':')
+        print('equif        '+frs.format(self.equif.shape)+':')
     
-    print ' '
-    print '-----------------------------------------------'
-    print 'Fourier quantities:'
-    print '-----------------------------------------------'
+    print(' ')
+    print('-----------------------------------------------')
+    print('Fourier quantities:')
+    print('-----------------------------------------------')
     
-    print 'xm        '+frs.format(self.xm.shape)+      ': Poloidal mode numbers'
-    print 'xn        '+frs.format(self.xm.shape)+      ': Toroidal mode numbers'
-    print 'xm_nyq    '+frs.format(self.xm_nyq.shape)+  ': Poloidal mode numbers (Nyquist)'
-    print 'xn_nyq    '+frs.format(self.xm_nyq.shape)+    ': Toroidal mode numbers (Nyquist)'
-    print 'rmnc      '+frs.format(self.rmnc.shape)+': cosmn component of cylindrical R, full mesh [m]'
-    print 'zmns      '+frs.format(self.zmns.shape)+': sinmn component of cylindrical Z, full mesh [m]'
-    print 'lmns      '+frs.format(self.lmns.shape)+': sinmn component of lambda, half mesh'
-    print 'gmnc      '+frs.format(self.gmnc.shape)+': cosmn component of jacobian, half mesh'
-    print 'bmnc      '+frs.format(self.bmnc.shape)+': cosmn component of mod-B, half mesh'
-    print 'bsubumnc  '+frs.format(self.bsubumnc.shape)+': cosmn covariant u-component of B, half mesh'
-    print 'bsubvmnc  '+frs.format(self.bsubvmnc.shape)+': cosmn covariant v-component of B, half mesh'
-    print 'bsubsmns  '+frs.format(self.bsubsmns.shape)+': sinmn covariant s-component of B, full mesh'
-    print 'bsupumnc  '+frs.format(self.bsupumnc.shape)+':'
-    print 'bsupvmnc  '+frs.format(self.bsupvmnc.shape)+':'
+    print('xm        '+frs.format(self.xm.shape)+      ': Poloidal mode numbers')
+    print('xn        '+frs.format(self.xm.shape)+      ': Toroidal mode numbers')
+    print('xm_nyq    '+frs.format(self.xm_nyq.shape)+  ': Poloidal mode numbers (Nyquist)')
+    print('xn_nyq    '+frs.format(self.xm_nyq.shape)+    ': Toroidal mode numbers (Nyquist)')
+    print('rmnc      '+frs.format(self.rmnc.shape)+': cosmn component of cylindrical R, full mesh [m]')
+    print('zmns      '+frs.format(self.zmns.shape)+': sinmn component of cylindrical Z, full mesh [m]')
+    print('lmns      '+frs.format(self.lmns.shape)+': sinmn component of lambda, half mesh')
+    print('gmnc      '+frs.format(self.gmnc.shape)+': cosmn component of jacobian, half mesh')
+    print('bmnc      '+frs.format(self.bmnc.shape)+': cosmn component of mod-B, half mesh')
+    print('bsubumnc  '+frs.format(self.bsubumnc.shape)+': cosmn covariant u-component of B, half mesh')
+    print('bsubvmnc  '+frs.format(self.bsubvmnc.shape)+': cosmn covariant v-component of B, half mesh')
+    print('bsubsmns  '+frs.format(self.bsubsmns.shape)+': sinmn covariant s-component of B, full mesh')
+    print('bsupumnc  '+frs.format(self.bsupumnc.shape)+':')
+    print('bsupvmnc  '+frs.format(self.bsupvmnc.shape)+':')
     if not(self.StelSym):
-      print 'rmns      '+frs.format(self.rmns.shape)+': sinmn component of cylindrical R, full mesh [m]'
-      print 'zmnc      '+frs.format(self.zmnc.shape)+': cosmn component of cylindrical Z, full mesh [m]'
-      print 'lmnc      '+frs.format(self.lmnc.shape)+': cosmn component of lambda, half mesh'
-      print 'gmns      '+frs.format(self.gmns.shape)+': sinmn component of jacobian, half mesh'
-      print 'bmns      '+frs.format(self.bmns.shape)+': sinmn component of mod-B, half mesh'
-      print 'bsubumns  '+frs.format(self.bsubumns.shape)+': sinmn covariant u-component of B, half mesh'
-      print 'bsubvmns  '+frs.format(self.bsubvmns.shape)+': sinmn covariant v-component of B, half mesh'
-      print 'bsubsmnc  '+frs.format(self.bsubsmnc.shape)+': cosmn covariant s-component of B, full mesh'
-      print 'bsupumns  '+frs.format(self.bsupumns.shape)+':'
-      print 'bsupvmns  '+frs.format(self.bsupvmns.shape)+':'
+      print('rmns      '+frs.format(self.rmns.shape)+': sinmn component of cylindrical R, full mesh [m]')
+      print('zmnc      '+frs.format(self.zmnc.shape)+': cosmn component of cylindrical Z, full mesh [m]')
+      print('lmnc      '+frs.format(self.lmnc.shape)+': cosmn component of lambda, half mesh')
+      print('gmns      '+frs.format(self.gmns.shape)+': sinmn component of jacobian, half mesh')
+      print('bmns      '+frs.format(self.bmns.shape)+': sinmn component of mod-B, half mesh')
+      print('bsubumns  '+frs.format(self.bsubumns.shape)+': sinmn covariant u-component of B, half mesh')
+      print('bsubvmns  '+frs.format(self.bsubvmns.shape)+': sinmn covariant v-component of B, half mesh')
+      print('bsubsmnc  '+frs.format(self.bsubsmnc.shape)+': cosmn covariant s-component of B, full mesh')
+      print('bsupumns  '+frs.format(self.bsupumns.shape)+':')
+      print('bsupvmns  '+frs.format(self.bsupvmns.shape)+':')
 
-    print '-----------------------------------------------'
+    print('-----------------------------------------------')
 
 
 
