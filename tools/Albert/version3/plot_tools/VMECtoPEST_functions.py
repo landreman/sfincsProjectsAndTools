@@ -3,7 +3,7 @@
 #This python file contains functions for transforming from VMEC to PEST coordinates
 
 import matplotlib
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import h5py
 import numpy as np
 import numpy

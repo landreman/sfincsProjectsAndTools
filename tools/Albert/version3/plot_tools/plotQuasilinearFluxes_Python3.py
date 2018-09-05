@@ -65,10 +65,14 @@ species = 4 - 1 ##Species index starts from 0
 
 includePhi1InCalculation = True
 
+dIotadpsiN = 0.0333098952242 ##Manual input
+
 TermPhi1Factor = 1.0
 TermdPhi1dalphaFactor = 1.0
+TermPhi1ShearFactor = 1.0
 TermdBdalphaFactor = 1.0
 TermdBdpsifactor = 1.0
+TermBShearFactor = 1.0
 
 zLabel = r'$1 + Ze\Phi_1 / T_z - \omega_E / \omega_{\ast z} - v_z^2 (\omega_B + \omega_\kappa) / \omega_{\ast z}$'
 
@@ -113,6 +117,8 @@ BHat_sub_psi = f["BHat_sub_psi"][()] ## "zeta", "theta"
 dBHatdpsiHat = f["dBHatdpsiHat"][()] ## "zeta", "theta"
 dBHatdtheta = f["dBHatdtheta"][()] ## "zeta", "theta"
 dBHatdzeta = f["dBHatdzeta"][()] ## "zeta", "theta"
+psiAHat = f["psiAHat"][()]
+dIotadpsiHat = dIotadpsiN / psiAHat
 
 dnHatdpsiHat = f["dnHatdpsiHat"][()] ## "species"
 dTHatdpsiHat = f["dTHatdpsiHat"][()] ## "species"
@@ -153,6 +159,8 @@ print ("B0OverBBar: " + str(B0OverBBar))
 print ("GHat: " + str(GHat))
 print ("IHat: " + str(IHat))
 print ("iota: " + str(iota))
+print ("dIotadpsiHat: " + str(dIotadpsiHat))
+print ("psiAHat: " + str(psiAHat))
 print ("nu_n: " + str(nu_n))
 print ("alpha: " + str(alpha))
 print ("NuPrime_aa: " + str(DensityToNuFactor*nHats))
