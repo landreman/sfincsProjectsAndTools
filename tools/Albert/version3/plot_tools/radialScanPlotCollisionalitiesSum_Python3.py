@@ -50,7 +50,7 @@ filename = 'sfincsOutput.h5' ##Name for SFINCS output HDF5 files.
 
 radiusName = "rN" ##Radial coordinate to use on x-axis. Must be "psiHat", "psiN", "rHat" or "rN".
 
-NumberSpecies = 3
+NumberSpecies = 2
 
 #plotVariableName = "Er" ##Parameter to plot on y-axis. In this version it must be "Er", "dPhiHatdpsiHat", "dPhiHatdpsiN", "dPhiHatdrHat" or "dPhiHatdrN" .
 plotVariableName = "nHats"
