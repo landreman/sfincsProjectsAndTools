@@ -1,9 +1,13 @@
-function Geom=makeBcfromVmec(woutin,Nu,Nw,min_Bmn,do_sort)
+function Geom=makeBcfromVmec(woutin,Nu,Nw,min_Bmn,do_sort,signcorr)
 if nargin==1
   Nu=inf;
   Nw=inf;
   min_Bmn=0;
-  do_sort=1;
+  do_sort=1; %-1:descending n, 1:ascending n, 0: no sort
+  signcorr='signcorr2';
+elseif nargin==4
+  do_sort=1; %-1:descending n, 1:ascending n, 0: no sort
+  signcorr='signcorr2';  
 end
 
 %The result can be saved with writeBoozerfile.m
@@ -75,8 +79,13 @@ Geom.Nperiods = double(wout.nfp);        %!< number of field periods
 
 Geom.StelSym  = StelSym;
 if StelSym
-  Geom.newsigncorr=0; %This is the convention in SFINCS
+  if strcmp(signcorr,'signcorr1')
+    Geom.newsigncorr=0;
+  elseif   strcmp(signcorr,'signcorr2')
+    Geom.newsigncorr=1;
+  end
 end
+
 Geom.torfluxtot = ...
    wout.phi(wout.ns)*signchange;%!<  total toroidal flux within the boundary (s=1)
 Geom.psi_a=Geom.torfluxtot/2/pi;
@@ -100,6 +109,13 @@ Geom.dpds=diff(wout.presf(skip:end))'./diff(Geom.fullgrid.s(skip:end));
 %Geom.dVdsoverNper=dVdsoverNper*signchange;
 Geom.Bphi  = wout.bvco*signchange;%direction switch sign
 Geom.Btheta= wout.buco;%*signchange;
+
+if Geom.newsigncorr==0
+  Geom.Bphi       = -Geom.Bphi;
+  Geom.Btheta     = -Geom.Btheta;
+  Geom.torfluxtot = -Geom.torfluxtot;
+  Geom.psi_a      = -Geom.psi_a;
+end
 
 Geom.Bphi=Geom.Bphi(skip+1:end)';
 Geom.Btheta=Geom.Btheta(skip+1:end)';
@@ -141,7 +157,11 @@ Geom.Bfilter.maxabs_n=(Nw-1)/2;
 %end
 
 %do_sort=1; %Sort the Bmns
-do_sort
+if do_sort==1
+  sort_opt='ascend';
+elseif do_sort==-1
+  sort_opt='descend';
+end
 
 tic
 for sind=1:length(Geom.s)
@@ -168,7 +188,7 @@ for sind=1:length(Geom.s)
        mends=[mstarts(2:end)-1,length(ms)];
        for ii=1:length(mstarts)
          minds_thism=sortminds(mstarts(ii):mends(ii));
-         [ns,sortninds]=sort(Bmnlist.n(good(minds_thism)));
+         [ns,sortninds]=sort(Bmnlist.n(good(minds_thism)),sort_opt);
 
          Geom.n{sind}(mstarts(ii):mends(ii))=ns;
          Geom.parity{sind}(mstarts(ii):mends(ii))=Bmnlist.cosparity(good(minds_thism(sortninds)));

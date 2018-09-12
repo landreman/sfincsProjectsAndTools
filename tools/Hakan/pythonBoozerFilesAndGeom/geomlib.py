@@ -359,7 +359,6 @@ class bcgeom:
          #%  self.Z00(rind)=self.Z{rind}(m0n0ind);
          #%This is always zero (also in Erika's files)
 
-
          if rthetazeta_righthanded==-1:
            for tmpind in range(len(self.n)):
                self.n[tmpind]=-self.n[tmpind]  #This assumes the argument  
@@ -568,8 +567,7 @@ class bcgeom:
         wout=input
         signchange=float(wout.signgs) #is -1, because vmec is left handed
         self.StelSym=input.StelSym
-        #self.newsigncorr=True
-        self.newsigncorr=False
+        self.newsigncorr=True
         self.headertext=headertxt()
         # Note that the following are only comments to what would appear in
         # a file stored with .write()
@@ -583,16 +581,17 @@ class bcgeom:
                'CC input_extension= '+wout.input_extension+'\n'+
                'CC The phase convention (m theta - n phi) is used in this file.\n'+
                'CC The coordinate system (r,theta,phi) is left-handed.\n'+
-               'CC Toroidal flux is counted positive in the direction opposite to the toroidal coordinate.')
+               'CC Toroidal flux is counted positive in the direction opposite to '+
+               'the toroidal coordinate (JG style).')
         else:
             # Use Erika Strumberger's convention as default for non-stellarator symmetric files:
             # Toroidal flux is counted positive in the direction of the toroidal coordinate.
-            self.headertext.maincomment=('CC Converted from VMEC using HSs routines\n'+
+            self.headertext.maincomment=('CC Converted from VMEC using HS''s python routines\n'+
             'CC VMEC version         = '+str(wout.version_)+'\n'+
             'CC VMEC input extension = '+wout.input_extension+'\n'+
             'CC The phase convention (m theta - n phi) is used in this file.\n'+
             'CC The coordinate system (r,theta,phi) is left-handed.\n'+
-            'CC Toroidal flux is counted positive in the direction of the toroidal coordinate.')
+            'CC Toroidal flux is counted positive in the direction of the toroidal coordinate (ES,YT style).')
           
         self.m0b=wout.mpol
         self.n0b=wout.ntor
@@ -725,10 +724,10 @@ class bcgeom:
             ii=[i for i,x in enumerate(wout.xm) if x==m]
             first_mode=ii[0]
             last_mode =ii[-1]
-            ns=np.expand_dims(wout.xn[ii[0]:ii[-1]]/wout.nfp, axis=1) #row vector
-            nnmat=(1.0+(-1.0)**ns-ns.T)/2.0
-            accum=accum+m*np.sum((np.expand_dims(wout.rmnc[-1][ii[0]:ii[-1]], axis=1)*
-                                  np.expand_dims(wout.zmns[-1][ii[0]:ii[-1]], axis=0))*nnmat)
+            ns=np.expand_dims(wout.xn[ii[0]:ii[-1]+1]/wout.nfp, axis=1) #row vector
+            nnmat=(1.0+(-1.0)**(ns-ns.T))/2.0
+            accum=accum+m*np.sum((np.expand_dims(wout.rmnc[-1][ii[0]:ii[-1]+1], axis=1)*
+                                  np.expand_dims(wout.zmns[-1][ii[0]:ii[-1]+1], axis=0))*nnmat)
 
         self.minorradiusW7AS=np.sqrt(np.abs(accum))
         
@@ -839,7 +838,14 @@ class bcgeom:
   ##############################################################################
   # Write a bcgeom to a file
   ##############################################################################
-  def write(self,filename,Nradii=None,min_Bmn=0.0,nsortstyle='ascend',printheadercomment=True):
+  # One can choose between
+  # minorradiusconvention='W7AS' (default) Joachim Geiger's convention
+  # minorradiusconvention='VMEC'
+  # and between
+  # majorradiusconvention='lastR00' (default) Joachim Geiger's convention
+  # majorradiusconvention='VMEC'
+  def write(self,filename,Nradii=None,min_Bmn=0.0,nsortstyle=None,printheadercomment=True,
+            minorradiusconvention='W7AS',majorradiusconvention='lastR00'):
       #argument Nradii is only used for .dat files.
       #First check which type of file the user wants.
       if filename[-3:]=='.bc':
@@ -884,18 +890,46 @@ class bcgeom:
          else:
             torfluxtot=-torfluxtot
 
-      print 'In write: torfluxtot='+str(torfluxtot)
+      #print 'In write: torfluxtot='+str(torfluxtot)
       iota=selfie.iota*signchange
       dVdsoverNper=selfie.dVdsoverNper*signchange
       Dphi=[]
+      Z=[]
       m=selfie.m
       n=[]
-      for tmpind in range(len(selfie.n)):
+      for tmprind in range(len(selfie.n)):
           Dphi.append(np.array([]))
+          Z.append(np.array([]))
           n.append(np.array([]))
-          Dphi[tmpind]=-selfie.Dphi[tmpind] 
-          n[tmpind]=np.where(selfie.m[tmpind]==0,np.abs(selfie.n[tmpind]),-selfie.n[tmpind])
+          Z[tmprind]    = selfie.Z[tmprind] 
+          Dphi[tmprind] =selfie.Dphi[tmprind]*signchange #swap coordinate direction
+          n[tmprind]    =selfie.n[tmprind]*signchange #swap coordinate direction
+              
+          if selfie.StelSym: #for m=0, I choose to output only positive n in the bc file
+              indsm0=np.where(np.logical_and(selfie.m[tmprind]==0,selfie.n[tmprind]!=0))[0]
+              signn=np.sign(n[tmprind][indsm0])
+              n[tmprind][indsm0]=signn*n[tmprind][indsm0]
+              Dphi[tmprind][indsm0]=signn*Dphi[tmprind][indsm0] #Dphi and Z are sin-series so changing
+              Z[tmprind][indsm0]=signn*Z[tmprind][indsm0]       #sign of n -> component sign change
+          
+          #n[tmprind]=np.where(selfie.m[tmprind]==0,np.abs(selfie.n[tmprind]),-selfie.n[tmprind])
 
+      if minorradiusconvention=='VMEC':
+          if np.isnan(selfie.minorradiusVMEC):
+              sys.exit("Error: minorradiusconvention='VMEC' could not be used when saving"+
+                       "the Boozer file, because the VMEC minor radius is unknown!")
+          chosenminorradius=selfie.minorradiusVMEC
+      else: #minorradiusconvention=='W7AS' (default)
+          chosenminorradius=selfie.minorradiusW7AS
+          
+      if majorradiusconvention=='VMEC':
+          if np.isnan(selfie.majorradiusVMEC):
+              sys.exit("Error: majorradiusconvention='VMEC' could not be used when saving"+
+                       "the Boozer file, because the VMEC major radius is unknown!")
+          chosenmajorradius=selfie.majorradiusVMEC
+      else: #majorradiusconvention=='lastR00' (default)
+          chosenmajorradius=selfie.majorradiusLastbcR00
+              
       #################################################################################
       if filetype=='bc':
       #################################################################################
@@ -911,14 +945,14 @@ class bcgeom:
                 f.write(' m0b  n0b nsurf nper  flux/[Tm^2]     a/[m]     R/[m]   avol/[m]\n')
                 f.write('%3d%5d%6d%4d%16.6E%10.5f%10.5f%11.5f\n' %
                         (selfie.m0b,selfie.n0b,selfie.nsurf,selfie.Nperiods,torfluxtot,
-                         selfie.minorradiusW7AS,selfie.majorradiusLastbcR00,selfie.minorradiusVMEC))
+                         chosenminorradius,chosenmajorradius,selfie.minorradiusVMEC))
             elif (not(np.isnan(selfie.minorradiusVMEC)) and not(np.isnan(selfie.majorradiusVMEC))
                   and np.isnan(selfie.volumeVMEC)):
                 f.write(' m0b  n0b nsurf nper  flux/[Tm^2]     a/[m]     R/[m]   avol/[m]  '+
                         'Rvol/[m]\n')
                 f.write('%3d%5d%6d%4d%16.6E%10.5f%10.5f%11.5f%11.5f%11.5f\n' %
                         (selfie.m0b,selfie.n0b,selfie.nsurf,selfie.Nperiods,torfluxtot,
-                         selfie.minorradiusW7AS,selfie.majorradiusLastbcR00,
+                         chosenminorradius,chosenmajorradius,
                          selfie.minorradiusVMEC,selfie.majorradiusVMEC,
                          np.pi*selfie.minorradiusVMEC**2.0*2.0*np.pi*selfie.majorradiusVMEC))
             elif (not(np.isnan(selfie.minorradiusVMEC)) and not(np.isnan(selfie.majorradiusVMEC))
@@ -927,13 +961,13 @@ class bcgeom:
                         'Rvol/[m] Vol/[m^3]\n')
                 f.write('%3d%5d%6d%4d%16.6E%10.5f%10.5f%11.5f%11.5f%11.5f\n' %
                         (selfie.m0b,selfie.n0b,selfie.nsurf,selfie.Nperiods,torfluxtot,
-                         selfie.minorradiusW7AS,selfie.majorradiusLastbcR00,
+                         chosenminorradius,chosenmajorradius,
                          selfie.minorradiusVMEC,selfie.majorradiusVMEC,selfie.volumeVMEC))
             else: #all three are nan
                 f.write(' m0b  n0b nsurf nper flux/[Tm^2]     a/[m]     R/[m]\n')
                 f.write('%3d%5d%6d%4d%16.6E%10.5f%10.5f\n' %
                         (selfie.m0b,selfie.n0b,selfie.nsurf,selfie.Nperiods,torfluxtot,
-                         selfie.minorradiusW7AS,selfie.majorradiusLastbcR00))
+                         chosenminorradius,chosenmajorradius))
          else: #non-StelSym, ES uses a little less info than JG
             f.write(' m0b   n0b  nsurf  nper    flux [Tm^2]        a [m]          R [m]\n')
             #Difficult! I Think Erika uses VMEC quantities here but I am not sure!
@@ -974,23 +1008,25 @@ class bcgeom:
                         'bmnc [T]         bmns [T]\n')
 
            if selfie.StelSym:
-              do_sort=False #If False, I choose not to mn-sort the components because they usually come sorted.
-              if do_sort:
-                  inds=np.lexsort((n[rind],m[rind]))
+              if not(nsortstyle is None): #Dont mn-sort the components because they usually come sorted
+                  if nsortstyle=='ascend':
+                      inds=np.lexsort((n[rind],m[rind]))
+                  elif nsortstyle=='descend':
+                      inds=np.lexsort((-n[rind],m[rind]))
                   for j in range(0,selfie.nmodes[rind]):
                       rmnc=selfie.R[rind][inds[j]]
-                      zmns=selfie.Z[rind][inds[j]]
+                      zmns=Z[rind][inds[j]]
                       vmns=Dphi[rind][inds[j]]
                       bmnc=selfie.B[rind][inds[j]]
                       f.write('%5d%5d%16.8E%16.8E%16.8E%16.8E\n' %
                               (m[rind][inds[j]],n[rind][inds[j]],
-                               selfie.R[rind][inds[j]],selfie.Z[rind][inds[j]],
+                               selfie.R[rind][inds[j]],Z[rind][inds[j]],
                                Dphi[rind][inds[j]],selfie.B[rind][inds[j]]))
               else:
                    for ind in range(0,selfie.nmodes[rind]):
                        f.write('%5d%5d%16.8E%16.8E%16.8E%16.8E\n' %
                                (m[rind][ind],n[rind][ind],
-                                selfie.R[rind][ind],selfie.Z[rind][ind],
+                                selfie.R[rind][ind],Z[rind][ind],
                                 Dphi[rind][ind],selfie.B[rind][ind]))
 
            else:
@@ -1019,13 +1055,13 @@ class bcgeom:
                   #print(thism, thisn, j, selfie.nmodes[rind], selfie.parity[rind][inds[j]])
                   if selfie.parity[rind][inds[j]]==1: #j is cosinus components
                        rmnc=selfie.R[rind][inds[j]]
-                       zmns=selfie.Z[rind][inds[j]]
+                       zmns=Z[rind][inds[j]]
                        vmns=Dphi[rind][inds[j]]
                        bmnc=selfie.B[rind][inds[j]]
                        j+=1              
                   else: #j is sinus components
                       rmns=selfie.R[rind][inds[j]]
-                      zmnc=selfie.Z[rind][inds[j]]
+                      zmnc=Z[rind][inds[j]]
                       vmnc=Dphi[rind][inds[j]]
                       bmns=selfie.B[rind][inds[j]]
                       if j+1==selfie.nmodes[rind]:
@@ -1035,7 +1071,7 @@ class bcgeom:
                           if thism==m[rind][inds[j+1]] and thisn==n[rind][inds[j+1]] and selfie.parity[rind][inds[j+1]]==1:
                               #print('B1 '+str(j))
                               rmnc=selfie.R[rind][inds[j+1]]
-                              zmns=selfie.Z[rind][inds[j+1]]
+                              zmns=Z[rind][inds[j+1]]
                               vmns=Dphi[rind][inds[j+1]]
                               bmnc=selfie.B[rind][inds[j+1]]
                               j+=2
@@ -1048,11 +1084,18 @@ class bcgeom:
       #################################################################################
       else: #save a .dat file instead
       #################################################################################
-         if np.isnan(selfie.majorradiusLastbcR00):
-             majorradiusLastbcR00=0.0
+         if majorradiusconvention=='VMEC':
+             print('Warning: You have chosen to make a Henning Maassberg style .dat file '+
+                   'with the major radius taken from VMEC instead of using the standard "lastR00" definition.')
          else:
-             majorradiusLastbcR00=selfie.majorradiusLastbcR00
+             if np.isnan(selfie.majorradiusLastbcR00):
+                 chosenmajorradius=0.0
 
+
+         if minorradiusconvention=='VMEC':
+             print('Warning: You have chosen to make a Henning Maassberg style .dat file '+
+                   'with the minor radius taken from VMEC instead of using the W7AS standard definition.')
+             
          if printheadercomment:
              f.write('cc Saved %4d.%2d.%2d %2d:%2d by HS python routine bcgeom.write.\n' %
                      (now.year,now.month,now.day,now.hour,now.minute))
@@ -1066,57 +1109,57 @@ class bcgeom:
                     and np.isnan(selfie.volumeVMEC)):
                    f.write('cc %3d%5d%6d%4d%16.6E%10.5f%10.5f%11.5f\n'%
                            (selfie.m0b,selfie.n0b,selfie.nsurf,selfie.Nperiods,torfluxtot,
-                            selfie.minorradiusW7AS,selfie.majorradiusLastbcR00,selfie.minorradiusVMEC))
+                            chosenminorradius,chosenmajorradius,selfie.minorradiusVMEC))
                 elif (not(np.isnan(selfie.minorradiusVMEC)) and not(np.isnan(selfie.majorradiusVMEC))
                       and np.isnan(selfie.volumeVMEC)):
                    f.write('cc %3d%5d%6d%4d%16.6E%10.5f%10.5f%11.5f%11.5f%11.5f\n'%
                            (selfie.m0b,selfie.n0b,selfie.nsurf,selfie.Nperiods,torfluxtot,
-                            selfie.minorradiusW7AS,selfie.majorradiusLastbcR00,
+                            chosenminorradius,chosenmajorradius,
                             selfie.minorradiusVMEC,selfie.majorradiusVMEC,
                             np.pi*selfie.minorradiusVMEC**2.0*2.0*np.pi*selfie.majorradiusVMEC))
                 elif (not(np.isnan(selfie.minorradiusVMEC)) and not(np.isnan(selfie.majorradiusVMEC))
                       and not(np.isnan(selfie.volumeVMEC))):
                    f.write('cc %3d%5d%6d%4d%16.6E%10.5f%10.5f%11.5f%11.5f%11.5f\n'%
                            (selfie.m0b,selfie.n0b,selfie.nsurf,selfie.Nperiods,torfluxtot,
-                            selfie.minorradiusW7AS,selfie.majorradiusLastbcR00,
+                            chosenminorradius,chosenmajorradius,
                             selfie.minorradiusVMEC,selfie.majorradiusVMEC,selfie.VolumeVMEC))
                 else:
                    f.write('cc %3d%5d%6d%4d%16.6E%10.5f%10.5f\n'%
                            (selfie.m0b,selfie.n0b,selfie.nsurf,selfie.Nperiods,torfluxtot,
-                            selfie.minorradiusW7AS,selfie.majorradiusLastbcR00))
+                            chosenminorradius,chosenmajorradius))
              else:
                 if (not(np.isnan(selfie.minorradiusVMEC)) and np.isnan(selfie.majorradiusVMEC)
                     and np.isnan(selfie.volumeVMEC)):
                    f.write('cc %6d%4d%10.5f%10.5f%11.5f\n'%
                            (selfie.nsurf,selfie.Nperiods,
-                            selfie.minorradiusW7AS,selfie.majorradiusLastbcR00,selfie.minorradiusVMEC))
+                            chosenminorradius,chosenmajorradius,selfie.minorradiusVMEC))
                 elif (not(np.isnan(selfie.minorradiusVMEC)) and not(np.isnan(selfie.majorradiusVMEC))
                       and np.isnan(selfie.volumeVMEC)):
                    f.write('cc %6d%4d%10.5f%10.5f%11.5f%11.5f%11.5f\n'%
                            (selfie.nsurf,selfie.Nperiods,
-                            selfie.minorradiusW7AS,selfie.majorradiusLastbcR00,
+                            chosenminorradius,chosenmajorradius,
                             selfie.minorradiusVMEC,selfie.majorradiusVMEC,
                             np.pi*selfie.minorradiusVMEC**2.0*2.0*np.pi*selfie.majorradiusVMEC))
                 elif (not(np.isnan(selfie.minorradiusVMEC)) and not(np.isnan(selfie.majorradiusVMEC))
                       and not(np.isnan(selfie.volumeVMEC))):
                    f.write(' cc %6d%4d%10.5f%10.5f%11.5f%11.5f%11.5f\n'%
                            (selfie.nsurf,selfie.Nperiods,
-                            selfie.minorradiusW7AS,selfie.majorradiusLastbcR00,
+                            chosenminorradius,chosenmajorradius,
                             selfie.minorradiusVMEC,selfie.majorradiusVMEC,selfie.VolumeVMEC))
                 else:
                    f.write('cc %6d%4d%10.5f%10.5f\n'%
                            (selfie.nsurf,selfie.Nperiods,
-                            selfie.minorradiusW7AS,selfie.majorradiusLastbcR00))
+                            chosenminorradius,chosenmajorradius))
          #end if headercomment
          
          f.write(' c     m, n, B_mn/B_00, B_mn, (dB_mn/dr)/B_00 [1/cm], R_mn, z_mn\n')
 
          for rind in range(selfie.nsurf):
              f.write('%6.2f%8.4f%3i%8.2f%8.2f%7.4f%8.2f%8.2f  r,io,N,ra,Rm,s,r_o,R00\n'%
-                     (selfie.minorradiusW7AS*selfie.rnorm[rind]*100.0,
-                      iota[rind],selfie.Nperiods,selfie.minorradiusW7AS*100.0,
-                      selfie.majorradiusLastbcR00*100.0,selfie.s[rind],
-                      selfie.minorradiusW7AS*selfie.rnorm[rind]*100.0,selfie.R00[rind]*100.0))
+                     (chosenminorradius*selfie.rnorm[rind]*100.0,
+                      iota[rind],selfie.Nperiods,chosenminorradius*100.0,
+                      chosenmajorradius*100.0,selfie.s[rind],
+                      chosenminorradius*selfie.rnorm[rind]*100.0,selfie.R00[rind]*100.0))
              f.write(' >  %13.4E%13.4E%13.4E     cur_pol=g, cur_tor=I, B_00\n'%
                      (Bphi[rind]/(1.0e6*selfie.Nperiods/2.0/np.pi*(4.0*np.pi*1.0e-7)),
                       Btheta[rind]/(1.0e6/2.0/np.pi*(4.0*np.pi*1.0e-7)),
@@ -1132,9 +1175,9 @@ class bcgeom:
                           n[rind][m0i],
                           selfie.Bnorm[rind][m0i],
                           selfie.B[rind][m0i],
-                          selfie.dBdrnorm[rind][m0i]/selfie.B00[rind]/selfie.minorradiusW7AS/100.0,
+                          selfie.dBdrnorm[rind][m0i]/selfie.B00[rind]/chosenminorradius/100.0,
                           selfie.R[rind][m0i]*100.0,
-                          selfie.Z[rind][m0i]*100.0))
+                          Z[rind][m0i]*100.0))
              for thism in range(1,int(np.max(m[rind]))+1):
                  thisminds=np.where(m[rind]==thism)[0]
                  if nsortstyle=='ascend':
@@ -1147,9 +1190,9 @@ class bcgeom:
                               n[rind][mi],
                               selfie.Bnorm[rind][mi],
                               selfie.B[rind][mi],
-                              selfie.dBdrnorm[rind][mi]/selfie.B00[rind]/selfie.minorradiusW7AS/100.0,
+                              selfie.dBdrnorm[rind][mi]/selfie.B00[rind]/chosenminorradius/100.0,
                               selfie.R[rind][mi]*100.0,
-                              selfie.Z[rind][mi]*100.0))
+                              Z[rind][mi]*100.0))
              #end for thism
              f.write('  -1   0 0.0 0.0 0.0 0.0 0.0     end of input\n')
          #end for rind
