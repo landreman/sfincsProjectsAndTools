@@ -251,6 +251,8 @@ if strcmp(filetype,'JG')
   end
   
   if Geom.torfluxtot*Bphi(1)>0
+    if not(Geom.StelSym)
+      error('Unknown sign convention in non-stellarator-symmetric file!') 
     if isnan(newsigncorrectionmethod)
       error('You must specify the signcorrection method signcorr1 or signcorr2')
     end
@@ -291,6 +293,8 @@ if strcmp(filetype,'JG')
       end
       Geom.torfluxtot=-Geom.torfluxtot;      
     end
+  elseif Geom.StelSym %and Geom.torfluxtot*Bphi(1)<0
+    error('Unknown sign convention in tellarator symmetric file! Neither YT nor JG standard.')  
   end
     
   rthetazeta_righthanded=sign(Geom.torfluxtot*Bphi(1)); %This is -1, because

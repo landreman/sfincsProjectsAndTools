@@ -279,6 +279,9 @@ if length(Geom.R00)==length(Geom.s) %just check that all were made.
   % Calculate minorradiusW7AS
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   accum=0;
+  %bcsurfind=find(abs(Geom.s-0.995)<5e-4);
+  %[dum,bcsurfind]=min(abs(Geom.s-0.995));
+  bcsurfind=size(wout.rmnc,2);
   for m=1:wout.xm(end)
     mind=m+1;
     ii=find(wout.xm==m);
@@ -287,8 +290,8 @@ if length(Geom.R00)==length(Geom.s) %just check that all were made.
     ns=wout.xn(start_modes:end_modes)/double(wout.nfp);
     nnmat=(1+(-1).^(ns*ones(size(ns'))-ones(size(ns))*ns'))/2;
     accum=accum+...
-          m*sum(sum((wout.rmnc(start_modes:end_modes,end)*...
-                     wout.zmns(start_modes:end_modes,end)').*nnmat));
+          m*sum(sum((wout.rmnc(start_modes:end_modes,bcsurfind)*...
+                     wout.zmns(start_modes:end_modes,bcsurfind)').*nnmat));
   end
   Geom.minorradiusW7AS=sqrt(abs(accum));
 

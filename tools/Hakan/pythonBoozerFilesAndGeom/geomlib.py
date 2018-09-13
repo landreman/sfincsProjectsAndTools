@@ -308,6 +308,8 @@ class bcgeom:
                     'a positive Jacobian. Something is wrong!')
 
          if self.torfluxtot*Bphi[0]>0:
+           if not(self.StelSym):
+               sys.exit('Unknown sign convention in non-stellarator-symmetric file!')
            if not(newsigncorrectionmethod):
                self.newsigncorr=0
                if not(self.StelSym):
@@ -319,6 +321,9 @@ class bcgeom:
            else: #Use newsigncorrectionmethod
                self.newsigncorr=1
                self.torfluxtot=-self.torfluxtot
+         elif self.StelSym: #(and self.torfluxtot*Bphi[0]<0)
+           sys.exit('Unknown sign convention in non-stellarator-symmetric file! '+
+                    'Neither YT nor JG standard.')
 
          rthetazeta_righthanded=np.sign(self.torfluxtot*Bphi[0])
          #This is -1, because the Boozer file is supposed to be left handed
@@ -559,15 +564,15 @@ class bcgeom:
            if not(self.newsigncorr):
                self.Bphi=-self.Bphi
                self.Btheta=-self.Btheta
+               #NB: toroidal flux is not stored in HM's .dat files.
                
     #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  
     #% Turn a loaded vmec dataset vmecgeom into a bcgeom
     #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  
-    elif isinstance(input,vmecgeom):
+    elif isinstance(input,vmecgeom,signcorr=2):
         wout=input
         signchange=float(wout.signgs) #is -1, because vmec is left handed
         self.StelSym=input.StelSym
-        self.newsigncorr=True
         self.headertext=headertxt()
         # Note that the following are only comments to what would appear in
         # a file stored with .write()
@@ -617,6 +622,18 @@ class bcgeom:
         self.Bphi        = wout.bvco[skip:]*signchange #direction switch sign
         self.Btheta      = wout.buco[skip:] #sign change
 
+        if self.StelSym:
+            self.newsigncorr=True #default signcorr=2
+            if signcorr==1:
+                self.newsigncorr=False
+            elif signcorr==2:
+                self.newsigncorr=True #default signcorr=2
+            if not(self.newsigncorr):
+                self.Bphi      = -self.Bphi
+                self.Btheta    = -self.Btheta
+                self.torfluxtot= -self.torfluxtot
+                self.psi_a     = -self.psi_a
+                
         fullgrid_iota=wout.iotaf*signchange
         iota   = wout.iotas*signchange #half mesh
         self.iota=iota[skip:]
