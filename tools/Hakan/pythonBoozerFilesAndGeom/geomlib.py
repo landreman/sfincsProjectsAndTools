@@ -47,7 +47,7 @@ class Bfiltr:
 class bcgeom:
     
   def __init__(self,input,min_Bmn=0,max_m=np.inf,maxabs_n=np.inf,
-               symmetry='unknown',signcorr=1,verbose=1):
+               symmetry='unknown',signcorr=2,verbose=1):
     if isinstance(input,netCDF4.Group) or isinstance(input,netCDF4.Dataset):
         readfromnc(input,self)
         if not(hasattr(self,'nsurf')):
