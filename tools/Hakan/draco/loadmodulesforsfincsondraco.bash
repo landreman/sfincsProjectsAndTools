@@ -1,6 +1,7 @@
 module load netcdf-serial
 module load hdf5-serial
 #module load petsc-real
+#module load petsc-openmp-real/3.9.3
 
 export PETSC_ARCH=20170728-10-removingMPI_shouldWork
 export PETSC_DIR=/draco/u/mlan/petsc-3.7.6
