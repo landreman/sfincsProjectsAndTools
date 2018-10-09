@@ -14,8 +14,9 @@ import geomlib
 import mnFourierlib
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-# This class contains for one flux surface uniformly discretised flux coordinates (Boozer, Hamada or Pest)
-# and physical and geometric quantities related to them as well as their relation to the other coordinates.
+# This class, fluxcoorddiscr, contains for one flux surface uniformly discretised flux coordinates
+# (Boozer, Hamada or Pest) and physical and geometric quantities related to them as well as their
+# relation to the other coordinates.
 #
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -146,7 +147,7 @@ class fluxcoorddiscr:
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   # Constructor function 
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  def __init__(self,Geom,rind,Npol,Ntor,name='Boozer',u_zeroout_Deltaiota=-1.0):
+  def __init__(self,Geom,rind,Npol,Ntor,name='Boozer',u_zeroout_Deltaiota=-1.0,extended=False,makeSmith=False):
 
       #A function for interpolating on a nonuniform grid
       def griddatacyclic(unoneq,vnoneq,Fnoneq,Nperiods):
@@ -191,13 +192,32 @@ class fluxcoorddiscr:
       ##############################################################   
       
       self.name=name
-      if not((name=='Boozer') or (name=='Hamada') or (name=='Pest') or (name=='Cylindrical')):
-        sys.exit('The coordinate name must be one of Boozer, Hamada, Pest or Cylindrical!')
+      if not((name=='Boozer') or (name=='Hamada') or (name=='Pest') or (name=='Smith')):
+        sys.exit('The coordinate name must be one of Boozer, Hamada, Pest or Smith!')
 
       Ntheta=Npol
       Nzeta=Ntor
       
       mu0=1.256637061e-06
+
+      if extended:
+        ext_B = [None]*3
+        ext_R = [None]*3
+        ext_Z = [None]*3
+        ext_X = [None]*3
+        ext_Y = [None]*3
+        ext_Dzetacylphi = [None]*3
+        ext_Dzetaphi = [None]*3
+        if rind==0:
+          ext_rindstart=0
+          ext_relrind=0
+        elif rind==Geom.nsurf-1:
+          ext_rindstart=Geom.nsurf-3
+          ext_relrind=2
+        else:
+          ext_rindstart=rind-1
+          ext_relrind=1
+          
       if isinstance(Geom,geomlib.bcgeom):
           if rind > Geom.nsurf-1:
               sys.exit('Error in input to fluxcoorddiscr.py: The radius index rind = '+
@@ -222,10 +242,27 @@ class fluxcoorddiscr:
           Zmn=mnFourierlib.mnmat(Geom,Ntheta=Ntheta,Nzeta=Nzeta,rind=rind,quantity='Z')
           Dzetacylphimn=mnFourierlib.mnmat(Geom,Ntheta=Ntheta,Nzeta=Nzeta,rind=rind,quantity='Dphi')
           Dzetacylphi=Dzetacylphimn.ifft()
+          type(Bmn)
           B=Bmn.ifft()
           R=Rmn.ifft()
           Z=Zmn.ifft()
+          if extended:
+            ext_s   =Geom.s[ext_rindstart:ext_rindstart+3]
+            ext_G   =Geom.Bphi[ext_rindstart:ext_rindstart+3]
+            ext_I   =Geom.Btheta[ext_rindstart:ext_rindstart+3]
+            ext_iota=Geom.iota[ext_rindstart:ext_rindstart+3]
+            for ri in range(3):
+              ext_B[ri]=mnFourierlib.mnmat(Geom,Ntheta=Ntheta,Nzeta=Nzeta,rind=ext_rindstart+ri,quantity='B').ifft()
+              ext_R[ri]=mnFourierlib.mnmat(Geom,Ntheta=Ntheta,Nzeta=Nzeta,rind=ext_rindstart+ri,quantity='R').ifft()
+              ext_Z[ri]=mnFourierlib.mnmat(Geom,Ntheta=Ntheta,Nzeta=Nzeta,rind=ext_rindstart+ri,quantity='Z').ifft()
+              ext_Dzetacylphi[ri]=(
+                      mnFourierlib.mnmat(Geom,Ntheta=Ntheta,Nzeta=Nzeta,rind=ext_rindstart+ri,quantity='Dphi').ifft())
+              loc_cylphi=zeta-ext_Dzetacylphi[ri] #cylphi is minus the geometrical toroidal angle.
+              loc_geomang=-loc_cylphi         #(R,Z,cylphi) and (R,geomang,Z) are right handed systems. 
+              ext_X[ri]=ext_R[ri]*np.cos(loc_geomang)
+              ext_Y[ri]=ext_R[ri]*np.sin(loc_geomang)
 
+            
       elif isinstance(Geom,geomlib.vmecgeom):
           #VMEC LH coords: (u,v,s). Let w=-v => RH coords (u,w,s)
           #PEST coords pzeta=w=cylphi, ptheta=u+lambda. Here lambda is stored in the VMEC file.
@@ -236,6 +273,7 @@ class fluxcoorddiscr:
               sys.exit('Error in input to fluxcoorddiscr.py: The radius index rind = '+
                        str(rind)+' is greater than max rind = '+str(Geom.nsurf-1-skip))
           fullgrid_s      = Geom.phi/Geom.phi[Geom.ns-1] #full grid
+          halfgrid_s      = (fullgrid_s[1:]+fullgrid_s[0:-1])/2
           halfgrid_iota   = Geom.iotas[skip:]*signchange
           halfgrid_Bphi   = Geom.bvco[skip:]*signchange
           halfgrid_Btheta = Geom.buco[skip:]
@@ -297,9 +335,9 @@ class fluxcoorddiscr:
           uw_R=uw_Rmn.ifft()
           uw_Z=uw_Zmn.ifft()
           
-          B=interp2_cyclic(uw_u,uw_w,uw_B,Booz_u,Booz_w,Nperiods)
-          R=interp2_cyclic(uw_u,uw_w,uw_R,Booz_u,Booz_w,Nperiods)
-          Z=interp2_cyclic(uw_u,uw_w,uw_Z,Booz_u,Booz_w,Nperiods)
+          B=fluxcoorddiscr.interp2_cyclic(uw_u,uw_w,uw_B,Booz_u,Booz_w,Nperiods)
+          R=fluxcoorddiscr.interp2_cyclic(uw_u,uw_w,uw_R,Booz_u,Booz_w,Nperiods)
+          Z=fluxcoorddiscr.interp2_cyclic(uw_u,uw_w,uw_Z,Booz_u,Booz_w,Nperiods)
     
           Bmn=mnFourierlib.mnmat(B,Nperiods=Nperiods)
           Rmn=mnFourierlib.mnmat(R,Nperiods=Nperiods)
@@ -307,7 +345,63 @@ class fluxcoorddiscr:
           Dzetacylphimn=mnFourierlib.mnmat(Dzetacylphi,Nperiods=Nperiods)
 
           B00=Bmn.get00()
+
+          if extended:
+            ext_s   =halfgrid_s[ext_rindstart:ext_rindstart+3]
+            ext_iota=halfgrid_iota[ext_rindstart:ext_rindstart+3]
+            ext_G   =halfgrid_Bphi[ext_rindstart:ext_rindstart+3]
+            ext_I   =halfgrid_Btheta[ext_rindstart:ext_rindstart+3]
+            for ri in range(3):
+              locrind=ext_rindstart+ri
+              loc_iota=halfgrid_iota[locrind]
+              loc_G=halfgrid_Bphi[locrind]
+              loc_I=halfgrid_Btheta[locrind]
+              loc_mu0dpdpsi=halfgrid_dpds[locrind]/psi_a*mu0
+
+              loc_uw_Bmn=mnFourierlib.mnmat(Geom,Ntheta=Ntheta,Nzeta=Nzeta,rind=locrind,quantity='B')
+              loc_uw_Rmn=mnFourierlib.mnmat(Geom,Ntheta=Ntheta,Nzeta=Nzeta,rind=locrind,quantity='R')
+              loc_uw_Zmn=mnFourierlib.mnmat(Geom,Ntheta=Ntheta,Nzeta=Nzeta,rind=locrind,quantity='Z')
+              loc_uw_B_umntilde=mnFourierlib.mnmat(Geom,Ntheta=Ntheta,Nzeta=Nzeta,rind=locrind,quantity='B_u').remove00()
+              loc_uw_B_wmntilde=mnFourierlib.mnmat(Geom,Ntheta=Ntheta,Nzeta=Nzeta,rind=locrind,quantity='B_w').remove00()
+              loc_uw_lmn=mnFourierlib.mnmat(Geom,Ntheta=Ntheta,Nzeta=Nzeta,rind=locrind,quantity='lambda')
+              #print uw_lmn.ifft()
+              #alphamn1=uw_B_umntilde.invgrad(uw_B_wmntilde,method=1)
+              loc_alphamn2=loc_uw_B_umntilde.invgrad(loc_uw_B_wmntilde,method=2)
+              #if B_umn and B_wmn are good, then alphamn1 should equal alphamn2 (any problem here would be due to vmec)
+
+              loc_uw_pmn=(loc_alphamn2-loc_I*loc_uw_lmn)*(1.0/(loc_G+loc_iota*loc_I))
+              loc_uw_Dthetau=(loc_uw_lmn+loc_iota*loc_uw_pmn).ifft()
+              loc_uw_Dzetaw =loc_uw_pmn.ifft()
+              loc_uw_Dpthetau=loc_uw_lmn.ifft()
+            
+              loc_uw_theta=loc_uw_Dthetau+uw_u
+              loc_uw_zeta =loc_uw_Dzetaw +uw_w
+
+              loc_Booz_Dthetau =griddatacyclic(loc_uw_theta,loc_uw_zeta,loc_uw_Dthetau,Nperiods)
+              loc_Booz_Dzetaw  =griddatacyclic(loc_uw_theta,loc_uw_zeta,loc_uw_Dzetaw, Nperiods)
+              ext_Dzetacylphi[ri]  =loc_Booz_Dzetaw
+                  
+              loc_Booz_u=theta-loc_Booz_Dthetau        
+              loc_Booz_w=zeta-loc_Booz_Dzetaw
+        
+              loc_uw_B=loc_uw_Bmn.ifft()
+              loc_uw_R=loc_uw_Rmn.ifft()
+              loc_uw_Z=loc_uw_Zmn.ifft()
           
+              ext_B[ri]=interp2_cyclic(uw_u,uw_w,loc_uw_B,loc_Booz_u,loc_Booz_w,Nperiods)
+              ext_R[ri]=interp2_cyclic(uw_u,uw_w,loc_uw_R,loc_Booz_u,loc_Booz_w,Nperiods)
+              ext_Z[ri]=interp2_cyclic(uw_u,uw_w,loc_uw_Z,loc_Booz_u,loc_Booz_w,Nperiods)
+    
+              #ext_Bmn[ri]=mnFourierlib.mnmat(ext_B[ri],Nperiods=Nperiods)
+              #ext_Rmn[ri]=mnFourierlib.mnmat(ext_R[ri],Nperiods=Nperiods)
+              #ext_Zmn[ri]=mnFourierlib.mnmat(ext_Z[ri],Nperiods=Nperiods)
+              #ext_Dzetacylphimn[ri]=mnFourierlib.mnmat(ext_Dzetacylphi[ri],Nperiods=Nperiods)
+              loc_cylphi=zeta-ext_Dzetacylphi[ri] #cylphi is minus the geometrical toroidal angle.
+              loc_geomang=-loc_cylphi         #(R,Z,cylphi) and (R,geomang,Z) are right handed systems. 
+              ext_X[ri]=ext_R[ri]*np.cos(loc_geomang)
+              ext_Y[ri]=ext_R[ri]*np.sin(loc_geomang)
+              
+          #end if extended
       #end if bcgeom or vmecgeom
       
       self.Nperiods=Nperiods
@@ -399,15 +493,6 @@ class fluxcoorddiscr:
       gradpsi_Z=B**2/(G+iota*I)*(dXdtheta*dYdzeta-dYdtheta*dXdzeta)
       gpsipsi=gradpsi_X**2+gradpsi_Y**2+gradpsi_Z**2
 
-      #print cylphi[0,0]
-      #print dYdtheta[0,0]
-      #print dZdtheta[0,0]
-      #print dXdtheta[0,0]
-      #print dYdzeta[0,0]
-      #print dZdzeta[0,0]
-      #print dXdzeta[0,0]
-      #print gpsipsi[0,0]
-      
       Booz_XYZ_gradpsi=np.zeros((Ntheta,Nzeta,3))
       Booz_XYZ_gradpsi[:,:,0]=gradpsi_X
       Booz_XYZ_gradpsi[:,:,1]=gradpsi_Y
@@ -466,9 +551,7 @@ class fluxcoorddiscr:
       Booz_curv_geodes1=Booz_BxgradpsidotgradabsB/np.sqrt(gpsipsi)/B**2
       Booz_curv_geodes2=np.sum(np.cross(Booz_XYZ_B,Booz_XYZ_gradpsi)*Booz_XYZ_curv,axis=2)/np.sqrt(gpsipsi)/B
       Booz_gradpsidotgradB=Booz_curv_normal*np.sqrt(gpsipsi)*B-mu0dpdpsi*gpsipsi
-
-      
-      
+    
       #% The following is for equilibria close to axi-symmetry, where we want to calculate 
       #% the deviation from axi-symmetry in terms of dBinsurf and dBperp.
       #% Approximating that dr/dzeta is roughly in the geometrical toroidal direction I 
@@ -488,12 +571,12 @@ class fluxcoorddiscr:
       Booz_dBperp=dBR*bZmean-dBZ*bRmean   #cross product 
 
       #% ---------------------------------------------------------------------------------------
-      #% Calculate parallel current u from harmonics of 1/B**2. Used in NTV calculation.
+      #% Calculate parallel current u from harmonics of 1/B**2. 
       #% \nabla_\parallel u = (2/B^4) \nabla B \times \vector{B} \cdot \iota \nabla \psi 
       #% ---------------------------------------------------------------------------------------
       u = np.zeros((Ntheta,Nzeta))
       #Dzetaphi        =np.zeros(Ntheta,Nzeta) #difference between zeta (tor Boozer coord)
-                                              #and phi (tor Hamada coord) 
+                                               #and phi (tor Hamada coord) 
       h=1/(B**2)
       VPrimeHat=np.sum(h)*4*np.pi**2/(Nzeta*Ntheta) #Note: VPrime=VPrimeHat*(G+iota*I)
       FSAB2=4*np.pi**2/VPrimeHat
@@ -528,16 +611,10 @@ class fluxcoorddiscr:
       dYdvthet=B**2/FSAB2*(dYdtheta-YtozmYzot)
       dZdvthet=B**2/FSAB2*(dZdtheta-ZtozmZzot)
 
-      g_phiphi    =dXdphi**2  +dYdphi**2  +dZdphi**2
-      g_vthetvthet=dXdvthet**2+dYdvthet**2+dZdvthet**2
-      g_vthetphi  =dXdphi*dXdvthet+dYdphi*dYdvthet+dZdphi*dZdvthet
+      g_phiphi     = dXdphi**2 + dYdphi**2 + dZdphi**2
+      g_vthetvthet = dXdvthet**2 + dYdvthet**2 + dZdvthet**2
+      g_vthetphi   = dXdphi*dXdvthet + dYdphi*dYdvthet + dZdphi*dZdvthet
 
-      #print dDzetaphidzeta
-      #print dDzetaphidtheta
-      #Dzetaphimn.disp()
-      #dDzetaphidthetamn.disp()
-      #dDzetaphidzetamn.disp()
-      
       Booz_Dzetaphi=Dzetaphi
       Booz_Dzetapzeta=Dzetacylphi
       
@@ -545,6 +622,215 @@ class fluxcoorddiscr:
       Booz_vthet =theta-iota*Dzetaphi
       Booz_pzeta =zeta-Dzetacylphi       #pzeta=cylphi
       Booz_ptheta=theta-iota*Dzetacylphi 
+
+      dDzetapzetadthetamn,dDzetapzetadzetamn=mnFourierlib.mnmat(Booz_Dzetapzeta,Nperiods=Nperiods).grad()
+      Booz_Jacob_psi_ptheta_pzeta=Booz_Jacob_psi_theta_zeta*(1+iota*dDzetapzetadthetamn.ifft()+dDzetapzetadzetamn.ifft())
+      
+      #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+      #% Calculate Smith coordinates (spol,stor) 
+      #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+      if name=='Smith':
+        makeSmith=True
+      if makeSmith:
+        zetjumptolerance=np.pi/Nperiods*0.1
+        Dzetaeta=np.zeros_like(Dzetaphi)
+        zetv0=np.linspace(-1.0,1.0,num=Nzeta,endpoint=False)*np.pi/Nperiods
+        thev=iota*zetv0
+        zetguess=zetv0[np.argmax(Bmn.evalpoint(thev,zetv0))]
+        #(th0,zetguess) is the starting point for the max search along B
+        th0s=np.linspace(0.0,2.0*np.pi,num=max(Ntheta,111),endpoint=False)
+        ths=np.nan*np.zeros_like(th0s)
+        zes=np.nan*np.zeros_like(th0s)
+        absd2Bdz2_alongB=np.nan*np.zeros_like(th0s)
+        th0step=th0s[2]-th0s[1]
+        shortzetv0=np.linspace(-1.0,1.0,num=11,endpoint=False)*min(2.0*Dzeta,np.pi/Nperiods*0.1)
+        for th0i in range(len(th0s)):
+            print('th0i='+str(th0i))
+            shortzetv=shortzetv0+zetguess
+            shortthev=th0s[th0i]+iota*shortzetv
+            dBdzetv=iota*dBdthetamn.evalpoint(shortthev,shortzetv)+dBdzetamn.evalpoint(shortthev,shortzetv)
+            Li=np.where(np.diff(np.sign(dBdzetv))<0.0)[0][0]
+            zes[th0i]=shortzetv[Li]+(shortzetv[Li+1]-shortzetv[Li])*dBdzetv[Li]/(dBdzetv[Li]-dBdzetv[Li+1])
+            ths[th0i]=th0s[th0i]+iota*zes[th0i]
+            absd2Bdz2_alongB[th0i]=-(dBdzetv[Li+1]-dBdzetv[Li])/(shortzetv[Li+1]-shortzetv[Li])
+            if th0i<len(th0s)-1:
+              #find next guess
+              zes_extrap=zes[th0i]
+              #if th0i>0:
+              #    zes_extrap=2.0*zes[th0i]-zes[th0i-1]
+              zetv=zetv0+zes_extrap
+              thev=th0s[th0i+1]+iota*zetv
+              zetguess=zetv[np.argmax(Bmn.evalpoint(thev,zetv))]              
+              
+              if abs(zetguess-zes[th0i])>zetjumptolerance:
+                  makeSmith=False
+                  plt.plot(zetv0,th0s[th0i]+iota*zetv0,'r--',
+                           zes,ths,'b-x',
+                           zes_extrap,th0s[th0i+1]+iota*zes_extrap,'b+')
+                  plt.show()
+                  print('Smith not possible! Decrease th0step or try fewer mn modes in the equilibrium!')
+        #end for th0i
+      #end if makeSmith
+
+      if not(makeSmith):
+          if name=='Smith':
+            sys.exit('Could not generate Smith coordinates.')
+            
+      if makeSmith:
+        Bmaxs=Bmn.evalpoint(ths,zes)
+        possibleshifts=np.array([-3,-2,1,0,1,2,3])*2.0*np.pi/Nperiods
+        thezshift=possibleshifts[np.argmin(np.abs(zes[-1]-zes[0]-possibleshifts))]
+        zes_app=np.append(zes,[zes[0]+thezshift])
+        #ths_app=np.append(ths,[ths[0]])
+        th0s_app=np.append(th0s,[2*np.pi])
+        func2=interpolate.interp1d(th0s_app,zes_app)
+        Smith_spol=theta #use a uniform grid
+        Smith_stor=zeta  #use a uniform grid
+        SmithDzetastor=func2(Smith_spol)
+        SmithDzetastormn=mnFourierlib.mnmat(SmithDzetastor,Nperiods=Nperiods)
+        isStelSym=not(np.any(np.abs(Bmn.s[np.where(np.logical_not(np.isnan(Bmn.s)))])>0.0))
+        if isStelSym: #if Stellarator symmetric
+          SmithDzetastormn.c[np.where(np.logical_not(np.isnan(Bmn.c)))]=0
+          SmithDzetastor=SmithDzetastormn.ifft()
+        SmithdDzetastordspolmn,dummy=SmithDzetastormn.grad()
+        SmithdDzetastordspol=SmithdDzetastordspolmn.ifft()
+        Smith_zeta=Smith_stor+SmithDzetastor
+        Smith_theta=Smith_spol+iota*SmithDzetastor
+
+        BoozDzetastor=griddatacyclic(Smith_theta,Smith_zeta,SmithDzetastor,self.Nperiods)
+        Booz_dDzetastordspol=griddatacyclic(Smith_theta,Smith_zeta,SmithdDzetastordspol,self.Nperiods)
+        Booz_spol=theta-iota*BoozDzetastor
+        Booz_stor=zeta-BoozDzetastor
+        Booz_Jacob_psi_spol_stor=Booz_Jacob_psi_theta_zeta*(1+iota*Booz_dDzetastordspol)
+        dXdspol=(1+iota*Booz_dDzetastordspol)*dXdtheta+Booz_dDzetastordspol*dXdzeta
+        dYdspol=(1+iota*Booz_dDzetastordspol)*dYdtheta+Booz_dDzetastordspol*dYdzeta
+        dZdspol=(1+iota*Booz_dDzetastordspol)*dZdtheta+Booz_dDzetastordspol*dZdzeta
+        dXdstor=dXdzeta
+        dYdstor=dYdzeta
+        dZdstor=dZdzeta
+        g_storstor = dXdstor**2 + dYdstor**2 + dZdstor**2
+        g_spolspol = dXdspol**2 + dYdspol**2 + dZdspol**2
+        g_spolstor = dXdstor*dXdspol + dYdstor*dYdspol + dZdstor*dZdspol
+        Smith_dBdl=sqrt(dXdstor**2+dYdstor**2+dZdstor**2)
+      #end if makeSmith
+      
+      ###########################################################
+      # Nonlocal quantities are calculated if extended==True
+      ###########################################################
+      if extended:
+        for ri in range(3):
+          loc_h=1/(ext_B[ri]**2)
+          loc_VPrimeHat=np.sum(loc_h)*4*np.pi**2/(Nzeta*Ntheta) #Note: VPrime=VPrimeHat*(G+iota*I)
+          loc_FSAB2=4*np.pi**2/loc_VPrimeHat
+          ext_Dzetaphi[ri]=mnFourierlib.mnmat(1-loc_h*loc_FSAB2,Nperiods=Nperiods).invJacBdotgrad(ext_iota[ri]).ifft()
+                      
+        self.ext_s=ext_s[ext_relrind]
+        self.ext_psi=self.ext_s*Geom.psi_a
+        self.ext_psi_a=Geom.psi_a
+        #prepare for interpolating derivatives with resp to s evaluated at ext_s[ext_relrind]
+        #f=c2*(s-s0)^2+c1*(s-s0)+c0
+        #c2=d^-1*( f0*(s1-s2)+f1*(s2-s0)-f2*(s1-s0) )
+        #c1=d^-1*( f0*(s2^2-s1^2)-f1*(s2-s0)^2+f2*(s1-s0)^2 )
+        #d=(s1-s0)*(s2-s0)*(s1-s2)
+        #df/ds(s)=2*c2*(s-s0)+c1
+        ds10=ext_s[1]-ext_s[0]
+        ds20=ext_s[2]-ext_s[0]
+        ds12=ext_s[1]-ext_s[2]
+        invdet=1/(ds10*ds20*ds12)
+        dss0=self.ext_s-ext_s[0]
+        dds_coef=invdet*np.array([ds12*(2*dss0-ds20-ds10),ds20*(2*dss0-ds20),ds10*(-2*dss0+ds10)])
+
+        #Now perform the interpolations
+        diotads=ext_iota[0]*dds_coef[0]+ext_iota[1]*dds_coef[1]+ext_iota[2]*dds_coef[2]
+        dXds_appr=ext_X[0]*dds_coef[0]+ext_X[1]*dds_coef[1]+ext_X[2]*dds_coef[2]
+        dYds_appr=ext_Y[0]*dds_coef[0]+ext_Y[1]*dds_coef[1]+ext_Y[2]*dds_coef[2]
+        dZds_appr=ext_Z[0]*dds_coef[0]+ext_Z[1]*dds_coef[1]+ext_Z[2]*dds_coef[2]
+        dDzetacylphids_appr=ext_Dzetacylphi[0]*dds_coef[0]+ext_Dzetacylphi[1]*dds_coef[1]+ext_Dzetacylphi[2]*dds_coef[2]
+        dDzetaphids_appr=ext_Dzetaphi[0]*dds_coef[0]+ext_Dzetaphi[1]*dds_coef[1]+ext_Dzetaphi[2]*dds_coef[2]
+        diotadpsi=diotads/self.ext_psi_a
+        dDzetaphidpsiB_appr=dDzetaphids_appr/self.ext_psi_a
+        # There is an uncertainty in the numerical s derivative. I treat it the following way:
+        # First, assume that the above method gives the right direction of the vector e_psi but perhaps
+        # not the right length. Fix the length by requiring that 
+        # e_s dot e_theta x e_zeta = (G+iota*I)/B^2*psi_a
+        # e_s_appr*corrfac dot e_theta x e_zeta = (G+iota*I)/B^2*psi_a
+        # corrfac = (G+iota*I)/B^2*psi_a/(e_s_appr dot e_theta x e_zeta)
+        tripprod_appr=( dXds_appr*(dYdtheta*dZdzeta-dYdzeta*dZdtheta)
+                        -dYds_appr*(dXdtheta*dZdzeta-dXdzeta*dZdtheta)
+                        +dZds_appr*(dXdtheta*dYdzeta-dXdzeta*dYdtheta))
+        corrfac=Booz_Jacob_psi_theta_zeta*self.ext_psi_a/tripprod_appr
+        dXdpsiB_appr2=dXds_appr*corrfac/self.ext_psi_a
+        dYdpsiB_appr2=dYds_appr*corrfac/self.ext_psi_a
+        dZdpsiB_appr2=dZds_appr*corrfac/self.ext_psi_a
+
+        # e_psi has to have the form
+        # e_psi=grad(psi)/gpsipsi + B_psi/B^2\vek{B} + kappa/B^2 \vek{B} x grad(psi)
+        # with B_psi=B_psi00-(G+iota I)/<B^2> mu0 p' Dzetaphi
+        # We first determine kappa and B_psi00=mean(B dot e_psi)=mean(J^-1(e_zeta+iota e_theta) dot e_psi)
+        B_psi00=np.mean(((dXdzeta+iota*dXdtheta)*dXdpsiB_appr2+
+                        (dYdzeta+iota*dYdtheta)*dYdpsiB_appr2+
+                        (dZdzeta+iota*dZdtheta)*dZdpsiB_appr2)*B**2/(G+iota*I))
+        B_psi=B_psi00-mu0dpdpsi*(G+iota*I)/FSAB2*Dzetaphi
+        #and kappa=e_psi dot B x grad(psi)/gpsipsi=(G e_theta-I e_zeta) dot e_psi/(J gpsipsi)
+        kappa= ((G*dXdtheta-I*dXdzeta)*dXdpsiB_appr2+
+                (G*dYdtheta-I*dYdzeta)*dYdpsiB_appr2+
+                (G*dZdtheta-I*dZdzeta)*dZdpsiB_appr2)/(G+iota*I)*B**2/gpsipsi
+        g_psiBpsiB=1/gpsipsi+(B_psi**2+kappa*gpsipsi)/B**2
+        g_psitheta=(B_psi*(g_thetazeta+iota*g_thetatheta)+kappa*(G*g_thetatheta-I*g_thetazeta))/(G+iota*I)
+        g_zetapsi =(B_psi*(g_zetazeta +iota*g_thetazeta) +kappa*(G*g_thetazeta -I*g_zetazeta ))/(G+iota*I)
+
+        #    g_psiBpsiB_appr2=dXdpsiB_appr2**2+dYdpsiB_appr2**2+dZdpsiB_appr2**2
+        #    g_psitheta_appr2=dXdpsiB_appr2*dXdthetar+dYdpsiB_appr2*dYdtheta+dZdpsiB_appr2*dZdtheta
+        #    g_zetapsi_appr2 =dXdpsiB_appr2*dXdzeta  +dYdpsiB_appr2*dYdzeta +dZdpsiB_appr2*dZdzeta
+
+        #Other way to calculate the Jacobian
+        #J^2=( g_psipsi*(g_thetatheta*g_zetazeta-g_thetazeta**2)
+        #     -g_psitheta*(g_psitheta*g_zetazeta-g_psizeta*g_thetazeta)
+        #     +g_psizeta*(g_psitheta*g_thetazeta-g_thetazeta*g_psizeta) )
+
+        gthetatheta=(g_zetazeta*g_psiBpsiB-g_zetapsi**2)/Booz_Jacob_psi_theta_zeta**2
+        gthetazeta =(g_zetapsi*g_psitheta-g_psiBpsiB*g_thetazeta)/Booz_Jacob_psi_theta_zeta**2
+        gzetazeta  =(g_psiBpsiB*g_thetatheta-g_psitheta**2)/Booz_Jacob_psi_theta_zeta**2
+        gpsitheta  =(g_thetazeta*g_zetapsi-g_psitheta*g_zetazeta)/Booz_Jacob_psi_theta_zeta**2
+        gzetapsi   =(g_psitheta*g_thetazeta-g_zetapsi*g_thetatheta)/Booz_Jacob_psi_theta_zeta**2
+
+        #Now turn to the Hamada metric tensor. See notes_BoozerToHamada.pdf for details
+        #First the coordinate transformation matrix:
+        dthetadpsiH=(iota*dDzetaphidpsiB_appr*B**2/FSAB2
+              +Dzetaphi*diotadpsi*(1+iota*B**2/FSAB2*dDzetaphidtheta))
+        dzetadpsiH=B**2/FSAB2*(dDzetaphidpsiB_appr+Dzetaphi*diotadpsi*dDzetaphidtheta)
+        dthetadvthet=B**2/FSAB2*(1-dDzetaphidzeta)
+        dzetadvthet =B**2/FSAB2*dDzetaphidtheta
+        dthetadphi  =B**2/FSAB2*iota*dDzetaphidzeta
+        dzetadphi   =B**2/FSAB2*(1-iota*dDzetaphidtheta)
+
+        #and now the metric
+        g_psiHpsiH=(g_psiBpsiB+dthetadpsiH**2*g_thetatheta+dzetadpsiH**2*g_zetazeta+
+                    2*dthetadpsiH*g_psitheta+2*dzetadpsiH*g_zetapsi+2*dthetadpsiH*dzetadpsiH*g_thetazeta)
+        g_psivthet=(dthetadvthet*g_psitheta+dzetadvthet*g_zetapsi+
+                    dthetadpsiH*dthetadvthet*g_thetatheta+dzetadpsiH*dzetadvthet*g_zetazeta+
+                    (dthetadpsiH*dzetadvthet+dzetadpsiH*dthetadvthet)*g_thetazeta)
+        g_phipsi  =(dthetadphi*g_psitheta+dzetadphi*g_zetapsi+
+                    dthetadpsiH*dthetadphi*g_thetatheta+dzetadpsiH*dzetadphi*g_zetazeta+
+                    (dthetadpsiH*dzetadphi+dzetadpsiH*dthetadphi)*g_thetazeta)
+        #dXdpsiH=dXdpsiB+dthetadpsiH_appr*dXdtheta+dzetadpsiH_appr*dXdzeta
+        #dYdpsiH=dYdpsiB+dthetadpsiH_appr*dYdtheta+dzetadpsiH_appr*dYdzeta
+        #dZdpsiH=dZdpsiB+dthetadpsiH_appr*dZdtheta+dzetadpsiH_appr*dZdzeta
+        #g_psiHpsiH=dXdpsiH**2+dYdpsiH**2+dZdpsiH**2
+        #g_psivthet=dXdpsiH*dXdvthet+dYdpsiH*dYdvthet+dZdpsiH*dZdvthet
+        #g_phipsi  =dXdpsiH*dXdphi +dYdpsiH*dYdphi +dZdpsiH*dZdphi
+        
+        gvthetvthet=(g_phiphi*g_psiHpsiH-g_phipsi**2)/Jacob_psi_vthet_phi**2
+        gvthetphi  =(g_phipsi*g_psivthet-g_psiHpsiH*g_vthetphi)/Jacob_psi_vthet_phi**2
+        gphiphi    =(g_psiHpsiH*g_vthetvthet-g_psivthet**2)/Jacob_psi_vthet_phi**2
+        gpsivthet  =(g_vthetphi*g_phipsi-g_psivthet*g_phiphi)/Jacob_psi_vthet_phi**2
+        gphipsi    =(g_psivthet*g_vthetphi-g_phipsi*g_vthetvthet)/Jacob_psi_vthet_phi**2
+
+        if np.any(np.abs(corrfac-1.0)>0.05):
+          print('Probably too few surfaces in the equilibrium to get a good '+
+                   'approximation for e_psi! Turning of extended!')
+          extended=False
+      #end if extended
       
       #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       #% Store variables in the self struct
@@ -554,7 +840,7 @@ class fluxcoorddiscr:
       self.FSAg_phiphi=sum(sum(g_phiphi*h))/sum(sum(h))
       self.FSAgpsipsi=sum(sum(gpsipsi*h))/sum(sum(h))
       self.FSAsqrtgpsipsi=sum(sum(np.sqrt(gpsipsi)*h))/sum(sum(h))
-      self.Jacob_psi_vthet_phi=Jacob_psi_vthet_phi
+      self.Jacob_psi_vthet_phi=Jacob_psi_vthet_phi #This is a scalar
       self.dpsidrGraz=self.FSAsqrtgpsipsi*np.sign(psi_a)
       self.dsdrGraz  =self.FSAsqrtgpsipsi/abs(psi_a)
       self.r_eff=np.sqrt(self.FSAg_phiphi*self.FSAgpsipsi)/abs(self.G)
@@ -592,16 +878,45 @@ class fluxcoorddiscr:
           self.u_psi=u/iota
           self.h=h
           self.Bpsitilde   = Booz_B_psi_tilde
+          if extended:
+              self.Bpsi00 = B_psi00
           self.dBpsidtheta = Booz_dBpsidtheta
           self.dBpsidzeta  = Booz_dBpsidzeta
           self.Jacob_psi_theta_zeta = Booz_Jacob_psi_theta_zeta
+          self.Jacob_psi_ptheta_pzeta=Booz_Jacob_psi_ptheta_pzeta
+          if makeSmith:
+              self.Jacob_psi_spol_stor=Booz_Jacob_psi_spol_stor
           self.g_thetatheta = g_thetatheta
           self.g_thetazeta  = g_thetazeta
           self.g_zetazeta   = g_zetazeta
+          if extended:
+              self.g_psiBpsiB  = g_psiBpsiB #Mark with Booz because it is important which coords are held constant
+              self.g_psitheta  = g_psitheta
+              self.g_zetapsi   = g_zetapsi
+              self.gthetatheta = gthetatheta
+              self.gthetazeta  = gthetazeta
+              self.gzetazeta   = gzetazeta
+              self.gzetapsi    = gzetapsi
+              self.gpsitheta   = gpsitheta              
+          
+          self.gpsipsi      = gpsipsi
           self.g_phiphi     = g_phiphi
           self.g_vthetvthet = g_vthetvthet
           self.g_vthetphi   = g_vthetphi
-          self.gpsipsi      = gpsipsi
+          if makeSmith:
+              self.g_spolspol = g_spolspol
+              self.g_storstor = g_storstor
+              self.g_spolstor = g_spolstor
+          if extended:
+              self.g_psiHpsiH  = g_psiHpsiH
+              self.g_psivthet  = g_psivthet
+              self.g_phipsi    = g_phipsi
+              self.gvthetvthet = gvthetvthet
+              self.gvthetphi   = gvthetphi
+              self.gphiphi     = gphiphi
+              self.gphipsi     = gphipsi
+              self.gpsivthet   = gpsivthet              
+          
           self.gradpsidotgradB = Booz_gradpsidotgradB
           self.curv_normal  = Booz_curv_normal
           
@@ -625,7 +940,7 @@ class fluxcoorddiscr:
       #% Here, phi is the Hamada tor. coord. and vthet (\vartheta) is the Hamada poloidal coordinate.
       #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-      if name=='Hamada' or name=='Pest':
+      if name=='Hamada' or name=='Pest' or name=='Smith':
         #Choose the same resolution
         newtor=zeta  #This is just to copy the uniform grid
         newpol=theta #This is just to copy the uniform grid
@@ -636,32 +951,55 @@ class fluxcoorddiscr:
           Booz_newtor=Booz_phi
           Booz_newpol=Booz_vthet
           BoozDzetanewtor=Booz_Dzetaphi
+          #Make the interpolation
+          New_Dzetanewtor=griddatacyclic(Booz_newpol,Booz_newtor,BoozDzetanewtor,self.Nperiods)
+          self.zeta=newtor+New_Dzetanewtor
+          self.theta=newpol+iota*New_Dzetanewtor
+          self.Dzetaphi=New_Dzetanewtor
+          self.Dzetapzeta=fluxcoorddiscr.interp2_cyclic(theta,zeta,Booz_Dzetapzeta,
+                                                        self.theta,self.zeta,self.Nperiods)
+          if makeSmith:
+              self.Dzetastor=fluxcoorddiscr.interp2_cyclic(theta,zeta,Booz_Dzetastor,
+                                                        self.theta,self.zeta,self.Nperiods)
+          self.pzeta =self.zeta-self.Dzetapzeta
+          self.ptheta=self.theta-iota*self.Dzetapzeta
         elif name=='Pest':
           self.pzeta=newtor
           self.ptheta=newpol
           Booz_newtor=Booz_pzeta
           Booz_newpol=Booz_ptheta
-          BoozDzetanewtor=Booz_Dzetapzeta
-         
-        #Make the interpolation
-        New_Dzetanewtor=griddatacyclic(Booz_newpol,Booz_newtor,BoozDzetanewtor,self.Nperiods)
-
-        self.zeta=newtor+New_Dzetanewtor
-        self.theta=newpol+iota*New_Dzetanewtor
-
-        if name=='Hamada':
-          self.Dzetaphi=New_Dzetanewtor
-          self.Dzetapzeta=fluxcoorddiscr.interp2_cyclic(theta,zeta,Booz_Dzetapzeta,
-                                                        self.theta,self.zeta,self.Nperiods)
-          self.pzeta =self.zeta-self.Dzetapzeta
-          self.ptheta=self.theta-iota*self.Dzetapzeta
-        elif name=='Pest':
+          BoozDzetanewtor=Booz_Dzetapzeta         
+          #Make the interpolation
+          New_Dzetanewtor=griddatacyclic(Booz_newpol,Booz_newtor,BoozDzetanewtor,self.Nperiods)
+          self.zeta=newtor+New_Dzetanewtor
+          self.theta=newpol+iota*New_Dzetanewtor
           self.Dzetaphi=fluxcoorddiscr.interp2_cyclic(theta,zeta,Booz_Dzetaphi,
                                                       self.theta,self.zeta,self.Nperiods)
           self.Dzetapzeta=New_Dzetanewtor
+          if makeSmith:
+              self.Dzetastor=fluxcoorddiscr.interp2_cyclic(theta,zeta,Booz_Dzetastor,
+                                                      self.theta,self.zeta,self.Nperiods)
           self.phi  =self.zeta-self.Dzetaphi
           self.vthet=self.theta-iota*self.Dzetaphi
-
+          
+        elif name=='Smith':
+          self.stor=newtor
+          self.spol=newpol
+          Booz_newtor=Booz_stor
+          Booz_newpol=Booz_spol
+          BoozDzetanewtor=BoozDzetastor         
+          self.zeta=Smith_zeta
+          self.theta=Smith_theta
+          self.Dzetaphi=fluxcoorddiscr.interp2_cyclic(theta,zeta,Booz_Dzetaphi,
+                                                      self.theta,self.zeta,self.Nperiods)
+          self.Dzetapzeta=fluxcoorddiscr.interp2_cyclic(theta,zeta,Booz_Dzetapzeta,
+                                                        self.theta,self.zeta,self.Nperiods)
+          self.Dzetastor=SmithDzetastor
+          self.phi  =self.zeta-self.Dzetaphi
+          self.vthet=self.theta-iota*self.Dzetaphi
+          self.pzeta =self.zeta-self.Dzetapzeta
+          self.ptheta=self.theta-iota*self.Dzetapzeta
+          
         #Now we come to the interpolation of a lot of stuff...
       
 
@@ -685,13 +1023,41 @@ class fluxcoorddiscr:
                                                        self.theta,self.zeta,self.Nperiods) #Boozer specific
         self.Jacob_psi_theta_zeta=fluxcoorddiscr.interp2_cyclic(theta,zeta,Booz_Jacob_psi_theta_zeta,
                                                                 self.theta,self.zeta,self.Nperiods) #Boozer specific
+        self.Jacob_psi_ptheta_pzeta=fluxcoorddiscr.interp2_cyclic(theta,zeta,Booz_Jacob_psi_ptheta_pzeta,
+                                                                self.theta,self.zeta,self.Nperiods) #Boozer specific
+        self.Jacob_psi_spol_stor=fluxcoorddiscr.interp2_cyclic(theta,zeta,Booz_Jacob_psi_spol_stor,
+                                                                self.theta,self.zeta,self.Nperiods) #Boozer specific
         self.g_thetatheta   =fluxcoorddiscr.interp2_cyclic(theta,zeta,g_thetatheta,self.theta,self.zeta,self.Nperiods)
         self.g_thetazeta    =fluxcoorddiscr.interp2_cyclic(theta,zeta,g_thetazeta,self.theta,self.zeta,self.Nperiods)
         self.g_zetazeta     =fluxcoorddiscr.interp2_cyclic(theta,zeta,g_zetazeta,self.theta,self.zeta,self.Nperiods)
+        if extended:
+            self.g_psiBpsiB =fluxcoorddiscr.interp2_cyclic(theta,zeta,g_psiBpsiB,self.theta,self.zeta,self.Nperiods)
+            self.g_psitheta =fluxcoorddiscr.interp2_cyclic(theta,zeta,g_psitheta,self.theta,self.zeta,self.Nperiods)
+            self.g_zetapsi  =fluxcoorddiscr.interp2_cyclic(theta,zeta,g_zetapsi,self.theta,self.zeta,self.Nperiods)
+            self.gthetatheta=fluxcoorddiscr.interp2_cyclic(theta,zeta,gthetatheta,self.theta,self.zeta,self.Nperiods)
+            self.gthetazeta =fluxcoorddiscr.interp2_cyclic(theta,zeta,gthetazeta,self.theta,self.zeta,self.Nperiods)
+            self.gzetazeta  =fluxcoorddiscr.interp2_cyclic(theta,zeta,gzetazeta,self.theta,self.zeta,self.Nperiods)
+            self.gzetapsi   =fluxcoorddiscr.interp2_cyclic(theta,zeta,gzetapsi,self.theta,self.zeta,self.Nperiods)
+            self.gpsitheta  =fluxcoorddiscr.interp2_cyclic(theta,zeta,gpsitheta ,self.theta,self.zeta,self.Nperiods)
+            
+        self.gpsipsi        =fluxcoorddiscr.interp2_cyclic(theta,zeta,gpsipsi,self.theta,self.zeta,self.Nperiods)
         self.g_phiphi       =fluxcoorddiscr.interp2_cyclic(theta,zeta,g_phiphi,self.theta,self.zeta,self.Nperiods)
         self.g_vthetvthet   =fluxcoorddiscr.interp2_cyclic(theta,zeta,g_vthetvthet,self.theta,self.zeta,self.Nperiods)
         self.g_vthetphi     =fluxcoorddiscr.interp2_cyclic(theta,zeta,g_vthetphi,self.theta,self.zeta,self.Nperiods)
-        self.gpsipsi        =fluxcoorddiscr.interp2_cyclic(theta,zeta,gpsipsi,self.theta,self.zeta,self.Nperiods)
+        if extended:
+            self.g_psiHpsiH =fluxcoorddiscr.interp2_cyclic(theta,zeta,g_psiHpsiH,self.theta,self.zeta,self.Nperiods)
+            self.g_psivthet =fluxcoorddiscr.interp2_cyclic(theta,zeta,g_psivthet,self.theta,self.zeta,self.Nperiods)
+            self.g_phipsi   =fluxcoorddiscr.interp2_cyclic(theta,zeta,g_phipsi,self.theta,self.zeta,self.Nperiods)
+            self.gvthetvthet=fluxcoorddiscr.interp2_cyclic(theta,zeta,gvthetvthet,self.theta,self.zeta,self.Nperiods)
+            self.gvthetphi  =fluxcoorddiscr.interp2_cyclic(theta,zeta,gvthetphi,self.theta,self.zeta,self.Nperiods)
+            self.gphiphi    =fluxcoorddiscr.interp2_cyclic(theta,zeta,gphiphi,self.theta,self.zeta,self.Nperiods)
+            self.gphipsi    =fluxcoorddiscr.interp2_cyclic(theta,zeta,gphipsi,self.theta,self.zeta,self.Nperiods)
+            self.gpsivthet  =fluxcoorddiscr.interp2_cyclic(theta,zeta,gpsivthet ,self.theta,self.zeta,self.Nperiods)
+        if makeSmith:
+            self.g_spolspol = fluxcoorddiscr.interp2_cyclic(theta,zeta,g_spolspol,self.theta,self.zeta,self.Nperiods)
+            self.g_storstor = fluxcoorddiscr.interp2_cyclic(theta,zeta,g_storstor,self.theta,self.zeta,self.Nperiods)
+            self.g_spolstor = fluxcoorddiscr.interp2_cyclic(theta,zeta,g_spolstor,self.theta,self.zeta,self.Nperiods)
+        
         self.gradpsidotgradB=fluxcoorddiscr.interp2_cyclic(theta,zeta,Booz_gradpsidotgradB,self.theta,self.zeta,self.Nperiods)
         self.curv_normal    =fluxcoorddiscr.interp2_cyclic(theta,zeta,Booz_curv_normal,self.theta,self.zeta,self.Nperiods)
 
@@ -728,62 +1094,62 @@ class fluxcoorddiscr:
   def disp(self):
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         frm='{:8.4f}'
-        print '----------------------------------------------------------------------------------'
-        print 'Discretisation on a uniform '+self.name+' coordinate grid of the magnetic field'
-        print '\\mathbf{B} = I\\nabla\\theta + G\\nabla\\zeta + B_\\psi(\\theta,\\zeta)\\nabla\\psi'
-        print '\\mathbf{B} = I\\nabla\\vthet + G\\nabla\\phi + \\nabla H(\\psi,\\vthet,\\phi)'
-        print '----------------------------------------------------------------------------------'
-        print 'name     = '+self.name+' : the uniform coordinate grid'
-        print 'StelSym  = '+str(self.StelSym)
-        print 'Nperiods = '+str(self.Nperiods)
-        print 'Npol     = '+str(self.Npol)
-        print 'Ntor     = '+str(self.Ntor)
-        print 'Dpol     = '+frm.format(self.Dpol)
-        print 'Dtor     = '+frm.format(self.Dtor)
-        print 'iota     = '+frm.format(self.iota)
-        print 'G        = '+frm.format(self.G)
-        print 'I        = '+frm.format(self.I)
-        print 'mu0dpdpsi= '+frm.format(self.mu0dpdpsi)
-        print 'FSAB2    = '+frm.format(self.FSAB2)+  '            : <B^2>'
-        print 'FSAu2B2  = '+frm.format(self.FSAu2B2)+'            : <u^2B^2>'
-        print 'FSAg_phiphi    = '+frm.format(self.FSAg_phiphi)+'      : <g_phiphi>'
-        print 'FSAgpsipsi     = '+frm.format(self.FSAgpsipsi)+ '      : <g^psipsi>'
-        print 'FSAsqrtgpsipsi = '+frm.format(self.FSAsqrtgpsipsi)+'      : <sqrt(g^psipsi)>'
-        print 'Jacob_psi_vthet_phi = '+frm.format(self.Jacob_psi_vthet_phi)+' : Hamada Jacobian (G+iota*I)/<B^2>'
-        print 'dpsidrGraz     = '+frm.format(self.dpsidrGraz)+'      : dpsi/dr_Graz'
-        print 'dsdrGraz       = '+frm.format(self.dsdrGraz)+'      : ds/dr_Graz'
-        print 'r_eff          = '+frm.format(self.r_eff)+'      : r_eff = sqrt(<g_phiphi><g^psipsi>)/|G|'
-        print 'R00 = '+frm.format(self.R00)+'                 : m=n=0 Fourier coeff. in '+self.name+' coordinates'
+        print('----------------------------------------------------------------------------------')
+        print('Discretisation on a uniform '+self.name+' coordinate grid of the magnetic field')
+        print('\\mathbf{B} = I\\nabla\\theta + G\\nabla\\zeta + B_\\psi(\\theta,\\zeta)\\nabla\\psi')
+        print('\\mathbf{B} = I\\nabla\\vthet + G\\nabla\\phi + \\nabla H(\\psi,\\vthet,\\phi)')
+        print('----------------------------------------------------------------------------------')
+        print('name     = '+self.name+' : the uniform coordinate grid')
+        print('StelSym  = '+str(self.StelSym))
+        print('Nperiods = '+str(self.Nperiods))
+        print('Npol     = '+str(self.Npol))
+        print('Ntor     = '+str(self.Ntor))
+        print('Dpol     = '+frm.format(self.Dpol))
+        print('Dtor     = '+frm.format(self.Dtor))
+        print('iota     = '+frm.format(self.iota))
+        print('G        = '+frm.format(self.G))
+        print('I        = '+frm.format(self.I))
+        print('mu0dpdpsi= '+frm.format(self.mu0dpdpsi))
+        print('FSAB2    = '+frm.format(self.FSAB2)+  '            : <B^2>')
+        print('FSAu2B2  = '+frm.format(self.FSAu2B2)+'            : <u^2B^2>')
+        print('FSAg_phiphi    = '+frm.format(self.FSAg_phiphi)+'      : <g_phiphi>')
+        print('FSAgpsipsi     = '+frm.format(self.FSAgpsipsi)+ '      : <g^psipsi>')
+        print('FSAsqrtgpsipsi = '+frm.format(self.FSAsqrtgpsipsi)+'      : <sqrt(g^psipsi)>')
+        print('Jacob_psi_vthet_phi = '+frm.format(self.Jacob_psi_vthet_phi)+' : Hamada Jacobian (G+iota*I)/<B^2>')
+        print('dpsidrGraz     = '+frm.format(self.dpsidrGraz)+'      : dpsi/dr_Graz')
+        print('dsdrGraz       = '+frm.format(self.dsdrGraz)+'      : ds/dr_Graz')
+        print('r_eff          = '+frm.format(self.r_eff)+'      : r_eff = sqrt(<g_phiphi><g^psipsi>)/|G|')
+        print('R00 = '+frm.format(self.R00)+'                 : m=n=0 Fourier coeff. in '+self.name+' coordinates')
         if not(self.StelSym):
-            print 'Z00 = '+frm.format(self.Z00)+'                 : m=n=0 Fourier coeff. in '+self.name+' coordinates'
-        print 'B00 = '+frm.format(self.B00)+'                 : m=n=0 Fourier coeff. in '+self.name+' coordinates'
-        print '------------------------------------------------------------------------------'
-        print ' Npol x Ntor Scalar fields'
-        print '-------------------------------------'
-        print 'zeta,theta     : Boozer coordinates'
-        print 'phi,vthet      : Hamada coordinates'
-        print 'pzeta,ptheta   : Pest coordinates (pzeta=cylphi)'
-        print 'Dzetaphi       : zeta-phi'
-        print 'Dzetapzeta     : zeta-pzeta'
-        print 'R,Z,cylphi     : Cylindrical coordinates (right handed in this order)'
-        print 'X,Y,Z          : Cartesian coordinates'
-        print 'B, h           : B and h=1/B^2'
-        print 'u_chi          : defined by <uB^2>=0 and (B dot grad) u = 2 iota B^-3 B x nabla psi dot nabla B'
-        print 'u_psi          : defined by <uB^2>=0 and (B dot grad) u = 2 B^-3 B x nabla psi dot nabla B'
-        print 'Bpsitilde      : B_psi - B_psi_00  (Boozer specific)'
-        print 'dBpsidtheta    : dB_psi/dtheta (Boozer specific)'
-        print 'dBpsidzeta     : dB_psi/dzeta (Boozer specific)'
-        print 'Jacob_psi_theta_zeta                  : Boozer Jacobian (G+iota*I)/B^2'
-        print 'g_thetatheta, g_thetazeta, g_zetazeta : Boozer metric'
-        print 'g_vthetvthet, g_vthetphi,  g_phiphi   : Hamada metric'
-        print 'gpsipsi         : |grad(psi)|^2'
-        print 'gradpsidotgradB : grad(psi) dot grad(B)'
-        print 'curv_normal     : normal curvature grad(psi)/|grad(psi)| dot (b dot grad)b'
-        print '------------------------------------------------------------------------------'
-        print ' mnmat objects (Fourier transformed Npol x Ntor Scalar fields)'
-        print '---------------------------------------------------------------'
-        print 'Bmn'
-        print '------------------------------------------------------------------------------'
+            print('Z00 = '+frm.format(self.Z00)+'                 : m=n=0 Fourier coeff. in '+self.name+' coordinates')
+        print('B00 = '+frm.format(self.B00)+'                 : m=n=0 Fourier coeff. in '+self.name+' coordinates')
+        print('------------------------------------------------------------------------------')
+        print(' Npol x Ntor Scalar fields')
+        print('-------------------------------------')
+        print('zeta,theta     : Boozer coordinates')
+        print('phi,vthet      : Hamada coordinates')
+        print('pzeta,ptheta   : Pest coordinates (pzeta=cylphi)')
+        print('Dzetaphi       : zeta-phi')
+        print('Dzetapzeta     : zeta-pzeta')
+        print('R,Z,cylphi     : Cylindrical coordinates (right handed in this order)')
+        print('X,Y,Z          : Cartesian coordinates')
+        print('B, h           : B and h=1/B^2')
+        print('u_chi          : defined by <uB^2>=0 and (B dot grad) u = 2 iota B^-3 B x nabla psi dot nabla B')
+        print('u_psi          : defined by <uB^2>=0 and (B dot grad) u = 2 B^-3 B x nabla psi dot nabla B')
+        print('Bpsitilde      : B_psi - B_psi_00  (Boozer specific)')
+        print('dBpsidtheta    : dB_psi/dtheta (Boozer specific)')
+        print('dBpsidzeta     : dB_psi/dzeta (Boozer specific)')
+        print('Jacob_psi_theta_zeta                  : Boozer Jacobian (G+iota*I)/B^2')
+        print('g_thetatheta, g_thetazeta, g_zetazeta : Boozer metric')
+        print('g_vthetvthet, g_vthetphi,  g_phiphi   : Hamada metric')
+        print('gpsipsi         : |grad(psi)|^2')
+        print('gradpsidotgradB : grad(psi) dot grad(B)')
+        print('curv_normal     : normal curvature grad(psi)/|grad(psi)| dot (b dot grad)b')
+        print('------------------------------------------------------------------------------')
+        print(' mnmat objects (Fourier transformed Npol x Ntor Scalar fields)')
+        print('---------------------------------------------------------------')
+        print('Bmn')
+        print('------------------------------------------------------------------------------')
 
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   def plot(self,toshow,title='',cmap=None):
@@ -807,6 +1173,9 @@ class fluxcoorddiscr:
         elif self.name=='Pest':
             x=self.pzeta
             y=self.ptheta
+        elif self.name=='Smith':
+            x=self.stor
+            y=self.spol
             
         z = fun[:-1, :-1]
         z_min, z_max = z.min(), z.max()
@@ -932,3 +1301,6 @@ class fluxcoorddiscr:
         #plt.show()
         return fig, ax
 
+
+
+    

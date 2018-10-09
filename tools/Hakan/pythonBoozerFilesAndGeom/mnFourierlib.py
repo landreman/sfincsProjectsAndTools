@@ -35,7 +35,7 @@ class mnlist:
                 if geometry.Nperiods != Nperiods:
                     sys.exit('Input Nperiods does not match the value in the bcgeom!')
                     
-            self.Nperiods=geometry.Nperiods
+            self.Nperiods=int(geometry.Nperiods)
             self.m=geometry.m[rind]
             self.n=geometry.n[rind]
             data=getattr(geometry,quantity)
@@ -78,7 +78,7 @@ class mnlist:
             rindf_R = skrind
             rindf_L = skrind-1
             
-            self.Nperiods=wout.nfp
+            self.Nperiods=int(wout.nfp)
 
             if wout.StelSym:
                 if quantity=='B':
@@ -155,7 +155,10 @@ class mnlist:
         
         else: #input is supposed to be the m array
             m=input
-            self.Nperiods=Nperiods
+            if Nperiods is None:
+                self.Nperiods=None
+            else: 
+                self.Nperiods=int(Nperiods)
             if len(m)!=len(n):
                 sys.exit("m and n have different lengths")
             if len(n)!=len(data):
@@ -173,15 +176,22 @@ class mnlist:
             self.data=np.array(data)
 
                 
-    def disp(self):
-        print('---------')
+    def disp(self,threshold=-1.0):
+        datafrm='{:8.4e}'
+        modefrm='{:5d}'
+        print('------------------------------------')
         if not(self.Nperiods is None):
-            print 'Nperiods='+str(self.Nperiods)
-        print 'cosparity=\n'+str(self.cosparity)
-        print 'm=\n'+str(self.m)
-        print 'n=\n'+str(self.n)
-        print 'data=\n'+str(self.data)        
-        print('---------')
+            print('Nperiods='+str(self.Nperiods))
+        print('parity  m    n    data')
+        for ind in range(len(self.m)):
+            if abs(self.data[ind])>threshold:
+                if self.cosparity[ind]==1.0:
+                    cos_sin_str='cos '
+                else:
+                    cos_sin_str='sin '
+                print(cos_sin_str+modefrm.format(self.m[ind])+
+                      modefrm.format(self.n[ind])+'    '+datafrm.format(self.data[ind]))
+        print('------------------------------------')
 
 ###########################################################################################
 ###########################################################################################
@@ -195,16 +205,17 @@ class mnmat:
                  quantity='B',vmecgrid='half',warnings='off'):
         #Note that rind and quantity are only needed if input is a bcgeom
 
-        if isinstance(input, int):
-            input=float(input)
-            
-        if isinstance(input, float):
+        if isinstance(input, float) or isinstance(input, int):
+            if isinstance(input, int):
+                input=float(input)
             if Ntheta is None:
                 Ntheta=5 #default small number
             if Nzeta is None:
                 Nzeta=5 #default small number
             if Ntheta%2 != 1 or Nzeta%2 != 1:
                 sys.exit('sizes must be odd')
+            Ntheta=int(Ntheta)
+            Nzeta=int(Nzeta)
             self.Ntheta=Ntheta
             self.Nzeta=Nzeta
 
@@ -220,10 +231,13 @@ class mnmat:
             n0ind=(Nzeta-1)//2
             self.m0ind=m0ind
             self.n0ind=n0ind
+            Nperiods=int(Nperiods)
             self.Nperiods=Nperiods
             
             self.c=np.zeros((Nm,Nn))
             self.s=np.zeros((Nm,Nn))
+            self.c[0,:n0ind]=np.nan
+            self.s[0,:n0ind+1]=np.nan
             self.c[0,n0ind]=input
             #print('float input: '+str(self.c))
 
@@ -235,12 +249,12 @@ class mnmat:
             if newNtheta is None:
                 newNtheta=Ntheta_size
             elif newNtheta<Ntheta_size:
-                print 'Ntheta size of input: '+str(Ntheta_size)
-                print 'Ntheta parameter: '+str(newNtheta)
+                print('Ntheta size of input: '+str(Ntheta_size))
+                print('Ntheta parameter: '+str(newNtheta))
                 sys.exit('Ntheta is smaller than input size in mnmat fft routine for ndarrays! Not implemented yet.')
             elif newNtheta>Ntheta_size:
+                newNtheta=int(newNtheta)
                 do_expand=True
-            self.Ntheta=Ntheta
             
             Nzeta_size=input.shape[1]
             newNzeta=Nzeta
@@ -248,18 +262,23 @@ class mnmat:
             if newNzeta is None:
                 newNzeta=Nzeta_size
             elif newNzeta<Nzeta_size:
-                print 'Nzeta size of input: '+str(Nzeta_size)
-                print 'Nzeta parameter: '+str(newNzeta)
+                print('Nzeta size of input: '+str(Nzeta_size))
+                print('Nzeta parameter: '+str(newNzeta))
                 sys.exit('Nzeta is smaller than input size in mnmat fft routine for ndarrays! Not implemented yet.')
             elif newNzeta>Nzeta_size:
+                newNzeta =int(newNzeta)
                 do_expand=True
-            self.Nzeta=Nzeta
             
-            if self.Ntheta%2 != 1 or self.Nzeta%2 != 1:
-                sys.exit('sizes must be odd')
+            if Ntheta%2 != 1 or Nzeta%2 != 1:
+                sys.exit('Sizes Ntheta and Nzeta of the input matrix must be odd!')
+            self.Ntheta=Ntheta
+            self.Nzeta=Nzeta
+            if newNtheta%2 != 1 or newNzeta%2 != 1:
+                sys.exit('New sizes Ntheta and Nzeta must be odd!')
 
             if Nperiods is None:
-                 sys.exit('Nperiods is needed, not for the fft but for later use!')
+                sys.exit('Nperiods is needed, not for the fft but for later use!')
+            Nperiods=int(Nperiods)
             
             maxm=(Ntheta-1)//2
             Nm=maxm+1
@@ -278,12 +297,12 @@ class mnmat:
             self.c =  2.0/(Ntheta*Nzeta) * np.real(Fflip[0:maxm+1,::-1]);
             self.s = -2.0/(Ntheta*Nzeta) * np.imag(Fflip[0:maxm+1,::-1]);
 
-            self.c[0,0:n0ind]=None
-            self.s[0,0:n0ind+1]=None
+            self.c[0,:n0ind]=np.nan
+            self.s[0,:n0ind+1]=np.nan
             self.c[0,n0ind]=self.c[0,n0ind]/2.0
 
             if do_expand:
-                tmp = mnmat(self.mnlist(),Ntheta,Nzeta)
+                tmp = mnmat(self.mnlist(),newNtheta,newNzeta)
                 self.Ntheta   = tmp.Ntheta
                 self.Nzeta    = tmp.Nzeta
                 self.m0ind    = tmp.m0ind
@@ -294,44 +313,37 @@ class mnmat:
                 self.c        = tmp.c
                 self.s        = tmp.s
 
-                
-            #print('ndarray input:')
-            #print(self.c)
-            #print(self.s)
-
         elif isinstance(input, mnlist):
-            #print input.m.shape
-            #print input.n.shape
-            #print input.data.shape
-            #print input.cosparity.shape
-            
             if input.Nperiods is None:
-                self.Nperiods=Nperiods
+                if Nperiods is None:
+                    sys.exit('Nperiods is missing!')
+                else:    
+                    self.Nperiods=int(Nperiods)
             elif not(Nperiods is None):
                 if Nperiods==input.Nperiods:
-                    self.Nperiods=Nperiods
+                    self.Nperiods=int(Nperiods)
                 else:
                     sys.exit('You are trying to change the number of field periods'+
                              'from '+str(input.Nperiods)+' to '+str(Nperiods)+'!')
             else:
-                self.Nperiods=input.Nperiods
+                self.Nperiods=int(input.Nperiods)
             
             if Ntheta is None:
-                Ntheta=max(input.m)*2+1
+                Ntheta=int(max(input.m)*2+1)
             if Nzeta is None:
-                Nzeta=max(abs(input.n))*2+1
+                Nzeta=int(max(abs(input.n))*2+1)
             if Ntheta%2 != 1 or Nzeta%2 != 1:
                 sys.exit('sizes must be odd')
             self.Ntheta=Ntheta
             self.Nzeta=Nzeta
-            maxm=(Ntheta-1)//2
+            maxm=int((Ntheta-1)//2)
             Nm=maxm+1
-            maxabsn=(Nzeta-1)//2
+            maxabsn=int((Nzeta-1)//2)
             Nn=Nzeta
             self.m,self.n=np.mgrid[0:Nm,-maxabsn:maxabsn+1]
             
             m0ind=0
-            n0ind=(Nzeta-1)//2
+            n0ind=int((Nzeta-1)//2)
             self.m0ind=m0ind
             self.n0ind=n0ind
             self.c=np.zeros((Nm,Nn))
@@ -339,10 +351,10 @@ class mnmat:
 
             if warnings=='on':
                 if (input.m>maxm).any():
-                    Ntheta_needed=max(input.m)*2+1
+                    Ntheta_needed=int(max(input.m)*2+1)
                     sys.exit('Increase Ntheta to '+str(Ntheta_needed))
                 if (abs(input.n)>maxabsn).any():
-                    Nzeta_needed=max(abs(input.n))*2+1
+                    Nzeta_needed=int(max(abs(input.n))*2+1)
                     sys.exit('Increase Nzeta to '+str(Nzeta_needed))
 
             if (input.cosparity==1).all():
@@ -365,19 +377,21 @@ class mnmat:
                             self.c[input.m[ind],n0ind+input.n[ind]]+=input.data[ind]
                         else: #sinus component
                             self.s[input.m[ind],n0ind+input.n[ind]]+=input.data[ind]
+            self.c[0,:n0ind]=None
+            self.s[0,:n0ind+1]=None
             #print('list input:')
             #print(self.c)
             #print(self.s)
         elif isinstance(input, geomlib.bcgeom):
             lista=mnlist(input,rind=rind,quantity=quantity)
             tmp=mnmat(lista,Ntheta,Nzeta)
-            self.Nperiods=tmp.Nperiods
-            self.Ntheta  =tmp.Ntheta
-            self.Nzeta   =tmp.Nzeta
+            self.Nperiods=int(tmp.Nperiods)
+            self.Ntheta  =int(tmp.Ntheta)
+            self.Nzeta   =int(tmp.Nzeta)
 
-            maxm=(self.Ntheta-1)//2
+            maxm=int((self.Ntheta-1)//2)
             Nm=maxm+1
-            maxabsn=(self.Nzeta-1)//2
+            maxabsn=int((self.Nzeta-1)//2)
             Nn=self.Nzeta
             self.m,self.n=np.mgrid[0:Nm,-maxabsn:maxabsn+1]
              
@@ -389,18 +403,18 @@ class mnmat:
         elif isinstance(input, geomlib.vmecgeom):
             #quantity can be R,Z,B,lambda,B_u or B_w where (u,w,s) is RH and w=-v. (u,v,s) is the LH VMEC system.
             lista=mnlist(input,rind=rind,quantity=quantity,vmecgrid=vmecgrid)
-            #print 'shape of lista: '+str(lista.m.shape)
-            #print 'Ntheta='+str(Ntheta)
-            #print 'Nzeta='+str(Nzeta)
+            #print('shape of lista: '+str(lista.m.shape))
+            #print('Ntheta='+str(Ntheta))
+            #print('Nzeta='+str(Nzeta))
 
             tmp=mnmat(lista,Ntheta=Ntheta,Nzeta=Nzeta)
-            self.Nperiods=tmp.Nperiods
-            self.Ntheta  =tmp.Ntheta
-            self.Nzeta   =tmp.Nzeta
+            self.Nperiods=int(tmp.Nperiods)
+            self.Ntheta  =int(tmp.Ntheta)
+            self.Nzeta   =int(tmp.Nzeta)
 
-            maxm=(self.Ntheta-1)//2
+            maxm=int((self.Ntheta-1)//2)
             Nm=maxm+1
-            maxabsn=(self.Nzeta-1)//2
+            maxabsn=int((self.Nzeta-1)//2)
             Nn=self.Nzeta
             self.m,self.n=np.mgrid[0:Nm,-maxabsn:maxabsn+1]
              
@@ -475,9 +489,9 @@ class mnmat:
 
 
     def mnlist(self):
-        maxm=(self.Ntheta-1)//2
+        maxm=int((self.Ntheta-1)//2)
         Nn=self.Nzeta
-        Ns=Nn*maxm+(Nn-1)//2
+        Ns=int(Nn*maxm+(Nn-1)//2)
         Nc=Ns+1
         m_flat=self.m.flatten()
         n_flat=self.n.flatten()
@@ -491,19 +505,29 @@ class mnmat:
         
     def disp(self):
         if not(self.Nperiods is None):
-            print 'Nperiods='+str(self.Nperiods)
-        print '------------ cosinus -------------'
-        print self.c
-        print '------------- sinus --------------'
-        print self.s
+            print('Nperiods='+str(self.Nperiods))
+        print('------------ cosinus -------------')
+        print(self.c)
+        print('------------- sinus --------------')
+        print(self.s)
 
     def evalpoint(self,u,v):
+        if isinstance(u,int):
+            u=float(u) 
+        if isinstance(v,int):
+            v=float(v) 
+        if np.isscalar(u) and np.isscalar(v):
+            c=self.c*np.cos(self.m * u - self.n * self.Nperiods * v)
+            s=self.s*np.sin(self.m * u - self.n * self.Nperiods * v)
+            c[0,:self.n0ind]=0
+            s[0,:self.n0ind+1]=0
+            return np.sum(c+s)
         if u.ndim==0:
             c=self.c*np.cos(self.m * u - self.n * self.Nperiods * v)
             s=self.s*np.sin(self.m * u - self.n * self.Nperiods * v)
             c[0,:self.n0ind]=0
             s[0,:self.n0ind+1]=0
-            return (c+s).sum
+            return np.sum(c+s)
         if u.ndim>1:
             ufl=u.flatten()
             vfl=v.flatten()
@@ -513,11 +537,14 @@ class mnmat:
             
         c=self.c*np.cos(ufl[:,np.newaxis,np.newaxis]*self.m - vfl[:,np.newaxis,np.newaxis]*self.n*self.Nperiods)
         s=self.s*np.sin(ufl[:,np.newaxis,np.newaxis]*self.m - vfl[:,np.newaxis,np.newaxis]*self.n*self.Nperiods)
+
+        c[:,0,:self.n0ind]=0
+        s[:,0,:self.n0ind+1]=0
         
-        return (c+s).sum((1,2)).reshape(u.shape)
+        return np.sum((c+s),axis=(1,2)).reshape(u.shape)
        
     def ifft(self):
-        maxm=(self.Ntheta-1)//2
+        maxm=int((self.Ntheta-1)//2)
         n0ind=self.n0ind
         Nm=maxm+1
         Nn=self.Nzeta
@@ -569,25 +596,32 @@ class mnmat:
  
         return dduFmn, ddvFmn
 
-    def calcu(self,G,I,iota,radialvariable='poloidal flux',zeroout_Deltaiota=-1.0):
-        #% This solves the equation
-        #%
-        #%   B\cdot\nabla u = - B\times\nabla\chi\cdot\nabla h
-        #%
-        #% given that <B^2 u> = 0
-        #%
-        #% Very often we are interested to solve the equation with 
-        #% h=1/B^2, in which case one puts fftmn(1./B.^2) as the 
-        #% first argument.
-        #%
-        #% The optional 6th argument zeroout_Deltaiota can be used 
-        #% to zero out mn components of wmn
-        #% which have abs(n/m*NPeriods - iota) < zeroout_Deltaiota.
-        #%
-        #% The optional 7th argument can be used to change from the
-        #% poloidal flux \chi as the flux surface label in the above
-        #% equation to the toroidal flux \psi by giving the strings
-        #% 'poloidal flux' (default) or 'toroidal flux'.
+    def calcu(self,G,I,iota,radialvariable='poloidal flux',
+              zeroout_Deltaiota=-1.0, reference_theta=None,reference_zeta=None):
+        # This solves the equation
+        #
+        #   B\cdot\nabla u = - B\times\nabla\chi\cdot\nabla h
+        #
+        # given that <B^2 u> = 0
+        #
+        # Very often we are interested to solve the equation with 
+        # h=1/B^2, in which case one puts fftmn(1./B.^2) as the 
+        # first argument. For bootstrap coefficient calculations
+        # one instead often solves the equation with h=1/sqrt(1-lambda B).
+        #
+        # The optional argument zeroout_Deltaiota can be used 
+        # to zero out mn components of wmn
+        # which have abs(n/m*NPeriods - iota) < zeroout_Deltaiota.
+        #
+        # The optional argument radialvariablecan be used to change from the
+        # poloidal flux \chi as the flux surface label in the above
+        # equation to the toroidal flux \psi by giving the strings
+        # 'poloidal flux' (default) or 'toroidal flux'.
+        #
+        # The optional arguments reference_theta,reference_zeta can be used to set
+        # u_00 so that u(reference_theta,reference_zeta)=0. If a reference point
+        # is not given, then u_00=0.
+        
         if radialvariable=='poloidal flux':
             iotaexp=1
         elif radialvariable=='toroidal flux':
@@ -610,6 +644,9 @@ class mnmat:
         umn.c = np.where(np.logical_and(umn.m>0,abs(umn.n/m_tmp*N - iota)<zeroout_Deltaiota),0,umn.c)
         umn.s = np.where(np.logical_and(umn.m>0,abs(umn.n/m_tmp*N - iota)<zeroout_Deltaiota),0,umn.s)
 
+        if not(reference_theta is None) and not(reference_zeta is None):
+            umn.set00(-umn.evalpoint(reference_theta,reference_zeta))
+                
         return umn
         
     def invJacBdotgrad(self,iota):
@@ -656,8 +693,15 @@ class mnmat:
 
     def get00(self):
         return self.c[self.m0ind,self.n0ind]
+    
+    def set00(self,value):
+        self.c[self.m0ind,self.n0ind]=value
             
-    def remove00(self):
-        outmn=copy.deepcopy(self)
-        outmn.c[outmn.m0ind,outmn.n0ind]=0
-        return outmn
+    def remove00(self,copy=False):
+        if copy:
+            outmn=copy.deepcopy(self)
+            outmn.c[outmn.m0ind,outmn.n0ind]=0
+            return outmn
+        else:
+            self.c[self.m0ind,self.n0ind]=0
+            return self

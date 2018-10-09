@@ -63,14 +63,18 @@ else
   disp('Geom did not contain any field ''dVdsoverNper''!')
 end
 
-for tmpind=1:length(Geom.n)
-  Geom.n{tmpind}=-Geom.n{tmpind};
+if Geom.StelSym
+  for tmpind=1:length(Geom.n)
+    Geom.n{tmpind}=-Geom.n{tmpind};
+  end
 end
 
 if isfield(Geom,'Dphi')
-for tmpind=1:length(Geom.n)
-  Geom.Dphi{tmpind}=-Geom.Dphi{tmpind};
-end
+  if Geom.StelSym
+    for tmpind=1:length(Geom.n)
+      Geom.Dphi{tmpind}=-Geom.Dphi{tmpind};
+    end
+  end
 else
   disp('Geom did not contain any field ''Dphi''!')
 end
@@ -206,10 +210,18 @@ if strcmp(filetype,'bc')
     end
     if Geom.StelSym %I choose not to mn-sort the components because they usually come sorted.
       for ind=1:Geom.nmodes(rind)
-        fprintf(fid,'%5d%5d%16.8E%16.8E%16.8E%16.8E\n',...
-                Geom.m{rind}(ind),Geom.n{rind}(ind),...
-                Geom.R{rind}(ind),Geom.Z{rind}(ind),...
-                Geom.Dphi{rind}(ind),Geom.Bmn{rind}(ind));
+        if Geom.m{rind}(ind)==0
+          signn=sign(Geom.n{rind}(ind));
+          fprintf(fid,'%5d%5d%16.8E%16.8E%16.8E%16.8E\n',...
+                  Geom.m{rind}(ind),signn*Geom.n{rind}(ind),...
+                  Geom.R{rind}(ind),signn*Geom.Z{rind}(ind),...
+                  signn*Geom.Dphi{rind}(ind),Geom.Bmn{rind}(ind));
+        else  
+          fprintf(fid,'%5d%5d%16.8E%16.8E%16.8E%16.8E\n',...
+                  Geom.m{rind}(ind),Geom.n{rind}(ind),...
+                  Geom.R{rind}(ind),Geom.Z{rind}(ind),...
+                  Geom.Dphi{rind}(ind),Geom.Bmn{rind}(ind));
+        end
       end
     else     
       allms=sort(Geom.m{rind});

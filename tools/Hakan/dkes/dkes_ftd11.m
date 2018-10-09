@@ -414,6 +414,18 @@ for rind=1:dkdata.Nradii
         tmp=g11_erM(:);
         g11_er=tmp(totind);
         
+        displayit=0;
+        if displayit
+          good_efld=good.efld
+          good_cmul=good.cmul
+          good_d11=good.d11
+          good_d11e=good.d11e
+          ex_er
+          g11_er
+          cmul_ftu_def
+          error('stopppp')
+        end
+        
         %g11_er=sum(good.d11.*good.efld.^(3/2)./sqrt(good.cmul).*weights)/sum(weights)
 
         cmul_vec=linspace(cmul_ftl_def,cmul_ftu_def,100);

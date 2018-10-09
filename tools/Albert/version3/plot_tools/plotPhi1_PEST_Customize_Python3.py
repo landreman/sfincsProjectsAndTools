@@ -7,10 +7,10 @@ import numpy
 import os, sys, inspect
 import warnings
 import matplotlib.ticker as ticker
-import subprocess
+from scipy import interpolate
 
-#show_rN = True
-show_rN = False
+from VMECtoPEST_functions import interp2_cyclic, griddatacyclic
+from transformVMECtoPEST_Python3 import transformVMECtoPEST
 
 #makePDF = True
 makePDF = False
@@ -25,7 +25,7 @@ else:
    matplotlib.use('qt5agg')
 
 import matplotlib.pyplot as plt
-   
+
 print ("This is "+ inspect.getfile(inspect.currentframe()))
 
 sfincsHome = os.environ.get('SFINCS_HOME')
@@ -33,38 +33,48 @@ sfincsProjectsAndToolsHome = os.environ.get('SFINCS_PROJECTS_AND_TOOLS_HOME')
 
 exec(open(sfincsProjectsAndToolsHome + "/tools/Albert/version3/plot_tools"  + "/RadialScanPlotOptions.py").read())
 
-
 #########
 ##INPUT##
 #########
 
+readExternalData = False
+#readExternalData = True
+
+ExternalDataZetaColumn = 0
+ExternalDataThetaColumn = 1
+ExternalDataPhi1Column = 2
+ExternalDataPhi1Factor = 1.0/1000.0
+
+show_Title = True
+#PlotTitle = 'SFINCS'
+PlotTitle = 'EUTERPE'
+TitleSize = 40
+
+ShowLegend = False
+
 quantityToPlot = "Phi1Hat"
 
 filename = 'sfincsOutput.h5'
+#filename = 'EUTERPE_phi2d_helios_tj20_383_3cols.dat'
+
+#ncFilename = "/draco/u/almo/Phi1/LHD/lhd2_A_III/Input/wout_lhd2.nc"
+#ncFilename = "C:/Users/almo/Desktop/svn/sfincs/Impurities/Phi1/Results/LHD_Velasco_PPCF18/input/wout_lhd_r3.60_0.0.nc"
+ncFilename = "C:/Users/almo/Desktop/svn/sfincs/TJ-II/Input_TJII_case_Regana_NF17/wout_tj20.nc"
 
 #FigSize = (12,10)
-
-FigSize = (10,12)
-LeftMargin = 0.01
-RightMargin = 0.5
-TopMargin = 0.99
-BottomMargin = 0.01
-zLabelPad = 45
-PhiLabelPad = 30
 
 #font = {'size':25}
 #matplotlib.rc('font', **font)
 #matplotlib.rc('lines',markeredgewidth=0,markersize=3,linewidth=2.5)
 #matplotlib.rc('axes',linewidth=1.5)
 
-#matplotlib.rcParams['mathtext.default'] = 'it'
-#matplotlib.rcParams['text.usetex'] = True
-
 zFactor = 1000 ##kV -> V
 ##W7-X##
-xAxisTicks = [r'$0$', r'$\pi/10$', r'$2\pi/10$', r'$3\pi/10$', r'$4\pi/10$']
+#xAxisTicks = [r'$0$', r'$\pi/10$', r'$2\pi/10$', r'$3\pi/10$', r'$4\pi/10$']
 ##LHD
 #xAxisTicks = [r'$0$', r'$\pi/20$', r'$2\pi/20$', r'$3\pi/20$', r'$4\pi/20$']
+##TJ-II
+xAxisTicks = [r'$0$', r'$\pi/8$', r'$2\pi/8$', r'$3\pi/8$', r'$4\pi/8$']
 
 yAxisTicks = [r'$0$', r'$\pi/2$', r'$\pi$', r'$3\pi/2$', r'$2\pi$']
 
@@ -72,30 +82,23 @@ fig = plt.figure(figsize=FigSize)
 fig.patch.set_facecolor('white')
 numRows = 1
 numCols = 1
-
-#ContourLevels = numpy.array([-100.0, -10.0, -1.0, 0.0, 1.0, 10.0, 100.0])/zFactor
+#iteration = 0
 numContours = 100
-numShowLevels = 8
+#ContourLevels = [-3.0, -1.5, 0.0, 1.5, 3.0, 4.5, 6.0]
+#numLevels = 5
 
-ShowColorbar = True
+numShowLevels = 6
 
-#ScientificTicks = False
-#cbarTicks = [-200.0, -50.0, -20.0, -5.0, -1.0, 0.0, 1.0, 5.0, 20.0, 50.0, 200.0] # LHD discharge 113208 at t = 4.64 s
-#cbarTicks = [-10.0, -5.0, -1.0, -0.5, -0.1, 0.0, 0.1, 0.5, 1.0, 5.0, 10.0] # W7-X_NBI_case_Q34Q78_Z10_Zeff2p0
-#cbarTicks = [-5.0, -2.5 -1.0, -0.5, 0.0, 0.5, 1.0, 2.5, 5.0]
-cbarTicks = [-15.0, -10.0, -5.0, 0.0, 5.0, 10.0, 15.0] # W7-X OP1.1 EPS poster r/a=0.5
-#cbarTicks =None #None for automatic
+ShowColorbar = False
 
-#zMin = -250.0 # LHD discharge 113208 at t = 4.64 s
-#zMax = 250.0 # LHD discharge 113208 at t = 4.64 s
-#zMin = -15.0 # W7-X_NBI_case_Q34Q78_Z10_Zeff2p0
-#zMax = 15.0 # W7-X_NBI_case_Q34Q78_Z10_Zeff2p0
-#zMin = None #None to get the default value
-#zMax = None #None to get the default value
-zMin = -16.0 # W7-X OP1.1 EPS poster r/a=0.5
-zMax = 16.0 # W7-X OP1.1 EPS poster r/a=0.5
+#cbarTicks = [-15.0, -10.0, -5.0, 0.0, 5.0, 10.0, 15.0] # W7-X OP1.1 EPS poster r/a=0.5
+cbarTicks = [-2.0, -1.5, -1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0] # TJ-II TTF poster r/a=0.6
+
+zMin = -2.0 # TJ-II TTF poster r/a=0.6
+zMax = 2.0 # TJ-II TTF poster r/a=0.6
+
 zLogAxis = False
-LinearThreshold = 1.0 #In symlog plot
+LinearThreshold = 0.1 #In symlog plot
 LinearScale = 1.0 #When linscale == 1.0 (the default), the space used for the positive and negative halves of the linear range will be equal to one decade in the logarithmic range.
 
 TickFormat = r'$%2.1f$'
@@ -103,7 +106,7 @@ TickFormat = r'$%2.1f$'
 #TickFormat = r'%2.1f'
 #TickFormat = ticker.FuncFormatter(fmt_cbar)
 
-#PhiLabelPad = 30
+PhiLabelPad = 34
 ExtendRectangle = True
 
 ContourLabelSize = 30
@@ -115,15 +118,19 @@ ContourLabelShowLinearBorder = False
 ContourBorderColor = '#EEEE33'
 ContourBorderLineWidth = 4.
 
-ColorMap = 'gist_rainbow'
+#ColorMap = 'gist_rainbow'
 #ColorMap = 'hsv'
 ColorMap = 'rainbow'
 
-AddMaxMinBox = False
-MaxMinBoxXcoord = 0.4177 # LHD discharge 113208 at t = 4.64 s
-#MaxMinBoxXcoord = 2.016*0.4177 # W7-X_NBI_case_Q34Q78_Z10_Zeff2p0
-MaxMinBoxYcoord = -1.25 # LHD discharge 113208 at t = 4.64 s
+#zLabelPad = -30
+
+AddMaxMinBox = True
+#MaxMinBoxXcoord = 0.4177 # LHD discharge 113208 at t = 4.64 s
+MaxMinBoxXcoord = 2.016*0.4177 # W7-X_NBI_case_Q34Q78_Z10_Zeff2p0
+MaxMinBoxXcoord = 2.5*0.4177 # TJ-II case TTF poster
+#MaxMinBoxYcoord = -1.25 # LHD discharge 113208 at t = 4.64 s
 #MaxMinBoxYcoord = -1.224 # W7-X_NBI_case_Q34Q78_Z10_Zeff2p0
+MaxMinBoxYcoord = -1.3 # TJ-II case TTF poster
 MaxMinBoxLabelSize = 40
 MaxMinBoxFormat = '{:1.1f}'
 
@@ -141,27 +148,89 @@ def fmt_cbar(x, pos):
 def fmt_xy_axis(x, pos):
    return r'${}$'.format(x)
 
+#for i in range(6):
 print ("Processing file ",filename)
-f = h5py.File(filename,'r')
-theta = f["theta"][()]
-zeta = f["zeta"][()]
-Phi1Hat = f[quantityToPlot][()]
-iteration = f["NIterations"][()] - 1 #Results from last iteration
-rN = f["rN"][()]
-f.close()
 
+if readExternalData:
+   inputParams = numpy.genfromtxt(filename, dtype=None, comments="#")
+   ExternalZetas = inputParams[:, ExternalDataZetaColumn]
+   ExternalThetas = inputParams[:, ExternalDataThetaColumn]
+   ExternalPhi1Hats = ExternalDataPhi1Factor*inputParams[:, ExternalDataPhi1Column]
+
+   ExternalPhi1Function = interpolate.interp2d(ExternalThetas, ExternalZetas, ExternalPhi1Hats)
+
+   theta = numpy.unique(ExternalThetas)
+   zeta = numpy.unique(ExternalZetas)
+
+   Vmec_vmecu = theta.transpose()
+   Vmec_vmecw = zeta.transpose()
+   #Pest_Phi1 = Phi1Hat.transpose()
+
+   #Vmec_vmecu, Vmec_vmecw = numpy.meshgrid(theta, zeta)
+   
+   print ("ExternalThetas: " + str(ExternalThetas))
+   print ("ExternalZetas: " + str(ExternalZetas))
+   print ("theta: " + str(theta))
+   print ("zeta: " + str(zeta))
+   print ("length theta: " + str(len(theta)))
+   print ("length zeta: " + str(len(zeta)))
+   print ("Vmec_vmecu: " + str(Vmec_vmecu))
+   print ("Vmec_vmecw: " + str(Vmec_vmecw))
+
+   #Pest_Phi1 = ExternalPhi1Function(theta, zeta)
+   Pest_Phi1 = ExternalPhi1Function(Vmec_vmecu, Vmec_vmecw)
+
+   print ("Pest_Phi1: " + str(Pest_Phi1))
+   
+   Pest_vmecu = Vmec_vmecu
+   Pest_vmecw = Vmec_vmecw
+   Phi1Hat = Pest_Phi1
+
+   #sys.exit(0)
+else:
+   f = h5py.File(filename,'r')
+   theta = f["theta"][()]
+   zeta = f["zeta"][()]
+   iteration = f["NIterations"][()] - 1 #Results from last iteration
+   Phi1Hat = ((f[quantityToPlot][()])[:,:,iteration]).transpose()
+   rN = f["rN"][()]
+   Ntheta = f["Ntheta"][()]
+   Nzeta = f["Nzeta"][()]
+   psiN = f["psiN"][()]
+   f.close()
+
+   ############################################
+   ##Transform to PEST grid
+
+   Pest_vmecu, Pest_vmecw, Vmec_vmecu, Vmec_vmecw, Geom_Nperiods = transformVMECtoPEST(ncFilename, psiN, theta, zeta, -1)
+
+   Pest_Phi1 = interp2_cyclic(Vmec_vmecu, Vmec_vmecw, Phi1Hat, Pest_vmecu, Pest_vmecw, Geom_Nperiods)
+   ############################################
+
+#print ("psiN: " + str(psiN))
 print ("theta max: " + str(numpy.amax(theta)))
+print ("theta min: " + str(numpy.amin(theta)))
 print ("zeta max: " + str(numpy.amax(zeta)))
+print ("zeta min: " + str(numpy.amin(zeta)))
+print ("Pest_vmecu max: " + str(numpy.amax(Pest_vmecu)))
+print ("Pest_vmecu min: " + str(numpy.amin(Pest_vmecu)))
+print ("Pest_vmecw max: " + str(numpy.amax(Pest_vmecw)))
+print ("Pest_vmecw min: " + str(numpy.amin(Pest_vmecw)))
+
+print ("Phi1 max: " + str(numpy.amax(Phi1Hat)))
+print ("Phi1 min: " + str(numpy.amin(Phi1Hat)))
+print ("PEST_Phi1 max: " + str(numpy.amax(Pest_Phi1)))
+print ("PEST_Phi1 min: " + str(numpy.amin(Pest_Phi1)))
 
 if zMin == None:
-   zMin = zFactor*numpy.amin(Phi1Hat[:,:,iteration])
+   zMin = zFactor*numpy.amin(Pest_Phi1)
 if zMax == None:
-   zMax = zFactor*numpy.amax(Phi1Hat[:,:,iteration])
+   zMax = zFactor*numpy.amax(Pest_Phi1)
 print ("zMin = " + str(zMin))
 print ("zMax = " + str(zMax))
 
-zMinData = zFactor*numpy.amin(Phi1Hat[:,:,iteration])
-zMaxData = zFactor*numpy.amax(Phi1Hat[:,:,iteration])
+zMinData = zFactor*numpy.amin(Pest_Phi1)
+zMaxData = zFactor*numpy.amax(Pest_Phi1)
 print ("zMinData = " + str(zMinData))
 print ("zMaxData = " + str(zMaxData))
 #sys.exit(0)
@@ -171,6 +240,11 @@ if zMax < zMin:
    sys.exit(1)
 
 SymLogFlag = False
+
+
+#delta = (numpy.amax(Pest_Phi1) - numpy.amin(Pest_Phi1)) / numLevels
+#ContourLevels = numpy.arange(numpy.amin(Pest_Phi1), numpy.amax(Pest_Phi1) + delta/2.0, delta)
+#ContourLevels = zFactor*ContourLevels
 
 if zLogAxis:
    if zMin > 0:
@@ -256,31 +330,31 @@ print ("#############")
 LogNormToUse = matplotlib.colors.SymLogNorm(linthresh=LinearThreshold, linscale=LinearScale, vmin=zMin, vmax=zMax)
     
 ax = plt.subplot(numRows,numCols,1)
+    #plt.contourf(zeta,theta,1000*numpy.fliplr(Phi1Hat[:,:,iteration].transpose()),numContours)
+#Phi1Plot = plt.contourf(Vmec_vmecw.transpose(), Vmec_vmecu.transpose(), zFactor*Pest_Phi1.transpose(),numContours, cmap=plt.get_cmap(ColorMap))
 
 if zLogAxis:
-   Phi1Plot = plt.contourf(zeta,theta,zFactor*Phi1Hat[:,:,iteration].transpose(),numContours, levels=ContourLevels, cmap=plt.get_cmap(ColorMap), norm=LogNormToUse, extend='both')
+   Phi1Plot = plt.contourf(Vmec_vmecw.transpose(), Vmec_vmecu.transpose(), zFactor*Pest_Phi1.transpose(), numContours, levels=ContourLevels, cmap=plt.get_cmap(ColorMap), norm=LogNormToUse, extend='both')
 else:
-   Phi1Plot = plt.contourf(zeta,theta,zFactor*Phi1Hat[:,:,iteration].transpose(),numContours, levels=ContourLevels, cmap=plt.get_cmap(ColorMap), vmin=zMin, vmax=zMax, extend='both')
+   Phi1Plot = plt.contourf(Vmec_vmecw.transpose(), Vmec_vmecu.transpose(), zFactor*Pest_Phi1.transpose(), numContours, levels=ContourLevels, cmap=plt.get_cmap(ColorMap), vmin=zMin, vmax=zMax, extend='both')
 
-ax.set_visible(False)
-   
-#Phi1Plot2 = plt.contour(Phi1Plot,levels=ShowLevels, colors='k')
-#Phi1Plot2 = plt.contour(Phi1Plot,levels=ShowLevels, colors='k', linewidths=ContourThickness)
+#Phi1Plot2 = plt.contour(Phi1Plot,levels=ContourLevels, colors='k', hold='on')
+Phi1Plot2 = plt.contour(Phi1Plot,levels=ShowLevels, colors='k', linewidths=ContourThickness)
 
-#if SymLogFlag:
-#   Phi1Plot3 = plt.contour(Phi1Plot,levels=numpy.array([-LinearThreshold, LinearThreshold]), colors=ContourBorderColor, linewidths=ContourBorderLineWidth)
+if SymLogFlag:
+   Phi1Plot3 = plt.contour(Phi1Plot,levels=numpy.array([-LinearThreshold, LinearThreshold]), colors=ContourBorderColor, linewidths=ContourBorderLineWidth)
 
-#plt.xlabel(r'$\zeta$' + " " + r'$\mathrm{[rad]}$', fontsize=AxesLabelSize)
-#plt.ylabel(r'$\theta$'+ " " + r'$\mathrm{[rad]}$', fontsize=AxesLabelSize)
+plt.xlabel(r'$\zeta$' + " " + r'$\mathrm{[rad]}$', fontsize=AxesLabelSize)
+plt.ylabel(r'$\theta$'+ " " + r'$\mathrm{[rad]}$', fontsize=AxesLabelSize)
 
-#plt.xticks([0,max(zeta)/4,max(zeta)/2,3*max(zeta)/4,max(zeta)], fontsize=TickSize)
-#plt.yticks([0.0,max(theta)/4,max(theta)/2,3*max(theta)/4,max(theta)], fontsize=TickSize)
-#plt.gca().axes.xaxis.set_ticklabels(xAxisTicks)
-#plt.gca().axes.yaxis.set_ticklabels(yAxisTicks)
+plt.xticks([0,numpy.amax(Vmec_vmecw)/4,numpy.amax(Vmec_vmecw)/2,3*numpy.amax(Vmec_vmecw)/4,numpy.amax(Vmec_vmecw)], fontsize=TickSize)
+plt.yticks([0,numpy.amax(Vmec_vmecu)/4,numpy.amax(Vmec_vmecu)/2,3*numpy.amax(Vmec_vmecu)/4,numpy.amax(Vmec_vmecu)], fontsize=TickSize)
+plt.gca().axes.xaxis.set_ticklabels(xAxisTicks)
+plt.gca().axes.yaxis.set_ticklabels(yAxisTicks)
 
 #plt.gca().axes.xaxis.set_label_coords(0.5,-0.09)
 #plt.gca().axes.yaxis.set_label_coords(-0.09,0.5)
-#plt.gca().axes.xaxis.set_label_coords(0.5,-0.09)
+#plt.gca().axes.xaxis.set_label_coords(0.5,-0.05)
 #plt.gca().axes.yaxis.set_label_coords(-0.09,0.5)
 
 #ax.xaxis.set_major_formatter( ticker.FuncFormatter(fmt_xy_axis))
@@ -290,8 +364,14 @@ ax.set_visible(False)
 
 #plt.tight_layout(pad=0.4, w_pad=0.5, h_pad=1.0)
 
-if show_rN:
-    plt.title('rN = '+str(rN))
+if show_Title:
+    plt.title(PlotTitle, fontsize=TitleSize)
+
+
+#cbar = plt.colorbar(Phi1Plot, format=ticker.FuncFormatter(fmt_cbar), ticks=ContourLevels)
+#cbar.ax.set_ylabel(r'$\Phi_1$'+ " " + r'$\mathrm{[V]}$', rotation=0, labelpad=zLabelPad)
+
+#plt.clabel(Phi1Plot2, fmt=ticker.FuncFormatter(fmt_cbar), colors='k', fontsize=18, inline=False)
 
 if ShowColorbar:
 
@@ -302,11 +382,13 @@ if ShowColorbar:
    
    cbar.ax.set_ylabel(r'$\Phi_1$'+ " " + r'$\mathrm{[V]}$', rotation=0, labelpad=PhiLabelPad, fontsize=AxesLabelSize)
 
-#plt.clabel(Phi1Plot2, fmt=TickFormat, colors='k', fontsize=ContourLabelSize, inline=ContourLabelRemoveLine)
+plt.clabel(Phi1Plot2, fmt=TickFormat, colors='k', fontsize=ContourLabelSize, inline=ContourLabelRemoveLine)
+
+#plt.subplots_adjust(wspace=0.27)
 
 if SymLogFlag:
-   #if ContourLabelShowLinearBorder:
-   #   plt.clabel(Phi1Plot3, fmt=TickFormat, colors=ContourBorderColor, fontsize=ContourLabelSize, inline=ContourLabelRemoveLine)
+   if ContourLabelShowLinearBorder:
+      plt.clabel(Phi1Plot3, fmt=TickFormat, colors=ContourBorderColor, fontsize=ContourLabelSize, inline=ContourLabelRemoveLine)
 
    if ShowColorbar:
       #cbar.add_lines(Phi1Plot3)
@@ -334,7 +416,7 @@ if ShowSubPlotLabel:
 if AddMaxMinBox:
    plt.text(MaxMinBoxXcoord, MaxMinBoxYcoord, r'$\Phi_{1}^{\mathrm{min}} = $ ' + str(r'${}$'.format(MaxMinBoxFormat.format(zMinData))) + r' $\mathrm{V}$' + '\n' + r'$\Phi_{1}^{\mathrm{max}} = $ ' + str(r'${}$'.format(MaxMinBoxFormat.format(zMaxData))) + r' $\mathrm{V}$', fontsize=MaxMinBoxLabelSize)
 
-print (Phi1Hat.shape)
+print ("PEST_Phi1 shape: " + str(Pest_Phi1.shape))
 
 if makePDF:
     print ("Saving PDF")

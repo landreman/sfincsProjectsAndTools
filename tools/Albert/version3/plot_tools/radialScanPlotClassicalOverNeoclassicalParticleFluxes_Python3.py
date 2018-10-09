@@ -50,7 +50,8 @@ radiusName = "rN" ##Radial coordinate to use on x-axis. Must be "psiHat", "psiN"
 
 #plotVariableName = "Er" ##Parameter to plot on y-axis. In this version it must be "Er", "dPhiHatdpsiHat", "dPhiHatdpsiN", "dPhiHatdrHat" or "dPhiHatdrN" .
 plotVariableName = "particleFlux_vd_rHat"
-species = 3
+whichClassical = "classicalParticleFlux_rHat"
+species = 2
 TransformPlotVariableToOutputUnitsFactor = vbar
 
 MinFloat = pow(10, -sys.float_info.dig) 
@@ -113,7 +114,15 @@ for directory in PlotDirectories:
 
                 finished = file["finished"][()] 
                 integerToRepresentTrue = file["integerToRepresentTrue"][()]
-                includePhi1 = file["includePhi1"][()] 
+                includePhi1 = file["includePhi1"][()]
+
+                nHats = file["nHats"][()]
+
+                classicalParticleFlux = file[whichClassical][()]
+                classicalParticleFlux = classicalParticleFlux[:, -1]
+                classicalParticleFlux = classicalParticleFlux[species -1]
+                #classicalParticleFlux = TransformPlotVariableToOutputUnitsFactor * classicalParticleFlux
+                #classicalParticleFlux = classicalParticleFlux / nHats[species -1]
 
                 if includePhi1 == integerToRepresentTrue:
                     didNonlinearCalculationConverge = file["didNonlinearCalculationConverge"][()]
@@ -134,7 +143,7 @@ for directory in PlotDirectories:
                     VariableValue = VariableValue[:, -1]
                     VariableValue = VariableValue[species -1] 
 
-                VariableValue = TransformPlotVariableToOutputUnitsFactor * VariableValue
+                #VariableValue = TransformPlotVariableToOutputUnitsFactor * VariableValue
                 if includePhi1 == integerToRepresentTrue:
                     if didNonlinearCalculationConverge != integerToRepresentTrue:
                         print ("The nonlinear solver did not converge in " + fullSubDirectory)
@@ -145,6 +154,11 @@ for directory in PlotDirectories:
                 print ("Maybe the SFINCS run did not finish")
                 print ("Continuing with next sub directory.")
                 continue
+
+            #print("nHat: " + str(nHats[species -1]))
+
+            #VariableValue = VariableValue / nHats[species -1]
+            VariableValue = classicalParticleFlux / VariableValue
 
             Nradii += 1
             radii.append(radiusValue)
@@ -182,6 +196,7 @@ for directory in PlotDirectories:
         plt.plot(np.array(radii_sorted), np.array(ydata_sorted), PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel, linewidth=PlotLineWidth)
         linenumber += 1
 
+
     except:
         os.chdir(originalDirectory)
         print ("Unexpected error when processing " + directory)
@@ -217,6 +232,13 @@ plt.subplots_adjust(left=LeftMargin, right=RightMargin, top=TopMargin, bottom=Bo
 
 if ShowSubPlotLabel:
     plt.text(SubPlotLabelXcoord, SubPlotLabelYcoord, SubPlotLabel)
+
+if NoScientificAxes :
+    try:
+        ax.get_xaxis().get_major_formatter().set_scientific(False)
+        ax.get_yaxis().get_major_formatter().set_scientific(False)
+    except:
+        pass
 
 os.chdir(originalDirectory) 
 

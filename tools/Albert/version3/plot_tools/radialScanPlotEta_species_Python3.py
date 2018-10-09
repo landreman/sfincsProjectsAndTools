@@ -16,6 +16,8 @@ for arg in sys.argv:
 
 if makePDF:
     matplotlib.use('PDF')
+else:
+   matplotlib.use('qt5agg')
 
 import matplotlib.pyplot as plt
 
@@ -24,14 +26,10 @@ print ("This is "+ inspect.getfile(inspect.currentframe()))
 sfincsHome = os.environ.get('SFINCS_HOME') 
 sfincsProjectsAndToolsHome = os.environ.get('SFINCS_PROJECTS_AND_TOOLS_HOME')
 
-##PLOT OPTIONS##
-
-#execfile(sfincsProjectsAndToolsHome + "/tools/Albert/version3/plot_tools"  + "/RadialScanPlotOptions.py")
 exec(open(sfincsProjectsAndToolsHome + "/tools/Albert/version3/plot_tools"  + "/RadialScanPlotOptions.py").read())
 
-################
-
 ##INPUTS##
+species = 4
 
 ##NORMALIZATION FACTORS FOR SI UNITS##
 ######################################
@@ -48,12 +46,20 @@ filename = 'sfincsOutput.h5' ##Name for SFINCS output HDF5 files.
 
 radiusName = "rN" ##Radial coordinate to use on x-axis. Must be "psiHat", "psiN", "rHat" or "rN".
 
-#plotVariableName = "Er" ##Parameter to plot on y-axis. In this version it must be "Er", "dPhiHatdpsiHat", "dPhiHatdpsiN", "dPhiHatdrHat" or "dPhiHatdrN" .
-plotVariableName = "particleFlux_vd_rHat"
-species = 3
-TransformPlotVariableToOutputUnitsFactor = vbar
+#densityName = "nHats"
+#temperatureName = "THats"
+
+
+#TransformPlotVariableToOutputUnitsFactor = 10
+TransformPlotVariableToOutputUnitsFactor = 1.0
 
 MinFloat = pow(10, -sys.float_info.dig) 
+
+##PLOT OPTIONS##
+
+#execfile(sfincsProjectsAndToolsHome + "/tools/Albert/version3/plot_tools"  + "/RadialScanPlotOptions.py")
+
+################
 
 ##############################
 ##########END INPUTS##########
@@ -71,7 +77,7 @@ print ("Starting to create a plot from directories in " + originalDirectory)
 PlotDirectories = sorted(filter(os.path.isdir, os.listdir("."))) 
 
 if len(PlotDirectories) < 1:
-    print ("Error! Could not find any directories in " + originalDirectory)
+    print ("Error! Could not find any directories in " + originalDirectory) 
     sys.exit(1)
 
 fig = plt.figure(figsize=FigSize) 
@@ -79,7 +85,7 @@ fig.patch.set_facecolor('white')
 
 ax = plt.subplot(1, 1, 1)
 
-linenumber = 0
+#linenumber = 0
 
 for directory in PlotDirectories:
     try:
@@ -109,7 +115,7 @@ for directory in PlotDirectories:
             try:
                 file = h5py.File(fullSubDirectory + "/" + filename,'r')
                 radiusValue = file[radiusName][()]
-                #VariableValue = file[plotVariableName][()] 
+                #VariableValue = file[densityName][()] 
 
                 finished = file["finished"][()] 
                 integerToRepresentTrue = file["integerToRepresentTrue"][()]
@@ -117,22 +123,35 @@ for directory in PlotDirectories:
 
                 if includePhi1 == integerToRepresentTrue:
                     didNonlinearCalculationConverge = file["didNonlinearCalculationConverge"][()]
-                    #if plotVariableName == "particleFlux_vm_rHat":
+                    #if densityName == "particleFlux_vm_rHat":
                     #    VariableValue = file["particleFlux_vd_rHat"][()]
                 
-                if (plotVariableName.find('Flux_vd') != -1 or plotVariableName.find('Flux_vE') != -1) and (includePhi1 != integerToRepresentTrue):
-                    print (plotVariableName + " only exists in nonlinear runs, but this is a linear run.") 
-                    print ("Reading " + plotVariableName.replace('Flux_vd', 'Flux_vm').replace('Flux_vE', 'Flux_vm') + " instead.")
-                    VariableValue = file[plotVariableName.replace('Flux_vd', 'Flux_vm').replace('Flux_vE', 'Flux_vm')][()]
-                else:
-                    VariableValue = file[plotVariableName][()]
+#                if (densityName.find('Flux_vd') != -1 or densityName.find('Flux_vE') != -1) and (includePhi1 != integerToRepresentTrue):
+#                    print densityName + " only exists in nonlinear runs, but this is a linear run." 
+#                    print "Reading " + densityName.replace('Flux_vd', 'Flux_vm').replace('Flux_vE', 'Flux_vm') + " instead."
+#                    VariableValue = file[densityName.replace('Flux_vd', 'Flux_vm').replace('Flux_vE', 'Flux_vm')][()]
+#                else:
+#                    VariableValue = file[densityName][()]
+
+                THats = file["THats"][()] ## "species"
+                THats = THats[species - 1]
+                nHats = file["nHats"][()] ## "species"
+                nHats = nHats[species - 1]
+                dnHatdrN = file["dnHatdrN"][()] ## "species"
+                dnHatdrN = dnHatdrN[species - 1]
+                dTHatdrN = file["dTHatdrN"][()] ## "species"
+                dTHatdrN = dTHatdrN[species - 1]
+
+                eta = nHats*dTHatdrN / (THats*dnHatdrN)
+                
+                VariableValue = eta
 
                 file.close()
                 
-                #if plotVariableName == "particleFlux_vm_rHat":
-                if plotVariableName.find('Flux_v') != -1:
-                    VariableValue = VariableValue[:, -1]
-                    VariableValue = VariableValue[species -1] 
+                #if densityName == "particleFlux_vm_rHat":
+                #if densityName.find('Flux_v') != -1:
+                #    VariableValue = VariableValue[:, -1]
+                #    VariableValue = VariableValue[species -1] 
 
                 VariableValue = TransformPlotVariableToOutputUnitsFactor * VariableValue
                 if includePhi1 == integerToRepresentTrue:
@@ -174,13 +193,15 @@ for directory in PlotDirectories:
         print ("")
         print (np.array(ydata_sorted))
 
+        #for linenumber in range(species - 1,species - 1):
+        linenumber = species - 1
         try:
             LegendLabel = PlotLegendLabels[linenumber]
         except:
             LegendLabel = directory
 
-        plt.plot(np.array(radii_sorted), np.array(ydata_sorted), PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel, linewidth=PlotLineWidth)
-        linenumber += 1
+        plt.plot(np.array(radii_sorted), np.array(ydata_sorted), PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel)
+        #linenumber += 1
 
     except:
         os.chdir(originalDirectory)
@@ -205,6 +226,8 @@ else :
     ymin,ymax = plt.ylim(yAxisLim) 
     xmin,xmax = plt.xlim(xAxisLim) 
 
+#plt.legend(bbox_to_anchor = LegendBBoxToAnchor, loc=LegendPosition, ncol=LegendNumberColumns, mode=None, borderaxespad=0., prop=LegendProperties)#, fontsize=LegendFontSize)
+
 if ShowLegend:
     plt.legend(bbox_to_anchor = LegendBBoxToAnchor, loc=LegendPosition, ncol=LegendNumberColumns, mode=None, borderaxespad=0., prop=LegendProperties)#, fontsize=LegendFontSize)
 
@@ -218,10 +241,17 @@ plt.subplots_adjust(left=LeftMargin, right=RightMargin, top=TopMargin, bottom=Bo
 if ShowSubPlotLabel:
     plt.text(SubPlotLabelXcoord, SubPlotLabelYcoord, SubPlotLabel)
 
+if NoScientificAxes :
+    try:
+        ax.get_xaxis().get_major_formatter().set_scientific(False)
+        ax.get_yaxis().get_major_formatter().set_scientific(False)
+    except:
+        pass
+
 os.chdir(originalDirectory) 
 
 if makePDF: 
-    print ("Saving PDF")  
+    print ("Saving PDF")
 
     if len(sys.argv)>2 : #Use the substituted name as file name 
        print ("Writing plot to " + os.getcwd() + "/" + sys.argv[2] + ".pdf.")    

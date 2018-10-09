@@ -50,6 +50,8 @@ filename = 'sfincsOutput.h5' ##Name for SFINCS output HDF5 files.
 
 radiusName = "rN" ##Radial coordinate to use on x-axis. Must be "psiHat", "psiN", "rHat" or "rN".
 
+NumberSpecies = 2
+
 #plotVariableName = "Er" ##Parameter to plot on y-axis. In this version it must be "Er", "dPhiHatdpsiHat", "dPhiHatdpsiN", "dPhiHatdrHat" or "dPhiHatdrN" .
 plotVariableName = "nHats"
 
@@ -199,7 +201,7 @@ for directory in PlotDirectories:
         print ("")
         print (np.array(ydata_sorted))
 
-        for linenumber in range(0,4):
+        for linenumber in range(0, NumberSpecies):
             try:
                 LegendLabel = PlotLegendLabels[linenumber]
             except:
@@ -243,6 +245,13 @@ plt.subplots_adjust(left=LeftMargin, right=RightMargin, top=TopMargin, bottom=Bo
 
 if ShowSubPlotLabel:
     plt.text(SubPlotLabelXcoord, SubPlotLabelYcoord, SubPlotLabel)
+
+if NoScientificAxes :
+    try:
+        ax.get_xaxis().get_major_formatter().set_scientific(False)
+        ax.get_yaxis().get_major_formatter().set_scientific(False)
+    except:
+        pass
     
 os.chdir(originalDirectory) 
 

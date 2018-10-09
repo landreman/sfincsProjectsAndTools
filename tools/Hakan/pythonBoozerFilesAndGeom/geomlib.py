@@ -80,10 +80,10 @@ class bcgeom:
            sys.exit('Sign correction method for JG files not recognised!')
 
 
-       if filename[-4:-1]=='.dat':
+       if filename[-4:]=='.dat':
            #Henning Maassberg type file
            filetype='HM'
-       elif filename[-3:-1]=='.bc':
+       elif filename[-3:]=='.bc':
            #Joachim Geiger (or Erika Strumberger) type file
            filetype='JG'
        else: #default to JG
@@ -179,10 +179,10 @@ class bcgeom:
          while not endoffile:
            rind=rind+1
            if verbose>0:
-             print '\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b%5i/%5i'% (rind+1,self.nsurf),
-           if not(YTstyle): #%isempty(strfind(self.headertext.surfvars,'[A]'))
+             sys.stdout.write('\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b%5i/%5i'% (rind+1,self.nsurf))
+           if not(YTstyle): #isempty(strfind(self.headertext.surfvars,'[A]'))
                self.headertext.surfvarunits=f.readline() #unit line only in JG files
-           #print surfvarunits: '+self.headertext.surfvarunits
+           #print(surfvarunits: '+self.headertext.surfvarunits)
            surfheader=sscan(f.readline()) #fscanf(fid,'%f',6)
            torfluxnorm=np.append(torfluxnorm, surfheader[0])
            iota =np.append(iota,surfheader[1])
@@ -191,7 +191,7 @@ class bcgeom:
            dpds=np.append(dpds,surfheader[4])
            dVdsoverNper=np.append(dVdsoverNper,surfheader[5])
 
-           #f.readline() #%just skip the return character
+           #f.readline() #just skip the return character
            tmpstrunits=f.readline() #units line
            if rind==0:
                self.headertext.datavars=tmpstrunits
@@ -239,15 +239,15 @@ class bcgeom:
            while proceed:
                tmp_str=f.readline()
                if f.tell() == eof+1:
-                   #print 'eof found '+tmp_str
+                   #print('eof found '+tmp_str)
                    proceed=False
                    endoffile=True
-                   #print 'found end of file'
+                   #print('found end of file')
                if ('s' in tmp_str): #Next flux surface has been reached
                    proceed=False
-                   #print 'found next surface'
+                   #print('found next surface')
                else:
-                   #print tmp_str
+                   #print(tmp_str)
                    if self.StelSym:
                        tmp=sscan(tmp_str,count=6)
                        if ((abs(tmp[5])/B00[rind]>min_Bmn) and
@@ -300,7 +300,7 @@ class bcgeom:
          #end while loop over radii
          f.close()
          if verbose>0:
-           print '' #go to new line
+           print('') #go to new line
          
          if any([a>0 for a in dVdsoverNper]):
            sys.exit('The coordinate system in the Boozer '+
@@ -308,6 +308,8 @@ class bcgeom:
                     'a positive Jacobian. Something is wrong!')
 
          if self.torfluxtot*Bphi[0]>0:
+           if not(self.StelSym):
+               sys.exit('Unknown sign convention in non-stellarator-symmetric file!')
            if not(newsigncorrectionmethod):
                self.newsigncorr=0
                if not(self.StelSym):
@@ -319,6 +321,9 @@ class bcgeom:
            else: #Use newsigncorrectionmethod
                self.newsigncorr=1
                self.torfluxtot=-self.torfluxtot
+         elif self.StelSym: #(and self.torfluxtot*Bphi[0]<0)
+           sys.exit('Unknown sign convention in non-stellarator-symmetric file! '+
+                    'Neither YT nor JG standard.')
 
          rthetazeta_righthanded=np.sign(self.torfluxtot*Bphi[0])
          #This is -1, because the Boozer file is supposed to be left handed
@@ -358,7 +363,6 @@ class bcgeom:
          #%  m0n0ind=find(self.m{rind}==0 & self.n{rind}==0);
          #%  self.Z00(rind)=self.Z{rind}(m0n0ind);
          #%This is always zero (also in Erika's files)
-
 
          if rthetazeta_righthanded==-1:
            for tmpind in range(len(self.n)):
@@ -406,16 +410,22 @@ class bcgeom:
        if filetype=='HM': 
            self.StelSym=1
            self.newsigncorr=newsigncorrectionmethod
-     
-           f = open(filename, 'r')
-           f.seek(-1,2)     # go to the file end.
-           eof = f.tell()   # get the end of file location
-           f.seek(0,0)      # go back to file beginning
-           tmp_str=f.readline()
-           while tmp_str[1]=='c' or tmp_str[1]=='C':  #Skip comment line
-               tmp_str=f.readline() 
 
+           with open(filename) as f:
+               flines = f.readlines()
+           
+           #f = open(filename, 'r')
+           #f.seek(-1,2)     # go to the file end.
+           #eof = f.tell()   # get the end of file location
+           #f.seek(0,0)      # go back to file beginning
+           ind=0
+           tmp_str=flines[ind]
+           ind+=1
+           while tmp_str[1]=='c' or tmp_str[1]=='C':  #Skip comment line
+               tmp_str=flines[ind]#tmp_str=f.readline() 
+               ind+=1
            torfluxnorm=np.array([])
+           radii=np.array([])
            iota=np.array([])
            Bphi=np.array([])
            Btheta=np.array([])
@@ -431,6 +441,7 @@ class bcgeom:
            modesp=[]
            modesb=[]
            modesbnorm=[]
+           modesdbdrnorm=[]
            modespar=[]
              
            endoffile=False
@@ -439,7 +450,7 @@ class bcgeom:
            while not endoffile:
                rind=rind+1
                surfheader1     = sscan(tmp_str,count=8)
-               radii           = np.append(radii,surfheader1[0]/100) #(cm)
+               radii           = np.append(radii,surfheader1[0]/100) #(cm->m)
                iota            = np.append(iota,surfheader1[1])
                Nperiods        = surfheader1[2]
                minorradiusW7AS = surfheader1[3]/100 #(cm)
@@ -450,15 +461,18 @@ class bcgeom:
                else:
                    torfluxnorm = np.append(torfluxnorm,np.nan)
                    R00         = np.append(R00,np.nan)
-       
-               tmp_str=f.readline()
+
+                   
+               tmp_str=flines[ind]
+               ind+=1
                if tmp_str[1]=='>':
                    surfheader2=sscan(tmp_str[2:],count=3)
            
-                   Bphi      = np.append(Bphi,surfheader2[0]*1.0e6*Nperiods/2.0/pi*(4*pi*1e-7)) #Tesla*meter
-                   Btheta    = np.append(Btheta,surfheader2[1]*1.0e6/2.0/pi*(4*pi*1e-7))        #Tesla*meter
+                   Bphi      = np.append(Bphi,surfheader2[0]*1.0e6*Nperiods/2.0/np.pi*(4*np.pi*1e-7)) #Tesla*meter
+                   Btheta    = np.append(Btheta,surfheader2[1]*1.0e6/2.0/np.pi*(4*np.pi*1e-7))        #Tesla*meter
                    B00       = np.append(B00,surfheader2[2]) #Tesla
-                   tmp_str=f.readline()
+                   tmp_str=flines[ind]
+                   ind+=1
                else:
                    Bphi   = np.append(Bphi,np.nan)
                    Btheta = np.append(Btheta,np.nan)
@@ -472,6 +486,7 @@ class bcgeom:
                modesp.append(np.array([]))
                modesb.append(np.array([]))
                modesbnorm.append(np.array([]))
+               modesdbdrnorm.append(np.array([]))
                modespar.append(np.array([]))
     
                proceed=True
@@ -492,19 +507,21 @@ class bcgeom:
                            modesdbdrnorm[rind]= np.append(modesdbdrnorm[rind],tmp[4]*100) #conv. cm^-1 to m^-1
                            modesr[rind]= np.append(modesr[rind],tmp[5])
                            modesz[rind]= np.append(modesz[rind],tmp[6])
-         
-                   tmp_str=f.readline() #get the next line or surface header line
+
+                   if ind<len(flines):
+                       tmp_str=flines[ind]
+                       ind+=1 #get the next line or surface header line
                #end while proceed
                if modeind==-1:
                    sys.exit('no modes found for rind='+str(rind))
 
                no_of_modes.append(int(modeind+1))
 
-               if f.tell() == eof:
+               if ind>=len(flines): #f.tell() == eof:
                    endoffile=True
 
            #end while not endoffile
-           f.close()
+           #f.close()
            
            #self.torfluxtot is not stored in Henning Maassberg's files. Because they are 
            #based on Joachim Geiger's .bc files, however, they are left-handed (r,pol,tor) and
@@ -547,15 +564,15 @@ class bcgeom:
            if not(self.newsigncorr):
                self.Bphi=-self.Bphi
                self.Btheta=-self.Btheta
+               #NB: toroidal flux is not stored in HM's .dat files.
                
     #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  
     #% Turn a loaded vmec dataset vmecgeom into a bcgeom
     #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  
-    elif isinstance(input,vmecgeom):
+    elif isinstance(input,vmecgeom,signcorr=2):
         wout=input
         signchange=float(wout.signgs) #is -1, because vmec is left handed
         self.StelSym=input.StelSym
-        self.newsigncorr=True
         self.headertext=headertxt()
         # Note that the following are only comments to what would appear in
         # a file stored with .write()
@@ -569,21 +586,22 @@ class bcgeom:
                'CC input_extension= '+wout.input_extension+'\n'+
                'CC The phase convention (m theta - n phi) is used in this file.\n'+
                'CC The coordinate system (r,theta,phi) is left-handed.\n'+
-               'CC Toroidal flux is counted positive in the direction opposite to the toroidal coordinate.')
+               'CC Toroidal flux is counted positive in the direction opposite to '+
+               'the toroidal coordinate (JG style).')
         else:
             # Use Erika Strumberger's convention as default for non-stellarator symmetric files:
             # Toroidal flux is counted positive in the direction of the toroidal coordinate.
-            self.headertext.maincomment=('CC Converted from VMEC using HSs routines\n'+
+            self.headertext.maincomment=('CC Converted from VMEC using HS''s python routines\n'+
             'CC VMEC version         = '+str(wout.version_)+'\n'+
             'CC VMEC input extension = '+wout.input_extension+'\n'+
             'CC The phase convention (m theta - n phi) is used in this file.\n'+
             'CC The coordinate system (r,theta,phi) is left-handed.\n'+
-            'CC Toroidal flux is counted positive in the direction of the toroidal coordinate.')
+            'CC Toroidal flux is counted positive in the direction of the toroidal coordinate (ES,YT style).')
           
         self.m0b=wout.mpol
         self.n0b=wout.ntor
         self.nsurf= np.nan      #number of radial surfaces, Set this below
-        self.Nperiods=wout.nfp   #%!< number of field periods
+        self.Nperiods=int(wout.nfp)   #%!< number of field periods
         self.torfluxtot = wout.phi[wout.ns-1]*signchange
         self.psi_a=self.torfluxtot/2.0/np.pi
         self.minorradiusVMEC      = wout.Aminor_p  #minor plasma radius
@@ -604,6 +622,18 @@ class bcgeom:
         self.Bphi        = wout.bvco[skip:]*signchange #direction switch sign
         self.Btheta      = wout.buco[skip:] #sign change
 
+        if self.StelSym:
+            self.newsigncorr=True #default signcorr=2
+            if signcorr==1:
+                self.newsigncorr=False
+            elif signcorr==2:
+                self.newsigncorr=True #default signcorr=2
+            if not(self.newsigncorr):
+                self.Bphi      = -self.Bphi
+                self.Btheta    = -self.Btheta
+                self.torfluxtot= -self.torfluxtot
+                self.psi_a     = -self.psi_a
+                
         fullgrid_iota=wout.iotaf*signchange
         iota   = wout.iotas*signchange #half mesh
         self.iota=iota[skip:]
@@ -614,18 +644,18 @@ class bcgeom:
         #Use a RH coordinate system (u,w,s) with w=-v. Here, (u,v) are the VMEC coordinates
 
         if max_m==np.inf:
-          Ntheta = 1+2*max(abs(wout.xm))
-          self.Bfilter.max_m    = (Ntheta-1)//2
+          Ntheta = int(1+2*max(abs(wout.xm)))
+          self.Bfilter.max_m    = int((Ntheta-1)//2)
         else:
-          Ntheta = max_m*2+1
-          self.Bfilter.max_m    = max_m
+          Ntheta = int(max_m*2+1)
+          self.Bfilter.max_m    = int(max_m)
           
         if maxabs_n==np.inf:
-          Nzeta=1+2*max(abs(wout.xn))
-          self.Bfilter.maxabs_n = (Nzeta-1)//2
+          Nzeta=int(1+2*max(abs(wout.xn))/self.Nperiods)
+          self.Bfilter.maxabs_n = int((Nzeta-1)//2)
         else:
-          Nzeta = maxabs_n*2+1
-          self.Bfilter.maxabs_n = maxabs_n
+          Nzeta = int(maxabs_n*2+1)
+          self.Bfilter.maxabs_n = int(maxabs_n)
 
         self.dVdsoverNper = np.zeros(len(self.s)) 
         self.B00          = np.zeros(len(self.s))
@@ -642,16 +672,16 @@ class bcgeom:
         self.Bnorm=[]
         self.Dphi=[]
 
-        #print 'Nzeta,Ntheta = '+str(Nzeta)+', '+str(Ntheta)
+        #print('Nzeta,Ntheta = '+str(Nzeta)+', '+str(Ntheta)
         if verbose>0:
-          print 'Converting VMEC to Boozer coordinates...'
+          print('Converting VMEC to Boozer coordinates...')
         for rind in range(len(self.s)):
             if verbose>0:
-              print '\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\bRadius%5i/%5i'% (rind+1,len(self.s)),
-            Booz=fluxcoorddiscr.fluxcoorddiscr(wout,rind=rind,Ntheta=Ntheta,Nzeta=Nzeta,name='Boozer')
+              sys.stdout.write('\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\bRadius%5i/%5i'% (rind+1,len(self.s)))
+            Booz=fluxcoorddiscr.fluxcoorddiscr(wout,rind=rind,Npol=Ntheta,Ntor=Nzeta,name='Boozer')
             #(fig, ax)=Booz.plot('B')
             #fig.show()
-            #print Booz.B.shape
+            #print(Booz.B.shape)
             self.B00[rind]=Booz.B00
             self.R00[rind]=Booz.R00
             if self.StelSym:
@@ -698,7 +728,7 @@ class bcgeom:
 
         #end radius loop
         if verbose>0:
-          print '' #carriage return
+          print('') #carriage return
 
         self.dVdsoverNper=np.abs(self.psi_a*4*np.pi**2.0/self.Nperiods*
                                  (self.Bphi+self.iota*self.Btheta)/self.FSAB2)
@@ -711,10 +741,10 @@ class bcgeom:
             ii=[i for i,x in enumerate(wout.xm) if x==m]
             first_mode=ii[0]
             last_mode =ii[-1]
-            ns=np.expand_dims(wout.xn[ii[0]:ii[-1]]/wout.nfp, axis=1) #row vector
-            nnmat=(1.0+(-1.0)**ns-ns.T)/2.0
-            accum=accum+m*np.sum((np.expand_dims(wout.rmnc[-1][ii[0]:ii[-1]], axis=1)*
-                                  np.expand_dims(wout.zmns[-1][ii[0]:ii[-1]], axis=0))*nnmat)
+            ns=np.expand_dims(wout.xn[ii[0]:ii[-1]+1]/wout.nfp, axis=1) #row vector
+            nnmat=(1.0+(-1.0)**(ns-ns.T))/2.0
+            accum=accum+m*np.sum((np.expand_dims(wout.rmnc[-1][ii[0]:ii[-1]+1], axis=1)*
+                                  np.expand_dims(wout.zmns[-1][ii[0]:ii[-1]+1], axis=0))*nnmat)
 
         self.minorradiusW7AS=np.sqrt(np.abs(accum))
         
@@ -756,7 +786,7 @@ class bcgeom:
       #out=self.filter(min_Bmn)
       #out=self.filter(min_Bmn,max_m,maxabs_n)
       #out=self.filter(Bfilter)
-      # if makecopy=True the output is a copy of the input
+      # if makecopy=True the output is a new instance, and the input is untouched
 
       if makecopy:
          out=copy.deepcopy(self)
@@ -770,6 +800,11 @@ class bcgeom:
           max_m    = min(max_m,self.Bfilter.max_m)
           maxabs_n = min(maxabs_n,self.Bfilter.maxabs_n)
 
+      if max_m < np.inf:
+          max_m=int(max_m)
+      if maxabs_n < np.inf:
+          maxabs_n=int(maxabs_n)
+          
       if makecopy:
           out.Bfilter.min_Bmn  = min_Bmn
           out.Bfilter.max_m    = max_m
@@ -785,6 +820,7 @@ class bcgeom:
                                        np.logical_and(self.m[rind]<=max_m,
                                                       np.abs(self.n[rind])<=maxabs_n)))[0]
           if makecopy:
+              out.nmodes[rind]=len(inds)
               out.m[rind]=self.m[rind][inds]
               out.n[rind]=self.n[rind][inds]
               out.B[rind]=self.B[rind][inds]
@@ -795,12 +831,13 @@ class bcgeom:
               if not(self.StelSym):
                   out.parity[rind]=self.parity[rind][inds]
 
-              #print self.Bnorm[rind]
-              #print out.Bnorm[rind]
-              #print out.m[rind]
-              #print out.n[rind]
+              #print(self.Bnorm[rind])
+              #print(out.Bnorm[rind])
+              #print(out.m[rind])
+              #print(out.n[rind])
               #sys.exit('stop')
           else:
+              self.nmodes[rind]=len(inds)
               self.m[rind]=self.m[rind][inds]
               self.n[rind]=self.n[rind][inds]
               self.B[rind]=self.B[rind][inds]
@@ -818,7 +855,14 @@ class bcgeom:
   ##############################################################################
   # Write a bcgeom to a file
   ##############################################################################
-  def write(self,filename,Nradii=None,min_Bmn=0,nsortstyle='ascend',printheadercomment=True):
+  # One can choose between
+  # minorradiusconvention='W7AS' (default) Joachim Geiger's convention
+  # minorradiusconvention='VMEC'
+  # and between
+  # majorradiusconvention='lastR00' (default) Joachim Geiger's convention
+  # majorradiusconvention='VMEC'
+  def write(self,filename,Nradii=None,min_Bmn=0.0,nsortstyle=None,printheadercomment=True,
+            minorradiusconvention='W7AS',majorradiusconvention='lastR00'):
       #argument Nradii is only used for .dat files.
       #First check which type of file the user wants.
       if filename[-3:]=='.bc':
@@ -851,7 +895,7 @@ class bcgeom:
       f = open(filename, 'w')
       now = datetime.datetime.now()
       
-      signchange=-1; #sign changer
+      signchange=-1 #sign changer
       psi_a      = selfie.psi_a*signchange
       torfluxtot = selfie.torfluxtot*signchange
       Bphi=selfie.Bphi
@@ -863,17 +907,46 @@ class bcgeom:
          else:
             torfluxtot=-torfluxtot
 
+      #print 'In write: torfluxtot='+str(torfluxtot)
       iota=selfie.iota*signchange
       dVdsoverNper=selfie.dVdsoverNper*signchange
       Dphi=[]
+      Z=[]
       m=selfie.m
       n=[]
-      for tmpind in range(len(selfie.n)):
+      for tmprind in range(len(selfie.n)):
           Dphi.append(np.array([]))
+          Z.append(np.array([]))
           n.append(np.array([]))
-          Dphi[tmpind]=-selfie.Dphi[tmpind] 
-          n[tmpind]=np.where(selfie.m[tmpind]==0,np.abs(selfie.n[tmpind]),-selfie.n[tmpind])
+          Z[tmprind]    = selfie.Z[tmprind] 
+          Dphi[tmprind] =selfie.Dphi[tmprind]*signchange #swap coordinate direction
+          n[tmprind]    =selfie.n[tmprind]*signchange #swap coordinate direction
+              
+          if selfie.StelSym: #for m=0, I choose to output only positive n in the bc file
+              indsm0=np.where(np.logical_and(selfie.m[tmprind]==0,selfie.n[tmprind]!=0))[0]
+              signn=np.sign(n[tmprind][indsm0])
+              n[tmprind][indsm0]=signn*n[tmprind][indsm0]
+              Dphi[tmprind][indsm0]=signn*Dphi[tmprind][indsm0] #Dphi and Z are sin-series so changing
+              Z[tmprind][indsm0]=signn*Z[tmprind][indsm0]       #sign of n -> component sign change
+          
+          #n[tmprind]=np.where(selfie.m[tmprind]==0,np.abs(selfie.n[tmprind]),-selfie.n[tmprind])
 
+      if minorradiusconvention=='VMEC':
+          if np.isnan(selfie.minorradiusVMEC):
+              sys.exit("Error: minorradiusconvention='VMEC' could not be used when saving"+
+                       "the Boozer file, because the VMEC minor radius is unknown!")
+          chosenminorradius=selfie.minorradiusVMEC
+      else: #minorradiusconvention=='W7AS' (default)
+          chosenminorradius=selfie.minorradiusW7AS
+          
+      if majorradiusconvention=='VMEC':
+          if np.isnan(selfie.majorradiusVMEC):
+              sys.exit("Error: majorradiusconvention='VMEC' could not be used when saving"+
+                       "the Boozer file, because the VMEC major radius is unknown!")
+          chosenmajorradius=selfie.majorradiusVMEC
+      else: #majorradiusconvention=='lastR00' (default)
+          chosenmajorradius=selfie.majorradiusLastbcR00
+              
       #################################################################################
       if filetype=='bc':
       #################################################################################
@@ -889,14 +962,14 @@ class bcgeom:
                 f.write(' m0b  n0b nsurf nper  flux/[Tm^2]     a/[m]     R/[m]   avol/[m]\n')
                 f.write('%3d%5d%6d%4d%16.6E%10.5f%10.5f%11.5f\n' %
                         (selfie.m0b,selfie.n0b,selfie.nsurf,selfie.Nperiods,torfluxtot,
-                         selfie.minorradiusW7AS,selfie.majorradiusLastbcR00,selfie.minorradiusVMEC))
+                         chosenminorradius,chosenmajorradius,selfie.minorradiusVMEC))
             elif (not(np.isnan(selfie.minorradiusVMEC)) and not(np.isnan(selfie.majorradiusVMEC))
                   and np.isnan(selfie.volumeVMEC)):
                 f.write(' m0b  n0b nsurf nper  flux/[Tm^2]     a/[m]     R/[m]   avol/[m]  '+
                         'Rvol/[m]\n')
                 f.write('%3d%5d%6d%4d%16.6E%10.5f%10.5f%11.5f%11.5f%11.5f\n' %
                         (selfie.m0b,selfie.n0b,selfie.nsurf,selfie.Nperiods,torfluxtot,
-                         selfie.minorradiusW7AS,selfie.majorradiusLastbcR00,
+                         chosenminorradius,chosenmajorradius,
                          selfie.minorradiusVMEC,selfie.majorradiusVMEC,
                          np.pi*selfie.minorradiusVMEC**2.0*2.0*np.pi*selfie.majorradiusVMEC))
             elif (not(np.isnan(selfie.minorradiusVMEC)) and not(np.isnan(selfie.majorradiusVMEC))
@@ -905,13 +978,13 @@ class bcgeom:
                         'Rvol/[m] Vol/[m^3]\n')
                 f.write('%3d%5d%6d%4d%16.6E%10.5f%10.5f%11.5f%11.5f%11.5f\n' %
                         (selfie.m0b,selfie.n0b,selfie.nsurf,selfie.Nperiods,torfluxtot,
-                         selfie.minorradiusW7AS,selfie.majorradiusLastbcR00,
+                         chosenminorradius,chosenmajorradius,
                          selfie.minorradiusVMEC,selfie.majorradiusVMEC,selfie.volumeVMEC))
             else: #all three are nan
                 f.write(' m0b  n0b nsurf nper flux/[Tm^2]     a/[m]     R/[m]\n')
                 f.write('%3d%5d%6d%4d%16.6E%10.5f%10.5f\n' %
                         (selfie.m0b,selfie.n0b,selfie.nsurf,selfie.Nperiods,torfluxtot,
-                         selfie.minorradiusW7AS,selfie.majorradiusLastbcR00))
+                         chosenminorradius,chosenmajorradius))
          else: #non-StelSym, ES uses a little less info than JG
             f.write(' m0b   n0b  nsurf  nper    flux [Tm^2]        a [m]          R [m]\n')
             #Difficult! I Think Erika uses VMEC quantities here but I am not sure!
@@ -952,23 +1025,25 @@ class bcgeom:
                         'bmnc [T]         bmns [T]\n')
 
            if selfie.StelSym:
-              do_sort=False #If False, I choose not to mn-sort the components because they usually come sorted.
-              if do_sort:
-                  inds=np.lexsort((n[rind],m[rind]))
+              if not(nsortstyle is None): #Dont mn-sort the components because they usually come sorted
+                  if nsortstyle=='ascend':
+                      inds=np.lexsort((n[rind],m[rind]))
+                  elif nsortstyle=='descend':
+                      inds=np.lexsort((-n[rind],m[rind]))
                   for j in range(0,selfie.nmodes[rind]):
                       rmnc=selfie.R[rind][inds[j]]
-                      zmns=selfie.Z[rind][inds[j]]
+                      zmns=Z[rind][inds[j]]
                       vmns=Dphi[rind][inds[j]]
                       bmnc=selfie.B[rind][inds[j]]
                       f.write('%5d%5d%16.8E%16.8E%16.8E%16.8E\n' %
                               (m[rind][inds[j]],n[rind][inds[j]],
-                               selfie.R[rind][inds[j]],selfie.Z[rind][inds[j]],
+                               selfie.R[rind][inds[j]],Z[rind][inds[j]],
                                Dphi[rind][inds[j]],selfie.B[rind][inds[j]]))
               else:
                    for ind in range(0,selfie.nmodes[rind]):
                        f.write('%5d%5d%16.8E%16.8E%16.8E%16.8E\n' %
                                (m[rind][ind],n[rind][ind],
-                                selfie.R[rind][ind],selfie.Z[rind][ind],
+                                selfie.R[rind][ind],Z[rind][ind],
                                 Dphi[rind][ind],selfie.B[rind][ind]))
 
            else:
@@ -994,31 +1069,31 @@ class bcgeom:
                   vmns=0.0
                   bmnc=0.0
                   bmns=0.0
-                  #print thism, thisn, j, selfie.nmodes[rind], selfie.parity[rind][inds[j]]
+                  #print(thism, thisn, j, selfie.nmodes[rind], selfie.parity[rind][inds[j]])
                   if selfie.parity[rind][inds[j]]==1: #j is cosinus components
                        rmnc=selfie.R[rind][inds[j]]
-                       zmns=selfie.Z[rind][inds[j]]
+                       zmns=Z[rind][inds[j]]
                        vmns=Dphi[rind][inds[j]]
                        bmnc=selfie.B[rind][inds[j]]
                        j+=1              
                   else: #j is sinus components
                       rmns=selfie.R[rind][inds[j]]
-                      zmnc=selfie.Z[rind][inds[j]]
+                      zmnc=Z[rind][inds[j]]
                       vmnc=Dphi[rind][inds[j]]
                       bmns=selfie.B[rind][inds[j]]
                       if j+1==selfie.nmodes[rind]:
-                          #print 'A '+str(j)
+                          #print('A '+str(j))
                           j+=1
                       else: 
                           if thism==m[rind][inds[j+1]] and thisn==n[rind][inds[j+1]] and selfie.parity[rind][inds[j+1]]==1:
-                              #print 'B1 '+str(j)
+                              #print('B1 '+str(j))
                               rmnc=selfie.R[rind][inds[j+1]]
-                              zmns=selfie.Z[rind][inds[j+1]]
+                              zmns=Z[rind][inds[j+1]]
                               vmns=Dphi[rind][inds[j+1]]
                               bmnc=selfie.B[rind][inds[j+1]]
                               j+=2
                           else:
-                              #print 'B2 '+str(j)
+                              #print('B2 '+str(j))
                               j+=1 
                   f.write('%5d%5d%17.8E%17.8E%17.8E%17.8E%17.8E%17.8E%17.8E%17.8E\n' %
                           (thism,thisn,rmnc,rmns,zmnc,zmns,vmnc,vmns,bmnc,bmns))
@@ -1026,11 +1101,18 @@ class bcgeom:
       #################################################################################
       else: #save a .dat file instead
       #################################################################################
-         if np.isnan(selfie.majorradiusLastbcR00):
-             majorradiusLastbcR00=0.0
+         if majorradiusconvention=='VMEC':
+             print('Warning: You have chosen to make a Henning Maassberg style .dat file '+
+                   'with the major radius taken from VMEC instead of using the standard "lastR00" definition.')
          else:
-             majorradiusLastbcR00=selfie.majorradiusLastbcR00
+             if np.isnan(selfie.majorradiusLastbcR00):
+                 chosenmajorradius=0.0
 
+
+         if minorradiusconvention=='VMEC':
+             print('Warning: You have chosen to make a Henning Maassberg style .dat file '+
+                   'with the minor radius taken from VMEC instead of using the W7AS standard definition.')
+             
          if printheadercomment:
              f.write('cc Saved %4d.%2d.%2d %2d:%2d by HS python routine bcgeom.write.\n' %
                      (now.year,now.month,now.day,now.hour,now.minute))
@@ -1044,57 +1126,57 @@ class bcgeom:
                     and np.isnan(selfie.volumeVMEC)):
                    f.write('cc %3d%5d%6d%4d%16.6E%10.5f%10.5f%11.5f\n'%
                            (selfie.m0b,selfie.n0b,selfie.nsurf,selfie.Nperiods,torfluxtot,
-                            selfie.minorradiusW7AS,selfie.majorradiusLastbcR00,selfie.minorradiusVMEC))
+                            chosenminorradius,chosenmajorradius,selfie.minorradiusVMEC))
                 elif (not(np.isnan(selfie.minorradiusVMEC)) and not(np.isnan(selfie.majorradiusVMEC))
                       and np.isnan(selfie.volumeVMEC)):
                    f.write('cc %3d%5d%6d%4d%16.6E%10.5f%10.5f%11.5f%11.5f%11.5f\n'%
                            (selfie.m0b,selfie.n0b,selfie.nsurf,selfie.Nperiods,torfluxtot,
-                            selfie.minorradiusW7AS,selfie.majorradiusLastbcR00,
+                            chosenminorradius,chosenmajorradius,
                             selfie.minorradiusVMEC,selfie.majorradiusVMEC,
                             np.pi*selfie.minorradiusVMEC**2.0*2.0*np.pi*selfie.majorradiusVMEC))
                 elif (not(np.isnan(selfie.minorradiusVMEC)) and not(np.isnan(selfie.majorradiusVMEC))
                       and not(np.isnan(selfie.volumeVMEC))):
                    f.write('cc %3d%5d%6d%4d%16.6E%10.5f%10.5f%11.5f%11.5f%11.5f\n'%
                            (selfie.m0b,selfie.n0b,selfie.nsurf,selfie.Nperiods,torfluxtot,
-                            selfie.minorradiusW7AS,selfie.majorradiusLastbcR00,
+                            chosenminorradius,chosenmajorradius,
                             selfie.minorradiusVMEC,selfie.majorradiusVMEC,selfie.VolumeVMEC))
                 else:
                    f.write('cc %3d%5d%6d%4d%16.6E%10.5f%10.5f\n'%
                            (selfie.m0b,selfie.n0b,selfie.nsurf,selfie.Nperiods,torfluxtot,
-                            selfie.minorradiusW7AS,selfie.majorradiusLastbcR00))
+                            chosenminorradius,chosenmajorradius))
              else:
                 if (not(np.isnan(selfie.minorradiusVMEC)) and np.isnan(selfie.majorradiusVMEC)
                     and np.isnan(selfie.volumeVMEC)):
                    f.write('cc %6d%4d%10.5f%10.5f%11.5f\n'%
                            (selfie.nsurf,selfie.Nperiods,
-                            selfie.minorradiusW7AS,selfie.majorradiusLastbcR00,selfie.minorradiusVMEC))
+                            chosenminorradius,chosenmajorradius,selfie.minorradiusVMEC))
                 elif (not(np.isnan(selfie.minorradiusVMEC)) and not(np.isnan(selfie.majorradiusVMEC))
                       and np.isnan(selfie.volumeVMEC)):
                    f.write('cc %6d%4d%10.5f%10.5f%11.5f%11.5f%11.5f\n'%
                            (selfie.nsurf,selfie.Nperiods,
-                            selfie.minorradiusW7AS,selfie.majorradiusLastbcR00,
+                            chosenminorradius,chosenmajorradius,
                             selfie.minorradiusVMEC,selfie.majorradiusVMEC,
                             np.pi*selfie.minorradiusVMEC**2.0*2.0*np.pi*selfie.majorradiusVMEC))
                 elif (not(np.isnan(selfie.minorradiusVMEC)) and not(np.isnan(selfie.majorradiusVMEC))
                       and not(np.isnan(selfie.volumeVMEC))):
                    f.write(' cc %6d%4d%10.5f%10.5f%11.5f%11.5f%11.5f\n'%
                            (selfie.nsurf,selfie.Nperiods,
-                            selfie.minorradiusW7AS,selfie.majorradiusLastbcR00,
+                            chosenminorradius,chosenmajorradius,
                             selfie.minorradiusVMEC,selfie.majorradiusVMEC,selfie.VolumeVMEC))
                 else:
                    f.write('cc %6d%4d%10.5f%10.5f\n'%
                            (selfie.nsurf,selfie.Nperiods,
-                            selfie.minorradiusW7AS,selfie.majorradiusLastbcR00))
+                            chosenminorradius,chosenmajorradius))
          #end if headercomment
          
          f.write(' c     m, n, B_mn/B_00, B_mn, (dB_mn/dr)/B_00 [1/cm], R_mn, z_mn\n')
 
          for rind in range(selfie.nsurf):
              f.write('%6.2f%8.4f%3i%8.2f%8.2f%7.4f%8.2f%8.2f  r,io,N,ra,Rm,s,r_o,R00\n'%
-                     (selfie.minorradiusW7AS*selfie.rnorm[rind]*100.0,
-                      iota[rind],selfie.Nperiods,selfie.minorradiusW7AS*100.0,
-                      selfie.majorradiusLastbcR00*100.0,selfie.s[rind],
-                      selfie.minorradiusW7AS*selfie.rnorm[rind]*100.0,selfie.R00[rind]*100.0))
+                     (chosenminorradius*selfie.rnorm[rind]*100.0,
+                      iota[rind],selfie.Nperiods,chosenminorradius*100.0,
+                      chosenmajorradius*100.0,selfie.s[rind],
+                      chosenminorradius*selfie.rnorm[rind]*100.0,selfie.R00[rind]*100.0))
              f.write(' >  %13.4E%13.4E%13.4E     cur_pol=g, cur_tor=I, B_00\n'%
                      (Bphi[rind]/(1.0e6*selfie.Nperiods/2.0/np.pi*(4.0*np.pi*1.0e-7)),
                       Btheta[rind]/(1.0e6/2.0/np.pi*(4.0*np.pi*1.0e-7)),
@@ -1110,9 +1192,9 @@ class bcgeom:
                           n[rind][m0i],
                           selfie.Bnorm[rind][m0i],
                           selfie.B[rind][m0i],
-                          selfie.dBdrnorm[rind][m0i]/selfie.B00[rind]/selfie.minorradiusW7AS/100.0,
+                          selfie.dBdrnorm[rind][m0i]/selfie.B00[rind]/chosenminorradius/100.0,
                           selfie.R[rind][m0i]*100.0,
-                          selfie.Z[rind][m0i]*100.0))
+                          Z[rind][m0i]*100.0))
              for thism in range(1,int(np.max(m[rind]))+1):
                  thisminds=np.where(m[rind]==thism)[0]
                  if nsortstyle=='ascend':
@@ -1125,9 +1207,9 @@ class bcgeom:
                               n[rind][mi],
                               selfie.Bnorm[rind][mi],
                               selfie.B[rind][mi],
-                              selfie.dBdrnorm[rind][mi]/selfie.B00[rind]/selfie.minorradiusW7AS/100.0,
+                              selfie.dBdrnorm[rind][mi]/selfie.B00[rind]/chosenminorradius/100.0,
                               selfie.R[rind][mi]*100.0,
-                              selfie.Z[rind][mi]*100.0))
+                              Z[rind][mi]*100.0))
              #end for thism
              f.write('  -1   0 0.0 0.0 0.0 0.0 0.0     end of input\n')
          #end for rind
@@ -1138,7 +1220,7 @@ class bcgeom:
   ####################################################################
   # Interpolate a bcgeom to a set of new radii
   ####################################################################
-  def interp(self,invar,invarname='rnorm',interptype='linear'):
+  def interp(self,invar,invarname='rnorm',interptype='linear',padding=None):
       # This function interpolates the bcgeom to a new
       # set of radii. The chosen new values invar of the flux label 
       # given by the string invarname ('s', 'rnorm', 'rW7AS', 'rVMEC') are interpolated.
@@ -1158,19 +1240,19 @@ class bcgeom:
       #Decide which variable to interpolate over
       if invarname=='s':
           s=invar
-          if np.any(s<smin) or np.any(s>smax):
+          if (padding is None) and (np.any(s<smin) or np.any(s>smax)):
             sys.exit('Chosen s out of range!')
       elif invarname=='rnorm':
           s=invar**2
-          if np.any(s<smin) or np.any(s>smax):
+          if (padding is None) and (np.any(s<smin) or np.any(s>smax)):
             sys.exit('Chosen rnorm out of range!')
       elif invarname=='rW7AS':
           s=(invar/self.minorradiusW7AS)**2
-          if np.any(s<smin) or np.any(s>smax):
+          if (padding is None) and (np.any(s<smin) or np.any(s>smax)):
             sys.exit('Chosen rW7AS out of range!')
       elif invarname=='rVMEC':
           s=(invar/self.minorradiusVMEC)**2
-          if np.any(s<smin) or np.any(s>smax):
+          if (padding is None) and (np.any(s<smin) or np.any(s>smax)):
             sys.exit('Chosen rVMEC out of range!')
       elif invarname=='index':
           if np.any(invar<0) or np.any(invar>(len(self.s)-1)):
@@ -1180,7 +1262,10 @@ class bcgeom:
           interptype='nearest'
       else:
           sys.exit('invarname not recognised!')
-        
+      if padding=='end values' and not(invarname=='index'):
+          s=np.where(s<smin,smin,s)
+          s=np.where(s>smax,smax,s)
+          
       out=copy.deepcopy(self)
 
       s=np.sort(s)
@@ -1218,7 +1303,7 @@ class bcgeom:
           out.Dphi=[]
 
           for surfind in range(out.nsurf):
-              #print '\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b%4i/%4i'% (surfind+1,out.nsurf)
+              #print('\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b%4i/%4i'% (surfind+1,out.nsurf))
               if not(s[surfind] in self.s):
                   Rind=np.where(np.sign(self.s-s[surfind])==1)[0][0]
               else:
@@ -1413,7 +1498,7 @@ class bcgeom:
               out.Bnorm[surfind] = out.B[surfind]/out.B00[surfind]
               out.nmodes[surfind]= mode+1
           #end for surfind
-          #print '\n'
+          #print('\n')
       elif interptype=='nearest': #Pick the nearest existing surface
         actualinterpolation=True
         if len(s)==len(self.s):
@@ -1442,14 +1527,14 @@ class bcgeom:
         out.dVdsoverNper = self.dVdsoverNper[inds]
         out.B00    = self.B00[inds]
         out.R00    = self.R00[inds]
-        out.nmodes = self.nmodes[inds]
-        out.B      = self.B[inds]
-        out.R      = self.R[inds]
-        out.Z      = self.Z[inds]
-        out.Dphi   = self.Dphi[inds]
-        out.Bnorm  = self.Bnorm[inds]
-        out.m      = self.m[inds]
-        out.n      = self.n[inds]
+        out.nmodes = np.array(self.nmodes)[inds]
+        out.B      = np.array(self.B)[inds]
+        out.R      = np.array(self.R)[inds]
+        out.Z      = np.array(self.Z)[inds]
+        out.Dphi   = np.array(self.Dphi)[inds]
+        out.Bnorm  = np.array(self.Bnorm)[inds]
+        out.m      = np.array(self.m)[inds]
+        out.n      = np.array(self.n)[inds]
         if not(self.StelSym):
            out.parity = self.parity[inds]
 
@@ -1465,55 +1550,55 @@ class bcgeom:
   
   def disp(self,verbose=0):
 
-    print '-----------------------------------------------'
-    print 'Comment lines: headertext.maincomment='
-    #print '-----------------------------------------------'
+    print('-----------------------------------------------')
+    print('Comment lines: headertext.maincomment=')
+    #print('-----------------------------------------------')
 
-    print self.headertext.maincomment
-    print '-----------------------------------------------'
-    print 'Scalars:'
-    #print '-----------------------------------------------'
-    print 'nsurf                = '+str(self.nsurf)
-    print 'Nperiods             = '+str(self.Nperiods)
-    print 'psi_a                = '+str(self.psi_a)
-    print 'torfluxtot           = '+str(self.torfluxtot)
-    print 'minorradiusW7AS      = '+str(self.minorradiusW7AS)
-    print 'majorradiusLastbcR00 = '+str(self.majorradiusLastbcR00)
-    print 'minorradiusVMEC      = '+str(self.minorradiusVMEC)
-    print 'majorradiusVMEC      = '+str(self.majorradiusVMEC)
-    print 'volumeVMEC           = '+str(self.volumeVMEC)
-    print 'Bfilter.min_Bmn      = '+str(self.Bfilter.min_Bmn)
-    print 'Bfilter.max_m        = '+str(self.Bfilter.max_m)
-    print 'Bfilter.maxabs_n     = '+str(self.Bfilter.maxabs_n)
+    print(self.headertext.maincomment)
+    print('-----------------------------------------------')
+    print('Scalars:')
+    #print('-----------------------------------------------')
+    print('nsurf                = '+str(self.nsurf))
+    print('Nperiods             = '+str(self.Nperiods))
+    print('psi_a                = '+str(self.psi_a))
+    print('torfluxtot           = '+str(self.torfluxtot))
+    print('minorradiusW7AS      = '+str(self.minorradiusW7AS))
+    print('majorradiusLastbcR00 = '+str(self.majorradiusLastbcR00))
+    print('minorradiusVMEC      = '+str(self.minorradiusVMEC))
+    print('majorradiusVMEC      = '+str(self.majorradiusVMEC))
+    print('volumeVMEC           = '+str(self.volumeVMEC))
+    print('Bfilter.min_Bmn      = '+str(self.Bfilter.min_Bmn))
+    print('Bfilter.max_m        = '+str(self.Bfilter.max_m))
+    print('Bfilter.maxabs_n     = '+str(self.Bfilter.maxabs_n))
 
-    print '-----------------------------------------------'
-    print 'Radial arrays:'
-    #print '-----------------------------------------------'
+    print('-----------------------------------------------')
+    print('Radial arrays:')
+    #print('-----------------------------------------------')
     if verbose==1:
-      print 'rnorm='+str(self.rnorm)
-      print 's='+str(self.s)
-      print 'Bphi='+str(self.Bphi)
-      print 'Btheta='+str(self.Btheta)
-      print 'iota='+str(self.iota)
-      print 'dpds='+str(self.dpds)
+      print('rnorm='+str(self.rnorm))
+      print('s='+str(self.s))
+      print('Bphi='+str(self.Bphi))
+      print('Btheta='+str(self.Btheta))
+      print('iota='+str(self.iota))
+      print('dpds='+str(self.dpds))
   
-      print 'dVdsoverNper='+str(self.dVdsoverNper)
-      print 'FSAB2='+str(self.FSAB2)
-      print 'nmodes='+str(self.nmodes)
-      print 'B00='+str(self.B00)
-      print 'R00='+str(self.R00)
+      print('dVdsoverNper='+str(self.dVdsoverNper))
+      print('FSAB2='+str(self.FSAB2))
+      print('nmodes='+str(self.nmodes))
+      print('B00='+str(self.B00))
+      print('R00='+str(self.R00))
     elif verbose==0:
-      print 'rnorm, s, Bphi, Btheta, iota, dpds, dVdsoverNper, '
-      print 'FSAB2, nmodes, B00, R00'
+      print('rnorm, s, Bphi, Btheta, iota, dpds, dVdsoverNper, ')
+      print('FSAB2, nmodes, B00, R00')
 
-    print '-----------------------------------------------'
+    print('-----------------------------------------------')
     if self.StelSym:
-       print 'Fourier indexes:    m, n'
+       print('Fourier indexes:    m, n')
     else:
-       print 'Fourier indexes:    m, n, parity'
+       print('Fourier indexes:    m, n, parity')
 
-    print 'Fourier quantities: B, R, Z, Dphi'
-    print '-----------------------------------------------'
+    print('Fourier quantities: B, R, Z, Dphi')
+    print('-----------------------------------------------')
 
 
 
@@ -1572,36 +1657,36 @@ class vmecgeom:
                 a valid netCDF4.Dataset.variables key
             """
             try:
-                print "\t\ttype:", repr(nc_fid.variables[key].dtype)
+                print("\t\ttype:", repr(nc_fid.variables[key].dtype))
                 for ncattr in nc_fid.variables[key].ncattrs():
-                    print '\t\t%s:' % ncattr,\
-                          repr(nc_fid.variables[key].getncattr(ncattr))
+                    print('\t\t%s:' % ncattr,\
+                          repr(nc_fid.variables[key].getncattr(ncattr)))
             except KeyError:
-                print "\t\tWARNING: %s does not contain variable attributes" % key
+                print("\t\tWARNING: %s does not contain variable attributes" % key)
 
         # NetCDF global attributes
         nc_attrs = nc_fid.ncattrs()
         if verb:
-            print "NetCDF Global Attributes:"
+            print("NetCDF Global Attributes:")
             for nc_attr in nc_attrs:
-                print '\t%s:' % nc_attr, repr(nc_fid.getncattr(nc_attr))
+                print('\t%s:' % nc_attr, repr(nc_fid.getncattr(nc_attr)))
         nc_dims = [dim for dim in nc_fid.dimensions]  # list of nc dimensions
         # Dimension shape information.
         if verb:
-            print "NetCDF dimension information:"
+            print("NetCDF dimension information:")
             for dim in nc_dims:
-                print "\tName:", dim 
-                print "\t\tsize:", len(nc_fid.dimensions[dim])
+                print("\tName:", dim )
+                print("\t\tsize:", len(nc_fid.dimensions[dim]))
                 print_ncattr(dim)
         # Variable information.
         nc_vars = [var for var in nc_fid.variables]  # list of nc variables
         if verb:
-            print "NetCDF variable information:"
+            print("NetCDF variable information:")
             for var in nc_vars:
                 if var not in nc_dims:
-                    print '\tName:', var
-                    print "\t\tdimensions:", nc_fid.variables[var].dimensions
-                    print "\t\tsize:", nc_fid.variables[var].size
+                    print('\tName:', var)
+                    print("\t\tdimensions:", nc_fid.variables[var].dimensions)
+                    print("\t\tsize:", nc_fid.variables[var].size)
                     print_ncattr(var)
         return nc_attrs, nc_dims, nc_vars
 
@@ -1609,7 +1694,7 @@ class vmecgeom:
     
     dataset=Dataset(filename)
     nc_attrs, nc_dims, nc_vars = ncdump(dataset)
-    #print nc_vars
+    #print(nc_vars
     
     self.StelSym=not('bmns' in dataset.variables)
     self.skip = 1 #=1,this is how many elements are skipped at low radii when going to half grid
@@ -1780,154 +1865,154 @@ class vmecgeom:
     frmi='{:8d}'
     frs='{:11s}'
     if verbose:
-        print '-----------------------------------------------'
-        print 'File info'
-        print '-----------------------------------------------'
-        print 'filename       = '+self.filename
-        print 'version_       = '+str(self.version_)
-        print 'input_extension= '+self.input_extension
-        print 'mgrid_file     = '+self.mgrid_file
-        print 'pcurr_type     = '+self.pcurr_type
-        print 'pmass_type     = '+self.pmass_type
-        print 'piota_type     = '+self.piota_type
-        print 'mgrid_mode     = '+self.mgrid_mode
-        print ' ' 
-    print '-----------------------------------------------'
-    print 'Scalars:'
-    print '-----------------------------------------------'
+        print('-----------------------------------------------')
+        print('File info')
+        print('-----------------------------------------------')
+        print('filename       = '+self.filename)
+        print('version_       = '+str(self.version_))
+        print('input_extension= '+self.input_extension)
+        print('mgrid_file     = '+self.mgrid_file)
+        print('pcurr_type     = '+self.pcurr_type)
+        print('pmass_type     = '+self.pmass_type)
+        print('piota_type     = '+self.piota_type)
+        print('mgrid_mode     = '+self.mgrid_mode)
+        print(' ' )
+    print('-----------------------------------------------')
+    print('Scalars:')
+    print('-----------------------------------------------')
     if verbose:
-        print 'wb                   = '+frm.format(self.wb)+' :'
-        print 'wp                   = '+frm.format(self.wp)+' :'
-        print 'gamma                = '+frm.format(self.gamma)+' :'
-        print 'rmax_surf            = '+frm.format(self.rmax_surf)+' :'
-        print 'rmin_surf            = '+frm.format(self.rmin_surf)+' :'
-        print 'zmax_surf            = '+frm.format(self.zmax_surf)+' :'
-    print 'StelSym              =    '+str(self.StelSym)
-    print 'nfp                  = '+frm.format(self.nfp)+' : Number of field periods'
-    print 'ns                   = '+frmi.format(self.ns)+' : Number of flux surfaces'
-    print 'mpol                 = '+frmi.format(self.mpol)+' :'
-    print 'ntor                 = '+frmi.format(self.ntor)+' :'
-    print 'mnmax                = '+frmi.format(self.mnmax)+' :'
-    print 'mnmax_nyq            = '+frmi.format(self.mnmax_nyq)+' :'
+        print('wb                   = '+frm.format(self.wb)+' :')
+        print('wp                   = '+frm.format(self.wp)+' :')
+        print('gamma                = '+frm.format(self.gamma)+' :')
+        print('rmax_surf            = '+frm.format(self.rmax_surf)+' :')
+        print('rmin_surf            = '+frm.format(self.rmin_surf)+' :')
+        print('zmax_surf            = '+frm.format(self.zmax_surf)+' :')
+    print('StelSym              =    '+str(self.StelSym))
+    print('nfp                  = '+frm.format(self.nfp)+' : Number of field periods')
+    print('ns                   = '+frmi.format(self.ns)+' : Number of flux surfaces')
+    print('mpol                 = '+frmi.format(self.mpol)+' :')
+    print('ntor                 = '+frmi.format(self.ntor)+' :')
+    print('mnmax                = '+frmi.format(self.mnmax)+' :')
+    print('mnmax_nyq            = '+frmi.format(self.mnmax_nyq)+' :')
     if verbose:
-        print 'niter                = '+frmi.format(self.niter)+' :'
-        print 'itfsq                = '+frm.format(self.itfsq)+' :'
-        print 'lasym__logical__     =     '+str(self.lasym__logical__)+' :'
-        print 'lrecon__logical__    =    '+str(self.lrecon__logical__)+' :'
-        print 'lfreeb__logical__    =    '+str(self.lfreeb__logical__)+' :'
-        print 'lrfp__logical__      =    '+str(self.lrfp__logical__)+' :'
-        print 'ier_flag             = '+frmi.format(self.ier_flag)+' :'
-        print 'aspect               = '+frm.format(self.aspect)+' :'
-    print 'betatotal            = '+frm.format(self.betatotal)+' :'
-    print 'betapol              = '+frm.format(self.betapol)+' :'
-    print 'betator              = '+frm.format(self.betator)+' :'
-    print 'betaxis              = '+frm.format(self.betaxis)+' :'
-    print 'b0                   = '+frm.format(self.b0)+' :'
+        print('niter                = '+frmi.format(self.niter)+' :')
+        print('itfsq                = '+frm.format(self.itfsq)+' :')
+        print('lasym__logical__     =     '+str(self.lasym__logical__)+' :')
+        print('lrecon__logical__    =    '+str(self.lrecon__logical__)+' :')
+        print('lfreeb__logical__    =    '+str(self.lfreeb__logical__)+' :')
+        print('lrfp__logical__      =    '+str(self.lrfp__logical__)+' :')
+        print('ier_flag             = '+frmi.format(self.ier_flag)+' :')
+        print('aspect               = '+frm.format(self.aspect)+' :')
+    print('betatotal            = '+frm.format(self.betatotal)+' :')
+    print('betapol              = '+frm.format(self.betapol)+' :')
+    print('betator              = '+frm.format(self.betator)+' :')
+    print('betaxis              = '+frm.format(self.betaxis)+' :')
+    print('b0                   = '+frm.format(self.b0)+' :')
     if verbose:
-        print 'rbtor0               = '+frm.format(self.rbtor0)+' :'
-        print 'rbtor                = '+frm.format(self.rbtor)+' :'
-        print 'signgs               = '+frmi.format(self.signgs)+' :'
-        print 'IonLarmor            = '+frm.format(self.IonLarmor)+' :'
-        print 'volavgB              = '+frm.format(self.volavgB)+' :'
-        print 'ctor                 = '+frm.format(self.ctor)+' :'
-    print 'Aminor_p             = '+frm.format(self.Aminor_p)+' : Minor radius'
-    print 'Rmajor_p             = '+frm.format(self.Rmajor_p)+' : Major radius'
-    print 'volume_p             = '+frm.format(self.volume_p)+' :'
+        print('rbtor0               = '+frm.format(self.rbtor0)+' :')
+        print('rbtor                = '+frm.format(self.rbtor)+' :')
+        print('signgs               = '+frmi.format(self.signgs)+' :')
+        print('IonLarmor            = '+frm.format(self.IonLarmor)+' :')
+        print('volavgB              = '+frm.format(self.volavgB)+' :')
+        print('ctor                 = '+frm.format(self.ctor)+' :')
+    print('Aminor_p             = '+frm.format(self.Aminor_p)+' : Minor radius')
+    print('Rmajor_p             = '+frm.format(self.Rmajor_p)+' : Major radius')
+    print('volume_p             = '+frm.format(self.volume_p)+' :')
     if verbose:
-        print 'ftolv                = '+frm.format(self.ftolv)+' :'
-        print 'fsql                 = '+frm.format(self.fsql)+' :'
-        print 'fsqr                 = '+frm.format(self.fsqr)+' :'
-        print 'fsqz                 = '+frm.format(self.fsqz)+' :'
-        print 'nextcur              = '+frm.format(self.nextcur)+' :'
+        print('ftolv                = '+frm.format(self.ftolv)+' :')
+        print('fsql                 = '+frm.format(self.fsql)+' :')
+        print('fsqr                 = '+frm.format(self.fsqr)+' :')
+        print('fsqz                 = '+frm.format(self.fsqz)+' :')
+        print('nextcur              = '+frm.format(self.nextcur)+' :')
 
-    print ' '
+    print(' ')
     if verbose:
-        print '-----------------------------------------------'
-        print 'Arrays:'
-        print '-----------------------------------------------'
-        print 'raxis_cc        '+frs.format(self.xm_nyq.shape)+  ': raxis (cosnv)'
-        print 'zaxis_cs        '+frs.format(self.zaxis_cs.shape)+': zaxis (sinnv)'
-        print 'raxis_cs        '+frs.format(self.raxis_cs.shape)+': raxis (sinnv)'
-        print 'zaxis_cc        '+frs.format(self.zaxis_cc.shape)+': zaxis (cosnv)'
-        print 'am              '+frs.format(self.am.shape)+':'
-        print 'ac              '+frs.format(self.ac.shape)+':'
-        print 'ai              '+frs.format(self.ai.shape)+':'
-        print 'am_aux_s        '+frs.format(self.am_aux_s.shape)+':'
-        print 'am_aux_f        '+frs.format(self.am_aux_f.shape)+':'
-        print 'ai_aux_s        '+frs.format(self.ai_aux_s.shape)+':'
-        print 'ai_aux_f        '+frs.format(self.ai_aux_f.shape)+':'
-        print 'ac_aux_s        '+frs.format(self.ac_aux_s.shape)+':'
-        print 'ac_aux_f        '+frs.format(self.ac_aux_f.shape)+':'
-        print 'fsqt            '+frs.format(self.fsqt.shape)+':'
-        print 'wdot            '+frs.format(self.wdot.shape)+':'
-        print 'extcur          '+frs.format(self.extcur.shape)+':'
+        print('-----------------------------------------------')
+        print('Arrays:')
+        print('-----------------------------------------------')
+        print('raxis_cc        '+frs.format(self.xm_nyq.shape)+  ': raxis (cosnv)')
+        print('zaxis_cs        '+frs.format(self.zaxis_cs.shape)+': zaxis (sinnv)')
+        print('raxis_cs        '+frs.format(self.raxis_cs.shape)+': raxis (sinnv)')
+        print('zaxis_cc        '+frs.format(self.zaxis_cc.shape)+': zaxis (cosnv)')
+        print('am              '+frs.format(self.am.shape)+':')
+        print('ac              '+frs.format(self.ac.shape)+':')
+        print('ai              '+frs.format(self.ai.shape)+':')
+        print('am_aux_s        '+frs.format(self.am_aux_s.shape)+':')
+        print('am_aux_f        '+frs.format(self.am_aux_f.shape)+':')
+        print('ai_aux_s        '+frs.format(self.ai_aux_s.shape)+':')
+        print('ai_aux_f        '+frs.format(self.ai_aux_f.shape)+':')
+        print('ac_aux_s        '+frs.format(self.ac_aux_s.shape)+':')
+        print('ac_aux_f        '+frs.format(self.ac_aux_f.shape)+':')
+        print('fsqt            '+frs.format(self.fsqt.shape)+':')
+        print('wdot            '+frs.format(self.wdot.shape)+':')
+        print('extcur          '+frs.format(self.extcur.shape)+':')
         
-    print '-----------------------------------------------'
-    print 'Radial arrays:'
-    print '-----------------------------------------------'
-    print 'iotaf        '+frs.format(self.iotaf.shape)+   ': q-factor on full mesh'
+    print('-----------------------------------------------')
+    print('Radial arrays:')
+    print('-----------------------------------------------')
+    print('iotaf        '+frs.format(self.iotaf.shape)+   ': q-factor on full mesh')
     if not((np.isnan(self.q_factor)).all()):
-      print 'q_factor     '+frs.format(self.q_factor.shape)+':'
-    print 'presf        '+frs.format(self.presf.shape)+': pressure on full mesh [Pa]'
-    print 'phi          '+frs.format(self.phi.shape)+  ': Toroidal flux on full mesh [Wb]'
-    print 'phipf        '+frs.format(self.phipf.shape)+': d(phi)/ds: Toroidal flux deriv on full mesh'
+      print('q_factor     '+frs.format(self.q_factor.shape)+':')
+    print('presf        '+frs.format(self.presf.shape)+': pressure on full mesh [Pa]')
+    print('phi          '+frs.format(self.phi.shape)+  ': Toroidal flux on full mesh [Wb]')
+    print('phipf        '+frs.format(self.phipf.shape)+': d(phi)/ds: Toroidal flux deriv on full mesh')
     if not((np.isnan(self.chi)).all()):
-      print 'chi          '+frs.format(self.chi.shape)+  ': Poloidal flux on full mesh [Wb]'
-      print 'chipf        '+frs.format(self.chipf.shape)+': d(chi)/ds: Poroidal flux deriv on full mesh'
-    print 'jcuru        '+frs.format(self.jcuru.shape)+':'
-    print 'jcurv        '+frs.format(self.jcurv.shape)+':'
-    print 'iotas        '+frs.format(self.iotas.shape)+': iota half'
-    print 'mass         '+frs.format(self.mass.shape)+ ': mass half'
-    print 'pres         '+frs.format(self.pres.shape)+ ': pressure half [Pa]'
-    print 'beta_vol     '+frs.format(self.beta_vol.shape)+':'
-    print 'buco         '+frs.format(self.buco.shape)+':'
-    print 'bvco         '+frs.format(self.bvco.shape)+':'
-    print 'vp           '+frs.format(self.vp.shape)+':'
-    print 'specw        '+frs.format(self.specw.shape)+':'
-    print 'phips        '+frs.format(self.phips.shape)+':'
-    print 'over_r       '+frs.format(self.over_r.shape)+':'
-    print 'jdotb        '+frs.format(self.jdotb.shape)+':'
-    print 'bdotgradv    '+frs.format(self.bdotgradv.shape)+':'
+      print('chi          '+frs.format(self.chi.shape)+  ': Poloidal flux on full mesh [Wb]')
+      print('chipf        '+frs.format(self.chipf.shape)+': d(chi)/ds: Poroidal flux deriv on full mesh')
+    print('jcuru        '+frs.format(self.jcuru.shape)+':')
+    print('jcurv        '+frs.format(self.jcurv.shape)+':')
+    print('iotas        '+frs.format(self.iotas.shape)+': iota half')
+    print('mass         '+frs.format(self.mass.shape)+ ': mass half')
+    print('pres         '+frs.format(self.pres.shape)+ ': pressure half [Pa]')
+    print('beta_vol     '+frs.format(self.beta_vol.shape)+':')
+    print('buco         '+frs.format(self.buco.shape)+':')
+    print('bvco         '+frs.format(self.bvco.shape)+':')
+    print('vp           '+frs.format(self.vp.shape)+':')
+    print('specw        '+frs.format(self.specw.shape)+':')
+    print('phips        '+frs.format(self.phips.shape)+':')
+    print('over_r       '+frs.format(self.over_r.shape)+':')
+    print('jdotb        '+frs.format(self.jdotb.shape)+':')
+    print('bdotgradv    '+frs.format(self.bdotgradv.shape)+':')
     if verbose:
-        print 'DMerc        '+frs.format(self.DMerc.shape)+':'
-        print 'DShear       '+frs.format(self.DShear.shape)+':'
-        print 'DWell        '+frs.format(self.DWell.shape)+':'
-        print 'DCurr        '+frs.format(self.DCurr.shape)+':'
-        print 'DGeod        '+frs.format(self.DGeod.shape)+':'
-        print 'equif        '+frs.format(self.equif.shape)+':'
+        print('DMerc        '+frs.format(self.DMerc.shape)+':')
+        print('DShear       '+frs.format(self.DShear.shape)+':')
+        print('DWell        '+frs.format(self.DWell.shape)+':')
+        print('DCurr        '+frs.format(self.DCurr.shape)+':')
+        print('DGeod        '+frs.format(self.DGeod.shape)+':')
+        print('equif        '+frs.format(self.equif.shape)+':')
     
-    print ' '
-    print '-----------------------------------------------'
-    print 'Fourier quantities:'
-    print '-----------------------------------------------'
+    print(' ')
+    print('-----------------------------------------------')
+    print('Fourier quantities:')
+    print('-----------------------------------------------')
     
-    print 'xm        '+frs.format(self.xm.shape)+      ': Poloidal mode numbers'
-    print 'xn        '+frs.format(self.xm.shape)+      ': Toroidal mode numbers'
-    print 'xm_nyq    '+frs.format(self.xm_nyq.shape)+  ': Poloidal mode numbers (Nyquist)'
-    print 'xn_nyq    '+frs.format(self.xm_nyq.shape)+    ': Toroidal mode numbers (Nyquist)'
-    print 'rmnc      '+frs.format(self.rmnc.shape)+': cosmn component of cylindrical R, full mesh [m]'
-    print 'zmns      '+frs.format(self.zmns.shape)+': sinmn component of cylindrical Z, full mesh [m]'
-    print 'lmns      '+frs.format(self.lmns.shape)+': sinmn component of lambda, half mesh'
-    print 'gmnc      '+frs.format(self.gmnc.shape)+': cosmn component of jacobian, half mesh'
-    print 'bmnc      '+frs.format(self.bmnc.shape)+': cosmn component of mod-B, half mesh'
-    print 'bsubumnc  '+frs.format(self.bsubumnc.shape)+': cosmn covariant u-component of B, half mesh'
-    print 'bsubvmnc  '+frs.format(self.bsubvmnc.shape)+': cosmn covariant v-component of B, half mesh'
-    print 'bsubsmns  '+frs.format(self.bsubsmns.shape)+': sinmn covariant s-component of B, full mesh'
-    print 'bsupumnc  '+frs.format(self.bsupumnc.shape)+':'
-    print 'bsupvmnc  '+frs.format(self.bsupvmnc.shape)+':'
+    print('xm        '+frs.format(self.xm.shape)+      ': Poloidal mode numbers')
+    print('xn        '+frs.format(self.xm.shape)+      ': Toroidal mode numbers')
+    print('xm_nyq    '+frs.format(self.xm_nyq.shape)+  ': Poloidal mode numbers (Nyquist)')
+    print('xn_nyq    '+frs.format(self.xm_nyq.shape)+    ': Toroidal mode numbers (Nyquist)')
+    print('rmnc      '+frs.format(self.rmnc.shape)+': cosmn component of cylindrical R, full mesh [m]')
+    print('zmns      '+frs.format(self.zmns.shape)+': sinmn component of cylindrical Z, full mesh [m]')
+    print('lmns      '+frs.format(self.lmns.shape)+': sinmn component of lambda, half mesh')
+    print('gmnc      '+frs.format(self.gmnc.shape)+': cosmn component of jacobian, half mesh')
+    print('bmnc      '+frs.format(self.bmnc.shape)+': cosmn component of mod-B, half mesh')
+    print('bsubumnc  '+frs.format(self.bsubumnc.shape)+': cosmn covariant u-component of B, half mesh')
+    print('bsubvmnc  '+frs.format(self.bsubvmnc.shape)+': cosmn covariant v-component of B, half mesh')
+    print('bsubsmns  '+frs.format(self.bsubsmns.shape)+': sinmn covariant s-component of B, full mesh')
+    print('bsupumnc  '+frs.format(self.bsupumnc.shape)+':')
+    print('bsupvmnc  '+frs.format(self.bsupvmnc.shape)+':')
     if not(self.StelSym):
-      print 'rmns      '+frs.format(self.rmns.shape)+': sinmn component of cylindrical R, full mesh [m]'
-      print 'zmnc      '+frs.format(self.zmnc.shape)+': cosmn component of cylindrical Z, full mesh [m]'
-      print 'lmnc      '+frs.format(self.lmnc.shape)+': cosmn component of lambda, half mesh'
-      print 'gmns      '+frs.format(self.gmns.shape)+': sinmn component of jacobian, half mesh'
-      print 'bmns      '+frs.format(self.bmns.shape)+': sinmn component of mod-B, half mesh'
-      print 'bsubumns  '+frs.format(self.bsubumns.shape)+': sinmn covariant u-component of B, half mesh'
-      print 'bsubvmns  '+frs.format(self.bsubvmns.shape)+': sinmn covariant v-component of B, half mesh'
-      print 'bsubsmnc  '+frs.format(self.bsubsmnc.shape)+': cosmn covariant s-component of B, full mesh'
-      print 'bsupumns  '+frs.format(self.bsupumns.shape)+':'
-      print 'bsupvmns  '+frs.format(self.bsupvmns.shape)+':'
+      print('rmns      '+frs.format(self.rmns.shape)+': sinmn component of cylindrical R, full mesh [m]')
+      print('zmnc      '+frs.format(self.zmnc.shape)+': cosmn component of cylindrical Z, full mesh [m]')
+      print('lmnc      '+frs.format(self.lmnc.shape)+': cosmn component of lambda, half mesh')
+      print('gmns      '+frs.format(self.gmns.shape)+': sinmn component of jacobian, half mesh')
+      print('bmns      '+frs.format(self.bmns.shape)+': sinmn component of mod-B, half mesh')
+      print('bsubumns  '+frs.format(self.bsubumns.shape)+': sinmn covariant u-component of B, half mesh')
+      print('bsubvmns  '+frs.format(self.bsubvmns.shape)+': sinmn covariant v-component of B, half mesh')
+      print('bsubsmnc  '+frs.format(self.bsubsmnc.shape)+': cosmn covariant s-component of B, full mesh')
+      print('bsupumns  '+frs.format(self.bsupumns.shape)+':')
+      print('bsupvmns  '+frs.format(self.bsupvmns.shape)+':')
 
-    print '-----------------------------------------------'
+    print('-----------------------------------------------')
 
 
 

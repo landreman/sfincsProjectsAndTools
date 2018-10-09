@@ -50,6 +50,7 @@ radiusName = "rN" ##Radial coordinate to use on x-axis. Must be "psiHat", "psiN"
 
 #plotVariableName = "Er" ##Parameter to plot on y-axis. In this version it must be "Er", "dPhiHatdpsiHat", "dPhiHatdpsiN", "dPhiHatdrHat" or "dPhiHatdrN" .
 plotVariableName = "particleFlux_vd_rHat"
+whichClassical = "classicalParticleFlux_rHat"
 species = 3
 TransformPlotVariableToOutputUnitsFactor = vbar
 
@@ -101,6 +102,7 @@ for directory in PlotDirectories:
         Nradii = 0
         radii = []
         ydata = []
+        ydata2 = []
         
         for SubDirectory in SubDirectories:
             fullSubDirectory = fullDirectory + "/" + SubDirectory
@@ -113,7 +115,15 @@ for directory in PlotDirectories:
 
                 finished = file["finished"][()] 
                 integerToRepresentTrue = file["integerToRepresentTrue"][()]
-                includePhi1 = file["includePhi1"][()] 
+                includePhi1 = file["includePhi1"][()]
+
+                nHats = file["nHats"][()]
+
+                classicalParticleFlux = file[whichClassical][()]
+                classicalParticleFlux = classicalParticleFlux[:, -1]
+                classicalParticleFlux = classicalParticleFlux[species -1]
+                classicalParticleFlux = TransformPlotVariableToOutputUnitsFactor * classicalParticleFlux
+                classicalParticleFlux = classicalParticleFlux / nHats[species -1]
 
                 if includePhi1 == integerToRepresentTrue:
                     didNonlinearCalculationConverge = file["didNonlinearCalculationConverge"][()]
@@ -146,9 +156,14 @@ for directory in PlotDirectories:
                 print ("Continuing with next sub directory.")
                 continue
 
+            #print("nHat: " + str(nHats[species -1]))
+
+            VariableValue = VariableValue / nHats[species -1]
+
             Nradii += 1
             radii.append(radiusValue)
             ydata.append(VariableValue)
+            ydata2.append(classicalParticleFlux)
 
         if Nradii < 1:
             print ("Could not read any data in " + fullDirectory) 
@@ -158,21 +173,29 @@ for directory in PlotDirectories:
         ##Sort data after radii
         radii_sorted = sorted(radii)
         ydata_sorted = []
+        ydata2_sorted = []
         for radius in radii_sorted:
             ydata_sorted.append(ydata[radii.index(radius)])
+            ydata2_sorted.append(ydata2[radii.index(radius)])
         
         print ("radii: " + str(radii))
         print ("")
         print ("ydata: " + str(ydata))
         print ("")
+        print ("ydata2: " + str(ydata2))
+        print ("")
         print ("radii_sorted: " + str(radii_sorted))
         print ("")
         print ("ydata_sorted: " + str(ydata_sorted))
+        print ("")
+        print ("ydata2_sorted: " + str(ydata2_sorted))
         print ("")
 
         print (np.array(radii_sorted))
         print ("")
         print (np.array(ydata_sorted))
+        print ("")
+        print (np.array(ydata2_sorted))
 
         try:
             LegendLabel = PlotLegendLabels[linenumber]
@@ -180,6 +203,9 @@ for directory in PlotDirectories:
             LegendLabel = directory
 
         plt.plot(np.array(radii_sorted), np.array(ydata_sorted), PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel, linewidth=PlotLineWidth)
+        linenumber += 1
+
+        plt.plot(np.array(radii_sorted), np.array(ydata2_sorted), PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel, linewidth=PlotLineWidth)
         linenumber += 1
 
     except:
@@ -217,6 +243,13 @@ plt.subplots_adjust(left=LeftMargin, right=RightMargin, top=TopMargin, bottom=Bo
 
 if ShowSubPlotLabel:
     plt.text(SubPlotLabelXcoord, SubPlotLabelYcoord, SubPlotLabel)
+
+if NoScientificAxes :
+    try:
+        ax.get_xaxis().get_major_formatter().set_scientific(False)
+        ax.get_yaxis().get_major_formatter().set_scientific(False)
+    except:
+        pass
 
 os.chdir(originalDirectory) 
 
