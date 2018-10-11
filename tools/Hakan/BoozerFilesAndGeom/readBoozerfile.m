@@ -57,7 +57,7 @@ end
 
 fid = fopen(filename);
 if fid<0
- error(['Unable to open file: ',filename])
+  error(['Unable to open file: ',filename])
 end
 
 if filename(end-3:end)=='.dat'
@@ -67,7 +67,7 @@ elseif filename(end-2:end)=='.bc'
   %Joachim Geiger type file
   filetype='JG';
 else %default to JG
-  %Joachim Geiger type file
+     %Joachim Geiger type file
   filetype='JG';
 end
 
@@ -87,7 +87,7 @@ if strcmp(filetype,'JG')
         if not(isempty(strfind(tmp_str,'CStconfig')))
           YTsign=-1;
         end
-         concat_str = sprintf([concat_str,'\n',tmp_str]); %comment line
+        concat_str = sprintf([concat_str,'\n',tmp_str]); %comment line
       end
     end
     Geom.headertext.maincomment=concat_str;
@@ -107,9 +107,9 @@ if strcmp(filetype,'JG')
     %This is a file from Yuriy Turkin. Correct this line to the JG standard
     YTstyle=1; %indicates Yuriy Turkin style
     Geom.headertext.surfvars=...
-      '       s         iota  curr_pol/nper    curr_tor    pprime   sqrt g(0,0)';
+        '       s         iota  curr_pol/nper    curr_tor    pprime   sqrt g(0,0)';
     Geom.headertext.surfvarunits=...
-      '                            [A]            [A]   dp/ds,[Pa] (dV/ds)/nper';   
+        '                            [A]            [A]   dp/ds,[Pa] (dV/ds)/nper';   
   end
   Geom.m0b        = header_d(1);
   Geom.n0b        = header_d(2);
@@ -247,12 +247,13 @@ if strcmp(filetype,'JG')
   
   if any(dVdsoverNper>0)
     error(['The coordinate system in the Boozer file should be left handed,'...
-          ' but it has a positive Jacobian. Something is wrong!'])
+           ' but it has a positive Jacobian. Something is wrong!'])
   end
   
   if Geom.torfluxtot*Bphi(1)>0
     if not(Geom.StelSym)
       error('Unknown sign convention in non-stellarator-symmetric file!') 
+    end
     if isnan(newsigncorrectionmethod)
       error('You must specify the signcorrection method signcorr1 or signcorr2')
     end
@@ -266,10 +267,10 @@ if strcmp(filetype,'JG')
       end
       if 0 %Not necessary to write, because writeBoozerfile.m put the signs back again
         Geom.headertext.maincomment=sprintf([Geom.headertext.maincomment,'\n',...
-           'CC This stellarator symmetric file has been turned 180 degrees around an\n', ...
-           'CC horizontal axis by flipping the signs of Itor and Ipol compared with the\n',...
-           'CC original file. This was done in order for these signs to be consistent with\n',...
-           'CC the total toroidal flux, which has the same sign as in the original file.']);
+                            'CC This stellarator symmetric file has been turned 180 degrees around an\n', ...
+                            'CC horizontal axis by flipping the signs of Itor and Ipol compared with the\n',...
+                            'CC original file. This was done in order for these signs to be consistent with\n',...
+                            'CC the total toroidal flux, which has the same sign as in the original file.']);
       end
       % Such a rotation does not make it necessary to change the Fourier coefficients, 
       % in the case of Stellarator symmetry
@@ -296,7 +297,7 @@ if strcmp(filetype,'JG')
   elseif Geom.StelSym %and Geom.torfluxtot*Bphi(1)<0
     error('Unknown sign convention in tellarator symmetric file! Neither YT nor JG standard.')  
   end
-    
+  
   rthetazeta_righthanded=sign(Geom.torfluxtot*Bphi(1)); %This is -1, because
                                                         %the Boozer file is supposed to be left handed
   
