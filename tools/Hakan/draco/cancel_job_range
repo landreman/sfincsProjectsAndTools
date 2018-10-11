@@ -14,18 +14,20 @@ def parse_args(argv):
 arg, arg_remains = parse_args(sys.argv)
 therange=arg.therange
 
-startjob,stopjob=therange.split('-')
+startjob_str,stopjob_str=therange.split('-')
 
 command = 'squeue -u smithh'
 result = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
 jobs = result.stdout.read().split('\n')
 
+#print jobs
 
 for i in range(len(jobs)):
    if len(jobs[i].split()) < 1:
       continue
    elif (jobs[i].split())[0].isdigit():
-      if int((jobs[i].split())[0])>=startjob and int((jobs[i].split())[0])<=stopjob:
+      #print('parsing job #'+str((jobs[i].split())[0]))
+      if int((jobs[i].split())[0])>=int(startjob_str) and int((jobs[i].split())[0])<=int(stopjob_str):
           command2 = 'scancel ' + (jobs[i].split())[0]
           result2 = subprocess.Popen(command2, shell=True, stdout=subprocess.PIPE)
           print command2

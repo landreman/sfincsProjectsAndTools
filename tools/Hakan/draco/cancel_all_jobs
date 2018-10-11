@@ -15,7 +15,7 @@ for i in range(len(jobs)):
    elif (jobs[i].split())[0].isdigit():
       command2 = 'scancel ' + (jobs[i].split())[0]
       result2 = subprocess.Popen(command2, shell=True, stdout=subprocess.PIPE)
-      print result2.stdout.read()
+      print command2 #result2.stdout.read()
    else:
       continue
 
