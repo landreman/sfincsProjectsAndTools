@@ -37,29 +37,41 @@ exec(open(sfincsProjectsAndToolsHome + "/tools/Albert/version3/plot_tools"  + "/
 ##INPUT##
 #########
 
-readExternalData = False
-#readExternalData = True
+#readExternalData = False
+readExternalData = True
 
 ExternalDataZetaColumn = 0
 ExternalDataThetaColumn = 1
 ExternalDataPhi1Column = 2
 ExternalDataPhi1Factor = 1.0/1000.0
+#ExternalBoozerInput = True
+ExternalBoozerInput = False
+#ExternalRightHandedToLeftHanded = True
+ExternalRightHandedToLeftHanded = False
+ExternalpsiN = 0.639286
 
 show_Title = True
 #PlotTitle = 'SFINCS'
 PlotTitle = 'EUTERPE'
+#PlotTitle = 'KNOSOS'
 TitleSize = 40
 
 ShowLegend = False
 
 quantityToPlot = "Phi1Hat"
 
-filename = 'sfincsOutput.h5'
+#filename = 'sfincsOutput.h5'
 #filename = 'EUTERPE_phi2d_helios_tj20_383_3cols.dat'
+#filename = 'EUTERPE_phi2d_marconis_w7xr078_0005_3cols.dat'
+filename = 'EUTERPE_phi2d_marconi_lhdis_0008_3cols.dat'
+#filename = 'varphi1_KNOSOS.dat'
+
 
 #ncFilename = "/draco/u/almo/Phi1/LHD/lhd2_A_III/Input/wout_lhd2.nc"
 #ncFilename = "C:/Users/almo/Desktop/svn/sfincs/Impurities/Phi1/Results/LHD_Velasco_PPCF18/input/wout_lhd_r3.60_0.0.nc"
-ncFilename = "C:/Users/almo/Desktop/svn/sfincs/TJ-II/Input_TJII_case_Regana_NF17/wout_tj20.nc"
+#ncFilename = "C:/Users/almo/Desktop/svn/sfincs/TJ-II/Input_TJII_case_Regana_NF17/wout_tj20.nc"
+#ncFilename = "C:/Users/almo/Desktop/svn/sfincs/W7-X/OP1.1/XICS_data_Langenberg/Equilibria/wout_w7x.1000_1000_1000_1000_+0390_+0000.05.0000.nc"
+ncFilename = "C:/Users/almo/Desktop/svn/sfincs/Impurities/Phi1/Results/LHD_Velasco_PPCF18/input/wout_lhd_r3.60_0.0.nc"
 
 #FigSize = (12,10)
 
@@ -72,9 +84,9 @@ zFactor = 1000 ##kV -> V
 ##W7-X##
 #xAxisTicks = [r'$0$', r'$\pi/10$', r'$2\pi/10$', r'$3\pi/10$', r'$4\pi/10$']
 ##LHD
-#xAxisTicks = [r'$0$', r'$\pi/20$', r'$2\pi/20$', r'$3\pi/20$', r'$4\pi/20$']
+xAxisTicks = [r'$0$', r'$\pi/20$', r'$2\pi/20$', r'$3\pi/20$', r'$4\pi/20$']
 ##TJ-II
-xAxisTicks = [r'$0$', r'$\pi/8$', r'$2\pi/8$', r'$3\pi/8$', r'$4\pi/8$']
+#xAxisTicks = [r'$0$', r'$\pi/8$', r'$2\pi/8$', r'$3\pi/8$', r'$4\pi/8$']
 
 yAxisTicks = [r'$0$', r'$\pi/2$', r'$\pi$', r'$3\pi/2$', r'$2\pi$']
 
@@ -92,10 +104,19 @@ numShowLevels = 6
 ShowColorbar = False
 
 #cbarTicks = [-15.0, -10.0, -5.0, 0.0, 5.0, 10.0, 15.0] # W7-X OP1.1 EPS poster r/a=0.5
-cbarTicks = [-2.0, -1.5, -1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0] # TJ-II TTF poster r/a=0.6
+#cbarTicks = [-12.0, -8.0, -4.0, 0.0, 4.0, 8.0, 12.0] # W7-X OP1.1 TTF poster r/a=0.5
+#cbarTicks = [-2.0, -1.5, -1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0] # TJ-II TTF poster r/a=0.6
+cbarTicks = [-20.0, -15.0, -10.0, -5.0, 0.0, 5.0, 10.0] # LHD inward shifted TTF poster r/a=0.8
+#cbarTicks = [-40.0, -30.0, -20.0, -10.0, 0.0, 10.0, 20.0] # LHD inward shifted TTF poster r/a=0.8 with magnetic drifts
 
-zMin = -2.0 # TJ-II TTF poster r/a=0.6
-zMax = 2.0 # TJ-II TTF poster r/a=0.6
+#zMin = -2.0 # TJ-II TTF poster r/a=0.6
+#zMax = 2.0 # TJ-II TTF poster r/a=0.6
+#zMin = -12.0 # W7-X OP1.1 TTF poster r/a=0.5
+#zMax = 12.0 # W7-X OP1.1 TTF poster r/a=0.5
+zMin = -20.0 # LHD inward shifted TTF poster r/a=0.8
+zMax = 10.0 # LHD inward shifted TTF poster r/a=0.8
+#zMin = -45.0 # LHD inward shifted TTF poster r/a=0.8 with magnetic drifts
+#zMax = 25.0 # LHD inward shifted TTF poster r/a=0.8 with magnetic drifts
 
 zLogAxis = False
 LinearThreshold = 0.1 #In symlog plot
@@ -126,11 +147,21 @@ ColorMap = 'rainbow'
 
 AddMaxMinBox = True
 #MaxMinBoxXcoord = 0.4177 # LHD discharge 113208 at t = 4.64 s
-MaxMinBoxXcoord = 2.016*0.4177 # W7-X_NBI_case_Q34Q78_Z10_Zeff2p0
-MaxMinBoxXcoord = 2.5*0.4177 # TJ-II case TTF poster
+#MaxMinBoxXcoord = 2.016*0.4177 # W7-X_NBI_case_Q34Q78_Z10_Zeff2p0 # W7-X OP1.1 TTF poster r/a=0.5
+#MaxMinBoxXcoord = 2.028*0.4177 # W7-X OP1.1 TTF poster r/a=0.5 EUTERPE data
+#MaxMinBoxXcoord = 2.5*0.4177 # TJ-II case TTF poster
+#MaxMinBoxXcoord = 0.4177 # LHD inward shifted TTF poster r/a=0.8
+MaxMinBoxXcoord = 0.425 # LHD inward shifted TTF poster r/a=0.8 EUTERPE data
+#MaxMinBoxXcoord = 0.43355 # LHD inward shifted TTF poster r/a=0.8 KNOSOS data
+
 #MaxMinBoxYcoord = -1.25 # LHD discharge 113208 at t = 4.64 s
 #MaxMinBoxYcoord = -1.224 # W7-X_NBI_case_Q34Q78_Z10_Zeff2p0
-MaxMinBoxYcoord = -1.3 # TJ-II case TTF poster
+#MaxMinBoxYcoord = -1.3 # TJ-II case TTF poster # W7-X OP1.1 TTF poster r/a=0.5
+#MaxMinBoxYcoord = -1.352 # # W7-X OP1.1 TTF poster r/a=0.5 EUTERPE data
+#MaxMinBoxYcoord = -1.3 # LHD inward shifted TTF poster r/a=0.8
+MaxMinBoxYcoord = -1.329 # LHD inward shifted TTF poster r/a=0.8 EUTERPE data
+#MaxMinBoxYcoord = -1.366 # LHD inward shifted TTF poster r/a=0.8 KNOSOS data
+
 MaxMinBoxLabelSize = 40
 MaxMinBoxFormat = '{:1.1f}'
 
@@ -157,34 +188,66 @@ if readExternalData:
    ExternalThetas = inputParams[:, ExternalDataThetaColumn]
    ExternalPhi1Hats = ExternalDataPhi1Factor*inputParams[:, ExternalDataPhi1Column]
 
-   ExternalPhi1Function = interpolate.interp2d(ExternalThetas, ExternalZetas, ExternalPhi1Hats)
+   if ExternalRightHandedToLeftHanded:
+
+      tmpThetas = numpy.unique(ExternalThetas)
+      #deltaThetas = (numpy.amax(tmpThetas) - numpy.amin(tmpThetas)) / (tmpThetas.size - 1.0)
+      #print ("deltaThetas: " + str(deltaThetas))
+      print ("min Thetas: " + str(numpy.amin(tmpThetas)))
+      ExternalThetas = 2.0*numpy.pi - ExternalThetas + 1.0*numpy.amin(tmpThetas)
+
+      #sys.exit(0)
 
    theta = numpy.unique(ExternalThetas)
    zeta = numpy.unique(ExternalZetas)
 
-   Vmec_vmecu = theta.transpose()
-   Vmec_vmecw = zeta.transpose()
-   #Pest_Phi1 = Phi1Hat.transpose()
+   #theta = 2.0*numpy.pi - theta ##TEMPORARY FIX
 
-   #Vmec_vmecu, Vmec_vmecw = numpy.meshgrid(theta, zeta)
-   
    print ("ExternalThetas: " + str(ExternalThetas))
    print ("ExternalZetas: " + str(ExternalZetas))
    print ("theta: " + str(theta))
    print ("zeta: " + str(zeta))
    print ("length theta: " + str(len(theta)))
    print ("length zeta: " + str(len(zeta)))
+
+   ExternalPhi1Function = interpolate.interp2d(ExternalThetas, ExternalZetas, ExternalPhi1Hats)
+
+   if ExternalBoozerInput:
+
+      theta = theta.transpose()
+      zeta = zeta.transpose()
+
+      Phi1Hat = ExternalPhi1Function(theta, zeta)
+
+      Phi1Hat = Phi1Hat.transpose()
+      
+      #theta = 2.0*numpy.pi - theta - 1.0*1.0*6.89394E-01 - 0*0.00747846361396 ##TEMPORARY FIX
+      #zeta = 2.0*numpy.pi/10.0 - zeta ##TEMPORARY FIX
+      # Pest_vmecu max: 6.13389519925 ##TEMPORARY FIX
+      # Pest_vmecu min: -0.00747846361396 ##TEMPORARY FIX
+      # Pest_vmecw max: 0.61549570356 ##TEMPORARY FIX
+      # Pest_vmecw min: 0.0 ##TEMPORARY FIX
+
+      ############################################
+      ##Transform to PEST grid
+      Pest_vmecu, Pest_vmecw, Vmec_vmecu, Vmec_vmecw, Geom_Nperiods = transformVMECtoPEST(ncFilename, ExternalpsiN, theta, zeta, -1)
+      Pest_Phi1 = interp2_cyclic(Vmec_vmecu, Vmec_vmecw, Phi1Hat, Pest_vmecu, Pest_vmecw, Geom_Nperiods)
+      ############################################
+
+   else:
+   
+      Vmec_vmecu = theta.transpose()
+      Vmec_vmecw = zeta.transpose()
+      #Pest_Phi1 = Phi1Hat.transpose()
+
+      Pest_Phi1 = ExternalPhi1Function(Vmec_vmecu, Vmec_vmecw)
+      Pest_vmecu = Vmec_vmecu
+      Pest_vmecw = Vmec_vmecw
+      Phi1Hat = Pest_Phi1
+   
    print ("Vmec_vmecu: " + str(Vmec_vmecu))
    print ("Vmec_vmecw: " + str(Vmec_vmecw))
-
-   #Pest_Phi1 = ExternalPhi1Function(theta, zeta)
-   Pest_Phi1 = ExternalPhi1Function(Vmec_vmecu, Vmec_vmecw)
-
    print ("Pest_Phi1: " + str(Pest_Phi1))
-   
-   Pest_vmecu = Vmec_vmecu
-   Pest_vmecw = Vmec_vmecw
-   Phi1Hat = Pest_Phi1
 
    #sys.exit(0)
 else:
