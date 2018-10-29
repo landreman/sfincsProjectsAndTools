@@ -82,14 +82,14 @@ TermdBdalphaFactor = 1.0
 TermdBdpsifactor = 1.0
 TermBShearFactor = 1.0
 
-phiExponent = 4 ##Exponent defining peakedness of the perturbed potential, should be integer > 0.
-phiCenterZeta = 0.15 #0.0
+phiExponent = 50 ##Exponent defining peakedness of the perturbed potential, should be integer > 0.
+phiCenterZeta = 0.0 #0.0
 phiCenterTheta = 0.0 #numpy.pi/4.0
 
 #phiMaxShow = True
 
 InfoBox = True
-InfoBoxXcoord = 0.51
+InfoBoxXcoord = 0.50
 InfoBoxYcoord = -3.0
 InfoBoxFormat = '{:1.2f}'
 InfoBoxLabelSize = 37
@@ -223,11 +223,11 @@ theta2DMod[theta2DMod > numpy.pi] += - 2.0*numpy.pi
 #phiTMP = numpy.sqrt((numpy.pi - numpy.absolute(zeta2D*NPeriods - phiCenterZeta*NPeriods))**2 + (numpy.pi - numpy.absolute(theta2D - phiCenterTheta))**2)
 #phiTMP = (numpy.pi - numpy.absolute(zeta2DMod*NPeriods - phiCenterZeta*NPeriods)) + (numpy.pi - numpy.absolute(theta2DMod - phiCenterTheta))
 #phiTMP = numpy.cos((zeta2D*NPeriods - phiCenterZeta*NPeriods)) + numpy.cos((theta2D - phiCenterTheta))
-phiTMP = (zeta2DMod*NPeriods - phiCenterZeta*NPeriods)**2 + (theta2DMod - phiCenterTheta)**2
-phiTMP = numpy.amax(numpy.absolute(phiTMP)) - phiTMP 
+phiTMP = numpy.cos((zeta2DMod*NPeriods - phiCenterZeta*NPeriods)/2.0)**2 + numpy.cos((theta2DMod - phiCenterTheta)/2.0)**2
+#phiTMP = numpy.amax(numpy.absolute(phiTMP)) - phiTMP 
 phiTMP = phiTMP/numpy.amax(numpy.absolute(phiTMP))
 phi2 = phiTMP**phiExponent
-#phi = numpy.cos(phiTMP)**4
+#phi2 = numpy.cos(phiTMP)**phiExponent
 #phi = numpy.cos(zeta2D*NPeriods + theta2D)**4
 #######################
 
@@ -532,8 +532,8 @@ FigNum += 1
 
 ax2 = plt.subplot(numRows,numCols,FigNum)
 
-Plot3 = plt.contourf(zeta,theta,phi2[:,:].transpose(),numContours, cmap=plt.get_cmap('gist_rainbow'))
-#Plot3 = plt.contourf(zetaMod[zetaSortIndices], thetaMod[thetaSortIndices],phi2[zeta2DSortIndices, theta2DSortIndices].transpose(),numContours, cmap=plt.get_cmap('gist_rainbow'))
+#Plot3 = plt.contourf(zeta,theta,phi2[:,:].transpose(),numContours, cmap=plt.get_cmap('gist_rainbow'))
+Plot3 = plt.contourf(zetaMod[zetaSortIndices], thetaMod[thetaSortIndices],phi2[zeta2DSortIndices, theta2DSortIndices].transpose(),numContours, cmap=plt.get_cmap('gist_rainbow'))
 
 plt.xlabel(r'$\zeta$' + " " + r'$\mathrm{[rad]}$')
 plt.ylabel(r'$\theta$'+ " " + r'$\mathrm{[rad]}$')
@@ -635,17 +635,17 @@ if show_rN:
 
 InfoText = InfoText + r'$Z = $ ' + str(r'${}$'.format('{:1.0f}'.format(Zs[species]))) + r',   $T_z = $ ' + str(r'${}$'.format(InfoBoxFormat.format(THats[species]))) + r' $\mathrm{keV}$' + r',   $\eta_z = $ ' + str(r'${}$'.format(InfoBoxFormat.format(eta[species]))) + r',   $q = $ ' + str(r'${}$'.format(InfoBoxFormat.format(q))) + r',   $d q / d \psi_N = $ ' + str(r'${}$'.format(InfoBoxFormat.format(dqdpsiHat*psiAHat))) + '\n'
 
-InfoText = InfoText + r'$Q = $ ' + zLabel + '\n'
+InfoText = InfoText + r'$\mathbf{Q}$ \textbf{=} ' + zLabel + '\n'
 
 if includePhi1InCalculation and includePhi1:
 
-   InfoText = InfoText + r'$< |\phi|^2 \, Q_{\mathrm{w/} \; \Phi_1} > /< |\phi|^2 >$ = ' + str(r'${}$'.format(InfoBoxFormat.format(flux_surface_average(phi2[:,:]*QuantityForQuasilinearFluxes[:,:]) / flux_surface_average(phi2[:,:])))) + '\n'
+   InfoText = InfoText + r'$< |\phi|^2 \, \mathbf{Q_{\mathbf{w/} \; \Phi_1}} > /< |\phi|^2 >$ \textbf{=} ' + str(r'${}$'.format(InfoBoxFormat.format(flux_surface_average(phi2[:,:]*QuantityForQuasilinearFluxes[:,:]) / flux_surface_average(phi2[:,:])))) + '\n'
 
-   InfoText = InfoText + r'$< |\phi|^2 \, Q_{\mathrm{w/o} \; \Phi_1} > /< |\phi|^2 >$ = ' + str(r'${}$'.format(InfoBoxFormat.format(flux_surface_average(phi2[:,:]*QuantityForQuasilinearFluxesNoPhi1[:,:]) / flux_surface_average(phi2[:,:])))) + '\n'
+   InfoText = InfoText + r'$< |\phi|^2 \, \mathbf{Q_{\mathbf{w/o} \; \Phi_1}} > /< |\phi|^2 >$ \textbf{=} ' + str(r'${}$'.format(InfoBoxFormat.format(flux_surface_average(phi2[:,:]*QuantityForQuasilinearFluxesNoPhi1[:,:]) / flux_surface_average(phi2[:,:])))) + '\n'
 
-   InfoText = InfoText + r'$Q_{\mathrm{w/} \; \Phi_1} \,$' + r'$(\zeta$ = ' + str(r'${}$'.format(InfoBoxFormat.format(zeta[mindexZeta]))) + r', $\theta$ = ' + str(r'${}$'.format(InfoBoxFormat.format(theta[mindexTheta]))) +  r'$)$ = ' + str(r'${}$'.format(InfoBoxFormat.format(QuantityForQuasilinearFluxes[mindexZeta, mindexTheta]))) + '\n'
+   InfoText = InfoText + r'$\mathbf{Q_{\mathbf{w/} \; \Phi_1}} \,$' + r'\textbf{(}$\mathbf{\zeta}$ \textbf{=} ' + str(r'${}$'.format(InfoBoxFormat.format(zeta[mindexZeta]))) + r'\textbf{,} $\mathbf{\theta}$ \textbf{=} ' + str(r'${}$'.format(InfoBoxFormat.format(theta[mindexTheta]))) +  r'\textbf{)} \textbf{=} ' + str(r'${}$'.format(InfoBoxFormat.format(QuantityForQuasilinearFluxes[mindexZeta, mindexTheta]))) + '\n'
 
-   InfoText = InfoText + r'$Q_{\mathrm{w/o} \; \Phi_1} \,$' + r'$(\zeta$ = ' + str(r'${}$'.format(InfoBoxFormat.format(zeta[mindexZeta]))) + r', $\theta$ = ' + str(r'${}$'.format(InfoBoxFormat.format(theta[mindexTheta]))) +  r'$)$ = ' + str(r'${}$'.format(InfoBoxFormat.format(QuantityForQuasilinearFluxesNoPhi1[mindexZeta, mindexTheta]))) + '\n'
+   InfoText = InfoText + r'$\mathbf{Q_{\mathbf{w/o} \; \Phi_1}} \,$' + r'\textbf{(}$\mathbf{\zeta}$ \textbf{=} ' + str(r'${}$'.format(InfoBoxFormat.format(zeta[mindexZeta]))) + r'\textbf{,} $\mathbf{\theta}$ \textbf{=} ' + str(r'${}$'.format(InfoBoxFormat.format(theta[mindexTheta]))) +  r'\textbf{)} \textbf{=} ' + str(r'${}$'.format(InfoBoxFormat.format(QuantityForQuasilinearFluxesNoPhi1[mindexZeta, mindexTheta]))) + '\n'
 
    InfoText = InfoText + r'$\Phi_1 \,$' + r'$(\zeta$ = ' + str(r'${}$'.format(InfoBoxFormat.format(zeta[mindexZeta]))) + r', $\theta$ = ' + str(r'${}$'.format(InfoBoxFormat.format(theta[mindexTheta]))) +  r'$)$ = ' + str(r'${}$'.format(InfoBoxFormat.format(TermPhi1Factor*1000*Phi1Hat[mindexZeta ,mindexTheta, iteration]))) + r' $\mathrm{V}$' + '\n'
 

@@ -37,8 +37,8 @@ matplotlib.rcParams['text.usetex'] = True
 #matplotlib.style.use('grayscale')
 
 
-#PlotLinespecs = ['rD-', 'bo-', 'mv-.', 'cs-.', 'gx--', 'y+--', 'kp:', 'k*:'] #LHD113208t4640
-#PlotLineColors = ['r', 'b', 'm', 'c', 'g', 'y', 'k', '0.75'] #LHD113208t4640
+PlotLinespecs = ['rD-', 'bo-', 'mv-.', 'cs-.', 'gx--', 'y+--', 'kp:', 'k*:'] #LHD113208t4640
+PlotLineColors = ['r', 'b', 'm', 'c', 'g', 'y', 'k', '0.75'] #LHD113208t4640
 #PlotLinespecs = ['rD-', 'mv-.', 'gx--', 'y*--'] #W7-X NBI case
 #PlotLineColors = ['r', 'm', 'g', '#AAAA00'] #W7-X NBI case
 #PlotLinespecs = ['mD-', 'cv-.', 'gx--'] #TEMPORARY
@@ -63,8 +63,8 @@ matplotlib.rcParams['text.usetex'] = True
 #PlotLineColors = ['r', 'b', 'g', 'c'] #EPS poster Ar fluxes no Phi1
 #PlotLinespecs = ['rD-', 'mv-.', 'y*--'] #EPS poster Ar fluxes with Phi1
 #PlotLineColors = ['r', 'm', 'y',] #EPS poster Ar fluxes with Phi1
-PlotLinespecs = ['rD-', 'mv-.', 'b*--', 'cs:'] #TTF poster C6+ fluxes with Phi1
-PlotLineColors = ['r', 'm', 'b', 'c'] #TTF poster C6+ fluxes with Phi1
+#PlotLinespecs = ['rD-', 'mv-.', 'b*--', 'cs:'] #TTF poster C6+ fluxes with Phi1
+#PlotLineColors = ['r', 'm', 'b', 'c'] #TTF poster C6+ fluxes with Phi1
 #PlotLinespecs = ['rD', 'k-'] #EPS poster Ar fluxes vs XICS
 #PlotLineColors = ['r', '#666666'] #EPS poster Ar fluxes vs XICS
 #PlotLinespecs = ['gx', 'cs--'] #EPS poster GENE growth rates
@@ -77,7 +77,8 @@ PlotLineColors = ['r', 'm', 'b', 'c'] #TTF poster C6+ fluxes with Phi1
 #PlotMarkerEdgeWidth = [3, 3, 3, 2]
 #PlotMarkerEdgeWidth = [3, 3, 5, 2] #EPS poster Ar fluxes no Phi1
 #PlotMarkerEdgeWidth = [5, 3] #EPS poster GENE growth rates
-PlotMarkerEdgeWidth = [3, 3, 5, 3] #TTF poster C6+ fluxes
+#PlotMarkerEdgeWidth = [3, 3, 5, 3] #TTF poster C6+ fluxes
+PlotMarkerEdgeWidth = [3, 3, 3, 3, 3]
 #PlotMarkerSize = 10
 PlotMarkerSize = 15
 PlotLineWidth=7.0
@@ -89,7 +90,8 @@ yAxisScale = 'linear'
 
 ShowGrid = True
 
-xAxisLabel = r'$r/a$'
+#xAxisLabel = r'$r/a$'
+xAxisLabel = r'$E_r$'
 #yAxisLabel = r'$n_{\mathrm{C}^{6+}}$ $[10^{19} \mathrm{m}^{-3}]$'
 #yAxisLabel = r'$n$ $[10^{19} \mathrm{m}^{-3}]$'
 #yAxisLabel = r'$\eta_{s} = d(\ln T_{s}) / d(\ln n_{s})$'
@@ -99,15 +101,16 @@ xAxisLabel = r'$r/a$'
 #yAxisLabel = r'$\nu_{s}^{\prime} \equiv \frac{\left(G + \iota I\right)}{v_s B_{00}} \sum_{\alpha}  \nu_{s\alpha}$'
 # e   i   \mathrm{He}^{2+}   \mathrm{C}^{6+}   \mathrm{Ne}^{10+}
 #yAxisLabel = r'$<\mathbf{\Gamma}_{\mathrm{C}^{6+}} \cdot \nabla r> $ $[10^{20} \mathrm{m}^{-2} \mathrm{s}^{-1}]$'
+yAxisLabel = r'$<\mathbf{\Gamma}_{z} \cdot \nabla r> $ $[10^{20} \mathrm{m}^{-2} \mathrm{s}^{-1}]$'
 #yAxisLabel = r'$<\mathbf{\Gamma}_{\mathrm{Ar}^{16+}} \cdot \nabla r> $ $[10^{20} \mathrm{m}^{-2} \mathrm{s}^{-1}]$'
 #yAxisLabel = r'$<\mathbf{\Gamma}_{\mathrm{Ar}^{16+}} \cdot \nabla r> / n_{\mathrm{Ar}^{16+}} $ $[\mathrm{m} \, \mathrm{s}^{-1}]$'
 #yAxisLabel = r'$<\mathbf{\Gamma}_{\mathrm{C}^{6+}} \cdot \nabla r> / n_{\mathrm{C}^{6+}} $ $[\mathrm{m} \, \mathrm{s}^{-1}]$'
-yAxisLabel = r'$<\mathbf{\Gamma}_{\mathrm{C}^{6+}}^{\mathrm{Classical}} \cdot \nabla r>\!/<\mathbf{\Gamma}_{\mathrm{C}^{6+}}^{\mathrm{Neoclassical}} \cdot \nabla r> $'
+#yAxisLabel = r'$<\mathbf{\Gamma}_{\mathrm{C}^{6+}}^{\mathrm{Classical}} \cdot \nabla r>\!/<\mathbf{\Gamma}_{\mathrm{C}^{6+}}^{\mathrm{Neoclassical}} \cdot \nabla r> $'
 #yAxisLabel = r'$E_r$ $[\mathrm{kV/m}]$'
 #yAxisLabel = r'$\omega_r, \gamma$ $[c_s / a]$'
 #yAxisLabel = r'$Z_{\mathrm{eff}}$'
-#AxesLabelSize = 50
-AxesLabelSize = 40.4 ##TTF poster classical over neoclassical fluxes
+AxesLabelSize = 50
+#AxesLabelSize = 40.4 ##TTF poster classical over neoclassical fluxes
 
 TickSize = 45
 
@@ -185,11 +188,11 @@ ShowLegend = True
 #PlotLegendLabels = [r'SFINCS Fokker-Planck w/o $\Phi_1$', r'SFINCS Pitch-angle scattering w/o $\Phi_1$']
 
 #PlotLegendLabels = [r'SFINCS Fokker-Planck w/o $\Phi_1$', r'SFINCS Pitch-angle scattering w/o $\Phi_1$', r'EUTERPE mom. conservation w/o $\Phi_1$', r'EUTERPE Pitch-angle scattering w/o $\Phi_1$'] #EPS poster Ar fluxes no Phi1
-PlotLegendLabels = [r'SFINCS Fokker-Planck w/o $\Phi_1$', r'SFINCS Fokker-Planck w/ $\Phi_1$'] #EPS poster Ar fluxes with Phi1
+#PlotLegendLabels = [r'SFINCS Fokker-Planck w/o $\Phi_1$', r'SFINCS Fokker-Planck w/ $\Phi_1$'] #EPS poster Ar fluxes with Phi1
 #PlotLegendLabels = [r'SFINCS Pitch-angle scattering w/o $\Phi_1$', r'SFINCS Pitch-angle scattering w/ $\Phi_1$', r'EUTERPE Pitch-angle scattering w/o $\Phi_1$', r'EUTERPE Pitch-angle scattering w/ $\Phi_1$'] ##TTF poster C6+ fluxes
 #PlotLegendLabels = [r'$\nu_{i}^{\prime}$', r'$\nu_{C}^{\prime}$'] #TTF poster TJ-II Collisionality
 
-#PlotLegendLabels = []
+PlotLegendLabels = []
 
 #LegendFontSize = 15
 #LegendProperties = {'weight':'bold'}
@@ -226,6 +229,7 @@ LegendNumberColumns = 1
 #LegendBBoxToAnchor = [0.005, 0.85, 1., .102]
 #LegendBBoxToAnchor = [0.168, 0.005, 1., .102] ##TTF poster TJ-II classical over neoclassical fluxes PAS
 LegendBBoxToAnchor = [0.30, 0.005, 1., .102] ##TTF poster TJ-II classical over neoclassical fluxes FP
+LegendBBoxToAnchor = [0.50, 0.005, 1., .102]
 
 ShowSubPlotLabel = False
 SubPlotLabel = '(c)'
