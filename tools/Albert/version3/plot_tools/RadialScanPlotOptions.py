@@ -37,8 +37,8 @@ matplotlib.rcParams['text.usetex'] = True
 #matplotlib.style.use('grayscale')
 
 
-PlotLinespecs = ['rD-', 'bo-', 'mv-.', 'cs-.', 'gx--', 'y+--', 'kp:', 'k*:'] #LHD113208t4640
-PlotLineColors = ['r', 'b', 'm', 'c', 'g', 'y', 'k', '0.75'] #LHD113208t4640
+#PlotLinespecs = ['rD-', 'bo-', 'mv-.', 'cs-.', 'gx--', 'y+--', 'kp:', 'k*:'] #LHD113208t4640
+#PlotLineColors = ['r', 'b', 'm', 'c', 'g', 'y', 'k', '0.75'] #LHD113208t4640
 #PlotLinespecs = ['rD-', 'mv-.', 'gx--', 'y*--'] #W7-X NBI case
 #PlotLineColors = ['r', 'm', 'g', '#AAAA00'] #W7-X NBI case
 #PlotLinespecs = ['mD-', 'cv-.', 'gx--'] #TEMPORARY
@@ -73,12 +73,16 @@ PlotLineColors = ['r', 'b', 'm', 'c', 'g', 'y', 'k', '0.75'] #LHD113208t4640
 #PlotLineColors = ['r', 'm', '#666666'] #EPS poster Ar fluxes vs XICS
 #PlotLinespecs = ['k-']
 #PlotLineColors = ['#555555']
+PlotLinespecs = ['rD-', 'bo-', 'mv-.', 'cs-.', 'gx--', 'y+--', 'kp:', 'k*:', 'k2--', 'k4--'] 
+PlotLineColors = ['r', 'b', 'm', 'c', 'g', 'y', 'k', '0.75', '0.5', '0.25'] 
+
 #PlotMarkerEdgeWidth = [3, 3, 3, 0, 3, 3, 3, 3]
 #PlotMarkerEdgeWidth = [3, 3, 3, 2]
 #PlotMarkerEdgeWidth = [3, 3, 5, 2] #EPS poster Ar fluxes no Phi1
 #PlotMarkerEdgeWidth = [5, 3] #EPS poster GENE growth rates
 #PlotMarkerEdgeWidth = [3, 3, 5, 3] #TTF poster C6+ fluxes
-PlotMarkerEdgeWidth = [3, 3, 3, 3, 3]
+#PlotMarkerEdgeWidth = [3, 3, 3, 3, 3]
+PlotMarkerEdgeWidth = [3, 3, 3, 3, 3, 3, 3, 3, 3, 3]
 #PlotMarkerSize = 10
 PlotMarkerSize = 15
 PlotLineWidth=7.0
@@ -91,7 +95,7 @@ yAxisScale = 'linear'
 ShowGrid = True
 
 #xAxisLabel = r'$r/a$'
-xAxisLabel = r'$E_r$'
+xAxisLabel = r'$E_r [\mathrm{kV} \mathrm{m}^{-1}]$'
 #yAxisLabel = r'$n_{\mathrm{C}^{6+}}$ $[10^{19} \mathrm{m}^{-3}]$'
 #yAxisLabel = r'$n$ $[10^{19} \mathrm{m}^{-3}]$'
 #yAxisLabel = r'$\eta_{s} = d(\ln T_{s}) / d(\ln n_{s})$'
@@ -101,7 +105,7 @@ xAxisLabel = r'$E_r$'
 #yAxisLabel = r'$\nu_{s}^{\prime} \equiv \frac{\left(G + \iota I\right)}{v_s B_{00}} \sum_{\alpha}  \nu_{s\alpha}$'
 # e   i   \mathrm{He}^{2+}   \mathrm{C}^{6+}   \mathrm{Ne}^{10+}
 #yAxisLabel = r'$<\mathbf{\Gamma}_{\mathrm{C}^{6+}} \cdot \nabla r> $ $[10^{20} \mathrm{m}^{-2} \mathrm{s}^{-1}]$'
-yAxisLabel = r'$<\mathbf{\Gamma}_{z} \cdot \nabla r> $ $[10^{20} \mathrm{m}^{-2} \mathrm{s}^{-1}]$'
+#yAxisLabel = r'$<\mathbf{\Gamma}_{z} \cdot \nabla r> $ $[10^{20} \mathrm{m}^{-2} \mathrm{s}^{-1}]$'
 #yAxisLabel = r'$<\mathbf{\Gamma}_{\mathrm{Ar}^{16+}} \cdot \nabla r> $ $[10^{20} \mathrm{m}^{-2} \mathrm{s}^{-1}]$'
 #yAxisLabel = r'$<\mathbf{\Gamma}_{\mathrm{Ar}^{16+}} \cdot \nabla r> / n_{\mathrm{Ar}^{16+}} $ $[\mathrm{m} \, \mathrm{s}^{-1}]$'
 #yAxisLabel = r'$<\mathbf{\Gamma}_{\mathrm{C}^{6+}} \cdot \nabla r> / n_{\mathrm{C}^{6+}} $ $[\mathrm{m} \, \mathrm{s}^{-1}]$'
@@ -109,6 +113,7 @@ yAxisLabel = r'$<\mathbf{\Gamma}_{z} \cdot \nabla r> $ $[10^{20} \mathrm{m}^{-2}
 #yAxisLabel = r'$E_r$ $[\mathrm{kV/m}]$'
 #yAxisLabel = r'$\omega_r, \gamma$ $[c_s / a]$'
 #yAxisLabel = r'$Z_{\mathrm{eff}}$'
+yAxisLabel = r'$e \Delta \Phi_1 / 2 T_i$'
 AxesLabelSize = 50
 #AxesLabelSize = 40.4 ##TTF poster classical over neoclassical fluxes
 
@@ -197,11 +202,12 @@ PlotLegendLabels = []
 #LegendFontSize = 15
 #LegendProperties = {'weight':'bold'}
 #LegendProperties ={'size':'20', 'weight':'heavy'}
+LegendProperties ={'size':'15', 'weight':'heavy'}
 #LegendProperties ={'size':'30', 'weight':'heavy'} #LHD113208t4640, W7-X NBI case, Er scan, #EPS poster fluxes no Phi1 XICS
 #LegendProperties ={'size':'25', 'weight':'heavy'} #LHD113208t4640 Helium scan, #EPS poster fluxes no Phi1
 #LegendProperties ={'size':'27', 'weight':'heavy'} #EPS poster Er
 #LegendProperties ={'size':'35', 'weight':'heavy'} #EPS poster Collisionality, fluxes with Phi1, TTF poster TJ-II collisionality
-LegendProperties ={'size':'30.5', 'weight':'heavy'} #TTF poster TJ-II classical over neoclassical
+#LegendProperties ={'size':'30.5', 'weight':'heavy'} #TTF poster TJ-II classical over neoclassical
 LegendPosition = 3
 LegendNumberColumns = 1
 #LegendBBoxToAnchor = [0.01, 0.01, 1., .102]
@@ -229,7 +235,8 @@ LegendNumberColumns = 1
 #LegendBBoxToAnchor = [0.005, 0.85, 1., .102]
 #LegendBBoxToAnchor = [0.168, 0.005, 1., .102] ##TTF poster TJ-II classical over neoclassical fluxes PAS
 LegendBBoxToAnchor = [0.30, 0.005, 1., .102] ##TTF poster TJ-II classical over neoclassical fluxes FP
-LegendBBoxToAnchor = [0.50, 0.005, 1., .102]
+LegendBBoxToAnchor = [0.55, 0.005, 1., .102]
+LegendBBoxToAnchor = [0.005, 0.55, 1., .102]
 
 ShowSubPlotLabel = False
 SubPlotLabel = '(c)'

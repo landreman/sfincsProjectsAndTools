@@ -49,17 +49,17 @@ filename = 'sfincsOutput.h5' ##Name for SFINCS output HDF5 files.
 radiusName = "Er" ##Radial coordinate to use on x-axis. Must be "psiHat", "psiN", "rHat" or "rN".
 
 #plotVariableName = "Er" ##Parameter to plot on y-axis. In this version it must be "Er", "dPhiHatdpsiHat", "dPhiHatdpsiN", "dPhiHatdrHat" or "dPhiHatdrN" .
-plotVariableName = "particleFlux_vd_rHat"
-species = 3
-TransformPlotVariableToOutputUnitsFactor = vbar
+plotVariableName = "Phi1Hat"
+species = 2 #Species with ion temperature
+TransformPlotVariableToOutputUnitsFactor = 1.0
 
 MinFloat = pow(10, -sys.float_info.dig)
 
 ##WRITE DATA TO OUTPUT FILE##
 writeDataToFile = True
-outputFilenamePrefix = "SFINCS_" ##Start of name of output file to which the data is written.
+outputFilenamePrefix = "SFINCS_DeltaPhi1_" ##Start of name of output file to which the data is written.
 outputFilenameSuffix = ".dat" ##End of name of output file to which the data is written.
-OutputLabels = ["Er[kV/m]", "Gamma_z[1/m^2s]"]
+OutputLabels = ["Er[kV/m]", "e*DeltaPhi1/(2*Ti)"]
 #OutputLabels.append(xAxisLabel)
 #OutputLabels.append(yAxisLabel)
 #############################
@@ -122,39 +122,42 @@ for directory in PlotDirectories:
 
                 finished = file["finished"][()] 
                 integerToRepresentTrue = file["integerToRepresentTrue"][()]
-                includePhi1 = file["includePhi1"][()] 
+                includePhi1 = file["includePhi1"][()]
+
+                iteration = file["NIterations"][()] - 1 #Results from last iteration
+                THats = file["THats"][()]
+                alpha = file["alpha"][()]
 
                 if includePhi1 == integerToRepresentTrue:
                     didNonlinearCalculationConverge = file["didNonlinearCalculationConverge"][()]
                     #if plotVariableName == "particleFlux_vm_rHat":
                     #    VariableValue = file["particleFlux_vd_rHat"][()]
-                
-                if (plotVariableName.find('Flux_vd') != -1 or plotVariableName.find('Flux_vE') != -1) and (includePhi1 != integerToRepresentTrue):
-                    print (plotVariableName + " only exists in nonlinear runs, but this is a linear run.") 
-                    print ("Reading " + plotVariableName.replace('Flux_vd', 'Flux_vm').replace('Flux_vE', 'Flux_vm') + " instead.")
-                    VariableValue = file[plotVariableName.replace('Flux_vd', 'Flux_vm').replace('Flux_vE', 'Flux_vm')][()]
-                else:
-                    VariableValue = file[plotVariableName][()]
 
+                    Phi1Hat = file[plotVariableName][()] ##Phi1Hat
+                    zMinData = numpy.amin(Phi1Hat[:,:,iteration])
+                    zMaxData = numpy.amax(Phi1Hat[:,:,iteration])
+                    
                 file.close()
-                
-                #if plotVariableName == "particleFlux_vm_rHat":
-                if plotVariableName.find('Flux_v') != -1:
-                    VariableValue = VariableValue[:, -1]
-                    VariableValue = VariableValue[species -1] 
 
-                VariableValue = TransformPlotVariableToOutputUnitsFactor * VariableValue
                 if includePhi1 == integerToRepresentTrue:
                     if didNonlinearCalculationConverge != integerToRepresentTrue:
                         print ("The nonlinear solver did not converge in " + fullSubDirectory)
                         print ("Continuing with next sub directory.")
                         continue
+                else:
+                    print ("It seems there is no Phi1 in " + fullSubDirectory)
+                    print ("Continuing with next sub directory.")
+                    continue
             except:
                 print ("Error when reading from " + fullSubDirectory + "/" + filename)
                 print ("Maybe the SFINCS run did not finish")
                 print ("Continuing with next sub directory.")
                 continue
 
+            Ti = THats[species - 1] 
+
+            VariableValue = alpha*(zMaxData - zMinData) / (2.0*Ti)
+            VariableValue = TransformPlotVariableToOutputUnitsFactor * VariableValue
             Nradii += 1
             radii.append(radiusValue)
             ydata.append(VariableValue)
@@ -205,7 +208,7 @@ for directory in PlotDirectories:
             #print("TEST")
             #print(OutputData)
             #print(np.array([ydata_sorted]).transpose())
-            OutputData = np.concatenate((OutputData, nbar*np.array([ydata_sorted]).transpose()), axis=1)
+            OutputData = np.concatenate((OutputData, np.array([ydata_sorted]).transpose()), axis=1)
             #print("TEST2")
 
             #print ""
