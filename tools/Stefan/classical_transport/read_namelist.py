@@ -69,7 +69,7 @@ def readVariable(varName, inputFilename,intOrFloatOrString, required=True):
 
     ##if returnValue==None: #Commented by AM 2015-12
         ##if required: #Commented by AM 2015-12
-    if required and returnValue==None:
+    if required and (returnValue is None):
         print "Error! Unable to find a valid setting for the variable "+originalVarName+" in "+inputFilename+"."
 ##        raise #Commented by AM 2015-12
         exit(1) #Added by AM 2015-12
@@ -127,6 +127,7 @@ def read_namelist(inputFilename):
     nu_n = readVariable("nu_n",inputFilename, "float", required=True)
     
     if nu_n < 0:
+        """ assume RBar = 1m, mBar = proton mass, nBar = 1e20/m^3, TBar = 1keV; electrons first species"""
         if (abs(Delta-4.5694e-3) /4.5694e-3) > 0.1:
             raise ValueError("nu_n will be calculated with standard bars, but Delta is wrong.")
         lnLambda = (25.3e+0) - (1.15e+0)*log10(nHats[0]*(1e14)) + (2.30e+0)*log10(THats[0]*1000)

@@ -66,5 +66,5 @@ if __name__=="__main__":
     max_m = float("inf")
     maxabs_n = float("inf")
     symmetry = "StelSym"
-    classical_particle_flux =  classical_flux(namelist_filename,max_m,maxabs_n,symmetry,signcorr)
-    print str(classical_particle_flux)[1:-1]
+    classical_particle_flux,classical_heat_flux =  classical_flux(namelist_filename,max_m,maxabs_n,symmetry,signcorr)
+    print str(classical_particle_flux)[1:-1] + " " + str(classical_heat_flux)[1:-1]

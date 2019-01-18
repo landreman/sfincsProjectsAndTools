@@ -1,10 +1,10 @@
 from __future__ import division
 
-from numpy import sum,sqrt,array,pi,zeros
+from numpy import sum,sqrt,array,pi,zeros, argmax, delete
 from integrals import F,K
 from FSA import FSA
 
-def calculate_classical_transport(Zs,mHats,nHats,THats,ddpsiHat_nHats, ddpsiHat_THats, ddpsiHat_PhiHat,Delta,alpha,nu_n, nablaPsiHat2,BHat):
+def calculate_classical_transport(Zs,mHats,nHats,THats,ddpsiHat_nHats, ddpsiHat_THats, Delta,alpha,nu_n, nablaPsiHat2,BHat):
     """Calculates the classical transport given masses, charge and profiles of all the species, and a geometric factor |\nabla \psi|^2. Everything should be given in terms of the internal normalization in SFINCS, and the species dependent quantities should be passed as a list, tuple or numpy.array where Zs[i] and mHats[i] is charge-number and mass of species i, and so on."""
 
     # get number of species
@@ -14,8 +14,14 @@ def calculate_classical_transport(Zs,mHats,nHats,THats,ddpsiHat_nHats, ddpsiHat_
 
     classical_fluxes = zeros(Nspecies)
 
-    a = 1
-    b = 0
+
+    # assume the impurities are the heaviest species
+    a = argmax(mHats)
+    # collides with ions that are the second heaviest
+    b = argmax(delete(mHats,a))
+    if b>=a:
+        # compensates for deleting a from the list to get b
+        b = b + 1
     #y = THats[a] * mHats[b]/(THats[b] * mHats[a])
             
     classical_fluxes[a] += Zs[b]*FSA(nablaPsiHat2 * nHats[a] * nHats[b]/BHat**2,BHat) *( \
@@ -23,6 +29,7 @@ def calculate_classical_transport(Zs,mHats,nHats,THats,ddpsiHat_nHats, ddpsiHat_
                                                                                          - Zs[a]/8 * sqrt(mHats[b]/THats[b])  * ddpsiHat_THats[b]/THats[b] \
 
     )
+
 
     classical_fluxes = 2*Delta**2 * nu_n * classical_fluxes
 

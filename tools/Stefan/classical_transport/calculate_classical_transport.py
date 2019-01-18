@@ -24,26 +24,59 @@ def calculate_classical_transport(Zs,mHats,NHats,THats,ddpsiHat_NHats, ddpsiHat_
 
     #print (Zs,mHats,NHats,THats,ddpsiHat_NHats, ddpsiHat_THats, ddpsiHat_PhiHat,Delta,alpha,nu_n,nablaPsiHat2,BHat,Phi1Hat)
 
-    classical_fluxes = zeros(Nspecies)
-
+    classical_fluxes_OLD = zeros(Nspecies)
+    classicalPF = zeros(Nspecies)
+    classicalHF = zeros(Nspecies)
+    
     for a in range(0,Nspecies):
         for b in range(0,Nspecies):
-            if a==b:
-                # everything cancels
-                continue;
 
-            classical_fluxes[a] += Zs[b]*FSA(nablaPsiHat2 * nHats[a] * nHats[b]/BHat**2,BHat) *sqrt(mHats[b]/THats[b]) * (1 + mHats[b]/mHats[a]) *F(THats[a] * mHats[b]/(THats[b] * mHats[a])) *( \
+            xab2 = mHats[a]*THats[b]/(mHats[b]*THats[a])
+
+            # Braginskii matrix elements
+            Mab00 = - (1+mHats[a]/mHats[b]) * (1 + xab2)
+            Mab01 = - 1.5 * (1+mHats[a]/mHats[b])
+            Mab11 = -(13. + 16. * xab2 + 30. * xab2**2)/4.
+            Nab11 = 27. * mHats[a]/(4.*mHats[b])
+            Mab00 = Mab00/((1+xab2)**(2.5))
+            Mab01 = Mab01/((1+xab2)**(2.5))
+            Mab11 = Mab11/((1+xab2)**(2.5))
+            Nab11 = Nab11/((1+xab2)**(2.5))
+
+            G1ab =  FSA(nablaPsiHat2 * nHats[a] * nHats[b]/BHat**2,BHat)
+            G2ab =  FSA(nablaPsiHat2 * nHats[a] * nHats[b] *Phi1Hat/BHat**2,BHat)
+
+            classicalPF[a] = classicalPF[a] \
+                             + Zs[b]**2  *( \
+                                            G1ab * Mab00 * (THats[a] * ddpsiHat_NHats[a]/(NHats[a] * Zs[a]) - THats[b] * ddpsiHat_NHats[b]/(NHats[b] * Zs[b])) \
+                                            + G2ab * alpha * Mab00 * ( ddpsiHat_THats[a]/THats[a] -  ddpsiHat_THats[b]/THats[b]) \
+                                            + G1ab * ((Mab00 - Mab01) *  ddpsiHat_THats[a]/Zs[a] - (Mab00 - xab2*Mab01) *  ddpsiHat_THats[b]/Zs[b]) \
+                                        )
+
+            classicalHF[a] = classicalHF[a] \
+                             + Zs[b]**2 * NHats[b] *( \
+                                                      G1ab * Mab01 * (THats[a] * ddpsiHat_NHats[a]/(NHats[a] * Zs[a]) - THats[b] * ddpsiHat_NHats[b]/(NHats[b] * Zs[b])) \
+                                                      + G2ab * alpha * Mab01 * ( ddpsiHat_THats[a]/THats[a] -  ddpsiHat_THats[b]/THats[b]) \
+                                                      + G1ab * ((Mab01 - Mab11) *  ddpsiHat_THats[a]/Zs[a] - (Mab01 + Nab11) *  ddpsiHat_THats[b]/Zs[b]) \
+                                                  )
+
+
+            classical_fluxes_OLD[a] += Zs[b]*FSA(nablaPsiHat2 * nHats[a] * nHats[b]/BHat**2,BHat) *sqrt(mHats[b]/THats[b]) * (1 + mHats[b]/mHats[a]) *F(THats[a] * mHats[b]/(THats[b] * mHats[a])) *( \
                                                                                                +   (Zs[a] * (ddpsiHat_NHats[b]/NHats[b] - ddpsiHat_THats[b]/THats[b]/2)- Zs[b] * (THats[a]/THats[b]) *  (ddpsiHat_NHats[a]/NHats[a] - ddpsiHat_THats[a]/THats[a]/2)) \
                                                                                                + 1.5* (THats[a] * mHats[b])/(THats[b] * mHats[a]+THats[a] * mHats[b])*(Zs[a] * ddpsiHat_THats[b]/THats[b] - (mHats[a]/mHats[b])  * Zs[b] * ddpsiHat_THats[a]/THats[a]) \
             )
                 
                 
             if includePhi1:
-                classical_fluxes[a] += alpha*Zs[a] *Zs[b]**2 * FSA(nablaPsiHat2 * nHats[a] * nHats[b] *Phi1Hat/BHat**2,BHat) * sqrt(mHats[b]/THats[b]) * (1 + mHats[b]/mHats[a]) * F(THats[a] * mHats[b]/(THats[b] * mHats[a]))/THats[b] * (ddpsiHat_THats[b]/THats[b] -  ddpsiHat_THats[a]/THats[a])
+                classical_fluxes_OLD[a] += alpha*Zs[a] *Zs[b]**2 * FSA(nablaPsiHat2 * nHats[a] * nHats[b] *Phi1Hat/BHat**2,BHat) * sqrt(mHats[b]/THats[b]) * (1 + mHats[b]/mHats[a]) * F(THats[a] * mHats[b]/(THats[b] * mHats[a]))/THats[b] * (ddpsiHat_THats[b]/THats[b] -  ddpsiHat_THats[a]/THats[a])
 
-    classical_fluxes = 2*Delta**2 * nu_n * classical_fluxes
 
-    return classical_fluxes
+        classicalPF[a] = Zs[a] * Delta**2 * nu_n * sqrt(mHats[a]) * classicalPF[a]/(2*THats[a]**1.5)
+        classicalHF[a] = Zs[a] * Delta**2 * nu_n * sqrt(mHats[a]) * classicalPF[a]/(2*sqrt(THats[a]))
+        classicalHF[a] = classicalHF[a] + 2.5 * THats[a] * classicalPF[a]
+    classical_fluxes_OLD = 2*Delta**2 * nu_n * classical_fluxes_OLD
+    
+    return classicalPF,classicalHF
 
 if __name__ == "__main__":
     # debug against mass ratio expanded expression previously calculated

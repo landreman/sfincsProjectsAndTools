@@ -3,7 +3,7 @@ import sys,os
 
 from calculate_classical_transport import calculate_classical_transport 
 #sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'Hakan/pythonBoozerFilesAndGeom'))
-from geomlib import bcgeom
+from geomlib import bcgeom, vmecgeom
 from fluxcoorddiscr import fluxcoorddiscr
 
 def read_psiA(geom,signcorr=2):
@@ -21,7 +21,11 @@ def read_geometry(inputRadialCoordinate,rN_wish,Ntheta,Nzeta,equilibriumFile,min
     # in bcgeom file, rnorm is sqrt(normalized_toroidal_flux)
     # and s is normalized_toroidal_flux
 
-    geom = bcgeom(equilibriumFile,min_Bmn_to_load,max_m,maxabs_n ,symmetry,signcorr,verbose=0)
+    if equilibriumFile.split('.')[-1] == "nc":
+        raise Warning("vmec files are not supported!")
+    else:
+        geom = bcgeom(equilibriumFile,min_Bmn_to_load,max_m,maxabs_n ,symmetry,signcorr,verbose=0)
+        
     psiA = read_psiA(geom,signcorr)
     psiAHat = psiA/(BBar*RBar**2)
 
