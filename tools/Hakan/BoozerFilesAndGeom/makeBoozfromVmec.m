@@ -225,7 +225,6 @@ end
 alphamn1=invgrad(w.B_umntilde,w.B_wmntilde,Geom.Nperiods,1); 
 alphamn2=invgrad(w.B_umntilde,w.B_wmntilde,Geom.Nperiods,2);
 %if B_umn and B_wmn are good, then alphamn1 should equal alphamn2
-%I SHOULD TEST THIS
 
 w.pmn=(alphamn1-I*w.lmn)*(1/(G+iota*I));
 
@@ -263,7 +262,7 @@ Booz.mnmat.Dzetaw=fftmn(Booz.Dzetaw);
 
 if Geom.StelSym %Make sure this is fulfilled
   Booz.mnmat.B=removesin(Booz.mnmat.B);
-  Booz.mnmat.R=removesin(Booz.mnmat.B);
+  Booz.mnmat.R=removesin(Booz.mnmat.R);
   Booz.mnmat.Z=removecos(Booz.mnmat.Z);
   Booz.mnmat.Dzetaw=removecos(Booz.mnmat.Dzetaw);
   Booz.B=ifftmn(Booz.mnmat.B);

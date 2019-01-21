@@ -242,6 +242,7 @@ class fluxcoorddiscr(object):
           Zmn=mnFourierlib.mnmat(Geom,Ntheta=Ntheta,Nzeta=Nzeta,rind=rind,quantity='Z')
           Dzetacylphimn=mnFourierlib.mnmat(Geom,Ntheta=Ntheta,Nzeta=Nzeta,rind=rind,quantity='Dphi')
           Dzetacylphi=Dzetacylphimn.ifft()
+          type(Bmn)
           B=Bmn.ifft()
           R=Rmn.ifft()
           Z=Zmn.ifft()
@@ -644,7 +645,7 @@ class fluxcoorddiscr(object):
         th0step=th0s[2]-th0s[1]
         shortzetv0=np.linspace(-1.0,1.0,num=11,endpoint=False)*min(2.0*Dzeta,np.pi/Nperiods*0.1)
         for th0i in range(len(th0s)):
-            print 'th0i='+str(th0i)
+            print('th0i='+str(th0i))
             shortzetv=shortzetv0+zetguess
             shortthev=th0s[th0i]+iota*shortzetv
             dBdzetv=iota*dBdthetamn.evalpoint(shortthev,shortzetv)+dBdzetamn.evalpoint(shortthev,shortzetv)
@@ -667,7 +668,7 @@ class fluxcoorddiscr(object):
                            zes,ths,'b-x',
                            zes_extrap,th0s[th0i+1]+iota*zes_extrap,'b+')
                   plt.show()
-                  print 'Smith not possible! Decrease th0step or try fewer mn modes in the equilibrium!'
+                  print('Smith not possible! Decrease th0step or try fewer mn modes in the equilibrium!')
         #end for th0i
       #end if makeSmith
 
@@ -826,7 +827,7 @@ class fluxcoorddiscr(object):
         gphipsi    =(g_psivthet*g_vthetphi-g_phipsi*g_vthetvthet)/Jacob_psi_vthet_phi**2
 
         if np.any(np.abs(corrfac-1.0)>0.05):
-          print ('Probably too few surfaces in the equilibrium to get a good '+
+          print('Probably too few surfaces in the equilibrium to get a good '+
                    'approximation for e_psi! Turning of extended!')
           extended=False
       #end if extended
@@ -1094,62 +1095,62 @@ class fluxcoorddiscr(object):
   def disp(self):
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         frm='{:8.4f}'
-        print '----------------------------------------------------------------------------------'
-        print 'Discretisation on a uniform '+self.name+' coordinate grid of the magnetic field'
-        print '\\mathbf{B} = I\\nabla\\theta + G\\nabla\\zeta + B_\\psi(\\theta,\\zeta)\\nabla\\psi'
-        print '\\mathbf{B} = I\\nabla\\vthet + G\\nabla\\phi + \\nabla H(\\psi,\\vthet,\\phi)'
-        print '----------------------------------------------------------------------------------'
-        print 'name     = '+self.name+' : the uniform coordinate grid'
-        print 'StelSym  = '+str(self.StelSym)
-        print 'Nperiods = '+str(self.Nperiods)
-        print 'Npol     = '+str(self.Npol)
-        print 'Ntor     = '+str(self.Ntor)
-        print 'Dpol     = '+frm.format(self.Dpol)
-        print 'Dtor     = '+frm.format(self.Dtor)
-        print 'iota     = '+frm.format(self.iota)
-        print 'G        = '+frm.format(self.G)
-        print 'I        = '+frm.format(self.I)
-        print 'mu0dpdpsi= '+frm.format(self.mu0dpdpsi)
-        print 'FSAB2    = '+frm.format(self.FSAB2)+  '            : <B^2>'
-        print 'FSAu2B2  = '+frm.format(self.FSAu2B2)+'            : <u^2B^2>'
-        print 'FSAg_phiphi    = '+frm.format(self.FSAg_phiphi)+'      : <g_phiphi>'
-        print 'FSAgpsipsi     = '+frm.format(self.FSAgpsipsi)+ '      : <g^psipsi>'
-        print 'FSAsqrtgpsipsi = '+frm.format(self.FSAsqrtgpsipsi)+'      : <sqrt(g^psipsi)>'
-        print 'Jacob_psi_vthet_phi = '+frm.format(self.Jacob_psi_vthet_phi)+' : Hamada Jacobian (G+iota*I)/<B^2>'
-        print 'dpsidrGraz     = '+frm.format(self.dpsidrGraz)+'      : dpsi/dr_Graz'
-        print 'dsdrGraz       = '+frm.format(self.dsdrGraz)+'      : ds/dr_Graz'
-        print 'r_eff          = '+frm.format(self.r_eff)+'      : r_eff = sqrt(<g_phiphi><g^psipsi>)/|G|'
-        print 'R00 = '+frm.format(self.R00)+'                 : m=n=0 Fourier coeff. in '+self.name+' coordinates'
+        print('----------------------------------------------------------------------------------')
+        print('Discretisation on a uniform '+self.name+' coordinate grid of the magnetic field')
+        print('\\mathbf{B} = I\\nabla\\theta + G\\nabla\\zeta + B_\\psi(\\theta,\\zeta)\\nabla\\psi')
+        print('\\mathbf{B} = I\\nabla\\vthet + G\\nabla\\phi + \\nabla H(\\psi,\\vthet,\\phi)')
+        print('----------------------------------------------------------------------------------')
+        print('name     = '+self.name+' : the uniform coordinate grid')
+        print('StelSym  = '+str(self.StelSym))
+        print('Nperiods = '+str(self.Nperiods))
+        print('Npol     = '+str(self.Npol))
+        print('Ntor     = '+str(self.Ntor))
+        print('Dpol     = '+frm.format(self.Dpol))
+        print('Dtor     = '+frm.format(self.Dtor))
+        print('iota     = '+frm.format(self.iota))
+        print('G        = '+frm.format(self.G))
+        print('I        = '+frm.format(self.I))
+        print('mu0dpdpsi= '+frm.format(self.mu0dpdpsi))
+        print('FSAB2    = '+frm.format(self.FSAB2)+  '            : <B^2>')
+        print('FSAu2B2  = '+frm.format(self.FSAu2B2)+'            : <u^2B^2>')
+        print('FSAg_phiphi    = '+frm.format(self.FSAg_phiphi)+'      : <g_phiphi>')
+        print('FSAgpsipsi     = '+frm.format(self.FSAgpsipsi)+ '      : <g^psipsi>')
+        print('FSAsqrtgpsipsi = '+frm.format(self.FSAsqrtgpsipsi)+'      : <sqrt(g^psipsi)>')
+        print('Jacob_psi_vthet_phi = '+frm.format(self.Jacob_psi_vthet_phi)+' : Hamada Jacobian (G+iota*I)/<B^2>')
+        print('dpsidrGraz     = '+frm.format(self.dpsidrGraz)+'      : dpsi/dr_Graz')
+        print('dsdrGraz       = '+frm.format(self.dsdrGraz)+'      : ds/dr_Graz')
+        print('r_eff          = '+frm.format(self.r_eff)+'      : r_eff = sqrt(<g_phiphi><g^psipsi>)/|G|')
+        print('R00 = '+frm.format(self.R00)+'                 : m=n=0 Fourier coeff. in '+self.name+' coordinates')
         if not(self.StelSym):
-            print 'Z00 = '+frm.format(self.Z00)+'                 : m=n=0 Fourier coeff. in '+self.name+' coordinates'
-        print 'B00 = '+frm.format(self.B00)+'                 : m=n=0 Fourier coeff. in '+self.name+' coordinates'
-        print '------------------------------------------------------------------------------'
-        print ' Npol x Ntor Scalar fields'
-        print '-------------------------------------'
-        print 'zeta,theta     : Boozer coordinates'
-        print 'phi,vthet      : Hamada coordinates'
-        print 'pzeta,ptheta   : Pest coordinates (pzeta=cylphi)'
-        print 'Dzetaphi       : zeta-phi'
-        print 'Dzetapzeta     : zeta-pzeta'
-        print 'R,Z,cylphi     : Cylindrical coordinates (right handed in this order)'
-        print 'X,Y,Z          : Cartesian coordinates'
-        print 'B, h           : B and h=1/B^2'
-        print 'u_chi          : defined by <uB^2>=0 and (B dot grad) u = 2 iota B^-3 B x nabla psi dot nabla B'
-        print 'u_psi          : defined by <uB^2>=0 and (B dot grad) u = 2 B^-3 B x nabla psi dot nabla B'
-        print 'Bpsitilde      : B_psi - B_psi_00  (Boozer specific)'
-        print 'dBpsidtheta    : dB_psi/dtheta (Boozer specific)'
-        print 'dBpsidzeta     : dB_psi/dzeta (Boozer specific)'
-        print 'Jacob_psi_theta_zeta                  : Boozer Jacobian (G+iota*I)/B^2'
-        print 'g_thetatheta, g_thetazeta, g_zetazeta : Boozer metric'
-        print 'g_vthetvthet, g_vthetphi,  g_phiphi   : Hamada metric'
-        print 'gpsipsi         : |grad(psi)|^2'
-        print 'gradpsidotgradB : grad(psi) dot grad(B)'
-        print 'curv_normal     : normal curvature grad(psi)/|grad(psi)| dot (b dot grad)b'
-        print '------------------------------------------------------------------------------'
-        print ' mnmat objects (Fourier transformed Npol x Ntor Scalar fields)'
-        print '---------------------------------------------------------------'
-        print 'Bmn'
-        print '------------------------------------------------------------------------------'
+            print('Z00 = '+frm.format(self.Z00)+'                 : m=n=0 Fourier coeff. in '+self.name+' coordinates')
+        print('B00 = '+frm.format(self.B00)+'                 : m=n=0 Fourier coeff. in '+self.name+' coordinates')
+        print('------------------------------------------------------------------------------')
+        print(' Npol x Ntor Scalar fields')
+        print('-------------------------------------')
+        print('zeta,theta     : Boozer coordinates')
+        print('phi,vthet      : Hamada coordinates')
+        print('pzeta,ptheta   : Pest coordinates (pzeta=cylphi)')
+        print('Dzetaphi       : zeta-phi')
+        print('Dzetapzeta     : zeta-pzeta')
+        print('R,Z,cylphi     : Cylindrical coordinates (right handed in this order)')
+        print('X,Y,Z          : Cartesian coordinates')
+        print('B, h           : B and h=1/B^2')
+        print('u_chi          : defined by <uB^2>=0 and (B dot grad) u = 2 iota B^-3 B x nabla psi dot nabla B')
+        print('u_psi          : defined by <uB^2>=0 and (B dot grad) u = 2 B^-3 B x nabla psi dot nabla B')
+        print('Bpsitilde      : B_psi - B_psi_00  (Boozer specific)')
+        print('dBpsidtheta    : dB_psi/dtheta (Boozer specific)')
+        print('dBpsidzeta     : dB_psi/dzeta (Boozer specific)')
+        print('Jacob_psi_theta_zeta                  : Boozer Jacobian (G+iota*I)/B^2')
+        print('g_thetatheta, g_thetazeta, g_zetazeta : Boozer metric')
+        print('g_vthetvthet, g_vthetphi,  g_phiphi   : Hamada metric')
+        print('gpsipsi         : |grad(psi)|^2')
+        print('gradpsidotgradB : grad(psi) dot grad(B)')
+        print('curv_normal     : normal curvature grad(psi)/|grad(psi)| dot (b dot grad)b')
+        print('------------------------------------------------------------------------------')
+        print(' mnmat objects (Fourier transformed Npol x Ntor Scalar fields)')
+        print('---------------------------------------------------------------')
+        print('Bmn')
+        print('------------------------------------------------------------------------------')
 
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   def plot(self,toshow,title='',cmap=None):

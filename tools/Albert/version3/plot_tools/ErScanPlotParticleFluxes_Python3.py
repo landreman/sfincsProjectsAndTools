@@ -33,15 +33,6 @@ exec(open(sfincsProjectsAndToolsHome + "/tools/Albert/version3/plot_tools"  + "/
 
 ##INPUTS##
 
-species = 2
-
-withExternal = True
-externalDataFileType = '.dat'
-radiusColumn = 0
-FluxColumn = 17
-DensityColumn = 14
-sigmaColumn = 18
-
 ##NORMALIZATION FACTORS FOR SI UNITS##
 ######################################
 qe = 1.6021766208*10**(-19) #Electron charge
@@ -53,25 +44,33 @@ Bbar = 1.0
 vbar = np.sqrt(2.0 * Tbar / mbar)  
 ######################################
 
-#externalNormalization = nbar
-
 filename = 'sfincsOutput.h5' ##Name for SFINCS output HDF5 files.
 
-radiusName = "rN" ##Radial coordinate to use on x-axis. Must be "psiHat", "psiN", "rHat" or "rN".
+radiusName = "Er" ##Radial coordinate to use on x-axis. Must be "psiHat", "psiN", "rHat" or "rN".
 
 #plotVariableName = "Er" ##Parameter to plot on y-axis. In this version it must be "Er", "dPhiHatdpsiHat", "dPhiHatdpsiN", "dPhiHatdrHat" or "dPhiHatdrN" .
 plotVariableName = "particleFlux_vd_rHat"
+species = 3
 TransformPlotVariableToOutputUnitsFactor = vbar
 
-MinFloat = pow(10, -sys.float_info.dig) 
+MinFloat = pow(10, -sys.float_info.dig)
+
+##WRITE DATA TO OUTPUT FILE##
+writeDataToFile = True
+outputFilenamePrefix = "SFINCS_" ##Start of name of output file to which the data is written.
+outputFilenameSuffix = ".dat" ##End of name of output file to which the data is written.
+OutputLabels = ["Er[kV/m]", "Gamma_z[1/m^2s]"]
+#OutputLabels.append(xAxisLabel)
+#OutputLabels.append(yAxisLabel)
+#############################
 
 ##############################
 ##########END INPUTS##########
 ##############################
 
-if radiusName != "psiHat" and radiusName != "psiN" and radiusName != "rHat" and radiusName != "rN":
-    print ("Error! Invalid radial coordinate.")
-    sys.exit(1)
+#if radiusName != "psiHat" and radiusName != "psiN" and radiusName != "rHat" and radiusName != "rN":
+#    print ("Error! Invalid radial coordinate.")
+#    sys.exit(1)
 
 ##READ AND PLOT THE DATA##
 originalDirectory = os.getcwd() 
@@ -123,9 +122,7 @@ for directory in PlotDirectories:
 
                 finished = file["finished"][()] 
                 integerToRepresentTrue = file["integerToRepresentTrue"][()]
-                includePhi1 = file["includePhi1"][()]
-
-                nHats = file["nHats"][()]
+                includePhi1 = file["includePhi1"][()] 
 
                 if includePhi1 == integerToRepresentTrue:
                     didNonlinearCalculationConverge = file["didNonlinearCalculationConverge"][()]
@@ -140,11 +137,11 @@ for directory in PlotDirectories:
                     VariableValue = file[plotVariableName][()]
 
                 file.close()
-
+                
                 #if plotVariableName == "particleFlux_vm_rHat":
                 if plotVariableName.find('Flux_v') != -1:
                     VariableValue = VariableValue[:, -1]
-                    VariableValue = VariableValue[species -1]
+                    VariableValue = VariableValue[species -1] 
 
                 VariableValue = TransformPlotVariableToOutputUnitsFactor * VariableValue
                 if includePhi1 == integerToRepresentTrue:
@@ -157,8 +154,6 @@ for directory in PlotDirectories:
                 print ("Maybe the SFINCS run did not finish")
                 print ("Continuing with next sub directory.")
                 continue
-
-            VariableValue = VariableValue / nHats[species -1]
 
             Nradii += 1
             radii.append(radiusValue)
@@ -196,49 +191,35 @@ for directory in PlotDirectories:
         plt.plot(np.array(radii_sorted), np.array(ydata_sorted), PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel, linewidth=PlotLineWidth)
         linenumber += 1
 
+
+        if writeDataToFile:
+
+            os.chdir(originalDirectory)
+            outputFilename = outputFilenamePrefix + LegendLabel + outputFilenameSuffix
+
+            #print ""
+            #print "OutputData = " + str(OutputData)
+            #print ""
+            #OutputData = np.array([])
+            OutputData = np.array([radii_sorted]).transpose()
+            #print("TEST")
+            #print(OutputData)
+            #print(np.array([ydata_sorted]).transpose())
+            OutputData = np.concatenate((OutputData, nbar*np.array([ydata_sorted]).transpose()), axis=1)
+            #print("TEST2")
+
+            #print ""
+            #print "OutputLabels = " + str(OutputLabels)
+            #print ""
+
+            print ("Writing data to " + outputFilename)
+            np.savetxt(outputFilename, OutputData, delimiter='\t', newline='\n', header='\t'.join(OutputLabels))
+
     except:
         os.chdir(originalDirectory)
         print ("Unexpected error when processing " + directory)
         print ("Continuing with next directory.")
         continue
-
-##ADD EXTERNAL DATA TO PLOT (E.G. DKES)##
-if withExternal :
-    os.chdir(originalDirectory)
-    externalInputFiles = [];
-
-    for externalfile in os.listdir(originalDirectory):
-        if externalfile.endswith(externalDataFileType):
-            try:
-                inputParams = np.genfromtxt(externalfile, dtype=None, comments="#", skip_header=1)
-                #print(inputParams[:,radiusColumn])
-                #print(inputParams[:,ErColumn])
-                try:
-                    LegendLabel = PlotLegendLabels[linenumber]
-                except:
-                    LegendLabel = externalfile
-                if FilledErrors or (not ErrorBars[linenumber]):
-                    plt.plot(inputParams[:,radiusColumn], inputParams[:,FluxColumn]/inputParams[:,DensityColumn], PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel, linewidth=PlotLineWidth)
-                    if ErrorBars[linenumber] :
-                        plt.fill_between(inputParams[:,radiusColumn], inputParams[:,FluxColumn]/inputParams[:,DensityColumn] + inputParams[:,sigmaColumn]/inputParams[:,DensityColumn], inputParams[:,FluxColumn]/inputParams[:,DensityColumn] - inputParams[:,sigmaColumn]/inputParams[:,DensityColumn], color=PlotLineColors[linenumber], alpha=ErrorBarAlpha)
-                else:
-                    plt.errorbar(inputParams[:,radiusColumn], inputParams[:,FluxColumn]/inputParams[:,DensityColumn], fmt=PlotLinespecs[linenumber], yerr=inputParams[:,sigmaColumn]/inputParams[:,DensityColumn], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel, linewidth=PlotLineWidth)
-                    
-
-                linenumber += 1
-
-                externalInputFiles.append(externalfile)
-            except Exception as e:
-                print (e.__class__.__name__, ": ", e.message, "while reading %s" % inputfile)
-                print ("Continuing with next file!")
-                continue
-
-    if len(externalInputFiles) > 0 :
-        print("Read external data files: " + str(externalInputFiles))
-    else:
-        print("Could not read any external data files.")
-
-#########################################
 
 
 plt.xscale(xAxisScale) 
@@ -270,11 +251,7 @@ plt.subplots_adjust(left=LeftMargin, right=RightMargin, top=TopMargin, bottom=Bo
 if ShowSubPlotLabel:
     plt.text(SubPlotLabelXcoord, SubPlotLabelYcoord, SubPlotLabel)
 
-if NoScientificAxes :
-    ax.get_xaxis().get_major_formatter().set_scientific(False)
-    ax.get_yaxis().get_major_formatter().set_scientific(False)
-
-os.chdir(originalDirectory) 
+os.chdir(originalDirectory)
 
 if makePDF: 
     print ("Saving PDF")  

@@ -1,8 +1,13 @@
-function Geom=makeBcfromVmec(woutin,Nu,Nw,min_Bmn)
+function Geom=makeBcfromVmec(woutin,Nu,Nw,min_Bmn,do_sort,signcorr)
 if nargin==1
   Nu=inf;
   Nw=inf;
   min_Bmn=0;
+  do_sort=1; %-1:descending n, 1:ascending n, 0: no sort
+  signcorr='signcorr2';
+elseif nargin==4
+  do_sort=1; %-1:descending n, 1:ascending n, 0: no sort
+  signcorr='signcorr2';  
 end
 
 %The result can be saved with writeBoozerfile.m
@@ -74,8 +79,13 @@ Geom.Nperiods = double(wout.nfp);        %!< number of field periods
 
 Geom.StelSym  = StelSym;
 if StelSym
-  Geom.newsigncorr=0; %This is the convention in SFINCS
+  if strcmp(signcorr,'signcorr1')
+    Geom.newsigncorr=0;
+  elseif   strcmp(signcorr,'signcorr2')
+    Geom.newsigncorr=1;
+  end
 end
+
 Geom.torfluxtot = ...
    wout.phi(wout.ns)*signchange;%!<  total toroidal flux within the boundary (s=1)
 Geom.psi_a=Geom.torfluxtot/2/pi;
@@ -99,6 +109,13 @@ Geom.dpds=diff(wout.presf(skip:end))'./diff(Geom.fullgrid.s(skip:end));
 %Geom.dVdsoverNper=dVdsoverNper*signchange;
 Geom.Bphi  = wout.bvco*signchange;%direction switch sign
 Geom.Btheta= wout.buco;%*signchange;
+
+if Geom.newsigncorr==0
+  Geom.Bphi       = -Geom.Bphi;
+  Geom.Btheta     = -Geom.Btheta;
+  Geom.torfluxtot = -Geom.torfluxtot;
+  Geom.psi_a      = -Geom.psi_a;
+end
 
 Geom.Bphi=Geom.Bphi(skip+1:end)';
 Geom.Btheta=Geom.Btheta(skip+1:end)';
@@ -139,6 +156,13 @@ Geom.Bfilter.maxabs_n=(Nw-1)/2;
 %  error('Stellarator symmetric case not implemented yet!')
 %end
 
+%do_sort=1; %Sort the Bmns
+if do_sort==1
+  sort_opt='ascend';
+elseif do_sort==-1
+  sort_opt='descend';
+end
+
 tic
 for sind=1:length(Geom.s)
   fprintf(1,'\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b radius %i / %i',...
@@ -151,13 +175,34 @@ for sind=1:length(Geom.s)
   Dzetawmnlist=mnlist(Booz.mnmat.Dzetaw);
   
   if Geom.StelSym
-    goodinds=find(Bmnlist.cosparity);
-    Geom.nmodes(1,sind)=length(goodinds);
-    Geom.m{sind}  =Bmnlist.m(goodinds);
-    Geom.n{sind}  =Bmnlist.n(goodinds);
-    Geom.parity{sind}=Bmnlist.cosparity(goodinds);
-    Geom.Bmn{sind}=Bmnlist.data(goodinds);
-    Geom.R{sind}  =Rmnlist.data(goodinds);
+    good=find(Bmnlist.cosparity);
+    Geom.nmodes(1,sind)=length(good);
+    if do_sort
+       [ms,sortminds]=sort(Bmnlist.m(good));
+       Geom.m{sind} = ms;
+       Geom.n{sind}     = zeros(size(ms));
+       Geom.parity{sind}= zeros(size(ms));
+       Geom.Bmn{sind}   = zeros(size(ms));
+       Geom.R{sind}     = zeros(size(ms));
+       mstarts=[1,find(diff(ms)>0)+1];
+       mends=[mstarts(2:end)-1,length(ms)];
+       for ii=1:length(mstarts)
+         minds_thism=sortminds(mstarts(ii):mends(ii));
+         [ns,sortninds]=sort(Bmnlist.n(good(minds_thism)),sort_opt);
+
+         Geom.n{sind}(mstarts(ii):mends(ii))=ns;
+         Geom.parity{sind}(mstarts(ii):mends(ii))=Bmnlist.cosparity(good(minds_thism(sortninds)));
+         Geom.Bmn{sind}(mstarts(ii):mends(ii))   =Bmnlist.data(good(minds_thism(sortninds)));
+         Geom.R{sind}(mstarts(ii):mends(ii))     =Rmnlist.data(good(minds_thism(sortninds)));
+       end
+       %[ms',Bmnlist.n(good(sortminds))',Geom.n{sind}',Geom.Bmn{sind}',Bmnlist.m(good)',Bmnlist.n(good)',Bmnlist.data(good)']
+    else
+      Geom.m{sind}  =Bmnlist.m(good);
+      Geom.n{sind}  =Bmnlist.n(good);
+      Geom.parity{sind}=Bmnlist.cosparity(good);
+      Geom.Bmn{sind}=Bmnlist.data(good);
+      Geom.R{sind}  =Rmnlist.data(good);
+    end
   else
     Geom.nmodes(1,sind)=length(Bmnlist.m)+1;
     Geom.m{sind}  =[Bmnlist.m,0];
@@ -234,6 +279,9 @@ if length(Geom.R00)==length(Geom.s) %just check that all were made.
   % Calculate minorradiusW7AS
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   accum=0;
+  %bcsurfind=find(abs(Geom.s-0.995)<5e-4);
+  %[dum,bcsurfind]=min(abs(Geom.s-0.995));
+  bcsurfind=size(wout.rmnc,2);
   for m=1:wout.xm(end)
     mind=m+1;
     ii=find(wout.xm==m);
@@ -242,8 +290,8 @@ if length(Geom.R00)==length(Geom.s) %just check that all were made.
     ns=wout.xn(start_modes:end_modes)/double(wout.nfp);
     nnmat=(1+(-1).^(ns*ones(size(ns'))-ones(size(ns))*ns'))/2;
     accum=accum+...
-          m*sum(sum((wout.rmnc(start_modes:end_modes,end)*...
-                     wout.zmns(start_modes:end_modes,end)').*nnmat));
+          m*sum(sum((wout.rmnc(start_modes:end_modes,bcsurfind)*...
+                     wout.zmns(start_modes:end_modes,bcsurfind)').*nnmat));
   end
   Geom.minorradiusW7AS=sqrt(abs(accum));
 
