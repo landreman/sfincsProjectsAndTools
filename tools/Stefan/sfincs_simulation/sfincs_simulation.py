@@ -7,6 +7,7 @@ import subprocess
 from warnings import warn
 
 from shutil import copytree
+import os
 
 from geomlib import bcgeom
 from fluxcoorddiscr import fluxcoorddiscr
@@ -63,7 +64,7 @@ class Species(object):
     def __str__(self):
         return str(self.names) + "," + str(self.Zs) + "," + str(self.mHats)
 
-def create_species(normalization,filename="species",database_filename = "/home/bstefan/documents/svn/stefan/scripts/python/PERFECT_utils/species_database.namelist"):
+def create_species(normalization,filename="species",database_filename = os.path.abspath(__file__).rsplit("/",1)[0] + "/species_database.namelist"):
     """ creates a Species object from a .csv file containing species, and a Normalization object"""
 
     filename="." + "/" + filename
