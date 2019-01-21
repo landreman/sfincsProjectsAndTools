@@ -135,7 +135,7 @@ class bcgeom(object):
          self.m0b        = header_df[0]
          self.n0b        = header_df[1]
          self.nsurf      = int(header_df[2])
-         self.Nperiods   = header_df[3]
+         self.Nperiods   = int(header_df[3])
          self.psi_a=np.nan #Insert psi_a at this place in the list, but set it later.
          self.torfluxtot = header_df[4]*YTsign #Note that this is not per pol. angle,
                                          #note: possible YTsign
@@ -452,7 +452,7 @@ class bcgeom(object):
                surfheader1     = sscan(tmp_str,count=8)
                radii           = np.append(radii,surfheader1[0]/100) #(cm->m)
                iota            = np.append(iota,surfheader1[1])
-               Nperiods        = surfheader1[2]
+               Nperiods        = int(surfheader1[2])
                minorradiusW7AS = surfheader1[3]/100 #(cm)
                majorradiusLastbcR00 = surfheader1[4]/100 #(cm)
                if len(surfheader1)>5:
@@ -569,7 +569,7 @@ class bcgeom(object):
     #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  
     #% Turn a loaded vmec dataset vmecgeom into a bcgeom
     #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  
-    elif isinstance(input,vmecgeom,signcorr=2):
+    elif isinstance(input,vmecgeom):
         wout=input
         signchange=float(wout.signgs) #is -1, because vmec is left handed
         self.StelSym=input.StelSym
