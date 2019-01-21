@@ -1,0 +1,18 @@
+&unitSpecification
+  units = SI
+  ! Should be SI, for now.
+  ! Other units may be supported later
+/
+
+&normalizationParameters
+  BBar = 1.0
+  RBar = 1.0
+  nBar = 1d+20
+  TBar = 1.602176565d-16
+  mBar = 1.672621898e-27
+  eBar = 1.602176565d-19
+  ePhiBar = 1.602176565d-16
+  ! Should be elementary charge
+/
+
+
