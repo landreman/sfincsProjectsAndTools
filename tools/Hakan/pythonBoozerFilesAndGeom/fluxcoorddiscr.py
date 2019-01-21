@@ -113,7 +113,7 @@ import mnFourierlib
 # fig,plt=Booz.plot3d(nparrayquantity,title='The quantity',torstride=1,polstride=1,cmap=None)
 
 
-class fluxcoorddiscr:
+class fluxcoorddiscr(object):
 
   @staticmethod
   def interp2_cyclic(uin,vin,F,ueval,veval,N):#general function to interpolate 2d cyclic on regular grids
@@ -334,9 +334,9 @@ class fluxcoorddiscr:
           uw_R=uw_Rmn.ifft()
           uw_Z=uw_Zmn.ifft()
           
-          B=interp2_cyclic(uw_u,uw_w,uw_B,Booz_u,Booz_w,Nperiods)
-          R=interp2_cyclic(uw_u,uw_w,uw_R,Booz_u,Booz_w,Nperiods)
-          Z=interp2_cyclic(uw_u,uw_w,uw_Z,Booz_u,Booz_w,Nperiods)
+          B=fluxcoorddiscr.interp2_cyclic(uw_u,uw_w,uw_B,Booz_u,Booz_w,Nperiods)
+          R=fluxcoorddiscr.interp2_cyclic(uw_u,uw_w,uw_R,Booz_u,Booz_w,Nperiods)
+          Z=fluxcoorddiscr.interp2_cyclic(uw_u,uw_w,uw_Z,Booz_u,Booz_w,Nperiods)
     
           Bmn=mnFourierlib.mnmat(B,Nperiods=Nperiods)
           Rmn=mnFourierlib.mnmat(R,Nperiods=Nperiods)
@@ -853,6 +853,7 @@ class fluxcoorddiscr:
       self.Dtor=Dzeta
       self.Dpol=Dtheta
       self.StelSym=Geom.StelSym
+      self.u_zeroout_Deltaiota = u_zeroout_Deltaiota
       
       if name=='Boozer':
           self.Dzetaphi  =Booz_Dzetaphi

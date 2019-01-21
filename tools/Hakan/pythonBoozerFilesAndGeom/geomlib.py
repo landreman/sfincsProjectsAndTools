@@ -30,7 +30,7 @@ import scipy.integrate as integrate
 # Geom=bcgeom(wout), where wout is a vmecgeom object
 #
 
-class headertxt:
+class headertxt(object):
   def __init__(self):
       self.maincomment=''
       self.globalvars=''
@@ -38,13 +38,13 @@ class headertxt:
       self.surfvarunits=''
       self.datavars=''
 
-class Bfiltr:
+class Bfiltr(object):
   def __init__(self):
       self.min_Bmn=0
       self.max_m=np.inf
       self.maxabs_n=np.inf
 
-class bcgeom:
+class bcgeom(object):
     
   def __init__(self,input,min_Bmn=0,max_m=np.inf,maxabs_n=np.inf,
                symmetry='unknown',signcorr=2,verbose=1):
@@ -634,7 +634,7 @@ class bcgeom:
           self.Bfilter.max_m    = max_m
           
         if maxabs_n==np.inf:
-          Nzeta=1+2*max(abs(wout.xn))/self.Nperiods
+          Nzeta=1+2*max(abs(wout.xn))//self.Nperiods
           self.Bfilter.maxabs_n = (Nzeta-1)//2
         else:
           Nzeta = maxabs_n*2+1
@@ -661,7 +661,7 @@ class bcgeom:
         for rind in range(len(self.s)):
             if verbose>0:
               print '\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\bRadius%5i/%5i'% (rind+1,len(self.s)),
-            Booz=fluxcoorddiscr.fluxcoorddiscr(wout,rind=rind,Ntheta=Ntheta,Nzeta=Nzeta,name='Boozer')
+            Booz=fluxcoorddiscr.fluxcoorddiscr(wout,rind=rind,Npol=Ntheta,Ntor=Nzeta,name='Boozer')
             #(fig, ax)=Booz.plot('B')
             #fig.show()
             #print Booz.B.shape
@@ -684,7 +684,7 @@ class bcgeom:
             self.Dphi.append(np.array([0])) #m=n=0 cos element is 0
             if not(self.StelSym):
                 self.parity.append(np.array([]))
-            
+
             Blist=(mnFourierlib.mnmat(Booz.B,Nperiods=self.Nperiods)).mnlist()
             Rlist=(mnFourierlib.mnmat(Booz.R,Nperiods=self.Nperiods)).mnlist()
             Zlist=(mnFourierlib.mnmat(Booz.Z,Nperiods=self.Nperiods)).mnlist()
@@ -708,6 +708,8 @@ class bcgeom:
                 self.Dphi[rind]=np.append(self.Dphi[rind],np.concatenate((Dphilist.data[(Ntheta*Nzeta+1)//2:],Dphilist.data[1:(Ntheta*Nzeta+1)//2])))
                    
             self.Bnorm[rind]=np.append(self.Bnorm[rind],self.B[rind]/Booz.B00)
+            #self.m=[e.astype(int) for e in modesm]
+            #self.n=[e.astype(int) for e in modesn]
 
         #end radius loop
         if verbose>0:
@@ -724,7 +726,7 @@ class bcgeom:
             ii=[i for i,x in enumerate(wout.xm) if x==m]
             first_mode=ii[0]
             last_mode =ii[-1]
-            ns=np.expand_dims(wout.xn[ii[0]:ii[-1]]/wout.nfp, axis=1) #row vector
+            ns=np.expand_dims(wout.xn[ii[0]:ii[-1]]//wout.nfp, axis=1) #row vector
             nnmat=(1.0+(-1.0)**ns-ns.T)/2.0
             accum=accum+m*np.sum((np.expand_dims(wout.rmnc[-1][ii[0]:ii[-1]], axis=1)*
                                   np.expand_dims(wout.zmns[-1][ii[0]:ii[-1]], axis=0))*nnmat)
@@ -1540,7 +1542,7 @@ class bcgeom:
 ##########################################################################################
     
 
-class vmecgeom:
+class vmecgeom(object):
     
   def __init__(self,filename,min_Bmn=0,max_m=np.inf,maxabs_n=np.inf,
                symmetry='unknown'):
@@ -1645,7 +1647,7 @@ class vmecgeom:
     self.rmax_surf        =float(dataset.variables['rmax_surf'][:])
     self.rmin_surf        =float(dataset.variables['rmin_surf'][:])
     self.zmax_surf        =float(dataset.variables['zmax_surf'][:])
-    self.nfp              =float(dataset.variables['nfp'][:])
+    self.nfp              =int(dataset.variables['nfp'][:])
     self.ns               =int(dataset.variables['ns'][:])
     self.mpol             =int(dataset.variables['mpol'][:])
     self.ntor             =int(dataset.variables['ntor'][:])

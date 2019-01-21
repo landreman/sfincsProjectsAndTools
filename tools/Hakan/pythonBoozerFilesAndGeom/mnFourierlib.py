@@ -15,7 +15,7 @@ import geomlib
 ###########################################################################################
 ###########################################################################################
 ###########################################################################################
-class mnlist:
+class mnlist(object):
 ###########################################################################################
 ###########################################################################################
 ###########################################################################################
@@ -36,8 +36,9 @@ class mnlist:
                     sys.exit('Input Nperiods does not match the value in the bcgeom!')
                     
             self.Nperiods=geometry.Nperiods
-            self.m=geometry.m[rind]
-            self.n=geometry.n[rind]
+            self.m=geometry.m[rind].astype(int)
+            self.n=geometry.n[rind].astype(int)
+            
             data=getattr(geometry,quantity)
             if quantity=='Dphi':
                 self.data=data[rind]*2*np.pi/self.Nperiods
@@ -68,7 +69,7 @@ class mnlist:
                 if wout.Nperiods != Nperiods:
                     sys.exit('Input Nperiods does not match the value in the vmecgeom!')
                     
-            signchange=float(wout.signgs) #is -1, because vmec is left handed
+            signchange=wout.signgs #is -1, because vmec is left handed
             if rind is None:
                 sys.exit('The radius index rind is required when taking input from a vmecgeom!')
             if vmecgrid=='full':
@@ -83,32 +84,32 @@ class mnlist:
             if wout.StelSym:
                 if quantity=='B':
                     self.m   =wout.xm_nyq
-                    self.n   =wout.xn_nyq*signchange/self.Nperiods #signchange because of toroidal direction swap
+                    self.n   =wout.xn_nyq*signchange//self.Nperiods #signchange because of toroidal direction swap
                     self.data=wout.bmnc[skrind]
                     self.cosparity=np.ones(len(self.m))
                 elif quantity=='R':
                     self.m   =wout.xm
-                    self.n   =wout.xn*signchange/self.Nperiods
+                    self.n   =wout.xn*signchange//self.Nperiods
                     self.data=(wout.rmnc[rindf_L]+wout.rmnc[rindf_R])/2.0
                     self.cosparity=np.ones(len(self.m))
                 elif quantity=='Z':
                     self.m   =wout.xm
-                    self.n   =wout.xn*signchange/self.Nperiods
+                    self.n   =wout.xn*signchange//self.Nperiods
                     self.data=(wout.zmns[rindf_L]+wout.zmns[rindf_R])/2.0
                     self.cosparity=np.zeros(len(self.m))
                 elif quantity=='lambda':
                     self.m   =wout.xm
-                    self.n   =wout.xn*signchange/self.Nperiods
+                    self.n   =wout.xn*signchange//self.Nperiods
                     self.data=(wout.lmns[rindf_L]+wout.lmns[rindf_R])/2.0
                     self.cosparity=np.zeros(len(self.m))
                 elif quantity=='B_u':
                     self.m   =wout.xm_nyq
-                    self.n   =wout.xn_nyq*signchange/self.Nperiods
+                    self.n   =wout.xn_nyq*signchange//self.Nperiods
                     self.data=wout.bsubumnc[skrind]
                     self.cosparity=np.ones(len(self.m))                    
                 elif quantity=='B_w':
                     self.m   =wout.xm_nyq
-                    self.n   =wout.xn_nyq*signchange/self.Nperiods
+                    self.n   =wout.xn_nyq*signchange//self.Nperiods
                     self.data=wout.bsubvmnc[skrind]*signchange
                     self.cosparity=np.ones(len(self.m))                    
                 else:
@@ -116,39 +117,41 @@ class mnlist:
             else:
                 if quantity=='B':
                     self.m   =np.concatenate((wout.xm_nyq,wout.xm_nyq))
-                    self.n   =np.concatenate((wout.xn_nyq,wout.xn_nyq))*signchange/self.Nperiods
+                    self.n   =np.concatenate((wout.xn_nyq,wout.xn_nyq))*signchange//self.Nperiods
                     self.data=np.concatenate((wout.bmnc[skrind],wout.bmns[skrind]))
                     self.cosparity=np.concatenate((np.ones(wout.mnmax_nyq),np.zeros(wout.mnmax_nyq)))
                 elif quantity=='R':
                     self.m   =np.concatenate((wout.xm,wout.xm))
-                    self.n   =np.concatenate((wout.xn,wout.xn))*signchange/self.Nperiods
+                    self.n   =np.concatenate((wout.xn,wout.xn))*signchange//self.Nperiods
                     self.data=np.concatenate(((wout.rmnc[rindf_L]+wout.rmnc[rindf_R])/2.0,
                                               (wout.rmns[rindf_L]+wout.rmns[rindf_R])/2.0))
                     self.cosparity=np.concatenate((np.ones(wout.mnmax),np.zeros(wout.mnmax)))
                 elif quantity=='Z':
                     self.m   =np.concatenate((wout.xm,wout.xm))
-                    self.n   =np.concatenate((wout.xn,wout.xn))*signchange/self.Nperiods
+                    self.n   =np.concatenate((wout.xn,wout.xn))*signchange//self.Nperiods
                     self.data=np.concatenate(((wout.zmns[rindf_L]+wout.zmns[rindf_R])/2.0,
                                               (wout.zmnc[rindf_L]+wout.zmnc[rindf_R])/2.0))                    
                     self.cosparity=np.concatenate((np.zeros(wout.mnmax),np.ones(wout.mnmax)))
                 elif quantity=='lambda':
                     self.m   =np.concatenate((wout.xm,wout.xm))
-                    self.n   =np.concatenate((wout.xn,wout.xn))*signchange/self.Nperiods
+                    self.n   =np.concatenate((wout.xn,wout.xn))*signchange//self.Nperiods
                     self.data=np.concatenate(((wout.lmns[rindf_L]+wout.lmns[rindf_R])/2.0,
                                               (wout.lmnc[rindf_L]+wout.lmnc[rindf_R])/2.0))
                     self.cosparity=np.concatenate((np.zeros(wout.mnmax),np.ones(wout.mnmax)))
                 elif quantity=='B_u':
                     self.m   =np.concatenate((wout.xm_nyq,wout.xm_nyq))
-                    self.n   =np.concatenate((wout.xn_nyq,wout.xn_nyq))*signchange/self.Nperiods
+                    self.n   =np.concatenate((wout.xn_nyq,wout.xn_nyq))*signchange//self.Nperiods
                     self.data=np.concatenate((wout.bsubumnc[skrind],wout.bsubumns[skrind]))
                     self.cosparity=np.concatenate((np.ones(wout.mnmax_nyq),np.zeros(wout.mnmax_nyq)))
                 elif quantity=='B_w':
                     self.m   =np.concatenate((wout.xm_nyq,wout.xm_nyq))
-                    self.n   =np.concatenate((wout.xn_nyq,wout.xn_nyq))*signchange/self.Nperiods
+                    self.n   =np.concatenate((wout.xn_nyq,wout.xn_nyq))*signchange//self.Nperiods
                     self.data=np.concatenate((wout.bsubvmnc[skrind],wout.bsubvmns[skrind]))*signchange
                     self.cosparity=np.concatenate((np.ones(wout.mnmax_nyq),np.zeros(wout.mnmax_nyq)))
                 else:
                     sys.exit('Undefined quantity!')
+            self.m = self.m.astype(int)
+            self.n = self.n.astype(int)
 
         #if isinstance(input,mnmat.mnmat):
         #    return input.mnlist()
@@ -186,7 +189,7 @@ class mnlist:
 ###########################################################################################
 ###########################################################################################
 ###########################################################################################
-class mnmat:
+class mnmat(object):
 ###########################################################################################
 ###########################################################################################
 ###########################################################################################
@@ -213,7 +216,8 @@ class mnmat:
             Nn=Nzeta
             [self.m,self.n]=np.mgrid[0:Nm,-maxabsn:maxabsn+1]
             #print self.m
-            #print self.n 
+            #print self.n
+
             
             m0ind=0
             n0ind=(Nzeta-1)//2
@@ -406,7 +410,7 @@ class mnmat:
             maxabsn=(self.Nzeta-1)//2
             Nn=self.Nzeta
             self.m,self.n=np.mgrid[0:Nm,-maxabsn:maxabsn+1]
-             
+            
             self.m0ind   =tmp.m0ind
             self.n0ind   =tmp.n0ind
             self.c=tmp.c

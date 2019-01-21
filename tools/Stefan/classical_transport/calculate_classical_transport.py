@@ -72,7 +72,7 @@ def calculate_classical_transport(Zs,mHats,NHats,THats,ddpsiHat_NHats, ddpsiHat_
 
 
         classicalPF[a] = Zs[a] * Delta**2 * nu_n * sqrt(mHats[a]) * classicalPF[a]/(2*THats[a]**1.5)
-        classicalHF[a] = Zs[a] * Delta**2 * nu_n * sqrt(mHats[a]) * classicalPF[a]/(2*sqrt(THats[a]))
+        classicalHF[a] = -Zs[a] * Delta**2 * nu_n * sqrt(mHats[a]) * classicalPF[a]/(2*sqrt(THats[a]))
         classicalHF[a] = classicalHF[a] + 2.5 * THats[a] * classicalPF[a]
     classical_fluxes_OLD = 2*Delta**2 * nu_n * classical_fluxes_OLD
     
