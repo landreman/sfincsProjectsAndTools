@@ -17,6 +17,7 @@ def calculate_classical_transport(Zs,mHats,NHats,THats,ddpsiHat_NHats, ddpsiHat_
     #include Phi1Hat in nHats if appropriate
     if Phi1Hat is None:
         includePhi1 = False
+        Phi1Hat = 0.0
     else:
         includePhi1 = True
         for i in range(Nspecies):
@@ -43,8 +44,12 @@ def calculate_classical_transport(Zs,mHats,NHats,THats,ddpsiHat_NHats, ddpsiHat_
             Mab11 = Mab11/((1+xab2)**(2.5))
             Nab11 = Nab11/((1+xab2)**(2.5))
 
+            #print Mab00,Mab01,Mab11,Nab11
+            
             G1ab =  FSA(nablaPsiHat2 * nHats[a] * nHats[b]/BHat**2,BHat)
             G2ab =  FSA(nablaPsiHat2 * nHats[a] * nHats[b] *Phi1Hat/BHat**2,BHat)
+
+            #print G1ab,G2ab
 
             classicalPF[a] = classicalPF[a] \
                              + Zs[b]**2  *( \
@@ -54,12 +59,12 @@ def calculate_classical_transport(Zs,mHats,NHats,THats,ddpsiHat_NHats, ddpsiHat_
                                         )
 
             classicalHF[a] = classicalHF[a] \
-                             + Zs[b]**2 * NHats[b] *( \
+                             + Zs[b]**2 * ( \
                                                       G1ab * Mab01 * (THats[a] * ddpsiHat_NHats[a]/(NHats[a] * Zs[a]) - THats[b] * ddpsiHat_NHats[b]/(NHats[b] * Zs[b])) \
                                                       + G2ab * alpha * Mab01 * ( ddpsiHat_THats[a]/THats[a] -  ddpsiHat_THats[b]/THats[b]) \
                                                       + G1ab * ((Mab01 - Mab11) *  ddpsiHat_THats[a]/Zs[a] - (Mab01 + Nab11) *  ddpsiHat_THats[b]/Zs[b]) \
                                                   )
-
+            # print classicalPF[a],classicalHF[a]
 
             classical_fluxes_OLD[a] += Zs[b]*FSA(nablaPsiHat2 * nHats[a] * nHats[b]/BHat**2,BHat) *sqrt(mHats[b]/THats[b]) * (1 + mHats[b]/mHats[a]) *F(THats[a] * mHats[b]/(THats[b] * mHats[a])) *( \
                                                                                                +   (Zs[a] * (ddpsiHat_NHats[b]/NHats[b] - ddpsiHat_THats[b]/THats[b]/2)- Zs[b] * (THats[a]/THats[b]) *  (ddpsiHat_NHats[a]/NHats[a] - ddpsiHat_THats[a]/THats[a]/2)) \
@@ -72,7 +77,7 @@ def calculate_classical_transport(Zs,mHats,NHats,THats,ddpsiHat_NHats, ddpsiHat_
 
 
         classicalPF[a] = Zs[a] * Delta**2 * nu_n * sqrt(mHats[a]) * classicalPF[a]/(2*THats[a]**1.5)
-        classicalHF[a] = -Zs[a] * Delta**2 * nu_n * sqrt(mHats[a]) * classicalPF[a]/(2*sqrt(THats[a]))
+        classicalHF[a] = -Zs[a] * Delta**2 * nu_n * sqrt(mHats[a]) * classicalHF[a]/(2*sqrt(THats[a]))
         classicalHF[a] = classicalHF[a] + 2.5 * THats[a] * classicalPF[a]
     classical_fluxes_OLD = 2*Delta**2 * nu_n * classical_fluxes_OLD
     

@@ -16,7 +16,7 @@ def resolution_from_collisionality(configuration):
 
         # from my anus
         nuPrime_data = np.array([0.001,100.])
-        Ntheta_data = np.array([61,21])
+        Ntheta_data = np.array([91,21])
         Nzeta_data = np.array([59,21])
         Nxi_data = np.array([200,20])
         Nx_data = np.array([6,8])

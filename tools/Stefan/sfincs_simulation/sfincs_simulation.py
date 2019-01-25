@@ -12,6 +12,8 @@ import os
 from geomlib import bcgeom
 from fluxcoorddiscr import fluxcoorddiscr
 
+from calculate_classical_transport import calculate_classical_transport
+
 
 
 class Normalization(object):
@@ -124,11 +126,24 @@ class Sfincs_input(object):
                 'physicsparameters' : {'delta' : 4.5694e-3,
                                        'alpha': 1.0,
                                        'nu_n' : 8.330e-3,
+                                       'er' : 0.0,
+                                       'dphihatdpsihat' : 0.0,
+                                       'dphihatdpsin' : 0.0,
+                                       'dphihatdrhat' : 0.0,
+                                       'dphihatdrn' : 0.0,
                                    },
                 'speciesparameters' : {'zs' : [1.0],
                                        'mhats' : [1.0],
                                        'nhats' : [1.0],
                                        'thats' : [1.0],
+                                       'dnHatdpsiHats' : [0.0],
+                                       'dnhatdpsins' : [0.0],
+                                       'dnhatdrhats' : [0.0],
+                                       'dnhatdrns' : [0.0],
+                                       'dthatdpsihats' : [0.0],
+                                       'dthatdpsins' : [0.0],
+                                       'dthatdrhats' : [0.0],
+                                       'dthatdrns' : [0.0],
                                    },
                 'resolutionparameters' : {'forceoddnthetaandnzeta' : True,
                                           'xmax': 5.0,
@@ -172,12 +187,24 @@ class Sfincs_input(object):
         return self.get_value_from_input_or_defaults("general","outputfilename")
 
     @property
+    def Delta(self):
+        return self.get_value_from_input_or_defaults("physicsparameters","delta")
+
+    @property
+    def alpha(self):
+        return self.get_value_from_input_or_defaults("physicsparameters","alpha")
+    
+    @property
     def nu_n(self):
         return self.get_value_from_input_or_defaults("physicsparameters","nu_n")
 
     @property
     def Zs(self):
         return self.get_value_from_input_or_defaults("speciesparameters","zs")
+
+    @property
+    def mHats(self):
+        return self.get_value_from_input_or_defaults("speciesparameters","mhats")
 
     @property
     def nHats(self):
@@ -221,6 +248,10 @@ class Sfincs_input(object):
         return self.get_value_from_input_or_defaults("geometryparameters","inputradialcoordinate")
 
     @property
+    def inputRadialCoordinateForGradients(self):
+        return self.get_value_from_input_or_defaults("geometryparameters","inputradialcoordinateforgradients")
+
+    @property
     def equilibrium_name(self):
         return self.get_value_from_input_or_defaults("geometryparameters","equilibriumFile")
 
@@ -236,7 +267,62 @@ class Sfincs_input(object):
             return self.get_value_from_input_or_defaults("geometryparameters","rN_wish")
         else:
             raise ValueError("inputRadialCoordinate should be 0,1,2,3,4; it is" + str(inputRadialCoordinate))
+
+    @property
+    def dTHatdss(self):
+        if self.inputRadialCoordinateForGradients == 0:
+            ret= self.get_value_from_input_or_defaults("speciesparameters","dTHatdpsiHats")
+        elif self.inputRadialCoordinateForGradients == 1:
+            ret= self.get_value_from_input_or_defaults("speciesparameters","dTHatdpsiNs")
+        elif (self.inputRadialCoordinateForGradients == 2) or (self.inputRadialCoordinateForGradients == 4):
+            ret= self.get_value_from_input_or_defaults("speciesparameters","dTHatdrHats")
+        elif self.inputRadialCoordinateForGradients == 3:
+            ret= self.get_value_from_input_or_defaults("speciesparameters","dTHatdrNs")
+        else:
+            raise ValueError("inputRadialCoordinateForGradients should be 0,1,2,3,4; it is" + str(inputRadialCoordinate))
+        return np.array(ret)
+
+    @property
+    def dnHatdss(self):
+        if self.inputRadialCoordinateForGradients == 0:
+            ret= self.get_value_from_input_or_defaults("speciesparameters","dnHatdpsiHats")
+        elif self.inputRadialCoordinateForGradients == 1:
+            ret= self.get_value_from_input_or_defaults("speciesparameters","dnHatdpsiNs")
+        elif (self.inputRadialCoordinateForGradients == 2) or (self.inputRadialCoordinateForGradients == 4):
+            ret= self.get_value_from_input_or_defaults("speciesparameters","dnHatdrHats")
+        elif self.inputRadialCoordinateForGradients == 3:
+            ret= self.get_value_from_input_or_defaults("speciesparameters","dnHatdrNs")
+        else:
+            raise ValueError("inputRadialCoordinateForGradients should be 0,1,2,3,4; it is" + str(inputRadialCoordinate))
+        return np.array(ret)
+
+    @property
+    def dPhiHatds(self):
+        if self.inputRadialCoordinateForGradients == 0:
+            ret= self.get_value_from_input_or_defaults("physicsparameters","dPhiHatdpsiHat")
+        elif self.inputRadialCoordinateForGradients == 1:
+            ret= self.get_value_from_input_or_defaults("physicsparameters","dPhiHatdpsiN")
+        elif self.inputRadialCoordinateForGradients == 2:
+            ret= self.get_value_from_input_or_defaults("physicsparameters","dPhiHatdrHat")
+        elif self.inputRadialCoordinateForGradients == 3:
+            ret= self.get_value_from_input_or_defaults("physicsparameters","dPhiHatdrN")
+        elif self.inputRadialCoordinateForGradients == 4:
+            ret= -self.get_value_from_input_or_defaults("physicsparameters","Er")
             
+        else:
+            raise ValueError("inputRadialCoordinateForGradients should be 0,1,2,3,4; it is" + str(inputRadialCoordinate))
+        return np.array(ret)
+
+    @property
+    def A1(self):
+        ret = self.dnHatdss/self.nHats + self.dTHatdss/self.THats + self.Zs * self.dPhiHatds/self.THats
+        return np.array(ret)
+
+    @property
+    def A2(self):
+        ret = self.dTHatdss/self.THats
+        return np.array(ret)
+    
     def __str__(self):
         return str(self.input_name)
 
@@ -244,14 +330,20 @@ class Sfincs_input(object):
 
 class Sfincs_simulation(object):
 
-    def absolute_path(self,relative_path):
-        return self.dirname + "/" + relative_path
+    def absolute_path(self,path):
+        if path[0]=='/':
+            return path
+        else:
+            return self.dirname + "/" + path
+
+    def clean(self):
+        pass
 
     def copy(self,new_dirname):
         copytree(self.dirname,new_dirname)
         return Sfincs_simulation(new_dirname,input_name=self.input_name,norm_name=self.norm_name,species_name=self.species_name)
         
-    def __init__(self,dirname,input_name="input.namelist",norm_name="norm.namelist",species_name="species"):
+    def __init__(self,dirname,input_name="input.namelist",norm_name="norm.namelist",species_name="species",override_geometry_name=None):
         #description of simulation, for usage as legend in plots, etc.
         self.description=""
 
@@ -271,6 +363,11 @@ class Sfincs_simulation(object):
         else:
             self.hasOutput=True
 
+        if override_geometry_name is not None:
+            self.equilibrium_name = override_geometry_name
+        else:
+            self.equilibrium_name = self.absolute_path(self.input.equilibrium_name)
+            
         if self.input.geometryScheme == 11:
             # known problem: if self.input.equilibrium_name is changed
             # these quanitities will no longer correspond to those indicated by the input.namelist
@@ -285,33 +382,129 @@ class Sfincs_simulation(object):
             self.zeroout_Deltaiota = 0.000
 
             try:
-                self.geom = bcgeom(self.absolute_path(self.input.equilibrium_name),self.min_Bmn,self.max_m,self.maxabs_n,self.symmetry,self.signcorr,verbose)
+                self.geom = bcgeom(self.equilibrium_name,self.min_Bmn,self.max_m,self.maxabs_n,self.symmetry,self.signcorr,verbose)
             except IOError as e:
                 raise IOError("Error loading geometry: " + str(e))
             
             self.Nperiods = self.geom.Nperiods
-            self.psiA = self.geom.psi_a/(self.normalization.BBar*self.normalization.RBar**2)
+            self.psiAHat = self.geom.psi_a/(self.normalization.BBar*self.normalization.RBar**2)
             self.aHat = self.geom.minorradiusVMEC/self.normalization.RBar
             
-            
-            if self.input.inputRadialCoordinate == 0:
-                self.rN_wish = np.sqrt(self.input.coordinate_wish/self.psiAHat)
-            elif self.input.inputRadialCoordinate == 1:
-                self.rN_wish = np.sqrt(self.input.coordinate_wish)
-            elif (self.input.inputRadialCoordinate == 2) or (self.input.inputRadialCoordinate == 4):
-                self.rN_wish = self.input.coordinate_wish/self.aHat 
-            elif self.input.inputRadialCoordinate == 3:
-                self.rN_wish = self.input.coordinate_wish
-            else:
-                raise ValueError("inputRadialCoordinate should be 0,1,2,3,4; it is" + str(self.input.inputRadialCoordinate))
-            self.rN = self.geom.rnorm
-            self.rind=np.argmin(np.fabs(self.rN - self.rN_wish))
+            self.rNs = self.geom.rnorm
+            self.rind=np.argmin(np.fabs(self.rNs - self.rN_wish))
             self.iota = self.geom.iota[self.rind]
             
             self.Booz = fluxcoorddiscr(self.geom,self.rind,self.input.Ntheta,self.input.Nzeta,u_zeroout_Deltaiota=self.zeroout_Deltaiota,name='Boozer')
             self.GHat=self.Booz.G/(self.normalization.BBar*self.normalization.RBar)
             self.IHat=self.Booz.I/(self.normalization.BBar*self.normalization.RBar)
             self.B00Hat = self.Booz.B00/(self.normalization.BBar)
+
+    @property
+    def gpsipsiHat(self):
+        if self.input.geometryScheme == 11:
+            return np.transpose(self.Booz.gpsipsi)/((self.normalization.BBar*self.normalization.RBar)**2)
+        else:
+            try:
+                return self.outputs["gpsiHatpsiHat"][()]
+            except KeyError:
+                raise NotImplementedError("gpsipsiHat cannot be calculated for this simulation since it does not use a .bc file and does not contain gpsipsi in the output.")
+            
+    @property
+    def BHat(self):
+        if self.input.geometryScheme == 11:
+            return np.transpose(self.Booz.B)/self.normalization.BBar
+        else:
+            try:
+                return self.outputs["BHat"][()]
+            except KeyError:
+                raise NotImplementedError("BHat cannot be calculated for this simulation since it does not use a .bc file and does not contain BHat in the output.")
+
+    @property
+    def u(self):
+        if self.input.geometryScheme == 11:
+            return np.transpose(self.Booz.u_psi)
+        else:
+            raise NotImplementedError("u cannot be calculated for this simulation since it does not use a .bc file.")
+        
+
+    def FSA(self,X):
+        if self.input.geometryScheme == 11:
+            BHat = self.BHat
+            # order of axis: zeta, theta, species, iteration
+            # thus the below sum over zeta and theta
+            return np.sum(X/BHat**2,axis=(0,1))/np.sum(1/BHat**2)
+        else:
+            raise NotImplementedError("Flux-surface average cannot be calculated for this simulation since it does not use a .bc file.")
+            
+    @property
+    def mixed_col_NC_C_ratio(self):
+        BHat = self.BHat
+        u = self.u
+        gpsipsi = self.gpsipsiHat
+        FSABHat2 = self.FSA(BHat**2)
+        ret = self.FSA(u**2 * BHat**2)*FSABHat2 - self.FSA(u*BHat**2)**2
+        ret = ret/(self.FSA(gpsipsi/BHat**2) * self.FSA(BHat**2))
+        return ret
+        
+    @property
+    def rN_wish(self):
+        if self.input.inputRadialCoordinate == 0:
+            return np.sqrt(self.input.coordinate_wish/self.psiAHat)
+        elif self.input.inputRadialCoordinate == 1:
+            return np.sqrt(self.input.coordinate_wish)
+        elif (self.input.inputRadialCoordinate == 2) or (self.input.inputRadialCoordinate == 4):
+            return self.input.coordinate_wish/self.aHat 
+        elif self.input.inputRadialCoordinate == 3:
+            return self.input.coordinate_wish
+        else:
+            raise ValueError("inputRadialCoordinate should be 0,1,2,3,4; it is" + str(self.input.inputRadialCoordinate))
+
+    @property
+    def psiN(self):
+        return self.geom.s[self.rind]
+
+    @property
+    def rN(self):
+        return np.sqrt(self.psiN)
+
+    @property
+    def psiHat(self):
+        return self.psiN * self.psiAHat
+
+    @property
+    def rHat(self):
+        return self.rN * self.aHat
+
+    
+
+    @property
+    def dnHatdpsiHats(self):
+        if self.input.inputRadialCoordinateForGradients == 0:
+            conversion_factor = 1.0
+        elif self.input.inputRadialCoordinate == 1:
+            conversion_factor = 1/self.psiAHat
+        elif (self.input.inputRadialCoordinate == 2) or (self.input.inputRadialCoordinate == 4):
+            conversion_factor = self.aHat/(2*self.psiAHat*np.sqrt(self.psiN))
+        elif self.input.inputRadialCoordinate == 3:
+            conversion_factor = 1/(2*self.psiAHat*np.sqrt(self.psiN))
+        else:
+            raise ValueError("inputRadialCoordinate should be 0,1,2,3,4; it is" + str(self.input.inputRadialCoordinate))
+        return conversion_factor * self.input.dnHatdss
+
+    @property
+    def dTHatdpsiHats(self):
+        if self.input.inputRadialCoordinateForGradients == 0:
+            conversion_factor = 1.0
+        elif self.input.inputRadialCoordinate == 1:
+            conversion_factor = 1/self.psiAHat
+        elif (self.input.inputRadialCoordinate == 2) or (self.input.inputRadialCoordinate == 4):
+            conversion_factor = self.aHat/(2*self.psiAHat*np.sqrt(self.psiN))
+        elif self.input.inputRadialCoordinate == 3:
+            conversion_factor = 1/(2*self.psiAHat*np.sqrt(self.psiN))
+        else:
+            raise ValueError("inputRadialCoordinate should be 0,1,2,3,4; it is" + str(self.input.inputRadialCoordinate))
+        return self.input.dTHatdss * conversion_factor
+        
             
     @property
     def integerToRepresentTrue(self):
@@ -320,27 +513,57 @@ class Sfincs_simulation(object):
     @property
     def includePhi1(self):
         return (self.outputs["includePhi1"][()] == self.integerToRepresentTrue)
-
+    
     @property
     def GammaHat(self):
         if self.includePhi1:
             return self.outputs["particleFlux_vd_psiHat"][:,-1]
         else:
-            return self.outputs["particleFlux_vd_psiHat"][()]
+            return self.outputs["particleFlux_vm_psiHat"][:,-1]
+
+    @property
+    def GammaHat_C(self):
+        if self.includePhi1:
+            try:
+                return self.outputs["classicalParticleFlux_psiHat"][:,-1]
+            except KeyError:
+                return calculate_classical_transport(self.input.Zs,self.input.mHats,self.input.nHats,self.input.THats,self.dnHatdpsiHats,self.dTHatdpsiHats,self.input.Delta,self.input.alpha,self.input.nu_n,self.gpsipsiHat,self.BHat,self.Phi1Hat)[0]
+        else:
+            try:
+                return self.outputs["classicalParticleFluxNoPhi1_psiHat"][()]
+            except KeyError:
+                return calculate_classical_transport(self.input.Zs,self.input.mHats,self.input.nHats,self.input.THats,self.dnHatdpsiHats,self.dTHatdpsiHats,self.input.Delta,self.input.alpha,self.input.nu_n,self.gpsipsiHat,self.BHat)[0]
 
     @property
     def QHat(self):
         if self.includePhi1:
             return self.outputs["heatFlux_vd_psiHat"][:,-1]
         else:
-            return self.outputs["heatFlux_vd_psiHat"][()]
+            return self.outputs["heatFlux_vm_psiHat"][:,-1]
+
+    @property
+    def Phi1Hat(self):
+        if self.includePhi1:
+            return self.outputs["Phi1Hat"][:,:,-1]
+        else:
+            None
+        
+    @property
+    def QHat_C(self):
+        if self.includePhi1:
+            try:
+                return self.outputs["classicalHeatFlux_psiHat"][:,-1]
+            except KeyError:
+                return calculate_classical_transport(self.input.Zs,self.input.mHats,self.input.nHats,self.input.THats,self.dnHatdpsiHats,self.dTHatdpsiHats,self.input.Delta,self.input.alpha,self.input.nu_n,self.gpsipsiHat,self.BHat,self.Phi1Hat)[1]
+        else:
+            try:
+                return self.outputs["classicalHeatFluxNoPhi1_psiHat"][()]
+            except KeyError:
+                return calculate_classical_transport(self.input.Zs,self.input.mHats,self.input.nHats,self.input.THats,self.dnHatdpsiHats,self.dTHatdpsiHats,self.input.Delta,self.input.alpha,self.input.nu_n,self.gpsipsiHat,self.BHat)[1]
 
     @property
     def FSABFlow(self):
-        if self.includePhi1:
-            return self.outputs["FSABFlow"][:,-1]
-        else:
-            return self.outputs["FSABFlow"][()]
+        return self.outputs["FSABFlow"][:,-1]
 
     @property
     def collisionality(self):
@@ -364,7 +587,28 @@ class Sfincs_simulation(object):
         nuHats = nuHats * nu_n *RHat
         return nuHats
 
-            
+
+    
+    @property
+    def collisionality_aa(self):
+        if self.input.geometryScheme == 11:
+            B00Hat = self.B00Hat
+            IHat = self.IHat
+            GHat = self.GHat
+            iota = self.iota
+        RHat = np.fabs((GHat + iota*IHat)/B00Hat)
+        nu_n = self.input.nu_n
+        Zs = self.input.Zs
+        nHats = self.input.nHats
+        THats = self.input.THats
+        
+        Nspecies = len(Zs)
+        nuHats = np.zeros(Nspecies)
+        for a in range(Nspecies):
+            nuHats[a] =nuHats[a] +  Zs[a]**4*nHats[a]/THats[a]**2
+        nuHats = nuHats * nu_n *RHat
+        return nuHats
+
             
 if __name__=="__main__":
 
@@ -374,9 +618,17 @@ if __name__=="__main__":
 
     print "GammaHat:"
     print simul.GammaHat
+    print "GammaHat_C:"
+    print simul.GammaHat_C
     print "QHat:"
     print simul.QHat
+    print "QHat_C:"
+    print simul.QHat_C
     print "FSABFlow:"
     print simul.FSABFlow
 
+    print "Gamma_C/Gamma:"
+    print simul.GammaHat_C/simul.GammaHat
+    print "Q_C/Q:"
+    print simul.QHat_C/simul.QHat
 
