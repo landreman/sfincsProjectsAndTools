@@ -14,13 +14,15 @@ def resolution_from_collisionality(configuration):
         # Nx_data = np.array([5,5,5,6,8,8,8])
         # NL_data = np.array([4,4,4,4,4,4,4])
 
-        # from my anus
-        nuPrime_data = np.array([0.001,100.])
-        Ntheta_data = np.array([91,21])
-        Nzeta_data = np.array([59,21])
-        Nxi_data = np.array([200,20])
-        Nx_data = np.array([6,8])
-        NL_data = np.array([4,4])
+        # from my adjustments
+        nuPrime_data = np.array([0.001,1.0,100.])
+        Ntheta_data = np.array([91,25,21])
+        Nzeta_data = np.array([59,40,21])
+        Nxi_data = np.array([200,50,20])
+        Nx_data = np.array([6,7,12])
+        NL_data = np.array([4,4,4])
+
+        precond_x_threshold = 5.0
         
 
         # nuPrime_low = np.array([0.001])
@@ -48,6 +50,8 @@ def resolution_from_collisionality(configuration):
         Nx_data = np.array([9,12])
         NL_data = np.array([8,8])
 
+        precond_x_threshold = None
+        
         # nuPrime_low = np.array([0.02])
         # nuPrime_hi = np.array([2.0])
         
@@ -65,4 +69,11 @@ def resolution_from_collisionality(configuration):
     Nx_interp = interp1d(np.log(nuPrime_data),Nx_data,fill_value = (Nx_data[0],Nx_data[-1]),bounds_error=False)
     NL_interp = interp1d(np.log(nuPrime_data),NL_data,fill_value = (NL_data[0],NL_data[-1]),bounds_error=False)
 
-    return Ntheta_interp,Nzeta_interp,Nxi_interp,Nx_interp,NL_interp
+    def f(nuPrime):
+        if nuPrime > precond_x_threshold:
+            return 0
+        else:
+            return 1
+    precond_x = np.vectorize(f,otypes=int)
+    
+    return Ntheta_interp,Nzeta_interp,Nxi_interp,Nx_interp,NL_interp,precond_x
