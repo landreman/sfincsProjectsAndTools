@@ -45,12 +45,13 @@ matplotlib.rcParams['mathtext.default'] = 'it'
 matplotlib.rcParams['text.usetex'] = True
 
 zFactor = 1 ##T
-##W7-X##
-xAxisTicks = [r'$0$', r'$\pi/10$', r'$2\pi/10$', r'$3\pi/10$', r'$4\pi/10$']
-##LHD
-#xAxisTicks = [r'$0$', r'$\pi/20$', r'$2\pi/20$', r'$3\pi/20$', r'$4\pi/20$']
+###W7-X##
+#xAxisTicks = [r'$0$', r'$\pi/10$', r'$2\pi/10$', r'$3\pi/10$', r'$4\pi/10$']
+###LHD
+##xAxisTicks = [r'$0$', r'$\pi/20$', r'$2\pi/20$', r'$3\pi/20$', r'$4\pi/20$']
+#
+#yAxisTicks = [r'$0$', r'$\pi/2$', r'$\pi$', r'$3\pi/2$', r'$2\pi$']
 
-yAxisTicks = [r'$0$', r'$\pi/2$', r'$\pi$', r'$3\pi/2$', r'$2\pi$']
 
 fig = plt.figure(figsize=FigSize)
 fig.patch.set_facecolor('white')
@@ -110,8 +111,8 @@ plt.ylabel(r'$\theta$'+ " " + r'$\mathrm{[rad]}$')
 #plt.zlabel(r'$B$'+ ' [T]')
 plt.xticks([0,max(zeta)/4,max(zeta)/2,3*max(zeta)/4,max(zeta)])
 plt.yticks([0,max(theta)/4,max(theta)/2,3*max(theta)/4,max(theta)])
-plt.gca().axes.xaxis.set_ticklabels(xAxisTicks)
-plt.gca().axes.yaxis.set_ticklabels(yAxisTicks)
+#plt.gca().axes.xaxis.set_ticklabels(xAxisTicks)
+#plt.gca().axes.yaxis.set_ticklabels(yAxisTicks)
 
 #plt.gca().axes.xaxis.set_label_coords(0.5,-0.09)
 #plt.gca().axes.yaxis.set_label_coords(-0.09,0.5)

@@ -16,10 +16,11 @@ import numpy
 #'lines.dotted_pattern' : [1.1, 1.1],
 #'lines.scale_dashes': True})
 
-FigSize = (12,10) #LHD113208t4640, W7-X NBI case, Er scan, Flux scan, #EPS poster Er, Collisionality, Ar fluxes
+#FigSize = (12,10) #LHD113208t4640, W7-X NBI case, Er scan, Flux scan, #EPS poster Er, Collisionality, Ar fluxes
 #FigSize = (13.5,10) #Phi1 plot
 #FigSize = (13.0,10.5) #Phi1 plot
 #FigSize = (12,12) #Phi1 plot without colorbar
+FigSize = (20,10) #D and V plot
 #font = {'size':35} #Phi1 plot without colorbar
 font = {'size':38} #EPS poster
 matplotlib.rc('font', **font) 
@@ -94,8 +95,8 @@ yAxisScale = 'linear'
 
 ShowGrid = True
 
-#xAxisLabel = r'$r/a$'
-xAxisLabel = r'$E_r [\mathrm{kV} \mathrm{m}^{-1}]$'
+xAxisLabel = r'$r/a$'
+#xAxisLabel = r'$E_r [\mathrm{kV} \mathrm{m}^{-1}]$'
 #yAxisLabel = r'$n_{\mathrm{C}^{6+}}$ $[10^{19} \mathrm{m}^{-3}]$'
 #yAxisLabel = r'$n$ $[10^{19} \mathrm{m}^{-3}]$'
 #yAxisLabel = r'$\eta_{s} = d(\ln T_{s}) / d(\ln n_{s})$'
@@ -108,12 +109,15 @@ xAxisLabel = r'$E_r [\mathrm{kV} \mathrm{m}^{-1}]$'
 #yAxisLabel = r'$<\mathbf{\Gamma}_{z} \cdot \nabla r> $ $[10^{20} \mathrm{m}^{-2} \mathrm{s}^{-1}]$'
 #yAxisLabel = r'$<\mathbf{\Gamma}_{\mathrm{Ar}^{16+}} \cdot \nabla r> $ $[10^{20} \mathrm{m}^{-2} \mathrm{s}^{-1}]$'
 #yAxisLabel = r'$<\mathbf{\Gamma}_{\mathrm{Ar}^{16+}} \cdot \nabla r> / n_{\mathrm{Ar}^{16+}} $ $[\mathrm{m} \, \mathrm{s}^{-1}]$'
+#yAxisLabel = r'$<\mathbf{\Gamma}_{i} \cdot \nabla r> / n_{i} $ $[\mathrm{m} \, \mathrm{s}^{-1}]$'
+#yAxisLabel = r'$<\mathbf{\Gamma}_{e} \cdot \nabla r> / n_{e} $ $[\mathrm{m} \, \mathrm{s}^{-1}]$'
 #yAxisLabel = r'$<\mathbf{\Gamma}_{\mathrm{C}^{6+}} \cdot \nabla r> / n_{\mathrm{C}^{6+}} $ $[\mathrm{m} \, \mathrm{s}^{-1}]$'
 #yAxisLabel = r'$<\mathbf{\Gamma}_{\mathrm{C}^{6+}}^{\mathrm{Classical}} \cdot \nabla r>\!/<\mathbf{\Gamma}_{\mathrm{C}^{6+}}^{\mathrm{Neoclassical}} \cdot \nabla r> $'
 #yAxisLabel = r'$E_r$ $[\mathrm{kV/m}]$'
 #yAxisLabel = r'$\omega_r, \gamma$ $[c_s / a]$'
 #yAxisLabel = r'$Z_{\mathrm{eff}}$'
-yAxisLabel = r'$e \Delta \Phi_1 / 2 T_i$'
+#yAxisLabel = r'$e \Delta \Phi_1 / 2 T_i$'
+yAxisLabel = [r'$D_z$ $[\mathrm{m}^2 \, \mathrm{s}^{-1}]$', r'$V_z$ $[\mathrm{m} \, \mathrm{s}^{-1}]$']
 AxesLabelSize = 50
 #AxesLabelSize = 40.4 ##TTF poster classical over neoclassical fluxes
 
@@ -196,18 +200,28 @@ ShowLegend = True
 #PlotLegendLabels = [r'SFINCS Fokker-Planck w/o $\Phi_1$', r'SFINCS Fokker-Planck w/ $\Phi_1$'] #EPS poster Ar fluxes with Phi1
 #PlotLegendLabels = [r'SFINCS Pitch-angle scattering w/o $\Phi_1$', r'SFINCS Pitch-angle scattering w/ $\Phi_1$', r'EUTERPE Pitch-angle scattering w/o $\Phi_1$', r'EUTERPE Pitch-angle scattering w/ $\Phi_1$'] ##TTF poster C6+ fluxes
 #PlotLegendLabels = [r'$\nu_{i}^{\prime}$', r'$\nu_{C}^{\prime}$'] #TTF poster TJ-II Collisionality
+#PlotLegendLabels = [r'SFINCS w/o $\Phi_1$', r'SFINCS w/ $\Phi_1$', r'SFINCS w/ $\Phi_1$ EUTERPE QN'] #EPS poster Ar fluxes with Phi with EUTERPE QN
+#PlotLegendLabels = [r'SFINCS Fokker-Planck w/o $\Phi_1$', r'SFINCS Classical w/o $\Phi_1$', r'SFINCS Fokker-Planck w/ $\Phi_1$', r'SFINCS Classical w/ $\Phi_1$', r'DKES Neoclassical', r'DKES Classical']
+#PlotLegendLabels = [r'SFINCS Neoclassical w/o $\Phi_1$', r'SFINCS Classical w/o $\Phi_1$', r'SFINCS Neoclassical + Classical w/o $\Phi_1$', r'SFINCS Neoclassical w/ $\Phi_1$', r'SFINCS Classical w/ $\Phi_1$', r'SFINCS Neoclassical + Classical w/ $\Phi_1$', r'DKES Neoclassical']
+#PlotLegendLabels = [r'SFINCS Neoclassical w/o $\Phi_1$', r'SFINCS Neoclassical + Classical w/o $\Phi_1$', r'SFINCS Neoclassical PAS w/o $\Phi_1$', r'SFINCS Neoclassical + Classical PAS w/o $\Phi_1$', r'SFINCS Neoclassical w/ $\Phi_1$', r'SFINCS Neoclassical + Classical w/ $\Phi_1$', r'DKES Neoclassical', r'DKES Neoclassical + Classical']
+#PlotLegendLabels = [r'SFINCS Neoclassical w/o $\Phi_1$', r'SFINCS Neoclassical + Classical w/o $\Phi_1$', r'SFINCS Neoclassical PAS w/o $\Phi_1$', r'SFINCS Neoclassical + Classical PAS w/o $\Phi_1$', r'DKES Neoclassical', r'Classical + DKES Neoclassical']
+#PlotLegendLabels = [r'SFINCS Neoclassical w/o $\Phi_1$', r'SFINCS Neoclassical + Classical w/o $\Phi_1$', r'DKES Neoclassical with mom. corr.', r'Classical + DKES Neoclassical with mom. corr.']
+PlotLegendLabels = [r'SFINCS Neoclassical w/o $\Phi_1$', r'SFINCS Neoclassical + Classical w/o $\Phi_1$', r'SFINCS Neoclassical w/ $\Phi_1$', r'SFINCS Neoclassical + Classical w/ $\Phi_1$', r'DKES Neoclassical with mom. corr.', r'Classical + DKES Neoclassical with mom. corr.']
+#PlotLegendLabels = [r'Neoclassical', r'Neoclassical + Classical']
 
-PlotLegendLabels = []
+#PlotLegendLabels = []
 
 #LegendFontSize = 15
 #LegendProperties = {'weight':'bold'}
 #LegendProperties ={'size':'20', 'weight':'heavy'}
-LegendProperties ={'size':'15', 'weight':'heavy'}
+#LegendProperties ={'size':'15', 'weight':'heavy'}
 #LegendProperties ={'size':'30', 'weight':'heavy'} #LHD113208t4640, W7-X NBI case, Er scan, #EPS poster fluxes no Phi1 XICS
 #LegendProperties ={'size':'25', 'weight':'heavy'} #LHD113208t4640 Helium scan, #EPS poster fluxes no Phi1
 #LegendProperties ={'size':'27', 'weight':'heavy'} #EPS poster Er
 #LegendProperties ={'size':'35', 'weight':'heavy'} #EPS poster Collisionality, fluxes with Phi1, TTF poster TJ-II collisionality
 #LegendProperties ={'size':'30.5', 'weight':'heavy'} #TTF poster TJ-II classical over neoclassical
+#LegendProperties ={'size':'22', 'weight':'heavy'}
+LegendProperties ={'size':'15', 'weight':'heavy'}
 LegendPosition = 3
 LegendNumberColumns = 1
 #LegendBBoxToAnchor = [0.01, 0.01, 1., .102]
@@ -234,9 +248,20 @@ LegendNumberColumns = 1
 #LegendBBoxToAnchor = [0.005, 0.805, 1., .102] #EPS poster GENE growth rates
 #LegendBBoxToAnchor = [0.005, 0.85, 1., .102]
 #LegendBBoxToAnchor = [0.168, 0.005, 1., .102] ##TTF poster TJ-II classical over neoclassical fluxes PAS
-LegendBBoxToAnchor = [0.30, 0.005, 1., .102] ##TTF poster TJ-II classical over neoclassical fluxes FP
-LegendBBoxToAnchor = [0.55, 0.005, 1., .102]
-LegendBBoxToAnchor = [0.005, 0.55, 1., .102]
+#LegendBBoxToAnchor = [0.30, 0.005, 1., .102] ##TTF poster TJ-II classical over neoclassical fluxes FP
+#LegendBBoxToAnchor = [0.55, 0.005, 1., .102]
+#LegendBBoxToAnchor = [0.005, 0.55, 1., .102]
+#LegendBBoxToAnchor = [0.23, 0.88, 1., .102]
+#LegendBBoxToAnchor = [0.2, 0.8, 1., .102]
+#LegendBBoxToAnchor = [0.005, 0.68, 1., .102]
+#LegendBBoxToAnchor = [0.005, 0.83, 1., .102]
+#LegendBBoxToAnchor = [0.005, 0.805, 1., .102]
+LegendBBoxToAnchor = [0.005, 0.76, 1., .102]
+#LegendBBoxToAnchor = [0.315, 0.55, 1., .102]
+#LegendBBoxToAnchor = [0.51, 0.68, 1., .102]
+#LegendBBoxToAnchor = [0.49, 0.005, 1., .102]
+#LegendBBoxToAnchor = [0.49, 0.76, 1., .102]
+#LegendBBoxToAnchor = [0.01, 0.69, 1., .102] # W7X_180919.055 collisionality
 
 ShowSubPlotLabel = False
 SubPlotLabel = '(c)'
@@ -275,4 +300,4 @@ ErrorBarAlpha = 0.3
 ShowLineAtXzero = True
 ShowLineAtYzero = False
 
-NoScientificAxes = True
+NoScientificAxes = False

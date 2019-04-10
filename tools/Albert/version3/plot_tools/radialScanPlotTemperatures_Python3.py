@@ -19,10 +19,17 @@ if makePDF:
 
 import matplotlib.pyplot as plt
 
-print "This is "+ inspect.getfile(inspect.currentframe())
+print ("This is "+ inspect.getfile(inspect.currentframe()))
 
 sfincsHome = os.environ.get('SFINCS_HOME') 
 sfincsProjectsAndToolsHome = os.environ.get('SFINCS_PROJECTS_AND_TOOLS_HOME')
+
+##PLOT OPTIONS##
+
+#execfile(sfincsProjectsAndToolsHome + "/tools/Albert/version3/plot_tools"  + "/RadialScanPlotOptions.py")
+exec(open(sfincsProjectsAndToolsHome + "/tools/Albert/version3/plot_tools"  + "/RadialScanPlotOptions.py").read())
+
+################
 
 ##INPUTS##
 
@@ -48,10 +55,6 @@ TransformPlotVariableToOutputUnitsFactor = 1.
 
 MinFloat = pow(10, -sys.float_info.dig) 
 
-##PLOT OPTIONS##
-
-execfile(sfincsProjectsAndToolsHome + "/tools/Albert/version3/plot_tools"  + "/RadialScanPlotOptions.py")
-
 ################
 
 ##############################
@@ -59,18 +62,18 @@ execfile(sfincsProjectsAndToolsHome + "/tools/Albert/version3/plot_tools"  + "/R
 ##############################
 
 if radiusName != "psiHat" and radiusName != "psiN" and radiusName != "rHat" and radiusName != "rN":
-    print "Error! Invalid radial coordinate."
+    print ("Error! Invalid radial coordinate.")
     sys.exit(1)
 
 ##READ AND PLOT THE DATA##
 originalDirectory = os.getcwd() 
-print "Starting to create a plot from directories in " + originalDirectory
+print ("Starting to create a plot from directories in " + originalDirectory)
 
 # Get a list of the subdirectories:
 PlotDirectories = sorted(filter(os.path.isdir, os.listdir("."))) 
 
 if len(PlotDirectories) < 1:
-    print "Error! Could not find any directories in " + originalDirectory 
+    print ("Error! Could not find any directories in " + originalDirectory )
     sys.exit(1)
 
 fig = plt.figure(figsize=FigSize) 
@@ -82,9 +85,9 @@ ax = plt.subplot(1, 1, 1)
 
 for directory in PlotDirectories:
     try:
-        print "*************************************************" 
-        print "Processing directory "+directory
-        print "*************************************************"
+        print ("*************************************************") 
+        print ("Processing directory "+directory)
+        print ("*************************************************")
 
         fullDirectory = originalDirectory + "/" + directory
         os.chdir(fullDirectory)
@@ -93,8 +96,8 @@ for directory in PlotDirectories:
         SubDirectories = sorted(filter(os.path.isdir, os.listdir(".")))
 
         if len(SubDirectories) < 1:
-            print "Could not find any directories in " + fullDirectory
-            print "Continuing with next directory." 
+            print ("Could not find any directories in " + fullDirectory)
+            print ("Continuing with next directory." )
             continue
 
         Nradii = 0
@@ -120,8 +123,8 @@ for directory in PlotDirectories:
                     #    VariableValue = file["particleFlux_vd_rHat"][()]
                 
                 if (plotVariableName.find('Flux_vd') != -1 or plotVariableName.find('Flux_vE') != -1) and (includePhi1 != integerToRepresentTrue):
-                    print plotVariableName + " only exists in nonlinear runs, but this is a linear run." 
-                    print "Reading " + plotVariableName.replace('Flux_vd', 'Flux_vm').replace('Flux_vE', 'Flux_vm') + " instead."
+                    print (plotVariableName + " only exists in nonlinear runs, but this is a linear run." )
+                    print ("Reading " + plotVariableName.replace('Flux_vd', 'Flux_vm').replace('Flux_vE', 'Flux_vm') + " instead.")
                     VariableValue = file[plotVariableName.replace('Flux_vd', 'Flux_vm').replace('Flux_vE', 'Flux_vm')][()]
                 else:
                     VariableValue = file[plotVariableName][()]
@@ -136,13 +139,13 @@ for directory in PlotDirectories:
                 VariableValue = TransformPlotVariableToOutputUnitsFactor * VariableValue
                 if includePhi1 == integerToRepresentTrue:
                     if didNonlinearCalculationConverge != integerToRepresentTrue:
-                        print "The nonlinear solver did not converge in " + fullSubDirectory
-                        print "Continuing with next sub directory."
+                        print ("The nonlinear solver did not converge in " + fullSubDirectory)
+                        print ("Continuing with next sub directory.")
                         continue
             except:
-                print "Error when reading from " + fullSubDirectory + "/" + filename
-                print "Maybe the SFINCS run did not finish"
-                print "Continuing with next sub directory."
+                print ("Error when reading from " + fullSubDirectory + "/" + filename)
+                print ("Maybe the SFINCS run did not finish")
+                print ("Continuing with next sub directory.")
                 continue
 
             Nradii += 1
@@ -150,8 +153,8 @@ for directory in PlotDirectories:
             ydata.append(VariableValue)
 
         if Nradii < 1:
-            print "Could not read any data in " + fullDirectory 
-            print "Continuing with next directory." 
+            print ("Could not read any data in " + fullDirectory )
+            print ("Continuing with next directory." )
             continue
 
         ##Sort data after radii
@@ -160,18 +163,18 @@ for directory in PlotDirectories:
         for radius in radii_sorted:
             ydata_sorted.append(ydata[radii.index(radius)])
         
-        print "radii: " + str(radii)
-        print ""
-        print "ydata: " + str(ydata)
-        print ""
-        print "radii_sorted: " + str(radii_sorted)
-        print ""
-        print "ydata_sorted: " + str(ydata_sorted)
-        print ""
+        print ("radii: " + str(radii))
+        print ("")
+        print ("ydata: " + str(ydata))
+        print ("")
+        print ("radii_sorted: " + str(radii_sorted))
+        print ("")
+        print ("ydata_sorted: " + str(ydata_sorted))
+        print ("")
 
-        print np.array(radii_sorted)
-        print ""
-        print np.array(ydata_sorted)
+        print (np.array(radii_sorted))
+        print ("")
+        print (np.array(ydata_sorted))
 
         for linenumber in range(0,4):
             try:
@@ -184,8 +187,8 @@ for directory in PlotDirectories:
 
     except:
         os.chdir(originalDirectory)
-        print "Unexpected error when processing " + directory
-        print "Continuing with next directory."
+        print ("Unexpected error when processing " + directory)
+        print ("Continuing with next directory.")
         continue
 
 
@@ -210,14 +213,14 @@ plt.legend(bbox_to_anchor = LegendBBoxToAnchor, loc=LegendPosition, ncol=LegendN
 os.chdir(originalDirectory) 
 
 if makePDF: 
-    print "Saving PDF"  
+    print ("Saving PDF")  
 
     if len(sys.argv)>2 : #Use the substituted name as file name 
-       print "Writing plot to " + os.getcwd() + "/" + sys.argv[2] + ".pdf."    
+       print ("Writing plot to " + os.getcwd() + "/" + sys.argv[2] + ".pdf.")    
        plt.savefig(sys.argv[2] + ".pdf", orientation = 'landscape', papertype='letter')  
     else : 
        head, tail = os.path.split(inspect.getfile(inspect.currentframe()))  
-       print "Writing plot to " + os.getcwd() + "/" + tail + ".pdf."  
+       print ("Writing plot to " + os.getcwd() + "/" + tail + ".pdf.")  
        plt.savefig(tail+'.pdf', orientation = 'landscape', papertype='letter')  
 else:   
     plt.show()       
