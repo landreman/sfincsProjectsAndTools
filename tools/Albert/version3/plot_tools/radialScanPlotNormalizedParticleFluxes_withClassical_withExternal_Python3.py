@@ -35,7 +35,7 @@ exec(open(sfincsProjectsAndToolsHome + "/tools/Albert/version3/plot_tools"  + "/
 
 species = 3
 
-withExternal = True
+withExternal = False
 withClassicalExternal = True
 externalDataFileType = '.dkes'
 radiusColumn = 0

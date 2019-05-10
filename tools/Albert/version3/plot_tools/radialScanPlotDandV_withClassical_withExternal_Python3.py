@@ -153,7 +153,8 @@ for directory in PlotDirectories:
 
                 ##assert ((radiusValue - radiusValue2)/radiusValue <= InputTol),"Error, radii don't seem to match!"
                 assert (numpy.allclose(radiusValue, radiusValue2, rtol=InputTol)),"Error, radii don't seem to match!"
-                assert (numpy.allclose(nHats, nHats2, rtol=InputTol)),"Error, densities don't seem to match!"
+                ##Note: density of studied species can be different since d(ln n)/dr is the thermodynamic force!
+                assert (numpy.allclose(numpy.delete(nHats, species - 1), numpy.delete(nHats2, species - 1), rtol=InputTol)),"Error, densities don't seem to match!"
                 assert (numpy.allclose(THats, THats2, rtol=InputTol)),"Error, temperatures don't seem to match!"
                 assert (numpy.allclose(mHats, mHats2, rtol=InputTol)),"Error, masses don't seem to match!"
                 assert (numpy.allclose(Zs, Zs2, rtol=InputTol)),"Error, charges don't seem to match!"            
@@ -200,6 +201,7 @@ for directory in PlotDirectories:
                 densityGradient2 = file2[DensityGradientName][()]
                 densityGradient2 = densityGradient2[species - 1]
                 nHat = nHats[species - 1]
+                nHat2 = nHats2[species - 1]
                 
                 #classicalParticleFlux = TransformPlotVariableToOutputUnitsFactor * classicalParticleFlux
                 #classicalParticleFlux = classicalParticleFlux / nHats[species - 1]
@@ -232,8 +234,8 @@ for directory in PlotDirectories:
 
             #VariableValue = VariableValue / nHats[species -1]
 
-            Dneo = - (neoParticleFlux2 - neoParticleFlux) / (densityGradient2 - densityGradient)
-            Dclassical = - (classicalParticleFlux2 - classicalParticleFlux) / (densityGradient2 - densityGradient)
+            Dneo = - (neoParticleFlux2/nHat2 - neoParticleFlux/nHat) / (densityGradient2/nHat2 - densityGradient/nHat)
+            Dclassical = - (classicalParticleFlux2/nHat2 - classicalParticleFlux/nHat) / (densityGradient2/nHat2 - densityGradient/nHat)
             
             Vneo = (neoParticleFlux + Dneo * densityGradient) / nHat
             Vclassical = (classicalParticleFlux + Dclassical * densityGradient) / nHat

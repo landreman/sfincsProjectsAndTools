@@ -33,14 +33,17 @@ exec(open(sfincsProjectsAndToolsHome + "/tools/Albert/version3/plot_tools"  + "/
 
 ##INPUTS##
 
-species = 2
+species = 3
 
 withExternal = True
 externalDataFileType = '.dat'
-radiusColumn = 0
-FluxColumn = 17
-DensityColumn = 14
-sigmaColumn = 18
+#Some parameters are arrays if several external files are used with different format
+radiusColumn = [2, 0]
+aNorm = 0.51092 ##This is used to normalize if the same radial coordinate is not used in the external data as for the SFINCS results, e.g. r -> r/a. Put to 1.0 if same coordinate.
+FluxColumn = [15, 10]
+DensityColumn = [12, 4]
+sigmaColumn = [16, -1] #Put -1 if no sigma
+ExternalNorm = [1.0, 10.0**20] ##Use if normalization in external is different than for the SFINCS results
 
 ##NORMALIZATION FACTORS FOR SI UNITS##
 ######################################
@@ -207,8 +210,10 @@ if withExternal :
     os.chdir(originalDirectory)
     externalInputFiles = [];
 
+    externalCounter = -1
     for externalfile in os.listdir(originalDirectory):
         if externalfile.endswith(externalDataFileType):
+            externalCounter += 1
             try:
                 inputParams = np.genfromtxt(externalfile, dtype=None, comments="#", skip_header=1)
                 #print(inputParams[:,radiusColumn])
@@ -217,12 +222,12 @@ if withExternal :
                     LegendLabel = PlotLegendLabels[linenumber]
                 except:
                     LegendLabel = externalfile
-                if FilledErrors or (not ErrorBars[linenumber]):
-                    plt.plot(inputParams[:,radiusColumn], inputParams[:,FluxColumn]/inputParams[:,DensityColumn], PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel, linewidth=PlotLineWidth)
-                    if ErrorBars[linenumber] :
-                        plt.fill_between(inputParams[:,radiusColumn], inputParams[:,FluxColumn]/inputParams[:,DensityColumn] + inputParams[:,sigmaColumn]/inputParams[:,DensityColumn], inputParams[:,FluxColumn]/inputParams[:,DensityColumn] - inputParams[:,sigmaColumn]/inputParams[:,DensityColumn], color=PlotLineColors[linenumber], alpha=ErrorBarAlpha)
+                if FilledErrors or (not ErrorBars[linenumber]) or sigmaColumn[externalCounter] == -1:
+                    plt.plot(inputParams[:,radiusColumn[externalCounter]]/aNorm, inputParams[:,FluxColumn[externalCounter]]/inputParams[:,DensityColumn[externalCounter]]/ExternalNorm[externalCounter], PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel, linewidth=PlotLineWidth)
+                    if ErrorBars[linenumber] and sigmaColumn[externalCounter] != -1:
+                        plt.fill_between(inputParams[:,radiusColumn[externalCounter]]/aNorm, inputParams[:,FluxColumn[externalCounter]]/inputParams[:,DensityColumn[externalCounter]]/ExternalNorm[externalCounter] + inputParams[:,sigmaColumn[externalCounter]]/inputParams[:,DensityColumn[externalCounter]]/ExternalNorm[externalCounter], inputParams[:,FluxColumn[externalCounter]]/inputParams[:,DensityColumn[externalCounter]]/ExternalNorm[externalCounter] - inputParams[:,sigmaColumn[externalCounter]]/inputParams[:,DensityColumn[externalCounter]]/ExternalNorm[externalCounter], color=PlotLineColors[linenumber], alpha=ErrorBarAlpha)
                 else:
-                    plt.errorbar(inputParams[:,radiusColumn], inputParams[:,FluxColumn]/inputParams[:,DensityColumn], fmt=PlotLinespecs[linenumber], yerr=inputParams[:,sigmaColumn]/inputParams[:,DensityColumn], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel, linewidth=PlotLineWidth)
+                    plt.errorbar(inputParams[:,radiusColumn[externalCounter]]/aNorm, inputParams[:,FluxColumn[externalCounter]]/inputParams[:,DensityColumn[externalCounter]]/ExternalNorm[externalCounter], fmt=PlotLinespecs[linenumber], yerr=inputParams[:,sigmaColumn[externalCounter]]/inputParams[:,DensityColumn[externalCounter]]/ExternalNorm[externalCounter], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel, linewidth=PlotLineWidth)
                     
 
                 linenumber += 1

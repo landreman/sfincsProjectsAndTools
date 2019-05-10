@@ -15,9 +15,11 @@ sfincsProjectsAndToolsHome = os.environ.get('SFINCS_PROJECTS_AND_TOOLS_HOME')
 ##INPUTS##
 
 externalRadiusFile = 'rho.txt'
-externalDataFile = 'nArHe_180919055.txt'
+#externalDataFile = 'nArHe_180919055.txt'
+externalDataFile = 'nArHe_180919046.txt'
 
-runspecFilename = 'shot180919055_profAL_TileTerunspec21.dat'
+#runspecFilename = 'shot180919055_profAL_TileTerunspec21.dat'
+runspecFilename = 'shot180919046_profAL_TileTerunspec21.dat'
 
 outputSuffix = "_real_nz"
 

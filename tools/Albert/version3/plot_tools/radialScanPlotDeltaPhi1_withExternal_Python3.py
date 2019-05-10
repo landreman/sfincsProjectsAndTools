@@ -49,17 +49,38 @@ filename = 'sfincsOutput.h5' ##Name for SFINCS output HDF5 files.
 radiusName = "rN" ##Radial coordinate to use on x-axis. Must be "psiHat", "psiN", "rHat" or "rN".
 
 #plotVariableName = "Er" ##Parameter to plot on y-axis. In this version it must be "Er", "dPhiHatdpsiHat", "dPhiHatdpsiN", "dPhiHatdrHat" or "dPhiHatdrN" .
-plotVariableName = "THats"
+plotVariableName = "Phi1Hat"
+species = 2 #Species with ion temperature
+TransformPlotVariableToOutputUnitsFactor = 1.0
 
-TransformPlotVariableToOutputUnitsFactor = 1.
+##EXTERNAL DATA##
+withExternal = True
+externalDataFileType = '.dat'
+#Some parameters are arrays if several external files are used with different format
+#radiusColumn = [1, 1, 2]
+radiusColumn = [ 1, 2]
+aNorm = 0.51092 ##This is used to normalize if the same radial coordinate is not used in the external data as for the SFINCS results, e.g. r -> r/a. Put to 1.0 if same coordinate.
+#DeltaPhi1Column = [21, 21, 19]
+DeltaPhi1Column = [21, 19]
+#ExternalNorm = [0.5, 0.5, 1.0] ##Use if normalization in external is different than for the SFINCS results
+ExternalNorm = [0.5, 1.0]
+#TemperatureColumn = [20, 20, 4]
+TemperatureColumn = [20, 4]
 
-MinFloat = pow(10, -sys.float_info.dig) 
-
-################
+##WRITE DATA TO OUTPUT FILE##
+writeDataToFile = False
+outputFilenamePrefix = "SFINCS_DeltaPhi1_" ##Start of name of output file to which the data is written.
+outputFilenameSuffix = ".dat" ##End of name of output file to which the data is written.
+OutputLabels = ["Er[kV/m]", "e*DeltaPhi1/(2*Ti)"]
+#OutputLabels.append(xAxisLabel)
+#OutputLabels.append(yAxisLabel)
+#############################
 
 ##############################
 ##########END INPUTS##########
 ##############################
+
+MinFloat = pow(10, -sys.float_info.dig)
 
 if radiusName != "psiHat" and radiusName != "psiN" and radiusName != "rHat" and radiusName != "rN":
     print ("Error! Invalid radial coordinate.")
@@ -73,7 +94,7 @@ print ("Starting to create a plot from directories in " + originalDirectory)
 PlotDirectories = sorted(filter(os.path.isdir, os.listdir("."))) 
 
 if len(PlotDirectories) < 1:
-    print ("Error! Could not find any directories in " + originalDirectory )
+    print ("Error! Could not find any directories in " + originalDirectory)
     sys.exit(1)
 
 fig = plt.figure(figsize=FigSize) 
@@ -81,7 +102,7 @@ fig.patch.set_facecolor('white')
 
 ax = plt.subplot(1, 1, 1)
 
-#linenumber = 0
+linenumber = 0
 
 for directory in PlotDirectories:
     try:
@@ -97,11 +118,10 @@ for directory in PlotDirectories:
 
         if len(SubDirectories) < 1:
             print ("Could not find any directories in " + fullDirectory)
-            print ("Continuing with next directory." )
+            print ("Continuing with next directory.") 
             continue
 
         Nradii = 0
-        Nspecies = 0
         radii = []
         ydata = []
         
@@ -116,54 +136,50 @@ for directory in PlotDirectories:
 
                 finished = file["finished"][()] 
                 integerToRepresentTrue = file["integerToRepresentTrue"][()]
-                includePhi1 = file["includePhi1"][()] 
+                includePhi1 = file["includePhi1"][()]
+
+                iteration = file["NIterations"][()] - 1 #Results from last iteration
+                THats = file["THats"][()]
+                alpha = file["alpha"][()]
 
                 if includePhi1 == integerToRepresentTrue:
                     didNonlinearCalculationConverge = file["didNonlinearCalculationConverge"][()]
                     #if plotVariableName == "particleFlux_vm_rHat":
                     #    VariableValue = file["particleFlux_vd_rHat"][()]
 
-                if Nspecies == 0 :
-                    Nspecies = file["Nspecies"][()]
-                elif Nspecies != file["Nspecies"][()] :
-                    file.close()
-                    print ("Nspecies not consistent with other runs in " + fullSubDirectory)
-                    print ("Continuing with next sub directory.")
-                    continue
-                
-                if (plotVariableName.find('Flux_vd') != -1 or plotVariableName.find('Flux_vE') != -1) and (includePhi1 != integerToRepresentTrue):
-                    print (plotVariableName + " only exists in nonlinear runs, but this is a linear run." )
-                    print ("Reading " + plotVariableName.replace('Flux_vd', 'Flux_vm').replace('Flux_vE', 'Flux_vm') + " instead.")
-                    VariableValue = file[plotVariableName.replace('Flux_vd', 'Flux_vm').replace('Flux_vE', 'Flux_vm')][()]
-                else:
-                    VariableValue = file[plotVariableName][()]
-
+                    Phi1Hat = file[plotVariableName][()] ##Phi1Hat
+                    zMinData = numpy.amin(Phi1Hat[:,:,iteration])
+                    zMaxData = numpy.amax(Phi1Hat[:,:,iteration])
+                    
                 file.close()
-                
-                #if plotVariableName == "particleFlux_vm_rHat":
-                #if plotVariableName.find('Flux_v') != -1:
-                #    VariableValue = VariableValue[:, -1]
-                #    VariableValue = VariableValue[species -1] 
 
-                VariableValue = TransformPlotVariableToOutputUnitsFactor * VariableValue
                 if includePhi1 == integerToRepresentTrue:
                     if didNonlinearCalculationConverge != integerToRepresentTrue:
                         print ("The nonlinear solver did not converge in " + fullSubDirectory)
                         print ("Continuing with next sub directory.")
                         continue
+                else:
+                    print ("It seems there is no Phi1 in " + fullSubDirectory)
+                    print ("Continuing with next sub directory.")
+                    continue
             except:
                 print ("Error when reading from " + fullSubDirectory + "/" + filename)
                 print ("Maybe the SFINCS run did not finish")
                 print ("Continuing with next sub directory.")
                 continue
 
+            Ti = THats[species - 1]
+            #print("Ti: " + str(Ti))
+
+            VariableValue = alpha*(zMaxData - zMinData) / (2.0*Ti)
+            VariableValue = TransformPlotVariableToOutputUnitsFactor * VariableValue
             Nradii += 1
             radii.append(radiusValue)
             ydata.append(VariableValue)
 
         if Nradii < 1:
-            print ("Could not read any data in " + fullDirectory )
-            print ("Continuing with next directory." )
+            print ("Could not read any data in " + fullDirectory) 
+            print ("Continuing with next directory.") 
             continue
 
         ##Sort data after radii
@@ -185,20 +201,74 @@ for directory in PlotDirectories:
         print ("")
         print (np.array(ydata_sorted))
 
-        for linenumber in range(0,Nspecies):
-            try:
-                LegendLabel = PlotLegendLabels[linenumber]
-            except:
-                LegendLabel = directory
+        try:
+            LegendLabel = PlotLegendLabels[linenumber]
+        except:
+            LegendLabel = directory
 
-            plt.plot(np.array(radii_sorted), np.array(ydata_sorted)[:, linenumber], PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel, linewidth=PlotLineWidth)
-        #linenumber += 1
+        plt.plot(np.array(radii_sorted), np.array(ydata_sorted), PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel, linewidth=PlotLineWidth)
+        linenumber += 1
+
+
+        if writeDataToFile:
+
+            os.chdir(originalDirectory)
+            outputFilename = outputFilenamePrefix + LegendLabel + outputFilenameSuffix
+
+            #print ""
+            #print "OutputData = " + str(OutputData)
+            #print ""
+            #OutputData = np.array([])
+            OutputData = np.array([radii_sorted]).transpose()
+            #print("TEST")
+            #print(OutputData)
+            #print(np.array([ydata_sorted]).transpose())
+            OutputData = np.concatenate((OutputData, np.array([ydata_sorted]).transpose()), axis=1)
+            #print("TEST2")
+
+            #print ""
+            #print "OutputLabels = " + str(OutputLabels)
+            #print ""
+
+            print ("Writing data to " + outputFilename)
+            np.savetxt(outputFilename, OutputData, delimiter='\t', newline='\n', header='\t'.join(OutputLabels))
 
     except:
         os.chdir(originalDirectory)
         print ("Unexpected error when processing " + directory)
         print ("Continuing with next directory.")
         continue
+
+
+##ADD EXTERNAL DATA TO PLOT (E.G. DKES)##
+
+if withExternal :
+    os.chdir(originalDirectory)
+    externalInputFiles = [];
+
+    externalCounter = -1
+    for externalfile in os.listdir(originalDirectory):
+        if externalfile.endswith(externalDataFileType):
+            externalCounter += 1
+            try:
+                inputParams = np.genfromtxt(externalfile, dtype=None, comments="#", skip_header=1)
+                try:
+                    LegendLabel = PlotLegendLabels[linenumber]
+                except:
+                    LegendLabel = externalfile
+                plt.plot(inputParams[:,radiusColumn[externalCounter]]/aNorm, inputParams[:,DeltaPhi1Column[externalCounter]]/(2.0*inputParams[:,TemperatureColumn[externalCounter]])/ExternalNorm[externalCounter], PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel, linewidth=PlotLineWidth)
+                linenumber += 1
+
+                externalInputFiles.append(externalfile)
+            except Exception as e:
+                print (e.__class__.__name__, ": ", e.message, "while reading %s" % inputfile)
+                print ("Continuing with next file!")
+                continue
+
+    if len(externalInputFiles) > 0 :
+        print("Read external data files: " + str(externalInputFiles))
+    else:
+        print("Could not read any external data files.")
 
 #########################################
 
@@ -231,11 +301,7 @@ plt.subplots_adjust(left=LeftMargin, right=RightMargin, top=TopMargin, bottom=Bo
 if ShowSubPlotLabel:
     plt.text(SubPlotLabelXcoord, SubPlotLabelYcoord, SubPlotLabel)
 
-if NoScientificAxes :
-    ax.get_xaxis().get_major_formatter().set_scientific(False)
-    ax.get_yaxis().get_major_formatter().set_scientific(False)
-
-os.chdir(originalDirectory) 
+os.chdir(originalDirectory)
 
 if makePDF: 
     print ("Saving PDF")  
