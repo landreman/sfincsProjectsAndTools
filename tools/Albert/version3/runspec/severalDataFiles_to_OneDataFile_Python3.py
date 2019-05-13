@@ -15,7 +15,8 @@ sfincsProjectsAndToolsHome = os.environ.get('SFINCS_PROJECTS_AND_TOOLS_HOME')
 ##INPUTS##
 
 outputFilename = 'W7X_180919.055_XICS.dat'
-inputFiles = ['rho.txt', 'normAr16Flux.txt', 'normAr16FluxErrors.txt', 'D.txt', 'Derror.txt', 'v.txt', 'verror.txt']
+#outputFilename = 'W7X_180919.046_XICS.dat'
+inputFiles = ['rho.txt', 'normAr16Flux.txt', 'normAr16FluxErrors.txt', 'Dprofile.txt', 'DprofileError.txt', 'Vprofile.txt', 'VprofileError.txt']
 outputLabels = ['r/a', 'GammaAr16+/nAr16+', 'ErrorGammaAr16+/nAr16+', 'DAr16+', 'ErrorDAr16+', 'VAr16+', 'ErrorVAr16+']
 TransformFactors = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
 

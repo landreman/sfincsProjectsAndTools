@@ -35,15 +35,24 @@ exec(open(sfincsProjectsAndToolsHome + "/tools/Albert/version3/plot_tools"  + "/
 
 species = 3
 
-withExternal = False
-withClassicalExternal = False
+SFINCSplotWithClassical = [False, True, True, True] #Whether to include classical fluxes in SFINCS results
+SFINCSplotFactors = [10.0, 10.0, 10.0, 1.0] #Factor to multiply SFINCS results
+
+legendAtDplot = True #If True the legend will be in the D plot, otherwise in the V plot
+
+withExternal = True
+withClassicalExternal = [False]
 externalDataFileType = '.dat'
-radiusColumn = 0
-aNorm = 0.51092 ##This is used to normalize if the same radial coordinate is not used in the external data as for the SFINCS results, e.g. r -> r/a. Put to 1.0 if same coordinate.
-Dcolumn = 10
-Vcolumn = 11
-ClassicalDcolumn = 13
-ClassicalVcolumn = 13
+radiusColumn = [0]
+aNorm = 1.0 #0.51092 ##This is used to normalize if the same radial coordinate is not used in the external data as for the SFINCS results, e.g. r -> r/a. Put to 1.0 if same coordinate.
+Dcolumn = [3]
+Vcolumn = [5]
+sigmaDColumn = [4] #Put -1 if no sigma
+sigmaVColumn = [6] #Put -1 if no sigma
+classicalDcolumn = [-1] #Put -1 if no classical
+classicalVcolumn = [-1] #Put -1 if no classical
+sigmaClassicalDcolumn = [-1] #Put -1 if no classical sigma
+sigmaClassicalVcolumn = [-1] #Put -1 if no classical sigma
 #FluxNorm = 10**20 ##Use if normalization in external fluxes is different than for the SFINCS results
 #DensityColumn = 4
 
@@ -58,7 +67,7 @@ Bbar = 1.0
 vbar = np.sqrt(2.0 * Tbar / mbar)  
 ######################################
 
-filename = 'sfincsOutput.h5' ##Name for SFINCS output HDF5 files.
+filename1 = 'sfincsOutput.h5' ##Name for SFINCS output HDF5 files.
 filename2 = 'sfincsOutput (2).h5' ##Name for second SFINCS output HDF5 files.
 
 radiusName = "rN" ##Radial coordinate to use on x-axis. Must be "psiHat", "psiN", "rHat" or "rN".
@@ -127,28 +136,28 @@ for directory in PlotDirectories:
             os.chdir(fullSubDirectory)
             
             try:
-                file = h5py.File(fullSubDirectory + "/" + filename,'r')
+                file1 = h5py.File(fullSubDirectory + "/" + filename1,'r')
                 file2 = h5py.File(fullSubDirectory + "/" + filename2,'r')
-                radiusValue = file[radiusName][()]
+                radiusValue = file1[radiusName][()]
                 radiusValue2 = file2[radiusName][()]
 
-                finished = file["finished"][()]
+                finished = file1["finished"][()]
                 finished2 = file2["finished"][()]
-                integerToRepresentTrue = file["integerToRepresentTrue"][()]
+                integerToRepresentTrue = file1["integerToRepresentTrue"][()]
                 integerToRepresentTrue2 = file2["integerToRepresentTrue"][()]
-                includePhi1 = file["includePhi1"][()]
+                includePhi1 = file1["includePhi1"][()]
                 includePhi12 = file2["includePhi1"][()]
 
                 assert ((finished == integerToRepresentTrue) and (finished2 == integerToRepresentTrue2)),"Error, both runs must finish!"
                 assert ((includePhi1 == integerToRepresentTrue) == (includePhi12 == integerToRepresentTrue2)),"Error, seems like Phi1 is included in one calculation but not the other!"
 
-                nHats = file["nHats"][()]
+                nHats = file1["nHats"][()]
                 nHats2 = file2["nHats"][()]
-                THats = file["THats"][()]
+                THats = file1["THats"][()]
                 THats2 = file2["THats"][()]
-                mHats = file["mHats"][()]
+                mHats = file1["mHats"][()]
                 mHats2 = file2["mHats"][()]
-                Zs = file["Zs"][()]
+                Zs = file1["Zs"][()]
                 Zs2 = file2["Zs"][()]
 
                 ##assert ((radiusValue - radiusValue2)/radiusValue <= InputTol),"Error, radii don't seem to match!"
@@ -160,10 +169,10 @@ for directory in PlotDirectories:
                 assert (numpy.allclose(Zs, Zs2, rtol=InputTol)),"Error, charges don't seem to match!"            
 
                 if includePhi1 == integerToRepresentTrue:
-                    didNonlinearCalculationConverge = file["didNonlinearCalculationConverge"][()]
+                    didNonlinearCalculationConverge = file1["didNonlinearCalculationConverge"][()]
                     didNonlinearCalculationConverge2 = file2["didNonlinearCalculationConverge"][()]
                     #if plotVariableName == "particleFlux_vm_rHat":
-                    #    VariableValue = file["particleFlux_vd_rHat"][()]
+                    #    VariableValue = file1["particleFlux_vd_rHat"][()]
 
                     assert ((didNonlinearCalculationConverge == integerToRepresentTrue) and (didNonlinearCalculationConverge2 == integerToRepresentTrue2)),"Error, both runs must finish!"
 
@@ -175,11 +184,11 @@ for directory in PlotDirectories:
                     #print (particleFluxName + " only exists in nonlinear runs, but this is a linear run.")
                     particleFluxName = particleFluxName.replace('Flux_vd', 'Flux_vm').replace('Flux_vE', 'Flux_vm')
                     #print ("Reading " + particleFluxName + " instead.")
-                    #VariableValue = file[plotVariableName.replace('Flux_vd', 'Flux_vm').replace('Flux_vE', 'Flux_vm')][()]
+                    #VariableValue = file1[plotVariableName.replace('Flux_vd', 'Flux_vm').replace('Flux_vE', 'Flux_vm')][()]
                 #else:
-                #    VariableValue = file[plotVariableName][()]
+                #    VariableValue = file1[plotVariableName][()]
 
-                classicalParticleFlux = file[classicalparticleFluxName][()]
+                classicalParticleFlux = file1[classicalparticleFluxName][()]
                 classicalParticleFlux = classicalParticleFlux[:, - 1]
                 classicalParticleFlux = classicalParticleFlux[species - 1]
 
@@ -187,7 +196,7 @@ for directory in PlotDirectories:
                 classicalParticleFlux2 = classicalParticleFlux2[:, - 1]
                 classicalParticleFlux2 = classicalParticleFlux2[species - 1]
 
-                neoParticleFlux = file[particleFluxName][()]
+                neoParticleFlux = file1[particleFluxName][()]
                 neoParticleFlux = neoParticleFlux[:, - 1]
                 neoParticleFlux = neoParticleFlux[species - 1]
 
@@ -195,7 +204,7 @@ for directory in PlotDirectories:
                 neoParticleFlux2 = neoParticleFlux2[:, - 1]
                 neoParticleFlux2 = neoParticleFlux2[species - 1]
 
-                densityGradient = file[DensityGradientName][()]
+                densityGradient = file1[DensityGradientName][()]
                 densityGradient = densityGradient[species - 1]
 
                 densityGradient2 = file2[DensityGradientName][()]
@@ -209,7 +218,7 @@ for directory in PlotDirectories:
                 #classicalParticleFlux2 = TransformPlotVariableToOutputUnitsFactor * classicalParticleFlux2
                 #classicalParticleFlux2 = classicalParticleFlux2 / nHats2[species - 1] 
 
-                file.close()
+                file1.close()
                 file2.close()
                 
                 
@@ -220,12 +229,12 @@ for directory in PlotDirectories:
                 #VariableValue = TransformPlotVariableToOutputUnitsFactor * VariableValue
                     
             except AssertionError as err:
-                print ("Error when reading from " + fullSubDirectory + "/" + filename + " and " + filename2)
+                print ("Error when reading from " + fullSubDirectory + "/" + filename1 + " and " + filename2)
                 print (err.args[0])
                 print ("Continuing with next sub directory.")
                 continue
             except:
-                print ("Error when reading from " + fullSubDirectory + "/" + filename + " and " + filename2)
+                print ("Error when reading from " + fullSubDirectory + "/" + filename1 + " and " + filename2)
                 print ("Maybe the SFINCS run did not finish")
                 print ("Continuing with next sub directory.")
                 continue
@@ -305,27 +314,36 @@ for directory in PlotDirectories:
             LegendLabel = PlotLegendLabels[linenumber]
         except:
             LegendLabel = directory
-        
-        #D neoclassical
-        axD.plot(np.array(radii_sorted), np.array(DneoData_sorted), PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel, linewidth=PlotLineWidth)
 
-        #V neoclassical
-        axV.plot(np.array(radii_sorted), np.array(VneoData_sorted), PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel, linewidth=PlotLineWidth)                
+        if SFINCSplotWithClassical[linenumber] :
+            #D neoclassical + classical
+            axD.plot(np.array(radii_sorted), SFINCSplotFactors[linenumber]*(np.array(DneoData_sorted) + np.array(DclassicalData_sorted)), PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel, linewidth=PlotLineWidth)
+
+            #V neoclassical + classical
+            axV.plot(np.array(radii_sorted), SFINCSplotFactors[linenumber]*(np.array(VneoData_sorted) + np.array(VclassicalData_sorted)), PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel, linewidth=PlotLineWidth)
+        
+        else :
+        
+            #D neoclassical
+            axD.plot(np.array(radii_sorted), SFINCSplotFactors[linenumber]*np.array(DneoData_sorted), PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel, linewidth=PlotLineWidth)
+
+            #V neoclassical
+            axV.plot(np.array(radii_sorted), SFINCSplotFactors[linenumber]*np.array(VneoData_sorted), PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel, linewidth=PlotLineWidth)                
         
         linenumber += 1
 
-        try:
-            LegendLabel = PlotLegendLabels[linenumber]
-        except:
-            LegendLabel = directory
-
+        #try:
+        #    LegendLabel = PlotLegendLabels[linenumber]
+        #except:
+        #    LegendLabel = directory
+        #
         #D neoclassical + classical
-        axD.plot(np.array(radii_sorted), np.array(DneoData_sorted) + np.array(DclassicalData_sorted), PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel, linewidth=PlotLineWidth)
-
+        #axD.plot(np.array(radii_sorted), np.array(DneoData_sorted) + np.array(DclassicalData_sorted), PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel, linewidth=PlotLineWidth)
+        #
         #V neoclassical + classical
-        axV.plot(np.array(radii_sorted), np.array(VneoData_sorted) + np.array(VclassicalData_sorted), PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel, linewidth=PlotLineWidth)
-        
-        linenumber += 1
+        #axV.plot(np.array(radii_sorted), np.array(VneoData_sorted) + np.array(VclassicalData_sorted), PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel, linewidth=PlotLineWidth)
+        #
+        #linenumber += 1
 
         #try:
         #    LegendLabel = PlotLegendLabels[linenumber]
@@ -344,12 +362,15 @@ for directory in PlotDirectories:
 
 
 ##ADD EXTERNAL DATA TO PLOT (E.G. DKES)##
+
 if withExternal :
     os.chdir(originalDirectory)
     externalInputFiles = [];
 
+    externalCounter = -1
     for externalfile in os.listdir(originalDirectory):
         if externalfile.endswith(externalDataFileType):
+            externalCounter += 1
             try:
                 inputParams = np.genfromtxt(externalfile, dtype=None, comments="#", skip_header=1)
                 #print(inputParams[:,radiusColumn])
@@ -358,16 +379,57 @@ if withExternal :
                     LegendLabel = PlotLegendLabels[linenumber]
                 except:
                     LegendLabel = externalfile
-                plt.plot(inputParams[:,radiusColumn]/aNorm, inputParams[:,FluxColumn]/inputParams[:,DensityColumn]/FluxNorm, PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel, linewidth=PlotLineWidth)
-                linenumber += 1
 
-                if withClassicalExternal :
-                    try:
-                        LegendLabel = PlotLegendLabels[linenumber]
-                    except:
-                        LegendLabel = externalfile
-                        plt.plot(inputParams[:,radiusColumn]/aNorm, inputParams[:,ClassicalFluxColumn]/inputParams[:,DensityColumn]/FluxNorm, PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel, linewidth=PlotLineWidth)
-                        linenumber += 1
+                externalDtoPlot = inputParams[:,Dcolumn[externalCounter]]
+                if (withClassicalExternal[externalCounter] and classicalDcolumn[externalCounter] != -1):
+                    externalDtoPlot = externalDtoPlot + inputParams[:,classicalDcolumn[externalCounter]]
+
+                externalVtoPlot = inputParams[:,Vcolumn[externalCounter]]
+                if (withClassicalExternal[externalCounter] and classicalVcolumn[externalCounter] != -1):
+                    externalVtoPlot = externalVtoPlot + inputParams[:,classicalVcolumn[externalCounter]]
+
+                externalSigmaDtoPlot = np.array([])
+                if (ErrorBars[linenumber] and (sigmaDColumn[externalCounter] != -1 or sigmaClassicalDcolumn[externalCounter] != -1)):
+                    if sigmaDColumn[externalCounter] == -1:
+                        externalSigmaDtoPlot = inputParams[:,sigmaClassicalDcolumn[externalCounter]]
+                    elif sigmaClassicalDcolumn[externalCounter] == -1:
+                        externalSigmaDtoPlot = inputParams[:,sigmaDColumn[externalCounter]]
+                    else :
+                        externalSigmaDtoPlot = inputParams[:,sigmaDColumn[externalCounter]] + inputParams[:,sigmaClassicalDcolumn[externalCounter]]
+
+                externalSigmaVtoPlot = np.array([])
+                if (ErrorBars[linenumber] and (sigmaVColumn[externalCounter] != -1 or sigmaClassicalVcolumn[externalCounter] != -1)):
+                    if sigmaVColumn[externalCounter] == -1:
+                        externalSigmaVtoPlot  = inputParams[:,sigmaClassicalVcolumn[externalCounter]]
+                    elif sigmaClassicalVcolumn[externalCounter] == -1:
+                        externalSigmaVtoPlot = inputParams[:,sigmaVColumn[externalCounter]]
+                    else :
+                        externalSigmaVtoPlot = inputParams[:,sigmaVColumn[externalCounter]] + inputParams[:,sigmaClassicalVcolumn[externalCounter]]
+                
+
+                if (FilledErrors or (not ErrorBars[linenumber]) or (sigmaDColumn[externalCounter] == -1 and sigmaClassicalDcolumn[externalCounter] == -1)) :
+
+                    #D external
+                    axD.plot(inputParams[:,radiusColumn[externalCounter]]/aNorm, externalDtoPlot, PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel, linewidth=PlotLineWidth)
+                    
+                    if (ErrorBars[linenumber] and externalSigmaDtoPlot.size != 0):
+                        axD.fill_between(inputParams[:,radiusColumn[externalCounter]]/aNorm, externalDtoPlot + externalSigmaDtoPlot, externalDtoPlot - externalSigmaDtoPlot, color=PlotLineColors[linenumber], alpha=ErrorBarAlpha)
+                else :
+                    axD.errorbar(inputParams[:,radiusColumn[externalCounter]]/aNorm, externalDtoPlot, fmt=PlotLinespecs[linenumber], yerr=externalSigmaDtoPlot, color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel, linewidth=PlotLineWidth)
+
+
+                if (FilledErrors or (not ErrorBars[linenumber]) or (sigmaVColumn[externalCounter] == -1 and sigmaClassicalVcolumn[externalCounter] == -1)) :
+                    
+                    #V external
+                    axV.plot(inputParams[:,radiusColumn[externalCounter]]/aNorm, externalVtoPlot, PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel, linewidth=PlotLineWidth)
+                    
+                    if (ErrorBars[linenumber] and externalSigmaVtoPlot.size != 0):
+                        axV.fill_between(inputParams[:,radiusColumn[externalCounter]]/aNorm, externalVtoPlot + externalSigmaVtoPlot, externalVtoPlot - externalSigmaVtoPlot, color=PlotLineColors[linenumber], alpha=ErrorBarAlpha)
+
+                else :
+                    axV.errorbar(inputParams[:,radiusColumn[externalCounter]]/aNorm, externalVtoPlot, fmt=PlotLinespecs[linenumber], yerr=externalSigmaVtoPlot, color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel, linewidth=PlotLineWidth)
+
+                linenumber += 1
 
                 externalInputFiles.append(externalfile)
             except Exception as e:
@@ -413,14 +475,17 @@ if AxisLimAuto:
 else : 
     #ymin,ymax = plt.ylim(yAxisLim) 
     #xmin,xmax = plt.xlim(xAxisLim)
-    yminD,ymaxD = plt.set_ylim(yAxisLim[0]) 
-    xminD,xmaxD = plt.set_xlim(xAxisLim[0])
-    yminV,ymaxV = plt.set_ylim(yAxisLim[1]) 
-    xminV,xmaxV = plt.set_xlim(xAxisLim[1]) 
+    yminD,ymaxD = axD.set_ylim(yAxisLim[0]) 
+    xminD,xmaxD = axD.set_xlim(xAxisLim[0])
+    yminV,ymaxV = axV.set_ylim(yAxisLim[1]) 
+    xminV,xmaxV = axV.set_xlim(xAxisLim[1]) 
 
 if ShowLegend:
     #plt.legend(bbox_to_anchor = LegendBBoxToAnchor, loc=LegendPosition, ncol=LegendNumberColumns, mode=None, borderaxespad=0., prop=LegendProperties)#, fontsize=LegendFontSize)
-    axD.legend(bbox_to_anchor = LegendBBoxToAnchor, loc=LegendPosition, ncol=LegendNumberColumns, mode=None, borderaxespad=0., prop=LegendProperties)#, fontsize=LegendFontSize)
+    if legendAtDplot:
+        axD.legend(bbox_to_anchor = LegendBBoxToAnchor, loc=LegendPosition, ncol=LegendNumberColumns, mode=None, borderaxespad=0., prop=LegendProperties)#, fontsize=LegendFontSize)
+    else :
+        axV.legend(bbox_to_anchor = LegendBBoxToAnchor, loc=LegendPosition, ncol=LegendNumberColumns, mode=None, borderaxespad=0., prop=LegendProperties)
 
 #plt.gca().axes.xaxis.set_label_coords(xAxisLabelCoords[0], xAxisLabelCoords[1])
 #plt.gca().axes.yaxis.set_label_coords(yAxisLabelCoords[0], yAxisLabelCoords[1])
