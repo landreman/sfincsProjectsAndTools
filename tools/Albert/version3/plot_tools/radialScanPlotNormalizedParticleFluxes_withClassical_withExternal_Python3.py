@@ -36,7 +36,7 @@ exec(open(sfincsProjectsAndToolsHome + "/tools/Albert/version3/plot_tools"  + "/
 species = 3
 
 withExternal = False
-withClassicalExternal = True
+withClassicalExternal = False
 externalDataFileType = '.dkes'
 radiusColumn = 0
 aNorm = 0.51092 ##This is used to normalize if the same radial coordinate is not used in the external data as for the SFINCS results, e.g. r -> r/a. Put to 1.0 if same coordinate.
@@ -70,10 +70,10 @@ MinFloat = pow(10, -sys.float_info.dig)
 
 ##WRITE DATA TO OUTPUT FILE##
 ##ONLY WRITING SFINCS DATA##
-writeDataToFile = False
-outputFilenamePrefix = "SFINCS_ArFluxes_" ##Start of name of output file to which the data is written.
+writeDataToFile = True
+outputFilenamePrefix = "SFINCS_ImpurityFluxes_" ##Start of name of output file to which the data is written.
 outputFilenameSuffix = ".dat" ##End of name of output file to which the data is written.
-OutputLabels = ["r/a", "Gamma_Ar/n_Ar[NEOCLASSICAL]", "Gamma_Ar/n_Ar[CLASSICAL+NEOCLASSICAL]"]
+OutputLabels = ["r/a", "Gamma_z/n_z[NEOCLASSICAL]", "Gamma_z/n_z[CLASSICAL+NEOCLASSICAL]"]
 
 ##############################
 ##########END INPUTS##########

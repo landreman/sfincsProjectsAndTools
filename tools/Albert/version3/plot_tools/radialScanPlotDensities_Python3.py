@@ -50,8 +50,8 @@ radiusName = "rN" ##Radial coordinate to use on x-axis. Must be "psiHat", "psiN"
 #plotVariableName = "Er" ##Parameter to plot on y-axis. In this version it must be "Er", "dPhiHatdpsiHat", "dPhiHatdpsiN", "dPhiHatdrHat" or "dPhiHatdrN" .
 plotVariableName = "nHats"
 
-#TransformPlotVariableToOutputUnitsFactor = [10.0, 10.0, 1.0/(6.37774*10**(-7))/1.5] #W7X_180919.055 densities
-TransformPlotVariableToOutputUnitsFactor = [10.0, 10.0, 1.0/(6.37774*10**(-7))/1.0] #W7X_180919.046 densities
+TransformPlotVariableToOutputUnitsFactor = [10.0, 10.0, 1.0/(6.37774*10**(-7))/0.7] #W7X_180919.055 densities
+#TransformPlotVariableToOutputUnitsFactor = [10.0, 10.0, 1.0/(6.37774*10**(-7))/1.0] #W7X_180919.046 densities
 
 MinFloat = pow(10, -sys.float_info.dig) 
 
@@ -233,6 +233,12 @@ if ShowSubPlotLabel:
 if NoScientificAxes :
     ax.get_xaxis().get_major_formatter().set_scientific(False)
     ax.get_yaxis().get_major_formatter().set_scientific(False)
+
+if ChangeXaxisTicks:
+    ax.xaxis.set_ticks(NewXaxisTicks)
+
+if ChangeYaxisTicks:
+    ax.yaxis.set_ticks(NewYaxisTicks)
 
 os.chdir(originalDirectory) 
 

@@ -33,23 +33,32 @@ exec(open(sfincsProjectsAndToolsHome + "/tools/Albert/version3/plot_tools"  + "/
 
 ##INPUTS##
 
-species = 3
+species = 2
 
-SFINCSplotWithClassical = [False, True, True, True] #Whether to include classical fluxes in SFINCS results
-SFINCSplotFactors = [10.0, 10.0, 10.0, 1.0] #Factor to multiply SFINCS results
+SFINCSplotWithClassical = [False] #Whether to include classical fluxes in SFINCS results
+SFINCSplotFactors = [1.0] #Factor to multiply SFINCS results
 
-#SFINCSplotWithClassical = [False, False] #Whether to include classical fluxes in SFINCS results
+#SFINCSplotWithClassical = [False, True] #Whether to include classical fluxes in SFINCS results
 #SFINCSplotFactors = [1.0, 1.0] #Factor to multiply SFINCS results
 
 withExternal = True
 externalDataFileType = '.dat'
 #Some parameters are arrays if several external files are used with different format
-radiusColumn = [0]
-aNorm = 1.0 #0.51092 ##This is used to normalize if the same radial coordinate is not used in the external data as for the SFINCS results, e.g. r -> r/a. Put to 1.0 if same coordinate.
-FluxColumn = [1]
-DensityColumn = [7]
-sigmaColumn = [2] #Put -1 if no sigma
-ExternalNorm = [1.0] ##Use if normalization in external is different than for the SFINCS results
+radiusColumn = [0, 0, 0] #EUTERPE, DKES, DKES
+#radiusColumn = [0, 0]
+aNorm = [1.0, 0.51092, 0.51092] #EUTERPE, DKES, DKES ##This is used to normalize if the same radial coordinate is not used in the external data as for the SFINCS results, e.g. r -> r/a. Put to 1.0 if same coordinate. 
+#aNorm = [0.51092, 0.51092]
+#aNorm = [1.0] #EUTERPE only
+#FluxColumn = [8, 10, 10] #EUTERPE, DKES, DKES Ar16 no Phi1
+FluxColumn = [11, 9, 9] #EUTERPE, DKES, DKES ion
+#FluxColumn = [9] #EUTERPE with Phi1
+#FluxColumn = [9, 9]
+#DensityColumn = [13, 4, 4] #EUTERPE, DKES, DKES Ar16 no Phi1
+DensityColumn = [13, 3, 3] #EUTERPE, DKES, DKES ion
+#DensityColumn = [3, 3]
+sigmaColumn = [-1, -1, -1] #Put -1 if no sigma
+ExternalNorm = [1.0, 10.0**20, 10.0**20] ##Use if normalization in external is different than for the SFINCS results
+#ExternalNorm = [10.0**20, 10.0**20]
 
 ##NORMALIZATION FACTORS FOR SI UNITS##
 ######################################
@@ -251,11 +260,11 @@ if withExternal :
                 except:
                     LegendLabel = externalfile
                 if FilledErrors or (not ErrorBars[linenumber]) or sigmaColumn[externalCounter] == -1:
-                    plt.plot(inputParams[:,radiusColumn[externalCounter]]/aNorm, inputParams[:,FluxColumn[externalCounter]]/inputParams[:,DensityColumn[externalCounter]]/ExternalNorm[externalCounter], PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel, linewidth=PlotLineWidth)
+                    plt.plot(inputParams[:,radiusColumn[externalCounter]]/aNorm[externalCounter], inputParams[:,FluxColumn[externalCounter]]/inputParams[:,DensityColumn[externalCounter]]/ExternalNorm[externalCounter], PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel, linewidth=PlotLineWidth)
                     if ErrorBars[linenumber] and sigmaColumn[externalCounter] != -1:
-                        plt.fill_between(inputParams[:,radiusColumn[externalCounter]]/aNorm, inputParams[:,FluxColumn[externalCounter]]/inputParams[:,DensityColumn[externalCounter]]/ExternalNorm[externalCounter] + inputParams[:,sigmaColumn[externalCounter]]/inputParams[:,DensityColumn[externalCounter]]/ExternalNorm[externalCounter], inputParams[:,FluxColumn[externalCounter]]/inputParams[:,DensityColumn[externalCounter]]/ExternalNorm[externalCounter] - inputParams[:,sigmaColumn[externalCounter]]/inputParams[:,DensityColumn[externalCounter]]/ExternalNorm[externalCounter], color=PlotLineColors[linenumber], alpha=ErrorBarAlpha)
+                        plt.fill_between(inputParams[:,radiusColumn[externalCounter]]/aNorm[externalCounter], inputParams[:,FluxColumn[externalCounter]]/inputParams[:,DensityColumn[externalCounter]]/ExternalNorm[externalCounter] + inputParams[:,sigmaColumn[externalCounter]]/inputParams[:,DensityColumn[externalCounter]]/ExternalNorm[externalCounter], inputParams[:,FluxColumn[externalCounter]]/inputParams[:,DensityColumn[externalCounter]]/ExternalNorm[externalCounter] - inputParams[:,sigmaColumn[externalCounter]]/inputParams[:,DensityColumn[externalCounter]]/ExternalNorm[externalCounter], color=PlotLineColors[linenumber], alpha=ErrorBarAlpha)
                 else:
-                    plt.errorbar(inputParams[:,radiusColumn[externalCounter]]/aNorm, inputParams[:,FluxColumn[externalCounter]]/inputParams[:,DensityColumn[externalCounter]]/ExternalNorm[externalCounter], fmt=PlotLinespecs[linenumber], yerr=inputParams[:,sigmaColumn[externalCounter]]/inputParams[:,DensityColumn[externalCounter]]/ExternalNorm[externalCounter], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel, linewidth=PlotLineWidth)
+                    plt.errorbar(inputParams[:,radiusColumn[externalCounter]]/aNorm[externalCounter], inputParams[:,FluxColumn[externalCounter]]/inputParams[:,DensityColumn[externalCounter]]/ExternalNorm[externalCounter], fmt=PlotLinespecs[linenumber], yerr=inputParams[:,sigmaColumn[externalCounter]]/inputParams[:,DensityColumn[externalCounter]]/ExternalNorm[externalCounter], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel, linewidth=PlotLineWidth)
                     
 
                 linenumber += 1
@@ -302,10 +311,13 @@ plt.subplots_adjust(left=LeftMargin, right=RightMargin, top=TopMargin, bottom=Bo
 
 if ShowSubPlotLabel:
     plt.text(SubPlotLabelXcoord, SubPlotLabelYcoord, SubPlotLabel)
-
+    
 if NoScientificAxes :
     ax.get_xaxis().get_major_formatter().set_scientific(False)
     ax.get_yaxis().get_major_formatter().set_scientific(False)
+
+if ChangeXaxisTicks:
+    ax.xaxis.set_ticks(NewXaxisTicks)
 
 os.chdir(originalDirectory) 
 

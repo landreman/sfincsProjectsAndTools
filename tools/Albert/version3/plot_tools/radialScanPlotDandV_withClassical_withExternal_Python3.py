@@ -35,8 +35,8 @@ exec(open(sfincsProjectsAndToolsHome + "/tools/Albert/version3/plot_tools"  + "/
 
 species = 3
 
-SFINCSplotWithClassical = [False, True, True, True] #Whether to include classical fluxes in SFINCS results
-SFINCSplotFactors = [10.0, 10.0, 10.0, 1.0] #Factor to multiply SFINCS results
+SFINCSplotWithClassical = [True, True, False] #Whether to include classical fluxes in SFINCS results
+SFINCSplotFactors = [1.0, 10.0, 10.0] #Factor to multiply SFINCS results
 
 legendAtDplot = True #If True the legend will be in the D plot, otherwise in the V plot
 
@@ -421,10 +421,10 @@ if withExternal :
                 if (FilledErrors or (not ErrorBars[linenumber]) or (sigmaVColumn[externalCounter] == -1 and sigmaClassicalVcolumn[externalCounter] == -1)) :
                     
                     #V external
-                    axV.plot(inputParams[:,radiusColumn[externalCounter]]/aNorm, externalVtoPlot, PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel, linewidth=PlotLineWidth)
+                    axV.plot((inputParams[:,radiusColumn[externalCounter]])/aNorm, externalVtoPlot, PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel, linewidth=PlotLineWidth)
                     
                     if (ErrorBars[linenumber] and externalSigmaVtoPlot.size != 0):
-                        axV.fill_between(inputParams[:,radiusColumn[externalCounter]]/aNorm, externalVtoPlot + externalSigmaVtoPlot, externalVtoPlot - externalSigmaVtoPlot, color=PlotLineColors[linenumber], alpha=ErrorBarAlpha)
+                        axV.fill_between((inputParams[:,radiusColumn[externalCounter]])/aNorm, externalVtoPlot + externalSigmaVtoPlot, externalVtoPlot - externalSigmaVtoPlot, color=PlotLineColors[linenumber], alpha=ErrorBarAlpha)
 
                 else :
                     axV.errorbar(inputParams[:,radiusColumn[externalCounter]]/aNorm, externalVtoPlot, fmt=PlotLinespecs[linenumber], yerr=externalSigmaVtoPlot, color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel, linewidth=PlotLineWidth)

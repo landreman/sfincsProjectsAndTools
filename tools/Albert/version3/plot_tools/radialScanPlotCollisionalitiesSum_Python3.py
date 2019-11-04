@@ -252,6 +252,12 @@ if NoScientificAxes :
         ax.get_yaxis().get_major_formatter().set_scientific(False)
     except:
         pass
+
+if ChangeXaxisTicks:
+    ax.xaxis.set_ticks(NewXaxisTicks)
+
+if ChangeYaxisTicks:
+    ax.yaxis.set_ticks(NewYaxisTicks)
     
 os.chdir(originalDirectory) 
 

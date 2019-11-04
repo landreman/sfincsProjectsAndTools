@@ -235,6 +235,12 @@ if NoScientificAxes :
     ax.get_xaxis().get_major_formatter().set_scientific(False)
     ax.get_yaxis().get_major_formatter().set_scientific(False)
 
+if ChangeXaxisTicks:
+    ax.xaxis.set_ticks(NewXaxisTicks)
+
+if ChangeYaxisTicks:
+    ax.yaxis.set_ticks(NewYaxisTicks)
+
 os.chdir(originalDirectory) 
 
 if makePDF: 

@@ -45,7 +45,8 @@ quantityToPlot = "Phi1Hat"
 
 #W7X_180919.055
 #filename = 'SFINCS_kinetic-e_Fokker-Planck_r0p1148.h5'
-filename = 'SFINCS_kinetic-e_Fokker-Planck_r0p220343.h5'
+#filename = 'SFINCS_kinetic-e_Fokker-Planck_r0p220343.h5'
+filename = 'SFINCS_kinetic-e_Fokker-Planck_rOa0p31209.h5'
 
 #ncFilename = "/draco/u/almo/Phi1/LHD/lhd2_A_III/Input/wout_lhd2.nc"
 #ncFilename = "C:/Users/almo/Desktop/svn/sfincs/Impurities/Phi1/Results/LHD_Velasco_PPCF18/input/wout_lhd_r3.60_0.0.nc"
@@ -54,7 +55,8 @@ filename = 'SFINCS_kinetic-e_Fokker-Planck_r0p220343.h5'
 #ncFilename = "C:/Users/almo/Desktop/svn/sfincs/Impurities/Phi1/Results/LHD_Velasco_PPCF18/input/wout_lhd_r3.60_0.0.nc"
 
 #W7X_180919.055
-ncFilename = "C:/Users/almo/Desktop/svn/sfincs/W7-X/OP1.2/W7X_180919.055/Equilibrium/wout_w7x.1000_1000_1000_1000_+0000_+0000.01.00jh_l+252.nc"
+#ncFilename = "C:/Users/almo/Desktop/svn/sfincs/W7-X/OP1.2/W7X_180919.055/Equilibrium/wout_w7x.1000_1000_1000_1000_+0000_+0000.01.00jh_l+252.nc"
+ncFilename = "C:/Users/legen/Desktop/svn/sfincs/W7-X/OP1.2/W7X_180919.055/Equilibrium/wout_w7x.1000_1000_1000_1000_+0000_+0000.01.00jh_l+252.nc"
 
 #FigSize = (12,10)
 FigSize = (10,12)
@@ -96,8 +98,9 @@ ShowColorbar = True
 #cbarTicks = [-12.0, -8.0, -4.0, 0.0, 4.0, 8.0, 12.0] # W7-X OP1.1 TTF poster r/a=0.5
 #cbarTicks = [-20.0, -15.0, -10.0, -5.0, 0.0, 5.0, 10.0] # LHD inward shifted TTF poster r/a=0.8
 #cbarTicks = [-40.0, -30.0, -20.0, -10.0, 0.0, 10.0, 20.0] # LHD inward shifted TTF poster r/a=0.8 with magnetic drifts
-#cbarTicks = [-10.0, -7.5, -5.0, -2.5, 0.0, 2.5, 5.0, 7.5, 10.0] # W7X_180919.055 r/a=0.11
-cbarTicks = [-3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0] # W7X_180919.055 r/a=0.21
+#cbarTicks = [-10.0, -7.5, -5.0, -2.5, 0.0, 2.5, 5.0, 7.5, 10.0] # W7X_180919.055 r/a=0.21
+cbarTicks = [-8.0, -6.0, -4.0, -2.0, 0.0, 2.0, 4.0, 6.0, 8.0] # W7X_180919.055 r/a=0.32
+#cbarTicks = [-3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0] # W7X_180919.055 r/a=0.
 
 #zMin = -2.0 # TJ-II TTF poster r/a=0.6
 #zMax = 2.0 # TJ-II TTF poster r/a=0.6
@@ -107,10 +110,12 @@ cbarTicks = [-3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0] # W7X_180919.055 r/a=0.21
 #zMax = 10.0 # LHD inward shifted TTF poster r/a=0.8
 #zMin = -45.0 # LHD inward shifted TTF poster r/a=0.8 with magnetic drifts
 #zMax = 25.0 # LHD inward shifted TTF poster r/a=0.8 with magnetic drifts
-#zMin = -10.0 # W7X_180919.055 r/a=0.11
-#zMax = 10.0 # W7X_180919.055 r/a=0.11
-zMin = -3.0 # W7X_180919.055 r/a=0.21
-zMax = 3.0 # W7X_180919.055 r/a=0.21
+#zMin = -10.0 # W7X_180919.055 r/a=0.21
+#zMax = 10.0 # W7X_180919.055 r/a=0.21
+zMin = -7.0 # W7X_180919.055 r/a=0.32
+zMax = 7.0 # W7X_180919.055 r/a=0.32
+#zMin = -3.0 # W7X_180919.055 r/a=0.
+#zMax = 3.0 # W7X_180919.055 r/a=0.
 
 zLogAxis = False
 LinearThreshold = 1.0 #In symlog plot
