@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from __future__ import division
 import numpy as np
-import sys, copy
+import sys, os, copy
 import datetime
 
 import mnFourierlib
@@ -70,7 +70,13 @@ class bcgeom(object):
        # signcorr=2: Total toroidal flux will get a sign change (default, as Yuriy Turkin)
 
        def sscan(strng,dtype=float,count=-1):
-           return np.fromstring(strng,dtype,count,sep=' ')
+         if isinstance(strng,list):
+            out=[None]*len(strng)
+            for i in range(len(strng)):
+                out[i]=np.fromstring(strng[i],dtype,count,sep=' ')
+            return tuple(out)  
+         else:    
+            return np.fromstring(strng,dtype,count,sep=' ')
 
        if signcorr==1:
            newsigncorrectionmethod=False
@@ -90,222 +96,231 @@ class bcgeom(object):
            filetype='JG'
 
        if filetype=='JG': 
-         f = open(filename, 'r')
-         f.seek(-1,2)     # go to the file end.
-         eof = f.tell()   # get the end of file location
-         f.seek(0,0)      # go back to file beginning
+         with open(filename, 'r') as f:
+           if sys.version_info[0] == 2:
+               f.seek(-1,2)     # go to the file end.
+           else:
+               f.seek(0, os.SEEK_END)
+               f.seek(f.tell() - 1, os.SEEK_SET)
 
-         YTsign=1 #1 means no sign change, 
-                 #-1 means sign change because YT has resaved JG's file
-         tmp_str=f.readline()
-         concat_str=tmp_str
-         self.headertext=headertxt()
-         if tmp_str[0:2]=='CC':
-           if 'CStconfig' in tmp_str: 
-               YTsign=-1
-           while tmp_str[0:2]=='CC':
-               tmp_str=f.readline()
-               if tmp_str[0:2]=='CC': #comment line
-                   if concat_str[-1]=='\n':
-                       concat_str = concat_str+tmp_str 
-                   else:
-                       concat_str = concat_str+'\n'+tmp_str 
-               if 'CStconfig' in tmp_str:
-                   YTsign=-1
-           if concat_str[-1]=='\n':
-               concat_str=concat_str[:-1]
-           self.headertext.maincomment=concat_str
-         else:
-           self.headertext.maincomment=('CC ----------------------'+
-                                      '------------------------')
+           eof = f.tell()   # get the end of file location
+           f.seek(0,0)      # go back to file beginning
 
-         self.headertext.globalvars=tmp_str
+           YTsign=1 #1 means no sign change, 
+                   #-1 means sign change because YT has resaved JG's file
+           tmp_str=f.readline()
+           concat_str=tmp_str
+           self.headertext=headertxt()
+           if tmp_str[0:2]=='CC':
+             if 'CStconfig' in tmp_str: 
+                 YTsign=-1
+             while tmp_str[0:2]=='CC':
+                 tmp_str=f.readline()
+                 if tmp_str[0:2]=='CC': #comment line
+                     if concat_str[-1]=='\n':
+                         concat_str = concat_str+tmp_str 
+                     else:
+                         concat_str = concat_str+'\n'+tmp_str 
+                 if 'CStconfig' in tmp_str:
+                     YTsign=-1
+             if concat_str[-1]=='\n':
+                 concat_str=concat_str[:-1]
+             self.headertext.maincomment=concat_str
+           else:
+             self.headertext.maincomment=('CC ----------------------'+
+                                        '------------------------')
+
+           self.headertext.globalvars=tmp_str
 
      
-         header_df=sscan(f.readline())
-         self.headertext.surfvars=f.readline() #Variable name line  
-         YTstyle=0
-         if '[A]' in self.headertext.surfvars:
-           #This is a file from Yuriy Turkin. Correct this line to the JG standard
-           YTstyle=1 #indicates Yuriy Turkin style
-           self.headertext.surfvars=(
-             '       s         iota  curr_pol/nper    curr_tor    pprime   sqrt g(0,0)')
-           self.headertext.surfvarunits=(
-             '                            [A]            [A]   dp/ds,[Pa] (dV/ds)/nper')  
-         self.m0b        = header_df[0]
-         self.n0b        = header_df[1]
-         self.nsurf      = int(header_df[2])
-         self.Nperiods   = int(header_df[3])
-         self.psi_a=np.nan #Insert psi_a at this place in the list, but set it later.
-         self.torfluxtot = header_df[4]*YTsign #Note that this is not per pol. angle,
-                                         #note: possible YTsign
-         self.minorradiusW7AS      = header_df[5]
-         self.majorradiusLastbcR00 = header_df[6]
-         if len(header_df)>7:
-           self.minorradiusVMEC=header_df[7]
-         else:
-           self.minorradiusVMEC=np.nan
-         if len(header_df)>8:
-           self.majorradiusVMEC=header_df[8]
-         else:
-           self.majorradiusVMEC=np.nan
-         if len(header_df)>9:
-           self.volumeVMEC=header_df[9]
-         else:
-           self.volumeVMEC=np.nan
+           header_df=sscan(f.readline())
+           self.headertext.surfvars=f.readline() #Variable name line  
+           YTstyle=0
+           if '[A]' in self.headertext.surfvars:
+             #This is a file from Yuriy Turkin. Correct this line to the JG standard
+             YTstyle=1 #indicates Yuriy Turkin style
+             self.headertext.surfvars=(
+               '       s         iota  curr_pol/nper    curr_tor    pprime   sqrt g(0,0)')
+             self.headertext.surfvarunits=(
+               '                            [A]            [A]   dp/ds,[Pa] (dV/ds)/nper')  
+           self.m0b        = header_df[0]
+           self.n0b        = header_df[1]
+           self.nsurf      = int(header_df[2])
+           self.Nperiods   = int(header_df[3])
+           self.psi_a=np.nan #Insert psi_a at this place in the list, but set it later.
+           self.torfluxtot = header_df[4]*YTsign #Note that this is not per pol. angle,
+                                           #note: possible YTsign
+           self.minorradiusW7AS      = header_df[5]
+           self.majorradiusLastbcR00 = header_df[6]
+           if len(header_df)>7:
+             self.minorradiusVMEC=header_df[7]
+           else:
+             self.minorradiusVMEC=np.nan
+           if len(header_df)>8:
+             self.majorradiusVMEC=header_df[8]
+           else:
+             self.majorradiusVMEC=np.nan
+           if len(header_df)>9:
+             self.volumeVMEC=header_df[9]
+           else:
+             self.volumeVMEC=np.nan
          
-         endoffile=False
-         rind=-1
+           endoffile=False
+           rind=-1
    
-         torfluxnorm=np.array([])
-         iota=np.array([])
-         Bphi=np.array([])
-         Btheta=np.array([])
-         dpds=np.array([])
-         dVdsoverNper=np.array([])
-         B00=np.array([])
-         R00=np.array([])
-         no_of_modes=[]
-         modesm=[]
-         modesn=[]
-         modesr=[]
-         modesz=[]
-         modesp=[]
-         modesb=[]
-         modesbnorm=[]
-         modespar=[]
+           torfluxnorm=np.array([])
+           iota=np.array([])
+           Bphi=np.array([])
+           Btheta=np.array([])
+           dpds=np.array([])
+           dVdsoverNper=np.array([])
+           B00=np.array([])
+           R00=np.array([])
+           no_of_modes=[]
+           modesm=[]
+           modesn=[]
+           modesr=[]
+           modesz=[]
+           modesp=[]
+           modesb=[]
+           modesbnorm=[]
+           modespar=[]
 
       
-         while not endoffile:
-           rind=rind+1
-           if verbose>0:
-             sys.stdout.write('\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b%5i/%5i'% (rind+1,self.nsurf))
-           if not(YTstyle): #isempty(strfind(self.headertext.surfvars,'[A]'))
-               self.headertext.surfvarunits=f.readline() #unit line only in JG files
-           #print(surfvarunits: '+self.headertext.surfvarunits)
-           surfheader=sscan(f.readline()) #fscanf(fid,'%f',6)
-           torfluxnorm=np.append(torfluxnorm, surfheader[0])
-           iota =np.append(iota,surfheader[1])
-           Bphi=np.append(Bphi,surfheader[2]*self.Nperiods/2.0/np.pi*(4*np.pi*1e-7)) #Tesla*meter
-           Btheta=np.append(Btheta,surfheader[3]/2.0/np.pi*(4*np.pi*1e-7))              #Tesla*meter
-           dpds=np.append(dpds,surfheader[4])
-           dVdsoverNper=np.append(dVdsoverNper,surfheader[5])
+           while not endoffile:
+             rind=rind+1
+             if verbose>0:
+               sys.stdout.write('\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b%5i/%5i'% (rind+1,self.nsurf))
+             if not(YTstyle): #isempty(strfind(self.headertext.surfvars,'[A]'))
+                 self.headertext.surfvarunits=f.readline() #unit line only in JG files
+             #print(surfvarunits: '+self.headertext.surfvarunits)
+             surfheader=sscan(f.readline()) #fscanf(fid,'%f',6)
+             torfluxnorm=np.append(torfluxnorm, surfheader[0])
+             iota =np.append(iota,surfheader[1])
+             Bphi=np.append(Bphi,surfheader[2]*self.Nperiods/2.0/np.pi*(4*np.pi*1e-7)) #Tesla*meter
+             Btheta=np.append(Btheta,surfheader[3]/2.0/np.pi*(4*np.pi*1e-7))              #Tesla*meter
+             dpds=np.append(dpds,surfheader[4])
+             dVdsoverNper=np.append(dVdsoverNper,surfheader[5])
 
-           #f.readline() #just skip the return character
-           tmpstrunits=f.readline() #units line
-           if rind==0:
-               self.headertext.datavars=tmpstrunits
-               self.StelSym=True
-               if 'rmnc' in self.headertext.datavars:
-                   self.StelSym=False #('rmnc' in self.headertext.datavars)
-                   
-               if not(symmetry=='unknown'):
-                   if self.StelSym and not(symmetry=='StelSym'):
-                       sys.exit('Boozer file is stellarator symmetric, but input to'+
-                                'readBoozerfile said it should be non-stellarator symmetric!')
-                   elif not(self.StelSym) and symmetry=='StelSym':
-                       sys.exit('Boozer file is non-stellarator symmetric,'+
-                                'but input to readBoozerfile said it should be'+
-                                'stellarator symmetric!')
-                  
-           position=f.tell()
-           if self.StelSym:
-               tmp=sscan(f.readline()) #,'%d %d %f %f %f %f',6)
-               while not(tmp[0]==0 and tmp[1]==0):
-                   tmp=sscan(f.readline(),count=6) #sscanf(tmp_str1,'%d %d %f %f %f %f',6)    
-               B00=np.append(B00,tmp[5])
-               R00=np.append(R00,tmp[2])
-           else:
-               tmp=sscan(f.readline())#sscanf(tmp_str1,'%d %d %f %f %f %f %f %f %f %f',10)
-               while not(tmp[0]==0 and tmp[1]==0):
-                   tmp=sscan(f.readline()) #sscanf(tmp_str1,'%d %d %f %f %f %f %f %f %f %f',10)
+             #f.readline() #just skip the return character
+             tmpstrunits=f.readline() #units line
+             if rind==0:
+                 self.headertext.datavars=tmpstrunits
+                 self.StelSym=True
+                 if 'rmnc' in self.headertext.datavars:
+                     self.StelSym=False #('rmnc' in self.headertext.datavars)
+                     
+                 if not(symmetry=='unknown'):
+                     if self.StelSym and not(symmetry=='StelSym'):
+                         sys.exit('Boozer file is stellarator symmetric, but input to'+
+                                  'readBoozerfile said it should be non-stellarator symmetric!')
+                     elif not(self.StelSym) and symmetry=='StelSym':
+                         sys.exit('Boozer file is non-stellarator symmetric,'+
+                                  'but input to readBoozerfile said it should be'+
+                                  'stellarator symmetric!')
+                    
+             position=f.tell()
+             if self.StelSym:
+                 tmp=sscan(f.readline()) #,'%d %d %f %f %f %f',6)
+                 while not(tmp[0]==0 and tmp[1]==0):
+                     tmp=sscan(f.readline(),count=6) #sscanf(tmp_str1,'%d %d %f %f %f %f',6)    
+                 B00=np.append(B00,tmp[5])
+                 R00=np.append(R00,tmp[2])
+             else:
+                 tmp=sscan(f.readline())#sscanf(tmp_str1,'%d %d %f %f %f %f %f %f %f %f',10)
+                 while not(tmp[0]==0 and tmp[1]==0):
+                     tmp=sscan(f.readline()) #sscanf(tmp_str1,'%d %d %f %f %f %f %f %f %f %f',10)
          
-               B00=np.append(B00,tmp[8])
-               R00=np.append(R00,tmp[2])
+                 B00=np.append(B00,tmp[8])
+                 R00=np.append(R00,tmp[2])
 
-           f.seek(position) #Rewind to beginning of surface data
+             f.seek(position) #Rewind to beginning of surface data
        
-           modesm.append(np.array([]))
-           modesn.append(np.array([]))
-           modesr.append(np.array([]))
-           modesz.append(np.array([]))
-           modesp.append(np.array([]))
-           modesb.append(np.array([]))
-           modesbnorm.append(np.array([]))
-           modespar.append(np.array([]))
+             modesm.append(np.array([]))
+             modesn.append(np.array([]))
+             modesr.append(np.array([]))
+             modesz.append(np.array([]))
+             modesp.append(np.array([]))
+             modesb.append(np.array([]))
+             modesbnorm.append(np.array([]))
+             modespar.append(np.array([]))
 
-           proceed=True
-           modeind=-1
-           while proceed:
-               tmp_str=f.readline()
-               if f.tell() == eof+1:
-                   #print('eof found '+tmp_str)
-                   proceed=False
-                   endoffile=True
-                   #print('found end of file')
-               if ('s' in tmp_str): #Next flux surface has been reached
-                   proceed=False
-                   #print('found next surface')
-               else:
-                   #print(tmp_str)
-                   if self.StelSym:
-                       tmp=sscan(tmp_str,count=6)
-                       if ((abs(tmp[5])/B00[rind]>min_Bmn) and
-                           (tmp[0]<=max_m) and (abs(tmp[1])<=maxabs_n)):
-                           modeind=modeind+1
-                           modesm[rind]=np.append(modesm[rind],tmp[0])
-                           modesn[rind]=np.append(modesn[rind],tmp[1])
-                           modesr[rind]=np.append(modesr[rind],tmp[2])
-                           modesz[rind]=np.append(modesz[rind],tmp[3])
-                           modesp[rind]=np.append(modesp[rind],tmp[4])
-                           modesb[rind]=np.append(modesb[rind],tmp[5])
-                           modesbnorm[rind]=np.append(modesbnorm[rind],tmp[5]/B00[rind])
+             proceed=True
+             modeind=-1
+             while proceed:
+                 tmp_str=f.readline()
+                 if f.tell() == eof+1:
+                     #print('eof found '+tmp_str)
+                     proceed=False
+                     endoffile=True
+                     #print('found end of file')
+                 if ('s' in tmp_str): #Next flux surface has been reached
+                     proceed=False
+                     #print('found next surface')
+                 else:
+                     #print(tmp_str)
+                     if self.StelSym:
+                         tmp=sscan(tmp_str,count=6)
+                         if ((abs(tmp[5])/B00[rind]>min_Bmn) and
+                             (tmp[0]<=max_m) and (abs(tmp[1])<=maxabs_n)):
+                             modeind=modeind+1
+                             modesm[rind]=np.append(modesm[rind],tmp[0])
+                             modesn[rind]=np.append(modesn[rind],tmp[1])
+                             modesr[rind]=np.append(modesr[rind],tmp[2])
+                             modesz[rind]=np.append(modesz[rind],tmp[3])
+                             modesp[rind]=np.append(modesp[rind],tmp[4])
+                             modesb[rind]=np.append(modesb[rind],tmp[5])
+                             modesbnorm[rind]=np.append(modesbnorm[rind],tmp[5]/B00[rind])
 
-                   else:
-                       tmp=sscan(tmp_str,count=10)
-                       if (tmp[0]<=max_m) and (abs(tmp[1])<=maxabs_n):
-                           if (abs(tmp[8])/B00[rind]>min_Bmn):
-                               #Cosinus component
-                               modeind=modeind+1
-                               modesm[rind]=np.append(modesm[rind],tmp[0])
-                               modesn[rind]=np.append(modesn[rind],tmp[1])
-                               modesr[rind]=np.append(modesr[rind],tmp[2])
-                               modesz[rind]=np.append(modesz[rind],tmp[5])
-                               modesp[rind]=np.append(modesp[rind],tmp[7])
-                               modesb[rind]=np.append(modesb[rind],tmp[8])
-                               modesbnorm[rind]=np.append(modesbnorm[rind],tmp[8]/B00[rind])
-                               modespar[rind]=np.append(modespar[rind],1) #parity 1 <=> Cosinus component
+                     else:
+                         tmp=sscan(tmp_str,count=10)
+                         if (tmp[0]<=max_m) and (abs(tmp[1])<=maxabs_n):
+                             if (abs(tmp[8])/B00[rind]>min_Bmn):
+                                 #Cosinus component
+                                 modeind=modeind+1
+                                 modesm[rind]=np.append(modesm[rind],tmp[0])
+                                 modesn[rind]=np.append(modesn[rind],tmp[1])
+                                 modesr[rind]=np.append(modesr[rind],tmp[2])
+                                 modesz[rind]=np.append(modesz[rind],tmp[5])
+                                 modesp[rind]=np.append(modesp[rind],tmp[7])
+                                 modesb[rind]=np.append(modesb[rind],tmp[8])
+                                 modesbnorm[rind]=np.append(modesbnorm[rind],tmp[8]/B00[rind])
+                                 modespar[rind]=np.append(modespar[rind],1) #parity 1 <=> Cosinus component
 
-                           if  (abs(tmp[9])/B00[rind]>min_Bmn):
-                               #Sinus component
-                               modeind=modeind+1
-                               modesm[rind]=np.append(modesm[rind],tmp[0])
-                               modesn[rind]=np.append(modesn[rind],tmp[1])
-                               modesr[rind]=np.append(modesr[rind],tmp[3])
-                               modesz[rind]=np.append(modesz[rind],tmp[4])
-                               modesp[rind]=np.append(modesp[rind],tmp[6])
-                               modesb[rind]=np.append(modesb[rind],tmp[9])
-                               modesbnorm[rind]=np.append(modesbnorm[rind],tmp[9]/B00[rind])
-                               modespar[rind]=np.append(modespar[rind],0) #parity 0 <=> Sinus component
-                           #end
-                       #end
-                   #end
-               #end
-           #end while proceed
-           if modeind==-1:
-              sys.exit('no modes found for rind='+str(rind))
+                             if  (abs(tmp[9])/B00[rind]>min_Bmn):
+                                 #Sinus component
+                                 modeind=modeind+1
+                                 modesm[rind]=np.append(modesm[rind],tmp[0])
+                                 modesn[rind]=np.append(modesn[rind],tmp[1])
+                                 modesr[rind]=np.append(modesr[rind],tmp[3])
+                                 modesz[rind]=np.append(modesz[rind],tmp[4])
+                                 modesp[rind]=np.append(modesp[rind],tmp[6])
+                                 modesb[rind]=np.append(modesb[rind],tmp[9])
+                                 modesbnorm[rind]=np.append(modesbnorm[rind],tmp[9]/B00[rind])
+                                 modespar[rind]=np.append(modespar[rind],0) #parity 0 <=> Sinus component
+                             #end
+                         #end
+                     #end
+                 #end
+             #end while proceed
+             if modeind==-1:
+                sys.exit('no modes found for rind='+str(rind))
 
-           no_of_modes.append(int(modeind+1))
+             no_of_modes.append(int(modeind+1))
 
-         #end while loop over radii
-         f.close()
+           #end while loop over radii
+         #end with open(filename, 'r') as f
          if verbose>0:
            print('') #go to new line
          
          if any([a>0 for a in dVdsoverNper]):
-           sys.exit('The coordinate system in the Boozer '+
+           print('The coordinate system in the Boozer '+
                     'file should be left handed, but it has '+
-                    'a positive Jacobian. Something is wrong!')
+                    'a positive Jacobian. Something is wrong! '+
+                    'I have had this for LHD bc files before. '+
+                    'The problem was perhaps introduced by Nikolai. '+
+                    'The sign will be changed!')
+           dVdsoverNper=-np.abs(dVdsoverNper)
 
          if self.torfluxtot*Bphi[0]>0:
            if not(self.StelSym):
@@ -864,15 +879,16 @@ class bcgeom(object):
   # majorradiusconvention='lastR00' (default) Joachim Geiger's convention
   # majorradiusconvention='VMEC'
   def write(self,filename,Nradii=None,min_Bmn=0.0,nsortstyle=None,printheadercomment=True,
-            minorradiusconvention='W7AS',majorradiusconvention='lastR00'):
+            minorradiusconvention='W7AS',majorradiusconvention='lastR00',HMstandardradii=None):
       #argument Nradii is only used for .dat files.
       #First check which type of file the user wants.
       if filename[-3:]=='.bc':
           filetype='bc'
       elif filename[-4:]=='.dat':
           filetype='dat'
-          if Nradii is None:
-              Nradii=7 #7 is the default for HM's DKES runs
+          #190503: Changed so that Nradii=None now writes all available radii instead of the HM 7 choice.
+          ##if Nradii is None:
+          ##    Nradii=7 #7 is the default for HM's DKES runs
       else: #if no file extension is given, assume .bc
           filetype='bc' 
           filename=filename+'.bc'
@@ -883,16 +899,28 @@ class bcgeom(object):
           else:
               selfie=self.filter(min_Bmn)
       else: #.dat
-          if Nradii != self.nsurf:
+          #190503: Changed so that Nradii=None now writes all available radii instead of the HM 7 choice.
+          if HMstandardradii is None:
+            if Nradii is None or Nradii==self.nsurf:
+              HMstandardradii=False
+            else:       
+              HMstandardradii=True
+          if not(HMstandardradii):
+              selfie=self.interp(self.s,'s','linear').filter(min_Bmn) #This is just to retrieve dBdrnorm
+          else: # Nradii != self.nsurf:
+              print("Nradii != nsurf. Interpolating to Nradii='+str(Nradii)+' radii according to HM's standard.")
               #HS's choice:
               #rnorms=np.linspace(self.rnorm[0],self.rnorm[-1],num=Nradii+1,endpoint=False)
               #HM's choice:
               rnorms=np.linspace(0.0,1.0,Nradii,endpoint=False)+1.0/Nradii/2.0
-              rnorms[ 0] = max(rnorms[ 0],self.rnorm[ 0])
-              rnorms[-1] = min(rnorms[-1],self.rnorm[-1])
-              selfie=self.interp(rnorms**2.0,'s','linear').filter(min_Bmn)
-          else:
-              selfie=self.interp(self.s,'s','linear').filter(min_Bmn) #This is just to retrieve dBdrnorm
+              ss=rnorms**2.0
+              ss[ 0] = max(ss[ 0],self.s[ 0])
+              ss[-1] = min(ss[-1],self.s[-1])
+              if np.any(np.diff(ss)<0.0):
+                  print('s='+str(ss))
+                  print('s is non-monotonic!')
+                  sys.exit('HM style choice of '+str(Nradii)+' radii failed. Please reduce Nradii!')
+              selfie=self.interp(ss,'s','linear').filter(min_Bmn)
               
       f = open(filename, 'w')
       now = datetime.datetime.now()
@@ -1141,7 +1169,7 @@ class bcgeom(object):
                    f.write('cc %3d%5d%6d%4d%16.6E%10.5f%10.5f%11.5f%11.5f%11.5f\n'%
                            (selfie.m0b,selfie.n0b,selfie.nsurf,selfie.Nperiods,torfluxtot,
                             chosenminorradius,chosenmajorradius,
-                            selfie.minorradiusVMEC,selfie.majorradiusVMEC,selfie.VolumeVMEC))
+                            selfie.minorradiusVMEC,selfie.majorradiusVMEC,selfie.volumeVMEC))
                 else:
                    f.write('cc %3d%5d%6d%4d%16.6E%10.5f%10.5f\n'%
                            (selfie.m0b,selfie.n0b,selfie.nsurf,selfie.Nperiods,torfluxtot,
@@ -1164,7 +1192,7 @@ class bcgeom(object):
                    f.write(' cc %6d%4d%10.5f%10.5f%11.5f%11.5f%11.5f\n'%
                            (selfie.nsurf,selfie.Nperiods,
                             chosenminorradius,chosenmajorradius,
-                            selfie.minorradiusVMEC,selfie.majorradiusVMEC,selfie.VolumeVMEC))
+                            selfie.minorradiusVMEC,selfie.majorradiusVMEC,selfie.volumeVMEC))
                 else:
                    f.write('cc %6d%4d%10.5f%10.5f\n'%
                            (selfie.nsurf,selfie.Nperiods,
@@ -1243,11 +1271,14 @@ class bcgeom(object):
       if invarname=='s':
           s=invar
           if (padding is None) and (np.any(s<smin) or np.any(s>smax)):
+            print('In bcgeom.interp: s='+str(s))
+            print('smin='+str(smin)+', smax='+str(smax))
             sys.exit('Chosen s out of range!')
       elif invarname=='rnorm':
           s=invar**2
           if (padding is None) and (np.any(s<smin) or np.any(s>smax)):
-            sys.exit('Chosen rnorm out of range!')
+            sys.exit('Chosen rnorm '+str(invar)+' out of range! rnorm_min='+str(np.sqrt(smin))+
+                     ', rnorm_max='+str(np.sqrt(smax)))
       elif invarname=='rW7AS':
           s=(invar/self.minorradiusW7AS)**2
           if (padding is None) and (np.any(s<smin) or np.any(s>smax)):
@@ -1271,8 +1302,12 @@ class bcgeom(object):
       out=copy.deepcopy(self)
 
       s=np.sort(s)
-      if np.any(np.diff(s)<=0):
-          sys.exit('invar contains doublets')
+      if np.any(np.diff(s)<0):
+          print('s='+str(s))
+          sys.exit('In bcgeom.interp: '+invarname+' is non-monotonic')
+      if np.any(np.diff(s)==0):
+          print('s='+str(s))
+          sys.exit('In bcgeom.interp: '+invarname+' contains doublets')
       out.nsurf=len(s)
 
       if interptype=='linear': #This is the default case
@@ -1311,9 +1346,12 @@ class bcgeom(object):
               else:
                   exactind=np.where(self.s==s[surfind])[0][0]
                   Rind=exactind+1
-                  if exactind==len(s):
+                  if exactind==len(s)-1:
                       Rind=len(s)-1
-                      
+
+              #print('self.s='+str(self.s))
+              #print('s='+str(s[surfind]))
+              #print('Rind='+str(Rind))
               Lind=Rind-1
               
               Ds=self.s[Rind]-self.s[Lind]
@@ -1693,174 +1731,661 @@ class vmecgeom(object):
         return nc_attrs, nc_dims, nc_vars
 
 
+    if filename.endswith('.nc'):
+      dataset=Dataset(filename)
+      nc_attrs, nc_dims, nc_vars = ncdump(dataset)
+      #print(nc_vars
     
-    dataset=Dataset(filename)
-    nc_attrs, nc_dims, nc_vars = ncdump(dataset)
-    #print(nc_vars
-    
-    self.StelSym=not('bmns' in dataset.variables)
-    self.skip = 1 #=1,this is how many elements are skipped at low radii when going to half grid
-    self.filename         =filename
-    self.version_         =float(dataset.variables['version_'][:])
-    self.input_extension  =''.join(dataset.variables['input_extension'][:])
-    self.mgrid_file       =''.join(dataset.variables['mgrid_file'][:])
-    if 'pcurr_type'.encode('utf-8') in nc_vars:
-        self.pcurr_type       =''.join(dataset.variables['pcurr_type'][:])
-    if 'pmass_type'.encode('utf-8') in nc_vars:
-        self.pmass_type       =''.join(dataset.variables['pmass_type'][:])
-    if 'piota_type'.encode('utf-8') in nc_vars:
-        self.piota_type       =''.join(dataset.variables['piota_type'][:])
-    self.wb               =float(dataset.variables['wb'][:])
-    self.wp               =float(dataset.variables['wp'][:])
-    self.gamma            =float(dataset.variables['gamma'][:])
-    self.rmax_surf        =float(dataset.variables['rmax_surf'][:])
-    self.rmin_surf        =float(dataset.variables['rmin_surf'][:])
-    self.zmax_surf        =float(dataset.variables['zmax_surf'][:])
-    self.nfp              =int(dataset.variables['nfp'][:])
-    self.ns               =int(dataset.variables['ns'][:])
-    self.mpol             =int(dataset.variables['mpol'][:])
-    self.ntor             =int(dataset.variables['ntor'][:])
-    self.mnmax            =int(dataset.variables['mnmax'][:])
-    self.mnmax_nyq        =int(dataset.variables['mnmax_nyq'][:])
-    self.niter            =int(dataset.variables['niter'][:])
-    self.itfsq            =float(dataset.variables['itfsq'][:])
-    self.lasym__logical__ =bool(dataset.variables['lasym__logical__'][:])
-    self.lrecon__logical__=bool(dataset.variables['lrecon__logical__'][:])
-    self.lfreeb__logical__=bool(dataset.variables['lfreeb__logical__'][:])
-    if 'lrfp__logical__'.encode('utf-8') in nc_vars:
-        self.lrfp__logical__  =bool(dataset.variables['lrfp__logical__'][:])
-    self.ier_flag         =int(dataset.variables['ier_flag'][:])
-    self.aspect           =float(dataset.variables['aspect'][:])
-    self.betatotal        =float(dataset.variables['betatotal'][:])
-    self.betapol          =float(dataset.variables['betapol'][:])
-    self.betator          =float(dataset.variables['betator'][:])
-    self.betaxis          =float(dataset.variables['betaxis'][:])
-    self.b0               =float(dataset.variables['b0'][:])
-    self.rbtor0           =float(dataset.variables['rbtor0'][:])
-    self.rbtor            =float(dataset.variables['rbtor'][:])
-    self.signgs           =int(dataset.variables['signgs'][:])
-    self.IonLarmor        =float(dataset.variables['IonLarmor'][:])
-    self.volavgB          =float(dataset.variables['volavgB'][:])
-    self.ctor             =float(dataset.variables['ctor'][:])
-    self.Aminor_p         =float(dataset.variables['Aminor_p'][:])
-    self.Rmajor_p         =float(dataset.variables['Rmajor_p'][:])
-    self.volume_p         =float(dataset.variables['volume_p'][:])
-    if 'ftolv'.encode('utf-8') in nc_vars:
-        self.ftolv            =float(dataset.variables['ftolv'][:])
-    if 'fsql'.encode('utf-8') in nc_vars:
-        self.fsql             =float(dataset.variables['fsql'][:])
-    if 'fsqr'.encode('utf-8') in nc_vars:
-        self.fsqr             =float(dataset.variables['fsqr'][:])
-    if 'fsqz'.encode('utf-8') in nc_vars:
-        self.fsqz             =float(dataset.variables['fsqz'][:])
-    self.nextcur          =float(dataset.variables['nextcur'][:])
-    self.extcur           =np.array(dataset.variables['extcur'][:]).astype(float)
-    self.mgrid_mode       =''.join(dataset.variables['mgrid_mode'][:])
-    self.xm               =np.array(dataset.variables['xm'][:]).astype(int)
-    self.xn               =np.array(dataset.variables['xn'][:]).astype(int)
-    self.xm_nyq           =np.array(dataset.variables['xm_nyq'][:]).astype(int)
-    self.xn_nyq           =np.array(dataset.variables['xn_nyq'][:]).astype(int)
-    self.raxis_cc         =np.array(dataset.variables['raxis_cc'][:]).astype(float)
-    self.zaxis_cs         =np.array(dataset.variables['zaxis_cs'][:]).astype(float)
-    if 'raxis_cs' in dataset.variables:
-        self.raxis_cs         =np.array(dataset.variables['raxis_cs'][:]).astype(float)
-        self.zaxis_cc         =np.array(dataset.variables['zaxis_cc'][:]).astype(float)
-    else:
-        self.raxis_cs=np.nan
-        self.zaxis_cc=np.nan
-    if 'am'.encode('utf-8') in nc_vars:
-        self.am               =np.array(dataset.variables['am'][:]).astype(float)
-    if 'ac'.encode('utf-8') in nc_vars:
-        self.ac               =np.array(dataset.variables['ac'][:]).astype(float)
-    if 'ai'.encode('utf-8') in nc_vars:
-        self.ai               =np.array(dataset.variables['ai'][:]).astype(float)
-    if 'am_aux_s'.encode('utf-8') in nc_vars:
-        self.am_aux_s         =np.array(dataset.variables['am_aux_s'][:]).astype(float)
-    if 'am_aux_f'.encode('utf-8') in nc_vars:
-        self.am_aux_f         =np.array(dataset.variables['am_aux_f'][:]).astype(float)
-    if 'am_aux_s'.encode('utf-8') in nc_vars:
-        self.ai_aux_s         =np.array(dataset.variables['ai_aux_s'][:]).astype(float)
-    if 'ai_aux_f'.encode('utf-8') in nc_vars:
-        self.ai_aux_f         =np.array(dataset.variables['ai_aux_f'][:]).astype(float)
-    if 'ac_aux_s'.encode('utf-8') in nc_vars:
-        self.ac_aux_s         =np.array(dataset.variables['ac_aux_s'][:]).astype(float)
-    if 'ac_aux_f'.encode('utf-8') in nc_vars:
-        self.ac_aux_f         =np.array(dataset.variables['ac_aux_f'][:]).astype(float)
-    self.iotaf            =np.array(dataset.variables['iotaf'][:]).astype(float)
-    if 'q_factor' in dataset.variables:
-      self.q_factor         =np.array(dataset.variables['q_factor'][:]).astype(float)
-    else:
-      self.q_factor         =np.nan*self.iotaf
-    self.presf            =np.array(dataset.variables['presf'][:]).astype(float)
-    self.phi              =np.array(dataset.variables['phi'][:]).astype(float)
-    self.phipf            =np.array(dataset.variables['phipf'][:]).astype(float)
-    if 'chi' in dataset.variables:
-      self.chi              =np.array(dataset.variables['chi'][:]).astype(float)
-      self.chipf            =np.array(dataset.variables['chipf'][:]).astype(float)
-    else:
-      self.chi              =np.nan*self.phi
-      self.chipf            =np.nan*self.phi
-    self.jcuru            =np.array(dataset.variables['jcuru'][:]).astype(float)
-    self.jcurv            =np.array(dataset.variables['jcurv'][:]).astype(float)
-    self.iotas            =np.array(dataset.variables['iotas'][:]).astype(float)
-    self.mass             =np.array(dataset.variables['mass'][:]).astype(float)
-    self.pres             =np.array(dataset.variables['pres'][:]).astype(float)
-    self.beta_vol         =np.array(dataset.variables['beta_vol'][:]).astype(float)
-    self.buco             =np.array(dataset.variables['buco'][:]).astype(float)
-    self.bvco             =np.array(dataset.variables['bvco'][:]).astype(float)
-    self.vp               =np.array(dataset.variables['vp'][:]).astype(float)
-    self.specw            =np.array(dataset.variables['specw'][:]).astype(float)
-    self.phips            =np.array(dataset.variables['phips'][:]).astype(float)
-    self.over_r           =np.array(dataset.variables['over_r'][:]).astype(float)
-    self.jdotb            =np.array(dataset.variables['jdotb'][:]).astype(float)
-    self.bdotgradv        =np.array(dataset.variables['bdotgradv'][:]).astype(float)
-    self.DMerc            =np.array(dataset.variables['DMerc'][:]).astype(float)
-    self.DShear           =np.array(dataset.variables['DShear'][:]).astype(float)
-    self.DWell            =np.array(dataset.variables['DWell'][:]).astype(float)
-    self.DCurr            =np.array(dataset.variables['DCurr'][:]).astype(float)
-    self.DGeod            =np.array(dataset.variables['DGeod'][:]).astype(float)
-    self.equif            =np.array(dataset.variables['equif'][:]).astype(float)
-    self.fsqt             =np.array(dataset.variables['fsqt'][:]).astype(float)
-    self.wdot             =np.array(dataset.variables['wdot'][:]).astype(float)
+      self.StelSym=not('bmns' in dataset.variables)
+      self.skip = 1 #=1,this is how many elements are skipped at low radii when going to half grid
+      self.filename         =filename
+      self.version_         =float(dataset.variables['version_'][:])
+      self.input_extension  =''.join(dataset.variables['input_extension'][:])
+      self.mgrid_file       =''.join(dataset.variables['mgrid_file'][:])
+      if 'pcurr_type'.encode('utf-8') in nc_vars:
+          self.pcurr_type       =''.join(dataset.variables['pcurr_type'][:])
+      if 'pmass_type'.encode('utf-8') in nc_vars:
+          self.pmass_type       =''.join(dataset.variables['pmass_type'][:])
+      if 'piota_type'.encode('utf-8') in nc_vars:
+          self.piota_type       =''.join(dataset.variables['piota_type'][:])
+      self.wb               =float(dataset.variables['wb'][:])
+      self.wp               =float(dataset.variables['wp'][:])
+      self.gamma            =float(dataset.variables['gamma'][:])
+      self.rmax_surf        =float(dataset.variables['rmax_surf'][:])
+      self.rmin_surf        =float(dataset.variables['rmin_surf'][:])
+      self.zmax_surf        =float(dataset.variables['zmax_surf'][:])
+      self.nfp              =int(dataset.variables['nfp'][:])
+      self.ns               =int(dataset.variables['ns'][:])
+      self.mpol             =int(dataset.variables['mpol'][:])
+      self.ntor             =int(dataset.variables['ntor'][:])
+      self.mnmax            =int(dataset.variables['mnmax'][:])
+      self.mnmax_nyq        =int(dataset.variables['mnmax_nyq'][:])
+      self.niter            =int(dataset.variables['niter'][:])
+      self.itfsq            =float(dataset.variables['itfsq'][:])
+      self.lasym__logical__ =bool(dataset.variables['lasym__logical__'][:])
+      self.lrecon__logical__=bool(dataset.variables['lrecon__logical__'][:])
+      self.lfreeb__logical__=bool(dataset.variables['lfreeb__logical__'][:])
+      if 'lrfp__logical__'.encode('utf-8') in nc_vars:
+          self.lrfp__logical__  =bool(dataset.variables['lrfp__logical__'][:])
+      self.ier_flag         =int(dataset.variables['ier_flag'][:])
+      self.aspect           =float(dataset.variables['aspect'][:])
+      self.betatotal        =float(dataset.variables['betatotal'][:])
+      self.betapol          =float(dataset.variables['betapol'][:])
+      self.betator          =float(dataset.variables['betator'][:])
+      self.betaxis          =float(dataset.variables['betaxis'][:])
+      self.b0               =float(dataset.variables['b0'][:])
+      self.rbtor0           =float(dataset.variables['rbtor0'][:])
+      self.rbtor            =float(dataset.variables['rbtor'][:])
+      self.signgs           =int(dataset.variables['signgs'][:])
+      self.IonLarmor        =float(dataset.variables['IonLarmor'][:])
+      self.volavgB          =float(dataset.variables['volavgB'][:])
+      self.ctor             =float(dataset.variables['ctor'][:])
+      self.Aminor_p         =float(dataset.variables['Aminor_p'][:])
+      self.Rmajor_p         =float(dataset.variables['Rmajor_p'][:])
+      self.volume_p         =float(dataset.variables['volume_p'][:])
+      if 'ftolv'.encode('utf-8') in nc_vars:
+          self.ftolv            =float(dataset.variables['ftolv'][:])
+      if 'fsql'.encode('utf-8') in nc_vars:
+          self.fsql             =float(dataset.variables['fsql'][:])
+      if 'fsqr'.encode('utf-8') in nc_vars:
+          self.fsqr             =float(dataset.variables['fsqr'][:])
+      if 'fsqz'.encode('utf-8') in nc_vars:
+          self.fsqz             =float(dataset.variables['fsqz'][:])
+      self.nextcur          =int(dataset.variables['nextcur'][:])
+      self.extcur           =np.array(dataset.variables['extcur'][:]).astype(float)
+      self.mgrid_mode       =''.join(dataset.variables['mgrid_mode'][:])
+      self.xm               =np.array(dataset.variables['xm'][:]).astype(int)
+      self.xn               =np.array(dataset.variables['xn'][:]).astype(int)
+      self.xm_nyq           =np.array(dataset.variables['xm_nyq'][:]).astype(int)
+      self.xn_nyq           =np.array(dataset.variables['xn_nyq'][:]).astype(int)
+      self.raxis_cc         =np.array(dataset.variables['raxis_cc'][:]).astype(float)
+      self.zaxis_cs         =np.array(dataset.variables['zaxis_cs'][:]).astype(float)
+      if 'raxis_cs' in dataset.variables:
+          self.raxis_cs         =np.array(dataset.variables['raxis_cs'][:]).astype(float)
+          self.zaxis_cc         =np.array(dataset.variables['zaxis_cc'][:]).astype(float)
+      else:
+          self.raxis_cs=None
+          self.zaxis_cc=None
+      if 'am'.encode('utf-8') in nc_vars:
+          self.am               =np.array(dataset.variables['am'][:]).astype(float)
+      if 'ac'.encode('utf-8') in nc_vars:
+          self.ac               =np.array(dataset.variables['ac'][:]).astype(float)
+      if 'ai'.encode('utf-8') in nc_vars:
+          self.ai               =np.array(dataset.variables['ai'][:]).astype(float)
+      if 'am_aux_s'.encode('utf-8') in nc_vars:
+          self.am_aux_s         =np.array(dataset.variables['am_aux_s'][:]).astype(float)
+      if 'am_aux_f'.encode('utf-8') in nc_vars:
+          self.am_aux_f         =np.array(dataset.variables['am_aux_f'][:]).astype(float)
+      if 'am_aux_s'.encode('utf-8') in nc_vars:
+          self.ai_aux_s         =np.array(dataset.variables['ai_aux_s'][:]).astype(float)
+      if 'ai_aux_f'.encode('utf-8') in nc_vars:
+          self.ai_aux_f         =np.array(dataset.variables['ai_aux_f'][:]).astype(float)
+      if 'ac_aux_s'.encode('utf-8') in nc_vars:
+          self.ac_aux_s         =np.array(dataset.variables['ac_aux_s'][:]).astype(float)
+      if 'ac_aux_f'.encode('utf-8') in nc_vars:
+          self.ac_aux_f         =np.array(dataset.variables['ac_aux_f'][:]).astype(float)
+      self.iotaf            =np.array(dataset.variables['iotaf'][:]).astype(float)
+      if 'q_factor' in dataset.variables:
+        self.q_factor         =np.array(dataset.variables['q_factor'][:]).astype(float)
+      else:
+        self.q_factor         =np.nan*self.iotaf
+      self.presf            =np.array(dataset.variables['presf'][:]).astype(float)
+      self.phi              =np.array(dataset.variables['phi'][:]).astype(float)
+      self.phipf            =np.array(dataset.variables['phipf'][:]).astype(float)
+      if 'chi' in dataset.variables:
+        self.chi              =np.array(dataset.variables['chi'][:]).astype(float)
+        self.chipf            =np.array(dataset.variables['chipf'][:]).astype(float)
+      else:
+        self.chi              =np.nan*self.phi
+        self.chipf            =np.nan*self.phi
+      self.jcuru            =np.array(dataset.variables['jcuru'][:]).astype(float)
+      self.jcurv            =np.array(dataset.variables['jcurv'][:]).astype(float)
+      self.iotas            =np.array(dataset.variables['iotas'][:]).astype(float)
+      self.mass             =np.array(dataset.variables['mass'][:]).astype(float)
+      self.pres             =np.array(dataset.variables['pres'][:]).astype(float)
+      self.beta_vol         =np.array(dataset.variables['beta_vol'][:]).astype(float)
+      self.buco             =np.array(dataset.variables['buco'][:]).astype(float)
+      self.bvco             =np.array(dataset.variables['bvco'][:]).astype(float)
+      self.vp               =np.array(dataset.variables['vp'][:]).astype(float)
+      self.specw            =np.array(dataset.variables['specw'][:]).astype(float)
+      self.phips            =np.array(dataset.variables['phips'][:]).astype(float)
+      self.over_r           =np.array(dataset.variables['over_r'][:]).astype(float)
+      self.jdotb            =np.array(dataset.variables['jdotb'][:]).astype(float)
+      self.bdotgradv        =np.array(dataset.variables['bdotgradv'][:]).astype(float)
+      self.DMerc            =np.array(dataset.variables['DMerc'][:]).astype(float)
+      self.DShear           =np.array(dataset.variables['DShear'][:]).astype(float)
+      self.DWell            =np.array(dataset.variables['DWell'][:]).astype(float)
+      self.DCurr            =np.array(dataset.variables['DCurr'][:]).astype(float)
+      self.DGeod            =np.array(dataset.variables['DGeod'][:]).astype(float)
+      self.equif            =np.array(dataset.variables['equif'][:]).astype(float)
+      self.fsqt             =np.array(dataset.variables['fsqt'][:]).astype(float)
+      self.wdot             =np.array(dataset.variables['wdot'][:]).astype(float)
 
-    self.rmnc             =np.array(dataset.variables['rmnc'][:,:]).astype(float)
-    self.zmns             =np.array(dataset.variables['zmns'][:,:]).astype(float)
-    self.lmns             =np.array(dataset.variables['lmns'][:,:]).astype(float)
-    self.gmnc             =np.array(dataset.variables['gmnc'][:,:]).astype(float)
-    self.bmnc             =np.array(dataset.variables['bmnc'][:,:]).astype(float)
-    self.bsubumnc         =np.array(dataset.variables['bsubumnc'][:,:]).astype(float)
-    self.bsubvmnc         =np.array(dataset.variables['bsubvmnc'][:,:]).astype(float)
-    self.bsubsmns         =np.array(dataset.variables['bsubsmns'][:,:]).astype(float)
-    self.bsupumnc         =np.array(dataset.variables['bsupumnc'][:,:]).astype(float)
-    self.bsupvmnc         =np.array(dataset.variables['bsupvmnc'][:,:]).astype(float)
-    if self.StelSym:
-      self.rmns             =np.nan
-      self.zmnc             =np.nan
-      self.lmnc             =np.nan
-      self.gmns             =np.nan
-      self.bmns             =np.nan
-      self.bsubumns         =np.nan
-      self.bsubvmns         =np.nan
-      self.bsubsmnc         =np.nan
-      self.bsupumns         =np.nan
-      self.bsupvmns         =np.nan
+      self.rmnc             =np.array(dataset.variables['rmnc'][:,:]).astype(float)
+      self.zmns             =np.array(dataset.variables['zmns'][:,:]).astype(float)
+      self.lmns             =np.array(dataset.variables['lmns'][:,:]).astype(float)
+      self.gmnc             =np.array(dataset.variables['gmnc'][:,:]).astype(float)
+      self.bmnc             =np.array(dataset.variables['bmnc'][:,:]).astype(float)
+      self.bsubumnc         =np.array(dataset.variables['bsubumnc'][:,:]).astype(float)
+      self.bsubvmnc         =np.array(dataset.variables['bsubvmnc'][:,:]).astype(float)
+      self.bsubsmns         =np.array(dataset.variables['bsubsmns'][:,:]).astype(float)
+      self.bsupumnc         =np.array(dataset.variables['bsupumnc'][:,:]).astype(float)
+      self.bsupvmnc         =np.array(dataset.variables['bsupvmnc'][:,:]).astype(float)
+      if self.StelSym:
+        self.rmns             =np.nan
+        self.zmnc             =np.nan
+        self.lmnc             =np.nan
+        self.gmns             =np.nan
+        self.bmns             =np.nan
+        self.bsubumns         =np.nan
+        self.bsubvmns         =np.nan
+        self.bsubsmnc         =np.nan
+        self.bsupumns         =np.nan
+        self.bsupvmns         =np.nan
+      else:
+        self.rmns             =np.array(dataset.variables['rmns'][:,:]).astype(float)
+        self.zmnc             =np.array(dataset.variables['zmnc'][:,:]).astype(float)
+        self.lmnc             =np.array(dataset.variables['lmnc'][:,:]).astype(float)
+        self.gmns             =np.array(dataset.variables['gmns'][:,:]).astype(float)
+        self.bmns             =np.array(dataset.variables['bmns'][:,:]).astype(float)
+        self.bsubumns         =np.array(dataset.variables['bsubumns'][:,:]).astype(float)
+        self.bsubvmns         =np.array(dataset.variables['bsubvmns'][:,:]).astype(float)
+        self.bsubsmnc         =np.array(dataset.variables['bsubsmnc'][:,:]).astype(float)
+        self.bsupumns         =np.array(dataset.variables['bsupumns'][:,:]).astype(float)
+        self.bsupvmns         =np.array(dataset.variables['bsupvmns'][:,:]).astype(float)
+
+    #######################################################################################    
+    # Read VMEC .txt file
+    #######################################################################################    
+    elif filename.endswith('.txt'):
+      self.filename=filename
+      self.input_extension='txt'
+      def sscan(strng,dtype=float,count=-1):
+        if isinstance(strng,list):
+            out=[None]*len(strng)
+            for i in range(len(strng)):
+                out[i]=np.fromstring(strng[i],dtype,count,sep=' ')
+            return tuple(out)  
+        else:    
+            return np.fromstring(strng,dtype,count,sep=' ')
+        
+      eps_w = 1.0e-4 #a small number.
+      with open(filename) as f:
+          fl = f.readlines()
+      c_vmec_version_string=fl[0]
+      c_version_number=c_vmec_version_string[c_vmec_version_string.find('=')+1:]
+      r_version_number=float(c_version_number)
+      self.version_=r_version_number
+
+      (self.wb, self.wp, self.gamma, self.pfac,
+       self.rmax_surf, self.rmin_surf, self.zmax_surf)=sscan(fl[1])
+
+      if r_version_number > 8.00:
+          (self.nfp, self.ns, self.mpol, self.ntor, self.mnmax, self.mnmax_nyq,
+           self.itfsq, self.niter, self.iasym, self.ireconstruct, self.ier_flag)=sscan(fl[2],dtype=int)
+      else:    
+          (self.nfp, self.ns, self.mpol, self.ntor, self.mnmax, self.itfsq, self.niter,
+           self.iasym, self.ireconstruct, self.ier_flag)=sscan(fl[2],dtype=int)
+          self.mnmax_nyq=self.mnmax #both are the same
+      self.StelSym=(self.iasym!=1)
+      if self.mnmax_nyq==self.mnmax:
+        mpol_nyq=self.mpol
+        ntor_nyq=self.ntor
+      else:    
+        mpol_nyq=self.mpol*2+1  
+        ntor_nyq=self.ntor*2  
+          
+      self.lasym__logical__ =(self.iasym==1)
+      self.lrecon__logical__=(self.ireconstruct==1)
+      self.lfreeb__logical__=None
+      self.lrfp__logical__  =None
+
+      (self.imse2_minus_1,self.itse, self.nbsets, self.nobd,
+       self.nextcur, self.nstore_seq)=sscan(fl[3],dtype=int)
+      i=4 #line index
+      if self.nbsets > 0:
+        i+=1 #  these values are not stored in the data structure.
+      self.mgrid_file=fl[i].rstrip()
+      
+      i+=1
+      self.xm=np.zeros((self.mnmax),dtype=int)
+      self.xn=np.zeros((self.mnmax),dtype=int)
+      self.xm_nyq=np.zeros((self.mnmax_nyq),dtype=int)
+      self.xn_nyq=np.zeros((self.mnmax_nyq),dtype=int)
+      
+      self.rmnc=np.zeros(((self.ntor*2+1)*self.mpol,self.ns))
+      self.zmns=np.zeros(((self.ntor*2+1)*self.mpol,self.ns))
+      self.lmns=np.zeros(((self.ntor*2+1)*self.mpol,self.ns))
+      
+      self.bmnc=np.zeros(((ntor_nyq*2+1)*mpol_nyq,self.ns))
+      self.gmnc=np.zeros(((ntor_nyq*2+1)*mpol_nyq,self.ns))
+      self.bsubumnc=np.zeros(((ntor_nyq*2+1)*mpol_nyq,self.ns))
+      self.bsubvmnc=np.zeros(((ntor_nyq*2+1)*mpol_nyq,self.ns))
+      self.bsubsmns=np.zeros(((ntor_nyq*2+1)*mpol_nyq,self.ns))
+      self.bsupumnc=np.zeros(((ntor_nyq*2+1)*mpol_nyq,self.ns))
+      self.bsupvmnc=np.zeros(((ntor_nyq*2+1)*mpol_nyq,self.ns))
+      if r_version_number <= 8.00:
+        self.currvmnc=np.zeros(((ntor_nyq*2+1)*mpol_nyq,self.ns))
+        
+      if self.iasym==1:
+        self.rmns=np.zeros(((self.ntor*2+1)*self.mpol,self.ns))
+        self.zmnc=np.zeros(((self.ntor*2+1)*self.mpol,self.ns))
+        self.lmnc=np.zeros(((self.ntor*2+1)*self.mpol,self.ns))
+
+        self.bmns=np.zeros(((ntor_nyq*2+1)*mpol_nyq,self.ns))
+        self.gmns=np.zeros(((ntor_nyq*2+1)*mpol_nyq,self.ns))
+        self.bsubumns=np.zeros(((ntor_nyq*2+1)*mpol_nyq,self.ns))
+        self.bsubvmns=np.zeros(((ntor_nyq*2+1)*mpol_nyq,self.ns))
+        self.bsubsmnc=np.zeros(((ntor_nyq*2+1)*mpol_nyq,self.ns))
+        self.bsupumns=np.zeros(((ntor_nyq*2+1)*mpol_nyq,self.ns))
+        self.bsupvmns=np.zeros(((ntor_nyq*2+1)*mpol_nyq,self.ns))
+
+      #Start with rmn,zmn,lmn
+      if r_version_number > 8.00:
+        for j in range(self.ns):
+          lind=0
+          for m in range(self.mpol):
+            nmin=-self.ntor
+            if m==0:
+              nmin=0
+            for n in range(nmin,self.ntor+1):
+              if j==0:
+                (md,nd)=sscan(fl[i])
+                i+=1
+              (self.rmnc[lind,j],self.zmns[lind,j],self.lmns[lind,j])=sscan(fl[i])
+              i+=1
+              self.xm[lind]=m
+              self.xn[lind]=n*self.nfp
+              if self.iasym == 1:
+                (self.rmns[lind,j],self.zmnc[lind,j],self.lmnc[lind,j])=sscan(fl[i])
+                i+=1  
+              lind+=1
+            #end for n
+          #end for m
+
+          #Now load the Nyqvist grid quantities
+          lind=0
+          for m in range(mpol_nyq):
+            nmin=-ntor_nyq
+            if m==0:
+              nmin=0
+            for n in range(nmin,ntor_nyq+1):
+              if j==0:
+                (md,nd)=sscan(fl[i])
+                i+=1
+              (self.bmnc[lind,j],self.gmnc[lind,j],self.bsubumnc[lind,j],self.bsubvmnc[lind,j],
+               self.bsubsmns[lind,j],self.bsupumnc[lind,j],self.bsupvmnc[lind,j])=sscan(fl[i])
+              i+=1
+              self.xm_nyq[lind]=m
+              self.xn_nyq[lind]=n*self.nfp
+              if self.iasym == 1:
+                (self.bmns[lind,j],self.gmns[lind,j],self.bsubumns[lind,j],self.bsubvmns[lind,j],
+                 self.bsubsmnc[lind,j],self.bsupumns[lind,j],self.bsupvmns[lind,j])=sscan(fl[i])
+                i+=1
+              lind+=1
+            #end for n
+          #end for m
+        #end for j  
+      else: #r_version_number <= 8.00:
+        for j in range(self.ns):
+          lind=0
+          for m in range(self.mpol):
+            nmin=-self.ntor
+            if m==0:
+              nmin=0
+            for n in range(nmin,self.ntor+1):
+              if j==0:
+                (md,nd)=sscan(fl[i])
+                i+=1
+              (self.rmnc[lind,j],self.zmns[lind,j],self.lmns[lind,j],
+               self.bmnc[lind,j],self.gmnc[lind,j],self.bsubumnc[lind,j],self.bsubvmnc[lind,j],
+               self.bsubsmns[lind,j],self.bsupumnc[lind,j],self.bsupvmnc[lind,j],self.currvmnc[lind,j])=sscan(fl[i])
+              i+=1
+              self.xm[lind]=m
+              self.xn[lind]=n*self.nfp
+              if self.iasym == 1:
+                (self.rmns[lind,j],self.zmnc[lind,j],self.lmnc[lind,j],
+                 self.bmns[lind,j],self.gmns[lind,j],self.bsubumns[lind,j],self.bsubvmns[lind,j],
+                 self.bsubsmnc[lind,j],self.bsupumns[lind,j],self.bsupvmns[lind,j])=sscan(fl[i])
+                i+=1  
+              lind+=1
+            #end for n
+          #end for m
+          self.xm_nyq=self.xm
+          self.xn_nyq=self.xn
+        #end for j  
+      #end if version
+                               
+      self.iotaf   =np.zeros((self.ns))
+      self.presf   =np.zeros((self.ns))
+      self.phipf   =np.zeros((self.ns))
+      self.phi     =np.zeros((self.ns))
+      self.jcuru   =np.zeros((self.ns))
+      self.jcurv   =np.zeros((self.ns))
+      self.iotas   =np.zeros((self.ns))
+      self.mass    =np.zeros((self.ns))
+      self.pres    =np.zeros((self.ns))
+      self.beta_vol=np.zeros((self.ns))
+      self.phip    =np.zeros((self.ns))
+      self.buco    =np.zeros((self.ns))
+      self.bvco    =np.zeros((self.ns))
+      self.vp      =np.zeros((self.ns))
+      self.over_r  =np.zeros((self.ns))
+      self.specw   =np.zeros((self.ns))
+
+      # reading of profiles.
+      # This part has been copied from the read_wout_mod.f-file of LIBSTELL.
+      if r_version_number <= 6.05+eps_w:
+        quants=['iotas','mass','pres','phip','buco','bvco','phi','vp','over_r','jcuru','jcurv','specw']
+        tmp=sscan(fl[i])
+        i+=1    
+        for qi in range(len(quants)):
+          setattr(self,quants[qi],np.insert(tmp[(self.ns-1)*qi:(self.ns-1)*(qi+1)],0,0.0))
+        (self.aspect, self.betatot, self.betapol, self.betator, self.betaxis, self.b0)=sscan(fl[i])
+        i+=1
+      elif r_version_number <= 6.20+eps_w:
+        quants=['iotas','mass','pres','beta_vol','phip','buco','bvco','phi','vp','over_r','jcuru','jcurv','specw']
+        tmp=sscan(fl[i])
+        i+=1    
+        for qi in range(len(quants)):
+          setattr(self,quants[qi],np.insert(tmp[(self.ns-1)*qi:(self.ns-1)*(qi+1)],0,0.0))
+        (self.aspect, self.betatot, self.betapol, self.betator, self.betaxis, self.b0)=sscan(fl[i])
+        i+=1
+      elif r_version_number <= 6.95+eps_w:
+        quants=['iotas','mass','pres','beta_vol','phip','buco','bvco','phi','vp','over_r','jcuru','jcurv','specw']
+        tmp=sscan(fl[i])
+        i+=1    
+        for qi in range(len(quants)):
+          setattr(self,quants[qi],np.insert(tmp[(self.ns-1)*qi:(self.ns-1)*(qi+1)],0,0.0))
+        (self.aspect, self.betatot, self.betapol, self.betator, self.betaxis, self.b0)=sscan(fl[i])
+        i+=1
+      else:
+        quants=['iotaf','presf','phipf','phi','jcuru','jcurv']
+        tmp=sscan(fl[i])
+        i+=1     
+        for qi in range(len(quants)):
+          setattr(self,quants[qi],tmp[self.ns*qi:self.ns*(qi+1)])
+          
+        quants=['iotas','mass','pres','beta_vol','phip','buco','bvco','vp','over_r','specw']
+        tmp=sscan(fl[i])
+        i+=1     
+        for qi in range(len(quants)):
+          setattr(self,quants[qi],np.insert(tmp[(self.ns-1)*qi:(self.ns-1)*(qi+1)],0,0.0))
+          
+        (self.aspect, self.betatot, self.betapol, self.betator, self.betaxis, self.b0)=sscan(fl[i])
+        i+=1
+
+      if r_version_number > 6.10+eps_w:
+        self.signgs=sscan(fl[i])[0]
+        i+=1
+        #print('len='+str(len(fl[i])))
+        self.input_extension=fl[i].rstrip()
+        i+=1
+        (self.IonLarmor, self.VolAvgB, self.rbtor0, self.rbtor, self.ctor,
+         self.Aminor_p, self.Rmajor_p, self.volume_p)=sscan(fl[i])
+        i+=1
+        
+      # Mercier criterion  
+      self.DMerc =np.zeros((self.ns))
+      self.DShear=np.zeros((self.ns))
+      self.DWell =np.zeros((self.ns))
+      self.DCurr =np.zeros((self.ns))
+      self.DQeod =np.zeros((self.ns))
+      self.equif =np.zeros((self.ns))
+      quants=['DMerc','DShear','DWell','DCurr','DGeod','equif']
+      tmp=sscan(fl[i])
+      #print('lentot='+str(len(tmp)))
+      #print('len/6='+str(len(tmp)/6.0))
+      i+=1
+      if (r_version_number > 5.10+eps_w) and (r_version_number< 6.20-eps_w):
+        for qi in range(len(quants)):
+          setattr(self,quants[qi],np.insert(tmp[(self.ns-1)*qi:(self.ns-1)*(qi+1)],0,0.0))
+      elif r_version_number >= 6.20-eps_w:
+        for qi in range(len(quants)):
+          setattr(self,quants[qi],np.append(np.insert(tmp[(self.ns-2)*qi:(self.ns-2)*(qi+1)],0,0.0),[0.0]))
+
+      if self.nextcur>0:
+        self.extcur=sscan(fl[i])
+        i+=1
+        self.curlabel=fl[i]
+        i+=1
+      else:
+        self.curlabel=None
+        self.extcur=None
+        
+      self.unidentified=[]  
+      while i<len(fl):
+        self.unidentified.append(fl[i])
+        i+=1
+      #print('len(unidentified)='+str(len(self.unidentified)))
+      #print('i='+str(i))
+      #print('len(fl)='+str(len(fl)))
+      #print('fl[-1]='+str(fl[-1]))
+      #print('len(sscan(self.unidentified[0]))='+str(len(sscan(self.unidentified[0]))))      
+      #print('len(sscan(self.unidentified[1]))='+str(len(sscan(self.unidentified[1]))))      
+
     else:
-      self.rmns             =np.array(dataset.variables['rmns'][:,:]).astype(float)
-      self.zmnc             =np.array(dataset.variables['zmnc'][:,:]).astype(float)
-      self.lmnc             =np.array(dataset.variables['lmnc'][:,:]).astype(float)
-      self.gmns             =np.array(dataset.variables['gmns'][:,:]).astype(float)
-      self.bmns             =np.array(dataset.variables['bmns'][:,:]).astype(float)
-      self.bsubumns         =np.array(dataset.variables['bsubumns'][:,:]).astype(float)
-      self.bsubvmns         =np.array(dataset.variables['bsubvmns'][:,:]).astype(float)
-      self.bsubsmnc         =np.array(dataset.variables['bsubsmnc'][:,:]).astype(float)
-      self.bsupumns         =np.array(dataset.variables['bsupumns'][:,:]).astype(float)
-      self.bsupvmns         =np.array(dataset.variables['bsupvmns'][:,:]).astype(float)
-
-    #sys.exit('tuuut')
-    #self.tut=5
-
+      sys.exit('Error: Unknown file extension in the file '+filename+' !') 
+        
   ####################################################################
-  
+
+  def write(self,filename):
+    if not(filename.endswith('.txt')):
+      sys.exit('Error in writing vmecgeom: Only .txt files supported so far.')
+    #if self.version_<=8.00:
+    #  sys.exit('Error in writing vmecgeom: Only saving of .txt files with version > 8.00 implemented. '+
+    #           'This file hase is version {:4.2f}'.format(self.version_))
+    eps_w = 1.0e-4 #a small number.
+    frme=' {:.15E}'
+    frmf15=' {:.15f}'
+    frmf16=' {:.16f}'
+    frmd='{:d}'
+    def frmfune(vals):
+        lista=[None]*len(vals)
+        for i in range(len(lista)):
+          if vals[i]==0.0 or abs(vals[i])>=10.0**5 or abs(vals[i])<0.1:
+            lista[i]=frme.format(vals[i])
+          else:
+            p=0
+            while abs(vals[i])>=10.0**p:
+              p+=1
+            thisform=' {:.'+str(16-p)+'f}'  
+            lista[i]=thisform.format(vals[i]) 
+          #elif abs(vals[i])>=1.0 and abs(vals[i])<10.0:
+          #  lista[i]=frmf15.format(vals[i])
+          #elif abs(vals[i])<1.0:  
+          #  lista[i]=frmf16.format(vals[i])            
+          #elif abs(vals[i])<100.0: 
+          #  lista[i]=' {:.14f}'.format(vals[i])
+          #else:
+          #  lista[i]=' {:.13f}'.format(vals[i])    
+        return ''.join(lista)    
+    def frmfunf(vals):
+        lista=[None]*len(vals)
+        for i in range(len(lista)):
+            lista[i]=frmf15.format(vals[i])
+        return ''.join(lista)    
+    def frmfund(vals):
+        lista=[None]*len(vals)
+        for i in range(len(lista)):
+            lista[i]=' '+frmd.format(vals[i])
+        return ''.join(lista)    
+    try:
+        f=open(filename,'w')
+    except:
+        sys.error('Error in writing vmecgeom: Could not open the file '+filename+' for writing!')    
+    
+    fl=['VMEC VERSION = {:4.2f}'.format(self.version_)+'\n']
+    fl.append(frmf15.format(self.wb)+frmfune([self.wp, self.gamma])+
+                        frmfunf([self.pfac,self.rmax_surf, self.rmin_surf])+
+                        frmf16.format(self.zmax_surf)+'\n')
+    if self.version_ > 8.00:
+      fl.append(frmfund([self.nfp, self.ns, self.mpol, self.ntor, self.mnmax, self.mnmax_nyq,
+                         self.itfsq, self.niter, self.iasym, self.ireconstruct, self.ier_flag])+'\n')
+    else:
+      fl.append(frmfund([self.nfp, self.ns, self.mpol, self.ntor, self.mnmax, self.itfsq, self.niter,
+                         self.iasym, self.ireconstruct, self.ier_flag])+'\n')    
+    fl.append(frmfund([self.imse2_minus_1,self.itse, self.nbsets, self.nobd,
+                       self.nextcur, self.nstore_seq])+'\n')
+    if self.nbsets>0:
+        sys.exit('Error in writing vmecgeom: The variable nbsets>0. Unknown case.')
+    if self.mnmax_nyq==self.mnmax:
+        mpol_nyq=self.mpol
+        ntor_nyq=self.ntor
+    else:    
+        mpol_nyq=self.mpol*2+1  
+        ntor_nyq=self.ntor*2  
+    fl.append(self.mgrid_file+'\n')
+    #print(self.xm)
+    #print(type(self.xm))
+    #fl.append(' '.join(frmfund([self.xm,self.xn])))
+    f.writelines(fl)
+    fl=[]
+    #Start with rmn,zmn,lmn
+    if self.version_ > 8.00:
+      for j in range(self.ns):
+        lind=0
+        for m in range(self.mpol):
+          nmin=-self.ntor
+          if m==0:
+            nmin=0
+          for n in range(nmin,self.ntor+1):
+            if j==0:
+              fl.append(frmfund([self.xm[lind],self.xn[lind]])+'\n')
+            fl.append(frmfune((self.rmnc[lind,j],self.zmns[lind,j],self.lmns[lind,j]))+'\n')
+            #self.xm[lind]=m
+            #self.xn[lind]=n*self.nfp
+            if self.iasym == 1:
+              fl.append(frmfune((self.rmns[lind,j],self.zmnc[lind,j],self.lmnc[lind,j]))+'\n')
+            lind+=1
+          #end for n
+        #end for m
+        f.writelines(fl)
+        fl=[]
+        
+        #Now load the Nyqvist grid quantities
+        lind=0
+        for m in range(mpol_nyq):
+          nmin=-ntor_nyq
+          if m==0:
+            nmin=0
+          for n in range(nmin,ntor_nyq+1):
+            if j==0:
+              fl.append(frmfund([self.xm[lind],self.xn[lind]])+'\n')
+            fl.append(frmfune((self.bmnc[lind,j],self.gmnc[lind,j],self.bsubumnc[lind,j],self.bsubvmnc[lind,j],
+                               self.bsubsmns[lind,j],self.bsupumnc[lind,j],self.bsupvmnc[lind,j]))+'\n')
+            #self.xm_nyq[lind]=m
+            #self.xn_nyq[lind]=n*self.nfp
+            if self.iasym == 1:
+              fl.append(frmfune((self.bmns[lind,j],self.gmns[lind,j],self.bsubumns[lind,j],self.bsubvmns[lind,j],
+                                 self.bsubsmnc[lind,j],self.bsupumns[lind,j],self.bsupvmns[lind,j]))+'\n')
+            lind+=1
+          #end for n
+        #end for m
+        f.writelines(fl)
+        fl=[]        
+      #end for j  
+
+    else: #r_version_number <= 8.00:
+      for j in range(self.ns):
+        lind=0
+        for m in range(self.mpol):
+          nmin=-self.ntor
+          if m==0:
+            nmin=0
+          for n in range(nmin,self.ntor+1):
+            if j==0:
+              fl.append(frmfund([self.xm[lind],self.xn[lind]])+'\n')
+            fl.append(frmfune((self.rmnc[lind,j],self.zmns[lind,j],self.lmns[lind,j],
+             self.bmnc[lind,j],self.gmnc[lind,j],self.bsubumnc[lind,j],self.bsubvmnc[lind,j],
+             self.bsubsmns[lind,j],self.bsupumnc[lind,j],self.bsupvmnc[lind,j],self.currvmnc[lind,j]))+'\n')
+            #self.xm[lind]=m
+            #self.xn[lind]=n*self.nfp
+            if self.iasym == 1:
+              fl.append(frmfune((self.rmns[lind,j],self.zmnc[lind,j],self.lmnc[lind,j],
+               self.bmns[lind,j],self.gmns[lind,j],self.bsubumns[lind,j],self.bsubvmns[lind,j],
+               self.bsubsmnc[lind,j],self.bsupumns[lind,j],self.bsupvmns[lind,j]))+'\n')
+            lind+=1
+          #end for n
+        #end for m
+        f.writelines(fl)
+        fl=[]        
+      #end for j  
+    #end if version
+        
+    if self.version_ <= 6.05+eps_w:
+      quants=['iotas','mass','pres','phip','buco','bvco','phi','vp','over_r','jcuru','jcurv','specw']
+      tmp=np.array([])
+      for qi in range(len(quants)):
+        tmp=np.append(tmp,getattr(self,quants[qi])[1:])#,np.insert(tmp[(self.ns-1)*qi:(self.ns-1)*(qi+1)],0,0.0))
+      fl.append(frmfune(tmp)+'\n')  
+      fl.append(frmfune((self.aspect, self.betatot, self.betapol, self.betator, self.betaxis, self.b0))+'\n')
+    elif self.version_ <= 6.20+eps_w:
+      quants=['iotas','mass','pres','beta_vol','phip','buco','bvco','phi','vp','over_r','jcuru','jcurv','specw']
+      tmp=np.array([])
+      for qi in range(len(quants)):
+        tmp=np.append(tmp,getattr(self,quants[qi])[1:])#,np.insert(tmp[(self.ns-1)*qi:(self.ns-1)*(qi+1)],0,0.0))
+      fl.append(frmfune(tmp)+'\n')  
+      fl.append(frmfune((self.aspect, self.betatot, self.betapol, self.betator, self.betaxis, self.b0))+'\n')
+    elif self.version_ <= 6.95+eps_w:
+      quants=['iotas','mass','pres','beta_vol','phip','buco','bvco','phi','vp','over_r','jcuru','jcurv','specw']
+      tmp=np.array([])
+      for qi in range(len(quants)):
+        tmp=np.append(tmp,getattr(self,quants[qi])[1:])#,np.insert(tmp[(self.ns-1)*qi:(self.ns-1)*(qi+1)],0,0.0))
+      fl.append(frmfune(tmp)+'\n')
+      fl.append(frmfune((self.aspect, self.betatot, self.betapol, self.betator, self.betaxis, self.b0))+'\n')
+    else:
+      quants=['iotaf','presf','phipf','phi','jcuru','jcurv']
+      tmp=np.array([])
+      for qi in range(len(quants)):
+        tmp=np.append(tmp,getattr(self,quants[qi]))#,tmp[self.ns*qi:self.ns*(qi+1)])
+      fl.append(frmfune(tmp)+'\n')
+      quants=['iotas','mass','pres','beta_vol','phip','buco','bvco','vp','over_r','specw']
+      tmp=np.array([])
+      for qi in range(len(quants)):
+        tmp=np.append(tmp,getattr(self,quants[qi])[1:])#,np.insert(tmp[(self.ns-1)*qi:(self.ns-1)*(qi+1)],0,0.0))
+      fl.append(frmfune(tmp)+'\n')
+        
+      fl.append(frmfune((self.aspect, self.betatot, self.betapol, self.betator, self.betaxis, self.b0))+'\n')
+
+    if self.version_ > 6.10+eps_w:
+      fl.append(' {:d}'.format(int(self.signgs))+'\n')
+      if len(self.input_extension)<=101:
+        fl.append('{:100}'.format(self.input_extension)+'\n')
+      else:
+        fl.append(self.input_extension+'\n')    
+      fl.append(frmfune((self.IonLarmor, self.VolAvgB, self.rbtor0, self.rbtor, self.ctor,
+                         self.Aminor_p, self.Rmajor_p, self.volume_p))+'\n')
+      
+    f.writelines(fl)
+    fl=[]
+    
+    # Mercier criterion  
+    quants=['DMerc','DShear','DWell','DCurr','DGeod','equif']
+    #tmp=sscan(fl[i])
+    #print('len='+str(len(tmp)/6.0))
+    if (self.version_ > 5.10+eps_w) and (self.version_< 6.20-eps_w):
+      tmp=np.array([])  
+      for qi in range(len(quants)):
+        tmp=np.append(tmp,getattr(self,quants[qi])[1:])#,np.insert(tmp[(self.ns-1)*qi:(self.ns-1)*(qi+1)],0,0.0))
+      fl.append(frmfune(tmp)+'\n')
+    elif self.version_ >= 6.20-eps_w:
+      tmp=np.array([])    
+      for qi in range(len(quants)):
+        tmp=np.append(tmp,getattr(self,quants[qi])[1:-1])
+        #setattr(self,quants[qi],np.append(np.insert(tmp[(self.ns-2)*qi:(self.ns-2)*(qi+1)],0,0.0),[0.0]))
+      fl.append(frmfune(tmp)+'\n')
+    if self.nextcur>0:
+      fl.append(frmfune((self.extcur))+'\n')  
+      fl.append(self.curlabel)
+    f.writelines(fl)
+    if hasattr(self,'unidentified'):
+      for i in range(len(self.unidentified)):
+        f.write(self.unidentified[i])  
+    f.close()      
+    #sys.exit('Under construction!!')  
+
+  #####################################################################################################    
   def disp(self,verbose=False):
     frm='{:8.4f}'
     frme='{:10.4e}'
@@ -1874,17 +2399,21 @@ class vmecgeom(object):
         print('version_       = '+str(self.version_))
         print('input_extension= '+self.input_extension)
         print('mgrid_file     = '+self.mgrid_file)
-        print('pcurr_type     = '+self.pcurr_type)
-        print('pmass_type     = '+self.pmass_type)
-        print('piota_type     = '+self.piota_type)
-        print('mgrid_mode     = '+self.mgrid_mode)
+        if hasattr(self,'pcurr_type'):
+          print('pcurr_type     = '+self.pcurr_type)
+        if hasattr(self,'pmass_type'):
+          print('pmass_type     = '+self.pmass_type)
+        if hasattr(self,'piota_type'):
+          print('piota_type     = '+self.piota_type)
+        if hasattr(self,'mgrid_mode'):
+          print('mgrid_mode     = '+self.mgrid_mode)
         print(' ' )
     print('-----------------------------------------------')
     print('Scalars:')
     print('-----------------------------------------------')
     if verbose:
-        print('wb                   = '+frm.format(self.wb)+' :')
-        print('wp                   = '+frm.format(self.wp)+' :')
+        print('wb                   = '+frm.format(self.wb)+' : Magnetic energy')
+        print('wp                   = '+frm.format(self.wp)+' : Plasma energy')
         print('gamma                = '+frm.format(self.gamma)+' :')
         print('rmax_surf            = '+frm.format(self.rmax_surf)+' :')
         print('rmin_surf            = '+frm.format(self.rmin_surf)+' :')
@@ -1902,30 +2431,46 @@ class vmecgeom(object):
         print('lasym__logical__     =     '+str(self.lasym__logical__)+' :')
         print('lrecon__logical__    =    '+str(self.lrecon__logical__)+' :')
         print('lfreeb__logical__    =    '+str(self.lfreeb__logical__)+' :')
-        print('lrfp__logical__      =    '+str(self.lrfp__logical__)+' :')
+        if hasattr(self,'lrfp__logical__'):
+          print('lrfp__logical__      =    '+str(self.lrfp__logical__)+' :')
         print('ier_flag             = '+frmi.format(self.ier_flag)+' :')
         print('aspect               = '+frm.format(self.aspect)+' :')
-    print('betatotal            = '+frm.format(self.betatotal)+' :')
+    if hasattr(self,'betatotal'):
+        print('betatotal            = '+frm.format(self.betatotal)+' :')
     print('betapol              = '+frm.format(self.betapol)+' :')
     print('betator              = '+frm.format(self.betator)+' :')
     print('betaxis              = '+frm.format(self.betaxis)+' :')
     print('b0                   = '+frm.format(self.b0)+' :')
     if verbose:
-        print('rbtor0               = '+frm.format(self.rbtor0)+' :')
-        print('rbtor                = '+frm.format(self.rbtor)+' :')
-        print('signgs               = '+frmi.format(self.signgs)+' :')
-        print('IonLarmor            = '+frm.format(self.IonLarmor)+' :')
-        print('volavgB              = '+frm.format(self.volavgB)+' :')
-        print('ctor                 = '+frm.format(self.ctor)+' :')
-    print('Aminor_p             = '+frm.format(self.Aminor_p)+' : Minor radius')
-    print('Rmajor_p             = '+frm.format(self.Rmajor_p)+' : Major radius')
-    print('volume_p             = '+frm.format(self.volume_p)+' :')
+        if hasattr(self,'rbtor0'):
+            print('rbtor0               = '+frm.format(self.rbtor0)+' :')
+        if hasattr(self,'rbtor'):
+            print('rbtor                = '+frm.format(self.rbtor)+' :')
+        if hasattr(self,'signs'):
+            print('signgs               = '+frmi.format(self.signgs)+' :')
+        if hasattr(self,'IonLarmor'):
+            print('IonLarmor            = '+frm.format(self.IonLarmor)+' :')
+        if hasattr(self,'volavgB'):
+            print('volavgB              = '+frm.format(self.volavgB)+' :')
+        if hasattr(self,'ctor'):
+            print('ctor                 = '+frm.format(self.ctor)+' :')
+    if hasattr(self,'Aminor_p'):
+        print('Aminor_p             = '+frm.format(self.Aminor_p)+' : Minor radius')
+    if hasattr(self,'Rmajor_p'):
+        print('Rmajor_p             = '+frm.format(self.Rmajor_p)+' : Major radius')
+    if hasattr(self,'volume_p'):
+        print('volume_p             = '+frm.format(self.volume_p)+' :')
     if verbose:
-        print('ftolv                = '+frm.format(self.ftolv)+' :')
-        print('fsql                 = '+frm.format(self.fsql)+' :')
-        print('fsqr                 = '+frm.format(self.fsqr)+' :')
-        print('fsqz                 = '+frm.format(self.fsqz)+' :')
-        print('nextcur              = '+frm.format(self.nextcur)+' :')
+        if hasattr(self,'ftolv'):
+          print('ftolv                = '+frm.format(self.ftolv)+' : Volumetric force residual')
+        if hasattr(self,'fsql'):
+          print('fsql                 = '+frm.format(self.fsql)+' : Lambda force residual')
+        if hasattr(self,'fsqr'):
+          print('fsqr                 = '+frm.format(self.fsqr)+' : R force residual')
+        if hasattr(self,'fsqz'):
+          print('fsqz                 = '+frm.format(self.fsqz)+' : Z force residual')
+        if hasattr(self,'nextcur'):
+          print('nextcur              = '+frmi.format(self.nextcur)+' :')
 
     print(' ')
     if verbose:
@@ -1933,34 +2478,56 @@ class vmecgeom(object):
         print('Arrays:')
         print('-----------------------------------------------')
         print('raxis_cc        '+frs.format(self.xm_nyq.shape)+  ': raxis (cosnv)')
-        print('zaxis_cs        '+frs.format(self.zaxis_cs.shape)+': zaxis (sinnv)')
-        print('raxis_cs        '+frs.format(self.raxis_cs.shape)+': raxis (sinnv)')
-        print('zaxis_cc        '+frs.format(self.zaxis_cc.shape)+': zaxis (cosnv)')
-        print('am              '+frs.format(self.am.shape)+':')
-        print('ac              '+frs.format(self.ac.shape)+':')
-        print('ai              '+frs.format(self.ai.shape)+':')
-        print('am_aux_s        '+frs.format(self.am_aux_s.shape)+':')
-        print('am_aux_f        '+frs.format(self.am_aux_f.shape)+':')
-        print('ai_aux_s        '+frs.format(self.ai_aux_s.shape)+':')
-        print('ai_aux_f        '+frs.format(self.ai_aux_f.shape)+':')
-        print('ac_aux_s        '+frs.format(self.ac_aux_s.shape)+':')
-        print('ac_aux_f        '+frs.format(self.ac_aux_f.shape)+':')
-        print('fsqt            '+frs.format(self.fsqt.shape)+':')
-        print('wdot            '+frs.format(self.wdot.shape)+':')
-        print('extcur          '+frs.format(self.extcur.shape)+':')
+        if hasattr(self,'zaxis_cs'):
+          print('zaxis_cs        '+frs.format(self.zaxis_cs.shape)+': zaxis (sinnv)')
+        if not(self.StelSym):
+          if hasattr(self,'raxis_cs'):
+            print('raxis_cs        '+frs.format(self.raxis_cs.shape)+': raxis (sinnv)')
+          if hasattr(self,'zaxis_cc'):
+            print('zaxis_cc        '+frs.format(self.zaxis_cc.shape)+': zaxis (cosnv)')
+        if hasattr(self,'am'):
+          print('am              '+frs.format(self.am.shape)+': mass profile [Pa]')
+        if hasattr(self,'ac'):
+          print('ac              '+frs.format(self.ac.shape)+': normalised current density [dimensionless] (used if NCURR=1)')
+        if hasattr(self,'ai'):
+          print('ai              '+frs.format(self.ai.shape)+': iota profile (used if NCURR=0)')
+        if hasattr(self,'am_aux_s'):
+          print('am_aux_s        '+frs.format(self.am_aux_s.shape)+': Spline knots')
+        if hasattr(self,'am_aux_f'):
+          print('am_aux_f        '+frs.format(self.am_aux_f.shape)+': Spline values')
+        if hasattr(self,'ai_aux_s'):
+          print('ai_aux_s        '+frs.format(self.ai_aux_s.shape)+': Spline knots')
+        if hasattr(self,'ai_aux_f'):
+          print('ai_aux_f        '+frs.format(self.ai_aux_f.shape)+': Spline values')
+        if hasattr(self,'ac_aux_s'):
+          print('ac_aux_s        '+frs.format(self.ac_aux_s.shape)+': Spline knots')
+        if hasattr(self,'ac_aux_f'):
+          print('ac_aux_f        '+frs.format(self.ac_aux_f.shape)+': Spline values')
+        if hasattr(self,'fsqt'):
+          print('fsqt            '+frs.format(self.fsqt.shape)+':')
+        if hasattr(self,'wdot'):
+          print('wdot            '+frs.format(self.wdot.shape)+': rate of change of energy')
+        if hasattr(self,'extcur'):
+          if not(self.extcur is None):
+            print('extcur          '+frs.format(self.extcur.shape)+':')
+        if hasattr(self,'curlabel'):
+          if not(self.curlabel is None):
+            print('curlabel = '+self.curlabel)
         
     print('-----------------------------------------------')
     print('Radial arrays:')
     print('-----------------------------------------------')
     print('iotaf        '+frs.format(self.iotaf.shape)+   ': q-factor on full mesh')
-    if not((np.isnan(self.q_factor)).all()):
-      print('q_factor     '+frs.format(self.q_factor.shape)+':')
+    if hasattr(self,'q_factor'):
+      if not((np.isnan(self.q_factor)).all()):
+        print('q_factor     '+frs.format(self.q_factor.shape)+':')
     print('presf        '+frs.format(self.presf.shape)+': pressure on full mesh [Pa]')
     print('phi          '+frs.format(self.phi.shape)+  ': Toroidal flux on full mesh [Wb]')
     print('phipf        '+frs.format(self.phipf.shape)+': d(phi)/ds: Toroidal flux deriv on full mesh')
-    if not((np.isnan(self.chi)).all()):
-      print('chi          '+frs.format(self.chi.shape)+  ': Poloidal flux on full mesh [Wb]')
-      print('chipf        '+frs.format(self.chipf.shape)+': d(chi)/ds: Poroidal flux deriv on full mesh')
+    if hasattr(self,'chi'):
+      if not((np.isnan(self.chi)).all()):
+        print('chi          '+frs.format(self.chi.shape)+  ': Poloidal flux on full mesh [Wb]')
+        print('chipf        '+frs.format(self.chipf.shape)+': d(chi)/ds: Poroidal flux deriv on full mesh')
     print('jcuru        '+frs.format(self.jcuru.shape)+':')
     print('jcurv        '+frs.format(self.jcurv.shape)+':')
     print('iotas        '+frs.format(self.iotas.shape)+': iota half')
@@ -1971,10 +2538,14 @@ class vmecgeom(object):
     print('bvco         '+frs.format(self.bvco.shape)+':')
     print('vp           '+frs.format(self.vp.shape)+':')
     print('specw        '+frs.format(self.specw.shape)+':')
-    print('phips        '+frs.format(self.phips.shape)+':')
-    print('over_r       '+frs.format(self.over_r.shape)+':')
-    print('jdotb        '+frs.format(self.jdotb.shape)+':')
-    print('bdotgradv    '+frs.format(self.bdotgradv.shape)+':')
+    if hasattr(self,'phips'):
+      print('phips        '+frs.format(self.phips.shape)+':')
+    if hasattr(self,'over_r'):
+      print('over_r       '+frs.format(self.over_r.shape)+':')
+    if hasattr(self,'jdotb'):
+      print('jdotb        '+frs.format(self.jdotb.shape)+':')
+    if hasattr(self,'bdotgradv'):
+      print('bdotgradv    '+frs.format(self.bdotgradv.shape)+':')
     if verbose:
         print('DMerc        '+frs.format(self.DMerc.shape)+':')
         print('DShear       '+frs.format(self.DShear.shape)+':')

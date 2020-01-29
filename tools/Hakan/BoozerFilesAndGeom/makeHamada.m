@@ -587,7 +587,8 @@ if useFFT
   end
   
   if 1
-    mnmats.Dzetaphi=invJacBdotgrad(fftmn(1-h*FSAB2),iota,NPeriods);
+    zeroout_Deltaiota=1e-10; %Just avoid division by zero 
+    mnmats.Dzetaphi=invJacBdotgrad(fftmn(1-h*FSAB2),iota,NPeriods,zeroout_Deltaiota);
     Dzetaphi=ifftmn(mnmats.Dzetaphi);
   else
     hmn=unmnmat(fftmn(h));
