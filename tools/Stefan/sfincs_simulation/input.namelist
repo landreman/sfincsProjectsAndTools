@@ -1,0 +1,110 @@
+! Input file for SFINCS version 3.
+! See the user manual for documentation of the parameters in this file.
+!----------------------------------------------------------------------
+! Example input file taken from Albert Mollen's simulations in "Flux-surface variations of the electrostatic potential in stellarators: Impact on the radial electric field and neoclassical impurity transport", Plasma physics and controlled fusion (2018)
+
+&general
+/
+
+&geometryParameters
+  rN_wish = 0.123717419954 ! Set by sfincsScan_5.
+  geometryScheme = 11
+
+  inputRadialCoordinate = 3  ! rN
+  inputRadialCoordinateForGradients = 4 ! d/drHat and Er
+!!  vmecRadialOption = 0
+  equilibriumFile = "w7x-m111-pb2.bc"
+/
+
+&speciesParameters
+  nHats = 0.796990899895 0.708436355462 0.00885545444328 ! Set by sfincsScan_5.
+  dnHatdrHats = -0.0629966598518 -0.0559970309794 -0.000699962887242 ! Set by sfincsScan_5.
+  THats = 2.85954105774 3.09165494846 3.09165494846 ! Set by sfincsScan_5.
+  dTHatdrHats = -0.779855761705 -1.58446354283 -1.58446354283 ! Set by sfincsScan_5.
+
+
+
+
+
+  Zs = -1 1 10
+
+  mHats = 0.000545509 1.0 20.18 !!Electron, Hydrogen and Ne10+
+
+  withAdiabatic = .false.
+
+/
+
+&physicsParameters
+  Delta = 4.5694d-3
+  alpha = 1d+0
+  nu_n = 0.00831565d+0
+
+  Er = -1.474464131630108588e+00
+
+  collisionOperator = 0 !!FP
+  includeXDotTerm = .true.
+  includeElectricFieldTermInXiDot = .true.
+  useDKESExBDrift = .false.
+
+  includePhi1 = .true.
+  includePhi1inKineticEquation = .true.
+  quasineutralityOption = 1 !!Full quasineutrality
+
+/
+
+&resolutionParameters
+
+!ss profilesScheme = 1
+!ss Nradius = 30
+!ss rN_max = 0.99744674054
+!ss rN_min = 0.12371742
+ 
+  Ntheta = 27
+!ss NthetaMinFactor = 0.7
+!ss NthetaMaxFactor = 1.5
+!ss NthetaNumRuns = 10
+
+  Nzeta = 111
+!ss NzetaMinFactor = 0.7
+!ss NzetaMaxFactor = 1.5
+!ss NzetaNumRuns = 10
+
+  Nxi = 160
+!ss NxiMinFactor = 0.7
+!ss NxiMaxFactor = 1.5
+!ss NxiNumRuns = 10
+  
+  Nx = 10
+!ss NxMinFactor = 0.58
+!ss NxMaxFactor = 1.42
+!ss NxNumRuns = 7
+
+  NL = 8
+!ss NLMinFactor = 1.0
+!ss NLMaxFactor = 2.0
+!ss NLNumRuns = 3
+
+  solverTolerance = 1d-6
+!ss solverToleranceMinFactor = 0.1
+!ss solverToleranceMaxFactor = 10
+!ss solverToleranceNumRuns = 3
+/
+
+&otherNumericalParameters
+/
+
+&preconditionerOptions
+  !preconditioner_species = 1
+  !preconditioner_x = 1
+  !preconditioner_x_min_L = 0
+  !preconditioner_xi = 0
+/
+
+&export_f
+!  export_full_f = .f.
+!  export_delta_f = .f.
+/
+!ss scanType = 2  ! set by sfincsScan_5.
+!ss NErs = 7  ! set by sfincsScan_5.
+!ss ErMax = 0.8274927541  ! set by sfincsScan_5.
+!ss ErMin = -4.17250724592  ! set by sfincsScan_5.

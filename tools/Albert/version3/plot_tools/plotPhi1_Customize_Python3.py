@@ -74,7 +74,8 @@ ShowColorbar = False
 #ScientificTicks = False
 #cbarTicks = [-200.0, -50.0, -20.0, -5.0, -1.0, 0.0, 1.0, 5.0, 20.0, 50.0, 200.0] # LHD discharge 113208 at t = 4.64 s
 #cbarTicks = [-10.0, -5.0, -1.0, -0.5, 0.0, 0.5, 1.0, 5.0, 10.0] # W7-X_NBI_case_Q34Q78_Z10_Zeff2p0
-cbarTicks = [-15.0, -10.0, -5.0, 0.0, 5.0, 10.0, 15.0] # W7-X OP1.1 EPS poster r/a=0.5
+#cbarTicks = [-15.0, -10.0, -5.0, 0.0, 5.0, 10.0, 15.0] # W7-X OP1.1 EPS poster r/a=0.5
+cbarTicks = [-25.0, -20.0, -15.0, -10.0, -5.0, 0.0, 5.0, 10.0, 15.0, 20.0, 25.0] # EUROfusion report 2019-02
 #cbarTicks = [-5.0, -2.5 -1.0, -0.5, 0.0, 0.5, 1.0, 2.5, 5.0]
 #cbarTicks =None #None for automatic
 
@@ -82,8 +83,10 @@ cbarTicks = [-15.0, -10.0, -5.0, 0.0, 5.0, 10.0, 15.0] # W7-X OP1.1 EPS poster r
 #zMax = 250.0 # LHD discharge 113208 at t = 4.64 s
 #zMin = -15.0 # W7-X_NBI_case_Q34Q78_Z10_Zeff2p0
 #zMax = 15.0 # W7-X_NBI_case_Q34Q78_Z10_Zeff2p0
-zMin = -16.0 # W7-X OP1.1 EPS poster r/a=0.5
-zMax = 16.0 # W7-X OP1.1 EPS poster r/a=0.5
+#zMin = -16.0 # W7-X OP1.1 EPS poster r/a=0.5
+#zMax = 16.0 # W7-X OP1.1 EPS poster r/a=0.5
+zMin = -25.0 # EUROfusion report 2019-02
+zMax = 25.0 # EUROfusion report 2019-02
 #zMin = None #None to get the default value
 #zMax = None #None to get the default value
 zLogAxis = False

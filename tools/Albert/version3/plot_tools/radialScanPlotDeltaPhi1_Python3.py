@@ -16,8 +16,6 @@ for arg in sys.argv:
 
 if makePDF:
     matplotlib.use('PDF')
-else:
-   matplotlib.use('qt5agg')
 
 import matplotlib.pyplot as plt
 
@@ -51,11 +49,20 @@ filename = 'sfincsOutput.h5' ##Name for SFINCS output HDF5 files.
 radiusName = "rN" ##Radial coordinate to use on x-axis. Must be "psiHat", "psiN", "rHat" or "rN".
 
 #plotVariableName = "Er" ##Parameter to plot on y-axis. In this version it must be "Er", "dPhiHatdpsiHat", "dPhiHatdpsiN", "dPhiHatdrHat" or "dPhiHatdrN" .
-plotVariableName = "nHats"
-
+plotVariableName = "Phi1Hat"
+species = 2 #Species with ion temperature
 TransformPlotVariableToOutputUnitsFactor = 1.0
 
-MinFloat = pow(10, -sys.float_info.dig) 
+MinFloat = pow(10, -sys.float_info.dig)
+
+##WRITE DATA TO OUTPUT FILE##
+writeDataToFile = False
+outputFilenamePrefix = "SFINCS_DeltaPhi1_" ##Start of name of output file to which the data is written.
+outputFilenameSuffix = ".dat" ##End of name of output file to which the data is written.
+OutputLabels = ["Er[kV/m]", "e*DeltaPhi1/(2*Ti)"]
+#OutputLabels.append(xAxisLabel)
+#OutputLabels.append(yAxisLabel)
+#############################
 
 ##############################
 ##########END INPUTS##########
@@ -73,7 +80,7 @@ print ("Starting to create a plot from directories in " + originalDirectory)
 PlotDirectories = sorted(filter(os.path.isdir, os.listdir("."))) 
 
 if len(PlotDirectories) < 1:
-    print ("Error! Could not find any directories in " + originalDirectory )
+    print ("Error! Could not find any directories in " + originalDirectory)
     sys.exit(1)
 
 fig = plt.figure(figsize=FigSize) 
@@ -81,7 +88,7 @@ fig.patch.set_facecolor('white')
 
 ax = plt.subplot(1, 1, 1)
 
-#linenumber = 0
+linenumber = 0
 
 for directory in PlotDirectories:
     try:
@@ -103,8 +110,6 @@ for directory in PlotDirectories:
         Nradii = 0
         radii = []
         ydata = []
-
-        Nspecies = 0
         
         for SubDirectory in SubDirectories:
             fullSubDirectory = fullDirectory + "/" + SubDirectory
@@ -117,55 +122,42 @@ for directory in PlotDirectories:
 
                 finished = file["finished"][()] 
                 integerToRepresentTrue = file["integerToRepresentTrue"][()]
-                includePhi1 = file["includePhi1"][()] 
+                includePhi1 = file["includePhi1"][()]
+
+                iteration = file["NIterations"][()] - 1 #Results from last iteration
+                THats = file["THats"][()]
+                alpha = file["alpha"][()]
 
                 if includePhi1 == integerToRepresentTrue:
                     didNonlinearCalculationConverge = file["didNonlinearCalculationConverge"][()]
                     #if plotVariableName == "particleFlux_vm_rHat":
                     #    VariableValue = file["particleFlux_vd_rHat"][()]
-                
-                if (plotVariableName.find('Flux_vd') != -1 or plotVariableName.find('Flux_vE') != -1) and (includePhi1 != integerToRepresentTrue):
-                    print (plotVariableName + " only exists in nonlinear runs, but this is a linear run.") 
-                    print ("Reading " + plotVariableName.replace('Flux_vd', 'Flux_vm').replace('Flux_vE', 'Flux_vm') + " instead.")
-                    VariableValue = file[plotVariableName.replace('Flux_vd', 'Flux_vm').replace('Flux_vE', 'Flux_vm')][()]
-                else:
-                    VariableValue = file[plotVariableName][()]
 
-                Zs = file["Zs"][()]
-                mHats = file["mHats"][()]
-                THats = file["THats"][()]
-                nHats = file["nHats"][()]
-                B0OverBBar = file["B0OverBBar"][()]
-                GHat = file["GHat"][()]
-                IHat = file["IHat"][()]
-                iota = file["iota"][()]
-                nu_n = file["nu_n"][()]
-
-                Nspecies = file["Nspecies"][()]
-
-                DensityToNuFactor = np.absolute((GHat + iota*IHat)*nu_n*Zs**4 / (B0OverBBar*THats**2))
-
+                    Phi1Hat = file[plotVariableName][()] ##Phi1Hat
+                    zMinData = numpy.amin(Phi1Hat[:,:,iteration])
+                    zMaxData = numpy.amax(Phi1Hat[:,:,iteration])
+                    
                 file.close()
-                
-                #if plotVariableName == "particleFlux_vm_rHat":
-                #if plotVariableName.find('Flux_v') != -1:
-                #    VariableValue = VariableValue[:, -1]
-                #    VariableValue = VariableValue[species -1]
 
-                VariableValue = VariableValue * DensityToNuFactor
-
-                VariableValue = TransformPlotVariableToOutputUnitsFactor * VariableValue
                 if includePhi1 == integerToRepresentTrue:
                     if didNonlinearCalculationConverge != integerToRepresentTrue:
                         print ("The nonlinear solver did not converge in " + fullSubDirectory)
                         print ("Continuing with next sub directory.")
                         continue
+                else:
+                    print ("It seems there is no Phi1 in " + fullSubDirectory)
+                    print ("Continuing with next sub directory.")
+                    continue
             except:
                 print ("Error when reading from " + fullSubDirectory + "/" + filename)
                 print ("Maybe the SFINCS run did not finish")
                 print ("Continuing with next sub directory.")
                 continue
 
+            Ti = THats[species - 1] 
+
+            VariableValue = alpha*(zMaxData - zMinData) / (2.0*Ti)
+            VariableValue = TransformPlotVariableToOutputUnitsFactor * VariableValue
             Nradii += 1
             radii.append(radiusValue)
             ydata.append(VariableValue)
@@ -194,14 +186,37 @@ for directory in PlotDirectories:
         print ("")
         print (np.array(ydata_sorted))
 
-        for linenumber in range(0,Nspecies):
-            try:
-                LegendLabel = PlotLegendLabels[linenumber]
-            except:
-                LegendLabel = directory
+        try:
+            LegendLabel = PlotLegendLabels[linenumber]
+        except:
+            LegendLabel = directory
 
-            plt.plot(np.array(radii_sorted), np.array(ydata_sorted)[:, linenumber], PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel, linewidth=PlotLineWidth)
-        #linenumber += 1
+        plt.plot(np.array(radii_sorted), np.array(ydata_sorted), PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel, linewidth=PlotLineWidth)
+        linenumber += 1
+
+
+        if writeDataToFile:
+
+            os.chdir(originalDirectory)
+            outputFilename = outputFilenamePrefix + LegendLabel + outputFilenameSuffix
+
+            #print ""
+            #print "OutputData = " + str(OutputData)
+            #print ""
+            #OutputData = np.array([])
+            OutputData = np.array([radii_sorted]).transpose()
+            #print("TEST")
+            #print(OutputData)
+            #print(np.array([ydata_sorted]).transpose())
+            OutputData = np.concatenate((OutputData, np.array([ydata_sorted]).transpose()), axis=1)
+            #print("TEST2")
+
+            #print ""
+            #print "OutputLabels = " + str(OutputLabels)
+            #print ""
+
+            print ("Writing data to " + outputFilename)
+            np.savetxt(outputFilename, OutputData, delimiter='\t', newline='\n', header='\t'.join(OutputLabels))
 
     except:
         os.chdir(originalDirectory)
@@ -239,17 +254,7 @@ plt.subplots_adjust(left=LeftMargin, right=RightMargin, top=TopMargin, bottom=Bo
 if ShowSubPlotLabel:
     plt.text(SubPlotLabelXcoord, SubPlotLabelYcoord, SubPlotLabel)
 
-if NoScientificAxes :
-    ax.get_xaxis().get_major_formatter().set_scientific(False)
-    ax.get_yaxis().get_major_formatter().set_scientific(False)
-
-if ChangeXaxisTicks:
-    ax.xaxis.set_ticks(NewXaxisTicks)
-
-if ChangeYaxisTicks:
-    ax.yaxis.set_ticks(NewYaxisTicks)
-    
-os.chdir(originalDirectory) 
+os.chdir(originalDirectory)
 
 if makePDF: 
     print ("Saving PDF")  

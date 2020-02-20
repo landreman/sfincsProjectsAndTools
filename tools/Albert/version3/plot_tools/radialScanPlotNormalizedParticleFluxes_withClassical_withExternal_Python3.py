@@ -16,8 +16,6 @@ for arg in sys.argv:
 
 if makePDF:
     matplotlib.use('PDF')
-else:
-   matplotlib.use('qt5agg')
 
 import matplotlib.pyplot as plt
 
@@ -35,6 +33,18 @@ exec(open(sfincsProjectsAndToolsHome + "/tools/Albert/version3/plot_tools"  + "/
 
 ##INPUTS##
 
+species = 3
+
+withExternal = False
+withClassicalExternal = False
+externalDataFileType = '.dkes'
+radiusColumn = 0
+aNorm = 0.51092 ##This is used to normalize if the same radial coordinate is not used in the external data as for the SFINCS results, e.g. r -> r/a. Put to 1.0 if same coordinate.
+FluxColumn = 10
+ClassicalFluxColumn = 13
+FluxNorm = 10**20 ##Use if normalization in external fluxes is different than for the SFINCS results
+DensityColumn = 4
+
 ##NORMALIZATION FACTORS FOR SI UNITS##
 ######################################
 qe = 1.6021766208*10**(-19) #Electron charge
@@ -51,11 +61,19 @@ filename = 'sfincsOutput.h5' ##Name for SFINCS output HDF5 files.
 radiusName = "rN" ##Radial coordinate to use on x-axis. Must be "psiHat", "psiN", "rHat" or "rN".
 
 #plotVariableName = "Er" ##Parameter to plot on y-axis. In this version it must be "Er", "dPhiHatdpsiHat", "dPhiHatdpsiN", "dPhiHatdrHat" or "dPhiHatdrN" .
-plotVariableName = "nHats"
+plotVariableName = "particleFlux_vd_rHat"
+whichClassical = "classicalParticleFlux_rHat"
 
-TransformPlotVariableToOutputUnitsFactor = 1.0
+TransformPlotVariableToOutputUnitsFactor = vbar
 
-MinFloat = pow(10, -sys.float_info.dig) 
+MinFloat = pow(10, -sys.float_info.dig)
+
+##WRITE DATA TO OUTPUT FILE##
+##ONLY WRITING SFINCS DATA##
+writeDataToFile = True
+outputFilenamePrefix = "SFINCS_ImpurityFluxes_" ##Start of name of output file to which the data is written.
+outputFilenameSuffix = ".dat" ##End of name of output file to which the data is written.
+OutputLabels = ["r/a", "Gamma_z/n_z[NEOCLASSICAL]", "Gamma_z/n_z[CLASSICAL+NEOCLASSICAL]"]
 
 ##############################
 ##########END INPUTS##########
@@ -73,7 +91,7 @@ print ("Starting to create a plot from directories in " + originalDirectory)
 PlotDirectories = sorted(filter(os.path.isdir, os.listdir("."))) 
 
 if len(PlotDirectories) < 1:
-    print ("Error! Could not find any directories in " + originalDirectory )
+    print ("Error! Could not find any directories in " + originalDirectory)
     sys.exit(1)
 
 fig = plt.figure(figsize=FigSize) 
@@ -81,7 +99,7 @@ fig.patch.set_facecolor('white')
 
 ax = plt.subplot(1, 1, 1)
 
-#linenumber = 0
+linenumber = 0
 
 for directory in PlotDirectories:
     try:
@@ -103,8 +121,7 @@ for directory in PlotDirectories:
         Nradii = 0
         radii = []
         ydata = []
-
-        Nspecies = 0
+        ydata2 = []
         
         for SubDirectory in SubDirectories:
             fullSubDirectory = fullDirectory + "/" + SubDirectory
@@ -117,7 +134,15 @@ for directory in PlotDirectories:
 
                 finished = file["finished"][()] 
                 integerToRepresentTrue = file["integerToRepresentTrue"][()]
-                includePhi1 = file["includePhi1"][()] 
+                includePhi1 = file["includePhi1"][()]
+
+                nHats = file["nHats"][()]
+
+                classicalParticleFlux = file[whichClassical][()]
+                classicalParticleFlux = classicalParticleFlux[:, -1]
+                classicalParticleFlux = classicalParticleFlux[species -1]
+                classicalParticleFlux = TransformPlotVariableToOutputUnitsFactor * classicalParticleFlux
+                classicalParticleFlux = classicalParticleFlux / nHats[species -1]
 
                 if includePhi1 == integerToRepresentTrue:
                     didNonlinearCalculationConverge = file["didNonlinearCalculationConverge"][()]
@@ -131,28 +156,12 @@ for directory in PlotDirectories:
                 else:
                     VariableValue = file[plotVariableName][()]
 
-                Zs = file["Zs"][()]
-                mHats = file["mHats"][()]
-                THats = file["THats"][()]
-                nHats = file["nHats"][()]
-                B0OverBBar = file["B0OverBBar"][()]
-                GHat = file["GHat"][()]
-                IHat = file["IHat"][()]
-                iota = file["iota"][()]
-                nu_n = file["nu_n"][()]
-
-                Nspecies = file["Nspecies"][()]
-
-                DensityToNuFactor = np.absolute((GHat + iota*IHat)*nu_n*Zs**4 / (B0OverBBar*THats**2))
-
                 file.close()
                 
                 #if plotVariableName == "particleFlux_vm_rHat":
-                #if plotVariableName.find('Flux_v') != -1:
-                #    VariableValue = VariableValue[:, -1]
-                #    VariableValue = VariableValue[species -1]
-
-                VariableValue = VariableValue * DensityToNuFactor
+                if plotVariableName.find('Flux_v') != -1:
+                    VariableValue = VariableValue[:, -1]
+                    VariableValue = VariableValue[species -1] 
 
                 VariableValue = TransformPlotVariableToOutputUnitsFactor * VariableValue
                 if includePhi1 == integerToRepresentTrue:
@@ -166,9 +175,14 @@ for directory in PlotDirectories:
                 print ("Continuing with next sub directory.")
                 continue
 
+            #print("nHat: " + str(nHats[species -1]))
+
+            VariableValue = VariableValue / nHats[species -1]
+
             Nradii += 1
             radii.append(radiusValue)
             ydata.append(VariableValue)
+            ydata2.append(classicalParticleFlux)
 
         if Nradii < 1:
             print ("Could not read any data in " + fullDirectory) 
@@ -178,36 +192,116 @@ for directory in PlotDirectories:
         ##Sort data after radii
         radii_sorted = sorted(radii)
         ydata_sorted = []
+        ydata2_sorted = []
         for radius in radii_sorted:
             ydata_sorted.append(ydata[radii.index(radius)])
+            ydata2_sorted.append(ydata2[radii.index(radius)])
         
         print ("radii: " + str(radii))
         print ("")
         print ("ydata: " + str(ydata))
         print ("")
+        print ("ydata2: " + str(ydata2))
+        print ("")
         print ("radii_sorted: " + str(radii_sorted))
         print ("")
         print ("ydata_sorted: " + str(ydata_sorted))
+        print ("")
+        print ("ydata2_sorted: " + str(ydata2_sorted))
         print ("")
 
         print (np.array(radii_sorted))
         print ("")
         print (np.array(ydata_sorted))
+        print ("")
+        print (np.array(ydata2_sorted))
 
-        for linenumber in range(0,Nspecies):
-            try:
-                LegendLabel = PlotLegendLabels[linenumber]
-            except:
-                LegendLabel = directory
+        try:
+            LegendLabel = PlotLegendLabels[linenumber]
+        except:
+            LegendLabel = directory
 
-            plt.plot(np.array(radii_sorted), np.array(ydata_sorted)[:, linenumber], PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel, linewidth=PlotLineWidth)
-        #linenumber += 1
+        #Neoclassical flux
+        plt.plot(np.array(radii_sorted), np.array(ydata_sorted), PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel, linewidth=PlotLineWidth)
+        linenumber += 1
+
+#        try:
+#            LegendLabel = PlotLegendLabels[linenumber]
+#        except:
+#            LegendLabel = directory
+#
+#        #Classical flux
+#        plt.plot(np.array(radii_sorted), np.array(ydata2_sorted), PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel, linewidth=PlotLineWidth)
+#        linenumber += 1
+
+        try:
+            LegendLabel = PlotLegendLabels[linenumber]
+        except:
+            LegendLabel = directory
+
+        #Neoclassical + classical flux
+        plt.plot(np.array(radii_sorted), np.array(ydata_sorted) + np.array(ydata2_sorted), PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel, linewidth=PlotLineWidth)
+        linenumber += 1
+
+        if writeDataToFile:
+
+            os.chdir(originalDirectory)
+            outputFilename = outputFilenamePrefix + LegendLabel + outputFilenameSuffix
+            outputFilename = outputFilename.replace("$", "")
+            outputFilename = outputFilename.replace("\\", "")
+            outputFilename = outputFilename.replace("/", "")
+            OutputData = np.array([radii_sorted]).transpose()
+            OutputData = np.concatenate((OutputData, np.array([ydata_sorted]).transpose()), axis=1)
+            OutputData = np.concatenate((OutputData, (np.array([ydata_sorted]) + np.array([ydata2_sorted])).transpose()), axis=1)
+            
+            print ("Writing data to " + outputFilename)
+            np.savetxt(outputFilename, OutputData, delimiter='\t', newline='\n', header='\t'.join(OutputLabels))
 
     except:
         os.chdir(originalDirectory)
         print ("Unexpected error when processing " + directory)
         print ("Continuing with next directory.")
         continue
+
+
+##ADD EXTERNAL DATA TO PLOT (E.G. DKES)##
+if withExternal :
+    os.chdir(originalDirectory)
+    externalInputFiles = [];
+
+    for externalfile in os.listdir(originalDirectory):
+        if externalfile.endswith(externalDataFileType):
+            try:
+                inputParams = np.genfromtxt(externalfile, dtype=None, comments="#", skip_header=1)
+                #print(inputParams[:,radiusColumn])
+                #print(inputParams[:,ErColumn])
+                try:
+                    LegendLabel = PlotLegendLabels[linenumber]
+                except:
+                    LegendLabel = externalfile
+                plt.plot(inputParams[:,radiusColumn]/aNorm, inputParams[:,FluxColumn]/inputParams[:,DensityColumn]/FluxNorm, PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel, linewidth=PlotLineWidth)
+                linenumber += 1
+
+                if withClassicalExternal :
+                    try:
+                        LegendLabel = PlotLegendLabels[linenumber]
+                    except:
+                        LegendLabel = externalfile
+                    plt.plot(inputParams[:,radiusColumn]/aNorm, inputParams[:,FluxColumn]/inputParams[:,DensityColumn]/FluxNorm + inputParams[:,ClassicalFluxColumn]/inputParams[:,DensityColumn]/FluxNorm, PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel, linewidth=PlotLineWidth)
+                    linenumber += 1
+
+                externalInputFiles.append(externalfile)
+            except Exception as e:
+                print (e.__class__.__name__, ": ", e.message, "while reading %s" % inputfile)
+                print ("Continuing with next file!")
+                continue
+
+    if len(externalInputFiles) > 0 :
+        print("Read external data files: " + str(externalInputFiles))
+    else:
+        print("Could not read any external data files.")
+
+#########################################
 
 
 plt.xscale(xAxisScale) 
@@ -240,15 +334,12 @@ if ShowSubPlotLabel:
     plt.text(SubPlotLabelXcoord, SubPlotLabelYcoord, SubPlotLabel)
 
 if NoScientificAxes :
-    ax.get_xaxis().get_major_formatter().set_scientific(False)
-    ax.get_yaxis().get_major_formatter().set_scientific(False)
+    try:
+        ax.get_xaxis().get_major_formatter().set_scientific(False)
+        ax.get_yaxis().get_major_formatter().set_scientific(False)
+    except:
+        pass
 
-if ChangeXaxisTicks:
-    ax.xaxis.set_ticks(NewXaxisTicks)
-
-if ChangeYaxisTicks:
-    ax.yaxis.set_ticks(NewYaxisTicks)
-    
 os.chdir(originalDirectory) 
 
 if makePDF: 

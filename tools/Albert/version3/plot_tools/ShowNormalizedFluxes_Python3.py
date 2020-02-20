@@ -15,7 +15,7 @@ from subprocess import call
 
 print ("This is "+ inspect.getfile(inspect.currentframe()))
 
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 #matplotlib.rcParams['text.usetex'] = True
 #matplotlib.rcParams['text.latex.unicode'] = True

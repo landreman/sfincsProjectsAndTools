@@ -33,7 +33,7 @@ exec(open(sfincsProjectsAndToolsHome + "/tools/Albert/version3/plot_tools"  + "/
 
 ##INPUTS##
 
-externalDataFileType = '.newdat'
+externalDataFileType = '.dat'
 radiusColumn = 0
 PlotColumn = 1
 

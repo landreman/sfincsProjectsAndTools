@@ -62,7 +62,7 @@ ContourLevels = [-6.0, -5.0, -4.0, -3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.
 #ContourLevels = [] ##If empty list the contours are calculated automatically
 numLevels = 5
 
-species = 4 - 1 ##Species index starts from 0
+species = 3 - 1 ##Species index starts from 0
 
 includePhi1InCalculation = True
 

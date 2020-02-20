@@ -19,10 +19,16 @@ if makePDF:
 
 import matplotlib.pyplot as plt
 
-print "This is "+ inspect.getfile(inspect.currentframe())
+print ("This is "+ inspect.getfile(inspect.currentframe()))
 
 sfincsHome = os.environ.get('SFINCS_HOME') 
 sfincsProjectsAndToolsHome = os.environ.get('SFINCS_PROJECTS_AND_TOOLS_HOME')
+
+##PLOT OPTIONS##
+
+#execfile(sfincsProjectsAndToolsHome + "/tools/Albert/version3/plot_tools"  + "/RadialScanPlotOptions.py")
+exec(open(sfincsProjectsAndToolsHome + "/tools/Albert/version3/plot_tools"  + "/RadialScanPlotOptions.py").read())
+################
 
 ##INPUTS##
 
@@ -44,33 +50,29 @@ radiusName = "rN" ##Radial coordinate to use on x-axis. Must be "psiHat", "psiN"
 #plotVariableName = "Er" ##Parameter to plot on y-axis. In this version it must be "Er", "dPhiHatdpsiHat", "dPhiHatdpsiN", "dPhiHatdrHat" or "dPhiHatdrN" .
 plotVariableName = "nHats"
 
-TransformPlotVariableToOutputUnitsFactor = 10
+TransformPlotVariableToOutputUnitsFactor = [10.0, 10.0, 1.0/(6.37774*10**(-7))/0.7] #W7X_180919.055 densities
+#TransformPlotVariableToOutputUnitsFactor = [10.0, 10.0, 1.0/(6.37774*10**(-7))/1.0] #W7X_180919.046 densities
 
 MinFloat = pow(10, -sys.float_info.dig) 
 
-##PLOT OPTIONS##
-
-execfile(sfincsProjectsAndToolsHome + "/tools/Albert/version3/plot_tools"  + "/RadialScanPlotOptions.py")
-
-################
 
 ##############################
 ##########END INPUTS##########
 ##############################
 
 if radiusName != "psiHat" and radiusName != "psiN" and radiusName != "rHat" and radiusName != "rN":
-    print "Error! Invalid radial coordinate."
+    print ("Error! Invalid radial coordinate.")
     sys.exit(1)
 
 ##READ AND PLOT THE DATA##
 originalDirectory = os.getcwd() 
-print "Starting to create a plot from directories in " + originalDirectory
+print ("Starting to create a plot from directories in " + originalDirectory)
 
 # Get a list of the subdirectories:
 PlotDirectories = sorted(filter(os.path.isdir, os.listdir("."))) 
 
 if len(PlotDirectories) < 1:
-    print "Error! Could not find any directories in " + originalDirectory 
+    print ("Error! Could not find any directories in " + originalDirectory) 
     sys.exit(1)
 
 fig = plt.figure(figsize=FigSize) 
@@ -82,9 +84,9 @@ ax = plt.subplot(1, 1, 1)
 
 for directory in PlotDirectories:
     try:
-        print "*************************************************" 
-        print "Processing directory "+directory
-        print "*************************************************"
+        print ("*************************************************") 
+        print ("Processing directory "+directory)
+        print ("*************************************************")
 
         fullDirectory = originalDirectory + "/" + directory
         os.chdir(fullDirectory)
@@ -93,11 +95,12 @@ for directory in PlotDirectories:
         SubDirectories = sorted(filter(os.path.isdir, os.listdir(".")))
 
         if len(SubDirectories) < 1:
-            print "Could not find any directories in " + fullDirectory
-            print "Continuing with next directory." 
+            print ("Could not find any directories in " + fullDirectory)
+            print ("Continuing with next directory.") 
             continue
 
         Nradii = 0
+        Nspecies = 0
         radii = []
         ydata = []
         
@@ -118,10 +121,18 @@ for directory in PlotDirectories:
                     didNonlinearCalculationConverge = file["didNonlinearCalculationConverge"][()]
                     #if plotVariableName == "particleFlux_vm_rHat":
                     #    VariableValue = file["particleFlux_vd_rHat"][()]
-                
+
+                if Nspecies == 0 :
+                    Nspecies = file["Nspecies"][()]
+                elif Nspecies != file["Nspecies"][()] :
+                    file.close()
+                    print ("Nspecies not consistent with other runs in " + fullSubDirectory)
+                    print ("Continuing with next sub directory.")
+                    continue
+                    
                 if (plotVariableName.find('Flux_vd') != -1 or plotVariableName.find('Flux_vE') != -1) and (includePhi1 != integerToRepresentTrue):
-                    print plotVariableName + " only exists in nonlinear runs, but this is a linear run." 
-                    print "Reading " + plotVariableName.replace('Flux_vd', 'Flux_vm').replace('Flux_vE', 'Flux_vm') + " instead."
+                    print (plotVariableName + " only exists in nonlinear runs, but this is a linear run.") 
+                    print ("Reading " + plotVariableName.replace('Flux_vd', 'Flux_vm').replace('Flux_vE', 'Flux_vm') + " instead.")
                     VariableValue = file[plotVariableName.replace('Flux_vd', 'Flux_vm').replace('Flux_vE', 'Flux_vm')][()]
                 else:
                     VariableValue = file[plotVariableName][()]
@@ -136,13 +147,13 @@ for directory in PlotDirectories:
                 VariableValue = TransformPlotVariableToOutputUnitsFactor * VariableValue
                 if includePhi1 == integerToRepresentTrue:
                     if didNonlinearCalculationConverge != integerToRepresentTrue:
-                        print "The nonlinear solver did not converge in " + fullSubDirectory
-                        print "Continuing with next sub directory."
+                        print ("The nonlinear solver did not converge in " + fullSubDirectory)
+                        print ("Continuing with next sub directory.")
                         continue
             except:
-                print "Error when reading from " + fullSubDirectory + "/" + filename
-                print "Maybe the SFINCS run did not finish"
-                print "Continuing with next sub directory."
+                print ("Error when reading from " + fullSubDirectory + "/" + filename)
+                print ("Maybe the SFINCS run did not finish")
+                print ("Continuing with next sub directory.")
                 continue
 
             Nradii += 1
@@ -150,8 +161,8 @@ for directory in PlotDirectories:
             ydata.append(VariableValue)
 
         if Nradii < 1:
-            print "Could not read any data in " + fullDirectory 
-            print "Continuing with next directory." 
+            print ("Could not read any data in " + fullDirectory)
+            print ("Continuing with next directory.") 
             continue
 
         ##Sort data after radii
@@ -160,34 +171,35 @@ for directory in PlotDirectories:
         for radius in radii_sorted:
             ydata_sorted.append(ydata[radii.index(radius)])
         
-        print "radii: " + str(radii)
-        print ""
-        print "ydata: " + str(ydata)
-        print ""
-        print "radii_sorted: " + str(radii_sorted)
-        print ""
-        print "ydata_sorted: " + str(ydata_sorted)
-        print ""
+        print ("radii: " + str(radii))
+        print ("")
+        print ("ydata: " + str(ydata))
+        print ("")
+        print ("radii_sorted: " + str(radii_sorted))
+        print ("")
+        print ("ydata_sorted: " + str(ydata_sorted))
+        print ("")
 
-        print np.array(radii_sorted)
-        print ""
-        print np.array(ydata_sorted)
+        print (np.array(radii_sorted))
+        print ("")
+        print (np.array(ydata_sorted))
 
-        for linenumber in range(0,4):
+        for linenumber in range(0,Nspecies):
             try:
                 LegendLabel = PlotLegendLabels[linenumber]
             except:
                 LegendLabel = directory
 
-            plt.plot(np.array(radii_sorted), np.array(ydata_sorted)[:, linenumber], PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel)
+            plt.plot(np.array(radii_sorted), np.array(ydata_sorted)[:, linenumber], PlotLinespecs[linenumber], color=PlotLineColors[linenumber], markersize=PlotMarkerSize, markeredgewidth=PlotMarkerEdgeWidth[linenumber], markeredgecolor=PlotLineColors[linenumber], label=LegendLabel, linewidth=PlotLineWidth)
         #linenumber += 1
 
     except:
         os.chdir(originalDirectory)
-        print "Unexpected error when processing " + directory
-        print "Continuing with next directory."
+        print ("Unexpected error when processing " + directory)
+        print ("Continuing with next directory.")
         continue
 
+#########################################
 
 plt.xscale(xAxisScale) 
 plt.yscale(yAxisScale)
@@ -205,19 +217,40 @@ else :
     ymin,ymax = plt.ylim(yAxisLim) 
     xmin,xmax = plt.xlim(xAxisLim) 
 
-plt.legend(bbox_to_anchor = LegendBBoxToAnchor, loc=LegendPosition, ncol=LegendNumberColumns, mode=None, borderaxespad=0., prop=LegendProperties)#, fontsize=LegendFontSize)
+if ShowLegend:
+    plt.legend(bbox_to_anchor = LegendBBoxToAnchor, loc=LegendPosition, ncol=LegendNumberColumns, mode=None, borderaxespad=0., prop=LegendProperties)#, fontsize=LegendFontSize)
+
+plt.gca().axes.xaxis.set_label_coords(xAxisLabelCoords[0], xAxisLabelCoords[1])
+plt.gca().axes.yaxis.set_label_coords(yAxisLabelCoords[0], yAxisLabelCoords[1])
+
+plt.tight_layout()
+
+plt.subplots_adjust(left=LeftMargin, right=RightMargin, top=TopMargin, bottom=BottomMargin)
+
+if ShowSubPlotLabel:
+    plt.text(SubPlotLabelXcoord, SubPlotLabelYcoord, SubPlotLabel)
+
+if NoScientificAxes :
+    ax.get_xaxis().get_major_formatter().set_scientific(False)
+    ax.get_yaxis().get_major_formatter().set_scientific(False)
+
+if ChangeXaxisTicks:
+    ax.xaxis.set_ticks(NewXaxisTicks)
+
+if ChangeYaxisTicks:
+    ax.yaxis.set_ticks(NewYaxisTicks)
 
 os.chdir(originalDirectory) 
 
 if makePDF: 
-    print "Saving PDF"  
+    print ("Saving PDF")
 
     if len(sys.argv)>2 : #Use the substituted name as file name 
-       print "Writing plot to " + os.getcwd() + "/" + sys.argv[2] + ".pdf."    
+       print ("Writing plot to " + os.getcwd() + "/" + sys.argv[2] + ".pdf.")    
        plt.savefig(sys.argv[2] + ".pdf", orientation = 'landscape', papertype='letter')  
     else : 
        head, tail = os.path.split(inspect.getfile(inspect.currentframe()))  
-       print "Writing plot to " + os.getcwd() + "/" + tail + ".pdf."  
+       print ("Writing plot to " + os.getcwd() + "/" + tail + ".pdf.")  
        plt.savefig(tail+'.pdf', orientation = 'landscape', papertype='letter')  
 else:   
     plt.show()       
