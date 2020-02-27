@@ -31,9 +31,9 @@ def Bscalebcfile(infile,outfile,Baxis_zeta0,min_Bmn=0,max_m=np.inf,maxabs_n=np.i
   Geom=bcgeom(infile,min_Bmn=min_Bmn,max_m=max_m,maxabs_n=maxabs_n,symmetry='StelSym')
   Booz=fluxcoorddiscr(Geom,0,15,101,name='Boozer')
   Baxis_zeta0_in=np.mean(Booz.B[:,0])
-  print('Booz.B='+str(Booz.B))
-  print('Booz.B[:,0]='+str(Booz.B[:,0]))
-  print('Geom.s[0]='+str(Geom.s[0]))
+  #print('Booz.B='+str(Booz.B))
+  #print('Booz.B[:,0]='+str(Booz.B[:,0]))
+  #print('Geom.s[0]='+str(Geom.s[0]))
   scalefactor=Baxis_zeta0/Baxis_zeta0_in
   for rind in range(len(Geom.B)):
     Geom.B[rind]*=scalefactor
