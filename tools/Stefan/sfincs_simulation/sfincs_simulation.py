@@ -14,7 +14,7 @@ from fluxcoorddiscr import fluxcoorddiscr
 
 from calculate_classical_transport import calculate_classical_transport
 
-
+elecharge = 1.60217662e-19
 
 class Normalization(object):
     def __init__(self,BBar,RBar,TBar,mBar,nBar,eBar,ePhiBar,units="SI"):
@@ -41,7 +41,7 @@ class Normalization(object):
 
 def create_normalization(filename="norms.namelist"):
     """ creates a Normalization object from the filename of a namelist of normalizing quantities"""
-    filename="." + "/" + filename
+    filename=filename
     file = f90nml.read(filename)
     units=file["unitSpecification"]["units"]
     norm_group_name="normalizationParameters"
@@ -69,7 +69,7 @@ class Species(object):
 def create_species(normalization,filename="species",database_filename = os.path.abspath(__file__).rsplit("/",1)[0] + "/species_database.namelist"):
     """ creates a Species object from a .csv file containing species, and a Normalization object"""
 
-    filename="." + "/" + filename
+    filename=filename
     names=[x.strip() for x in open(filename,'r').read().split('\n')[0].split(',')]
     database = f90nml.read(database_filename)
     Zs = np.array([database["speciesCharge"][x] for x in names])/normalization.eBar
@@ -102,7 +102,7 @@ class Sfincs_aux_inputs(object):
         self.species_name = self.species.names
         self.Delta = self.normalization.Delta
         self.alpha = self.normalization.alpha
-        
+
     def __str__(self):
         return str(self.normalization) + "\n" + str(self.species)
         
@@ -154,20 +154,26 @@ class Sfincs_input(object):
     def changevar(self,group,var,value):
         # Warning: this command will fail silently if the pattern is not found. Sorry about that.
         # Warning: case insensitive
-        if type(value) == str:
+        if type(value) == bool:
+            if value == True:
+                value = ".true."
+            else:
+                value = ".false."
+        elif type(value) == str:
             #strings must be enclosed in "" in namelists
             #may be wise to see if the string contains citation marks...
             if (value.find("'") != -1) or (value.find('"') != -1):
                 print "Warning! String to changevar contains a ' or \" character." 
             value = '"' + value + '"'
-        if (type(value) == list) or (type(value) == np.ndarray):
+        elif (type(value) == list) or (type(value) == np.ndarray):
             # arrays are space seperated
             delimiter=' '
             value_temp = '' 
             for val in value:
                 value_temp =  value_temp + str(val) + delimiter
             value = value_temp.rsplit(delimiter,1)[0]
-            
+        else:
+            pass    
         subprocess.call("sed -i -e '/\&"+group+"/I,/\&/{ s/^  "+var+" =.*/  "+var+" = "+str(value)+"/I } ' "+self.input_name, shell=True)
     
     def get_value_from_input_or_defaults(self,groupname,varname):
@@ -196,23 +202,40 @@ class Sfincs_input(object):
     
     @property
     def nu_n(self):
-        return self.get_value_from_input_or_defaults("physicsparameters","nu_n")
+        nu_n =  self.get_value_from_input_or_defaults("physicsparameters","nu_n")
+        if nu_n<0:
+            # check that normalizations are correct
+            lnLambda = (25.3e+0) - (1.15e+0)*np.log10(self.nHats[0]*(1e14)) + (2.30e+0)*np.log10(self.THats[0]*1000)
+            eC = 1.6022e-19
+            epsilon0 = 8.8542e-12
+            mproton = 1.6726e-27
+            nu_n = np.sqrt(mproton/(2*1000*eC)) * 4*np.sqrt(2*np.pi)*(1e20)*(eC**4)*lnLambda / (3*((4*np.pi*epsilon0)**2)*np.sqrt(mproton)*((1000*eC)**(1.5e+0)))
+        return nu_n
 
     @property
     def Zs(self):
-        return self.get_value_from_input_or_defaults("speciesparameters","zs")
+        return np.array(self.get_value_from_input_or_defaults("speciesparameters","zs"))
+
+    @property
+    def Nspecies(self):
+        return len(self.Zs)
 
     @property
     def mHats(self):
-        return self.get_value_from_input_or_defaults("speciesparameters","mhats")
+        return np.array(self.get_value_from_input_or_defaults("speciesparameters","mhats"))
 
     @property
     def nHats(self):
-        return self.get_value_from_input_or_defaults("speciesparameters","nhats")
+        return np.array(self.get_value_from_input_or_defaults("speciesparameters","nhats"))
+
 
     @property
+    def Zeff(self):
+        return np.sum(self.Zs**2*self.nHats)/np.sum(self.Zs*self.nHats)
+    
+    @property
     def THats(self):
-        return self.get_value_from_input_or_defaults("speciesparameters","thats")
+        return np.array(self.get_value_from_input_or_defaults("speciesparameters","thats"))
 
     @property
     def Ntheta(self):
@@ -295,7 +318,7 @@ class Sfincs_input(object):
         else:
             raise ValueError("inputRadialCoordinateForGradients should be 0,1,2,3,4; it is" + str(inputRadialCoordinate))
         return np.array(ret)
-
+    
     @property
     def dPhiHatds(self):
         if self.inputRadialCoordinateForGradients == 0:
@@ -322,7 +345,7 @@ class Sfincs_input(object):
     def A2(self):
         ret = self.dTHatdss/self.THats
         return np.array(ret)
-    
+
     def __str__(self):
         return str(self.input_name)
 
@@ -341,9 +364,9 @@ class Sfincs_simulation(object):
 
     def copy(self,new_dirname):
         copytree(self.dirname,new_dirname)
-        return Sfincs_simulation(new_dirname,input_name=self.input_name,norm_name=self.norm_name,species_name=self.species_name)
+        return Sfincs_simulation(new_dirname,input_name=self.input_name,norm_name=self.norm_name,species_name=self.species_name,override_geometry_name=self.equilibrium_name)
         
-    def __init__(self,dirname,input_name="input.namelist",norm_name="norm.namelist",species_name="species",override_geometry_name=None):
+    def __init__(self,dirname,input_name="input.namelist",norm_name="norm.namelist",species_name="species",override_geometry_name=None, load_geometry=True):
         #description of simulation, for usage as legend in plots, etc.
         self.description=""
 
@@ -367,41 +390,124 @@ class Sfincs_simulation(object):
             self.equilibrium_name = override_geometry_name
         else:
             self.equilibrium_name = self.absolute_path(self.input.equilibrium_name)
+        self.geometry_loaded = False
+        # halfloaded is set halfway during self.load_geometry() 
+        # because some data has to be read to 
+        # read in the correct radius in the Boozer file
+        self.geometry_halfloaded = False
+        if (self.input.geometryScheme == 11) and load_geometry:
+            self.load_geometry()
             
-        if self.input.geometryScheme == 11:
-            # known problem: if self.input.equilibrium_name is changed
-            # these quanitities will no longer correspond to those indicated by the input.namelist
-            # in some sense, these belong to the input_file and not the simulation, but the input file doesn't right now know about it's directory and hence can't translate to absolute path.
-            self.symmetry='StelSym'
-            self.min_Bmn=0
-            self.max_m=float("inf")
-            self.maxabs_n=float("inf")
-            self.signcorr=1
-            verbose = 0
+        
+    def load_geometry(self):
+        # known problem: if self.input.equilibrium_name is changed
+        # these quanitities will no longer correspond to those indicated by the input.namelist
+        # in some sense, these belong to the input_file and not the simulation, but the input file doesn't right now know about it's directory and hence can't translate to absolute path.
+        self.symmetry='StelSym'
+        self.min_Bmn=0
+        self.max_m=float("inf")
+        self.maxabs_n=float("inf")
+        self.signcorr=1
+        verbose = 0
 
-            self.zeroout_Deltaiota = 0.000
+        self.zeroout_Deltaiota = 0.000
 
+        try:
+            self.geom = bcgeom(self.equilibrium_name,self.min_Bmn,self.max_m,self.maxabs_n,self.symmetry,self.signcorr,verbose)
+        except IOError as e:
+            raise IOError("Error loading geometry: " + str(e))
+
+        self._Nperiods = self.geom.Nperiods
+        self._psiAHat = self.geom.psi_a/(self.normalization.BBar*self.normalization.RBar**2)
+        self._aHat = self.geom.minorradiusW7AS/self.normalization.RBar
+
+        self.rNs = self.geom.rnorm
+        
+        self.geometry_halfloaded = True
+        self.rind=np.argmin(np.fabs(self.rNs - self.rN_wish))
+        self._iota = self.geom.iota[self.rind]
+
+        self.Booz = fluxcoorddiscr(self.geom,self.rind,self.input.Ntheta,self.input.Nzeta,u_zeroout_Deltaiota=self.zeroout_Deltaiota,name='Boozer')
+        self._GHat=self.Booz.G/(self.normalization.BBar*self.normalization.RBar)
+        self._IHat=self.Booz.I/(self.normalization.BBar*self.normalization.RBar)
+        self._B00Hat = self.Booz.B00/(self.normalization.BBar)
+        self.geometry_loaded = True
+        
+    
+    @property
+    def Nperiods(self):
+        if self.geometry_loaded:
+            return self._Nperiods
+        else:
             try:
-                self.geom = bcgeom(self.equilibrium_name,self.min_Bmn,self.max_m,self.maxabs_n,self.symmetry,self.signcorr,verbose)
-            except IOError as e:
-                raise IOError("Error loading geometry: " + str(e))
-            
-            self.Nperiods = self.geom.Nperiods
-            self.psiAHat = self.geom.psi_a/(self.normalization.BBar*self.normalization.RBar**2)
-            self.aHat = self.geom.minorradiusVMEC/self.normalization.RBar
-            
-            self.rNs = self.geom.rnorm
-            self.rind=np.argmin(np.fabs(self.rNs - self.rN_wish))
-            self.iota = self.geom.iota[self.rind]
-            
-            self.Booz = fluxcoorddiscr(self.geom,self.rind,self.input.Ntheta,self.input.Nzeta,u_zeroout_Deltaiota=self.zeroout_Deltaiota,name='Boozer')
-            self.GHat=self.Booz.G/(self.normalization.BBar*self.normalization.RBar)
-            self.IHat=self.Booz.I/(self.normalization.BBar*self.normalization.RBar)
-            self.B00Hat = self.Booz.B00/(self.normalization.BBar)
+                return self.outputs["NPeriods"][()]
+            except KeyError:
+                raise NotImplementedError("Nperiods cannot be calculated for this simulation since it does not use a .bc file and does not contain NPeriods in the output.")
+
+    @property
+    def psiAHat(self):
+        if self.geometry_halfloaded:
+            return self._psiAHat
+        else:
+            try:
+                return self.outputs["psiAHat"][()]
+            except KeyError:
+                raise NotImplementedError("psiAHat cannot be calculated for this simulation since it does not use a .bc file and does not contain psiAHat in the output.")
+    
+    @property
+    def aHat(self):
+        if self.geometry_halfloaded:
+            return self._aHat
+        else:
+            try:
+                return self.outputs["aHat"][()]
+            except KeyError:
+                raise NotImplementedError("aHat cannot be calculated for this simulation since it does not use a .bc file and does not contain aHat in the output.")
+
+    @property
+    def iota(self):
+        if self.geometry_loaded:
+            return self._iota
+        else:
+            try:
+                return self.outputs["iota"][()]
+            except KeyError:
+                raise NotImplementedError("iota cannot be calculated for this simulation since it does not use a .bc file and does not contain iota in the output.")
+
+    @property
+    def B00Hat(self):
+        if self.geometry_loaded:
+            return self._B00Hat
+        else:
+            try:
+                return self.outputs["B0OverBBar"][()]
+            except KeyError:
+                raise NotImplementedError("B00Hat cannot be calculated for this simulation since it does not use a .bc file and does not contain B00OverBBar in the output.")
+
+
+    @property
+    def GHat(self):
+        if self.geometry_loaded:
+            return self._GHat
+        else:
+            try:
+                return self.outputs["GHat"][()]
+            except KeyError:
+                raise NotImplementedError("GHat cannot be calculated for this simulation since it does not use a .bc file and does not contain GHat in the output.")
+
+    @property
+    def IHat(self):
+        if self.geometry_loaded:
+            return self._IHat
+        else:
+            try:
+                return self.outputs["IHat"][()]
+            except KeyError:
+                raise NotImplementedError("IHat cannot be calculated for this simulation since it does not use a .bc file and does not contain IHat in the output.")
 
     @property
     def gpsipsiHat(self):
-        if self.input.geometryScheme == 11:
+        if self.geometry_loaded:
             return np.transpose(self.Booz.gpsipsi)/((self.normalization.BBar*self.normalization.RBar)**2)
         else:
             try:
@@ -411,7 +517,7 @@ class Sfincs_simulation(object):
             
     @property
     def BHat(self):
-        if self.input.geometryScheme == 11:
+        if self.geometry_loaded:
             return np.transpose(self.Booz.B)/self.normalization.BBar
         else:
             try:
@@ -421,20 +527,17 @@ class Sfincs_simulation(object):
 
     @property
     def u(self):
-        if self.input.geometryScheme == 11:
+        if self.geometry_loaded:
             return np.transpose(self.Booz.u_psi)
         else:
             raise NotImplementedError("u cannot be calculated for this simulation since it does not use a .bc file.")
         
 
     def FSA(self,X):
-        if self.input.geometryScheme == 11:
-            BHat = self.BHat
-            # order of axis: zeta, theta, species, iteration
-            # thus the below sum over zeta and theta
-            return np.sum(X/BHat**2,axis=(0,1))/np.sum(1/BHat**2)
-        else:
-            raise NotImplementedError("Flux-surface average cannot be calculated for this simulation since it does not use a .bc file.")
+        BHat = self.BHat
+        # order of axis: zeta, theta, species, iteration
+        # thus the below sum over zeta and theta
+        return np.sum(X/BHat**2,axis=(0,1))/np.sum(1/BHat**2)
             
     @property
     def mixed_col_NC_C_ratio(self):
@@ -445,7 +548,56 @@ class Sfincs_simulation(object):
         ret = self.FSA(u**2 * BHat**2)*FSABHat2 - self.FSA(u*BHat**2)**2
         ret = ret/(self.FSA(gpsipsi/BHat**2) * self.FSA(BHat**2))
         return ret
+
+    def mixed_col_DCni(self,ion_index = 0,impurity_index = -1):
+        """The bulk ion gradient drive for the classical radial impurity flux
+        Defined by Gamma_z^C = -n_z D^C_{n_i} d ln(ni)/dr"""
+        impurity_index = -1
+        BHat = self.BHat
+        gpsipsi = self.gpsipsiHat
+        return -self.FSA(gpsipsi/BHat**2)*self.ms[ion_index]*self.ns[ion_index]*self.Ts[ion_index]/(self.charges[impurity_index]*self.tau_ab[ion_index,impurity_index] * self.ns[impurity_index]*elecharge)
+
+    def mixed_col_DCTi(self,ion_index = 0,impurity_index = -1):
+        return -self.mixed_col_DCni(ion_index,impurity_index)/2
+
+    def mixed_col_DCnz(self,ion_index = 0,impurity_index = -1):
+        return -self.mixed_col_DCni(ion_index,impurity_index)/self.input.Zs[impurity_index]
+    
+    def mixed_col_DCni_r(self,ion_index = 0,impurity_index = -1):
+        return self.mixed_col_DCni(ion_index,impurity_index)*(self.drHat_dpsiHat*self.normalization.RBar)**2
         
+    def mixed_col_DCTi_r(self,ion_index = 0,impurity_index = -1):
+        return self.mixed_col_DCTi(ion_index,impurity_index)*(self.drHat_dpsiHat*self.normalization.RBar)**2
+   
+    def mixed_col_DCnz_r(self,ion_index = 0,impurity_index = -1):
+        return self.mixed_col_DCnz(ion_index,impurity_index)*(self.drHat_dpsiHat*self.normalization.RBar)**2
+    
+    def mixed_col_DNCni(self,ion_index = 0,impurity_index = -1):
+        """The bulk ion gradient drive for the neoclassical radial impurity flux
+        Defined by Gamma_z^C = -n_z D^C_{n_i} d ln(ni)/dr"""
+        impurity_index = -1
+        BHat = self.BHat
+        u = self.u
+        FSABHat2 = self.FSA(BHat**2)
+        geom = self.FSA(u**2 * BHat**2) - self.FSA(u*BHat**2)**2/FSABHat2
+        return -geom*self.ns[ion_index]*self.ms[ion_index]*self.Ts[ion_index]/(self.charges[impurity_index]*self.tau_ab[ion_index,impurity_index] * self.ns[impurity_index]*elecharge)
+
+    def mixed_col_DNCTi(self,ion_index = 0,impurity_index = -1):
+        return -self.mixed_col_DNCni(ion_index,impurity_index)/2
+
+    def mixed_col_DNCnz(self,ion_index = 0,impurity_index = -1):
+        return -self.mixed_col_DNCni(ion_index,impurity_index)/self.input.Zs[impurity_index]
+
+    def mixed_col_DNCni_r(self,ion_index = 0,impurity_index = -1):
+        return self.mixed_col_DNCni(ion_index,impurity_index)*(self.drHat_dpsiHat*self.normalization.RBar)**2
+        
+    def mixed_col_DNCTi_r(self,ion_index = 0,impurity_index = -1):
+        return self.mixed_col_DNCTi(ion_index,impurity_index)*(self.drHat_dpsiHat*self.normalization.RBar)**2
+        
+    def mixed_col_DNCnz_r(self,ion_index = 0,impurity_index = -1):
+        return self.mixed_col_DNCnz(ion_index,impurity_index)*(self.drHat_dpsiHat*self.normalization.RBar)**2
+    
+    
     @property
     def rN_wish(self):
         if self.input.inputRadialCoordinate == 0:
@@ -461,8 +613,14 @@ class Sfincs_simulation(object):
 
     @property
     def psiN(self):
-        return self.geom.s[self.rind]
-
+        if self.geometry_loaded:
+            return self.geom.s[self.rind]
+        else:
+            try:
+                return self.outputs["psiN"][()]
+            except KeyError:
+                raise NotImplementedError("psiN cannot be calculated for this simulation since it does not use a .bc file and does not contain psiN in the output.")
+    
     @property
     def rN(self):
         return np.sqrt(self.psiN)
@@ -475,17 +633,40 @@ class Sfincs_simulation(object):
     def rHat(self):
         return self.rN * self.aHat
 
-    
+    @property
+    def drHat_dpsiHat(self):
+        if not np.isnan(self.aHat):
+            return self.aHat/(2*self.psiAHat*np.sqrt(self.psiN))
+        elif self.outputs["dTHatdpsiHat"][()][0] != 0:
+            return self.outputs["dTHatdpsiHat"][()][0]/self.outputs["dTHatdrHat"][()][0]
+        elif self.outputs["dnHatdpsiHat"][()][0] != 0:
+            return self.outputs["dnHatdpsiHat"][()][0]/self.outputs["dnHatdrHat"][()][0]
+        elif self.outputs["dPhiHatdpsiHat"][()][0] != 0:
+            return self.outputs["dPhiHatdpsiHat"][()][0]/self.outputs["dPhiHatdrHat"][()][0]
+        else:
+            raise ValueError("Cannot calculate dr^/dpsi^ since all gradients are zero!")
+        
+    @property
+    def dnHatdrHats(self):
+        return  self.dnHatdpsiHats/self.drHat_dpsiHat
 
+    @property
+    def dTHatdrHats(self):
+        return  self.dTHatdpsiHats/self.drHat_dpsiHat
+    
+    @property
+    def dPhiHatdrHat(self):
+        return  self.dPhiHatdpsiHat/self.drHat_dpsiHat
+    
     @property
     def dnHatdpsiHats(self):
         if self.input.inputRadialCoordinateForGradients == 0:
             conversion_factor = 1.0
-        elif self.input.inputRadialCoordinate == 1:
+        elif self.input.inputRadialCoordinateForGradients == 1:
             conversion_factor = 1/self.psiAHat
-        elif (self.input.inputRadialCoordinate == 2) or (self.input.inputRadialCoordinate == 4):
+        elif (self.input.inputRadialCoordinateForGradients == 2) or (self.input.inputRadialCoordinateForGradients == 4):
             conversion_factor = self.aHat/(2*self.psiAHat*np.sqrt(self.psiN))
-        elif self.input.inputRadialCoordinate == 3:
+        elif self.input.inputRadialCoordinateForGradients == 3:
             conversion_factor = 1/(2*self.psiAHat*np.sqrt(self.psiN))
         else:
             raise ValueError("inputRadialCoordinate should be 0,1,2,3,4; it is" + str(self.input.inputRadialCoordinate))
@@ -495,17 +676,47 @@ class Sfincs_simulation(object):
     def dTHatdpsiHats(self):
         if self.input.inputRadialCoordinateForGradients == 0:
             conversion_factor = 1.0
-        elif self.input.inputRadialCoordinate == 1:
+        elif self.input.inputRadialCoordinateForGradients == 1:
             conversion_factor = 1/self.psiAHat
-        elif (self.input.inputRadialCoordinate == 2) or (self.input.inputRadialCoordinate == 4):
+        elif (self.input.inputRadialCoordinateForGradients == 2) or (self.input.inputRadialCoordinateForGradients == 4):
             conversion_factor = self.aHat/(2*self.psiAHat*np.sqrt(self.psiN))
-        elif self.input.inputRadialCoordinate == 3:
+        elif self.input.inputRadialCoordinateForGradients == 3:
             conversion_factor = 1/(2*self.psiAHat*np.sqrt(self.psiN))
         else:
             raise ValueError("inputRadialCoordinate should be 0,1,2,3,4; it is" + str(self.input.inputRadialCoordinate))
         return self.input.dTHatdss * conversion_factor
-        
-            
+
+    @property
+    def dPhiHatdpsiHat(self):
+        if self.input.inputRadialCoordinateForGradients == 0:
+            conversion_factor = 1.0
+        elif self.input.inputRadialCoordinateForGradients == 1:
+            conversion_factor = 1/self.psiAHat
+        elif (self.input.inputRadialCoordinateForGradients == 2) or (self.input.inputRadialCoordinateForGradients == 4):
+            conversion_factor = self.aHat/(2*self.psiAHat*np.sqrt(self.psiN))
+        elif self.input.inputRadialCoordinateForGradients == 3:
+            conversion_factor = 1/(2*self.psiAHat*np.sqrt(self.psiN))
+        else:
+            raise ValueError("inputRadialCoordinate should be 0,1,2,3,4; it is" + str(self.input.inputRadialCoordinate))
+        return self.input.dPhiHatds * conversion_factor
+
+    
+    @property
+    def Er(self):
+        if self.input.inputRadialCoordinateForGradients == 0:
+            conversion_factor = (2*self.psiAHat*np.sqrt(self.psiN))/self.aHat
+        elif self.input.inputRadialCoordinateForGradients == 1:
+            conversion_factor = (2*np.sqrt(self.psiN))/self.aHat
+        elif (self.input.inputRadialCoordinateForGradients == 2) or (self.input.inputRadialCoordinateForGradients == 4):
+            conversion_factor = 1.0
+            #conversion_factor = self.aHat/(2*self.psiAHat*np.sqrt(self.psiN))
+        elif self.input.inputRadialCoordinateForGradients == 3:
+            conversion_factor = 1/self.aHat
+        else:
+            raise ValueError("inputRadialCoordinate should be 0,1,2,3,4; it is" + str(self.input.inputRadialCoordinate))
+        return self.input.dPhiHatds * conversion_factor
+
+    
     @property
     def integerToRepresentTrue(self):
         return self.outputs["integerToRepresentTrue"]
@@ -513,14 +724,55 @@ class Sfincs_simulation(object):
     @property
     def includePhi1(self):
         return (self.outputs["includePhi1"][()] == self.integerToRepresentTrue)
-    
+
+    @property
+    def Phi1Hat(self):
+        if self.includePhi1:
+            return self.outputs["Phi1Hat"][:,:,-1]
+        else:
+            None
+
+    @property
+    def VPrimeHat(self):
+        return self.outputs["VPrimeHat"][()]
+
     @property
     def GammaHat(self):
         if self.includePhi1:
-            return self.outputs["particleFlux_vd_psiHat"][:,-1]
+            ret=self.outputs["particleFlux_vd_psiHat"][:,-1]
         else:
-            return self.outputs["particleFlux_vm_psiHat"][:,-1]
+            ret=self.outputs["particleFlux_vm_psiHat"][:,-1]
+        return ret
 
+    @property
+    def GammaHat_rHat(self):
+        if self.includePhi1:
+            ret=self.outputs["particleFlux_vd_rHat"][:,-1]
+        else:
+            ret=self.outputs["particleFlux_vm_rHat"][:,-1]
+        return ret
+
+    # @property
+    # def drHat_dpsiHat(self):
+    #     tol = 1e-10
+    #     if np.fabs(self.input.dTHatdss[0]) > tol:
+    #         try:
+    #             return self.outputs["dTHatdpsiHat"]/self.outputs["dTHatdrHat"]
+    #         except KeyError:
+    #             pass
+    #     if np.fabs(self.input.dnHatdss[0]) > tol:
+    #         try:
+    #             return self.outputs["dnHatdpsiHat"]/self.outputs["dnHatdrHat"]
+    #         except KeyError:
+    #             pass
+    #     if np.fabs(self.input.dPhiHatds) > tol:
+    #         try:
+    #             return self.outputs["dPhiHatdpsiHat"]/self.outputs["dPhiHatdrHat"]
+    #         except KeyError:
+    #             pass
+        
+      
+            
     @property
     def GammaHat_C(self):
         if self.includePhi1:
@@ -535,6 +787,10 @@ class Sfincs_simulation(object):
                 return calculate_classical_transport(self.input.Zs,self.input.mHats,self.input.nHats,self.input.THats,self.dnHatdpsiHats,self.dTHatdpsiHats,self.input.Delta,self.input.alpha,self.input.nu_n,self.gpsipsiHat,self.BHat)[0]
 
     @property
+    def GammaHat_C_rHat(self):
+        return self.GammaHat_C * self.drHat_dpsiHat
+        
+    @property
     def QHat(self):
         if self.includePhi1:
             return self.outputs["heatFlux_vd_psiHat"][:,-1]
@@ -542,11 +798,19 @@ class Sfincs_simulation(object):
             return self.outputs["heatFlux_vm_psiHat"][:,-1]
 
     @property
-    def Phi1Hat(self):
+    def QHat_rHat(self):
         if self.includePhi1:
-            return self.outputs["Phi1Hat"][:,:,-1]
+            return self.outputs["heatFlux_vd_rHat"][:,-1]
         else:
-            None
+            return self.outputs["heatFlux_vm_rHat"][:,-1]
+
+    @property
+    def ms(self):
+        return self.input.mHats * self.normalization.mBar
+
+    @property
+    def charges(self):
+        return self.input.Zs * self.normalization.eBar
         
     @property
     def QHat_C(self):
@@ -562,9 +826,153 @@ class Sfincs_simulation(object):
                 return calculate_classical_transport(self.input.Zs,self.input.mHats,self.input.nHats,self.input.THats,self.dnHatdpsiHats,self.dTHatdpsiHats,self.input.Delta,self.input.alpha,self.input.nu_n,self.gpsipsiHat,self.BHat)[1]
 
     @property
+    def QHat_C_rHat(self):
+        return self.QHat_C * self.drHat_dpsiHat
+            
+    
+    @property
+    def r_eff(self):
+        return self.rN * self.aHat * self.normalization.RBar
+
+
+    @property
+    def Gamma(self):
+        return self.GammaHat * self.normalization.nBar*self.normalization.vBar/self.normalization.RBar
+
+    @property
+    def Gamma_s(self):
+        """Gamma in units of 1/s"""
+        return self.VPrimeHat * self.GammaHat * self.normalization.nBar*self.normalization.vBar*self.normalization.RBar**2
+
+    @property
+    def Gamma_C(self):
+        return self.GammaHat_C * self.normalization.nBar*self.normalization.vBar/self.normalization.RBar
+
+    @property
+    def Gamma_C_s(self):
+        """Gamma_C in units of 1/s"""
+        return self.VPrimeHat * self.GammaHat_C * self.normalization.nBar*self.normalization.vBar*self.normalization.RBar**2
+
+
+    @property
+    def Gamma_r(self):
+        return self.GammaHat_rHat * self.normalization.nBar*self.normalization.vBar/self.normalization.RBar
+
+    @property
+    def Gamma_C_r(self):
+        return self.GammaHat_C_rHat * self.normalization.nBar*self.normalization.vBar/self.normalization.RBar
+
+    @property
+    def Q(self):
+        """Fixed normalization"""
+        return self.QHat *self.normalization.nBar*self.normalization.vBar**3*self.normalization.mBar/self.normalization.RBar
+
+    
+    @property
+    def Q_W(self):
+        """Q in units of W"""
+        return self.VPrimeHat * self.QHat *self.normalization.nBar*self.normalization.vBar**3*self.normalization.mBar*self.normalization.RBar**2
+
+
+    @property
+    def Q_MW(self):
+        """Q in units of MW"""
+        return self.Q_W/1e6
+
+
+    @property
+    def Q_C(self):
+        """Fixed normalization"""
+        return self.QHat_C *self.normalization.nBar*self.normalization.vBar**3*self.normalization.mBar/self.normalization.RBar
+
+    
+    @property
+    def Q_C_W(self):
+        """Q_C in units of W"""
+        return self.VPrimeHat * self.QHat_C *self.normalization.nBar*self.normalization.vBar**3*self.normalization.mBar*self.normalization.RBar**2
+
+    
+    @property
+    def Q_C_MW(self):
+        return self.Q_C_W/1e6
+    @property
+    def Q_r(self):
+        """Fixed normalization"""
+        return self.QHat_rHat *self.normalization.nBar*self.normalization.vBar**3*self.normalization.mBar
+
+    @property
+    def Q_C_r(self):
+        """Fixed normalization"""
+        return self.QHat_C_rHat *self.normalization.nBar*self.normalization.vBar**3*self.normalization.mBar
+
+    @property
     def FSABFlow(self):
         return self.outputs["FSABFlow"][:,-1]
 
+    @property
+    def nuBar(self):
+        # Inserting the definition of nu_n, this is
+        # sqrt(2) * nBar * e**4 * lnLambda/(12*pi**(3/2) * sqrt(mBar)*eps0**2 * TBar**(3/2))
+        # multiplying this with Z[a]**2 * Z[b]**2 * nHat[b]/(sqrt(mHat[a]) *THat[a]**(3/2))
+        # gives 1/tau_{ab} as defined in my classical paper and my JPP paper.
+        return self.input.nu_n*self.normalization.vBar/self.normalization.RBar
+
+    @property
+    def tau_ab(self):
+        one_over_tau = np.zeros((self.input.Nspecies,self.input.Nspecies))
+        for a in range(self.input.Nspecies):
+            for b in range(self.input.Nspecies):
+                one_over_tau[a,b] = self.nuBar*self.input.Zs[a]**2 * self.input.Zs[b]**2 * self.input.nHats[b]/(np.sqrt(self.input.mHats[a]) *self.input.THats[a]**(3/2))
+        return 1/one_over_tau
+
+    @property
+    def Ts(self):
+        return self.input.THats * self.normalization.TBar
+
+    @property
+    def ns(self):
+        return self.input.nHats * self.normalization.nBar
+
+    @property
+    def dPhiHatdpsiHat(self):
+        return self.outputs["dPhiHatdpsiHat"][()]
+
+    @property
+    def dTHatdpsiHat(self):
+        return self.outputs["dTHatdpsiHat"][()]
+
+    @property
+    def dnHatdpsiHat(self):
+        return self.outputs["dnHatdpsiHat"][()]
+
+    @property
+    def nHats(self):
+        return self.outputs["nHats"][()]
+
+    @property
+    def THats(self):
+        return self.outputs["THats"][()]
+
+    @property
+    def A1(self):
+        ret = self.dnHatdpsiHats/self.nHats + self.dTHatdpsiHats/self.THats + self.input.alpha * self.input.Zs * self.dPhiHatdpsiHat/self.THats
+        return ret
+
+    @property
+    def A2(self):
+        ret = self.dTHatdpsiHats/self.THats
+        return ret
+
+    
+    @property
+    def A1_r(self):
+        print self.drHat_dpsiHat
+        return self.A1/(self.drHat_dpsiHat*self.normalization.RBar)
+        
+    @property
+    def A2_r(self):
+        return self.A2/(self.drHat_dpsiHat*self.normalization.RBar)
+    
     @property
     def collisionality(self):
         if self.input.geometryScheme == 11:
@@ -609,6 +1017,30 @@ class Sfincs_simulation(object):
         nuHats = nuHats * nu_n *RHat
         return nuHats
 
+    @property
+    def collisionality_ab(self):
+        if self.input.geometryScheme == 11:
+            B00Hat = self.B00Hat
+            IHat = self.IHat
+            GHat = self.GHat
+            iota = self.iota
+        RHat = np.fabs((GHat + iota*IHat)/B00Hat)
+        nu_n = self.input.nu_n
+        Zs = self.input.Zs
+        nHats = self.input.nHats
+        THats = self.input.THats
+        
+        Nspecies = len(Zs)
+        nuHats = np.zeros((Nspecies,Nspecies))
+        for a in range(Nspecies):
+            for b in range(Nspecies):
+                nuHats[a,b] =(Zs[b]**2*nHats[b]) * (Zs[a]/THats[a])**2 
+        nuHats = nuHats * nu_n *RHat
+        return nuHats
+
+    @property
+    def jrHat(self):
+        return np.sum(self.input.Zs*self.GammaHat)
             
 if __name__=="__main__":
 
