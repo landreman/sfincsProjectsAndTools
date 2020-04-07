@@ -1,4 +1,4 @@
-from __future__ import division
+from __future__ import division, print_function
 import numpy as np
 import f90nml
 import h5py
@@ -21,7 +21,7 @@ class Normalization(object):
         if units == "SI":
             self.units=units
         else:
-            print "units '" + units + "' are not supported. Supported units are: 'SI'"
+            print("units '" + units + "' are not supported. Supported units are: 'SI'")
         
         self.BBar=BBar
         self.RBar=RBar
@@ -164,7 +164,7 @@ class Sfincs_input(object):
             #strings must be enclosed in "" in namelists
             #may be wise to see if the string contains citation marks...
             if (value.find("'") != -1) or (value.find('"') != -1):
-                print "Warning! String to changevar contains a ' or \" character." 
+                print("Warning! String to changevar contains a ' or \" character.")
             value = '"' + value + '"'
         elif (type(value) == list) or (type(value) == np.ndarray):
             # arrays are space seperated
@@ -176,6 +176,31 @@ class Sfincs_input(object):
         else:
             pass    
         subprocess.call("sed -i -e '/\&"+group+"/I,/\&/{ s/^  "+var+" =.*/  "+var+" = "+str(value)+"/I } ' "+self.input_name, shell=True)
+
+    def changessvar(self,var,value):
+        # Warning: this command will fail silently if the pattern is not found. Sorry about that.
+        # Warning: case insensitive
+        if type(value) == bool:
+            if value == True:
+                value = ".true."
+            else:
+                value = ".false."
+        elif type(value) == str:
+            #strings must be enclosed in "" in namelists
+            #may be wise to see if the string contains citation marks...
+            if (value.find("'") != -1) or (value.find('"') != -1):
+                print("Warning! String to changevar contains a ' or \" character.")
+            value = '"' + value + '"'
+        elif (type(value) == list) or (type(value) == np.ndarray):
+            # arrays are space seperated
+            delimiter=' '
+            value_temp = '' 
+            for val in value:
+                value_temp =  value_temp + str(val) + delimiter
+            value = value_temp.rsplit(delimiter,1)[0]
+        else:
+            pass    
+        subprocess.call("sed -i -e 's/^\!ss "+var+" =.*/\!ss "+var+" = "+str(value)+"/' "+self.input_name, shell=True)
     
     def get_value_from_input_or_defaults(self,groupname,varname):
         varname = varname.lower()
@@ -1004,7 +1029,7 @@ class Sfincs_simulation(object):
     
     @property
     def A1_r(self):
-        print self.drHat_dpsiHat
+        print(self.drHat_dpsiHat)
         return self.A1/(self.drHat_dpsiHat*self.normalization.RBar)
         
     @property
@@ -1086,19 +1111,19 @@ if __name__=="__main__":
     species_filename = "species"
     simul = Sfincs_simulation('.')
 
-    print "GammaHat:"
-    print simul.GammaHat
-    print "GammaHat_C:"
-    print simul.GammaHat_C
-    print "QHat:"
-    print simul.QHat
-    print "QHat_C:"
-    print simul.QHat_C
-    print "FSABFlow:"
-    print simul.FSABFlow
+    print("GammaHat:")
+    print(simul.GammaHat)
+    print("GammaHat_C:")
+    print(simul.GammaHat_C)
+    print("QHat:")
+    print(simul.QHat)
+    print("QHat_C:")
+    print(simul.QHat_C)
+    print("FSABFlow:")
+    print(simul.FSABFlow)
 
-    print "Gamma_C/Gamma:"
-    print simul.GammaHat_C/simul.GammaHat
-    print "Q_C/Q:"
-    print simul.QHat_C/simul.QHat
+    print("Gamma_C/Gamma:")
+    print(simul.GammaHat_C/simul.GammaHat)
+    print("Q_C/Q:")
+    print(simul.QHat_C/simul.QHat)
 

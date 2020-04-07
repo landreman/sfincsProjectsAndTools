@@ -12,8 +12,6 @@ class Er_scan(object):
 
     def __getattr__(self, name):
         """Get attributes from the underlying simulations by interpolation"""
-        # REMEMBER: we cannot acccess attributes of this class with dot notation
-        # use self.__dict__["variable name"] instead.
         y = [getattr(s,name) for s in self.simuls]
         x = self.Ers
         if self.use_roots == "all":
@@ -71,7 +69,7 @@ class Er_scan(object):
         #inputRadialCoordinateForGradients = np.array([s.input.inputRadialCoordinateForGradients for s in simuls])
         # NOTE: this assumes all the simulations use the same inputRadialCoordinateForGradients. TODO: remove this assumption.
         Ers = np.array([s.Er for s in simuls])
-        tmp = sorted(zip(Ers,simuls))
+        tmp = sorted(zip(Ers,simuls), key = lambda x: x[0])
         self.simuls = [b for a,b in tmp]
         self.Ers = [a for a,b in tmp]
         self.interpolator = interpolator
@@ -106,9 +104,9 @@ class Er_scan(object):
         for index,value in enumerate(signFlips):
             if value:
                 roots.append(brentq(interpolator,Er_fine[index],Er_fine[index+1]))
-                # Convert standard array to numpy array:
-                roots = np.sort(np.array(roots))
-
+               
+        # Convert standard array to numpy array:
+        roots = np.sort(np.array(roots))
         return roots
 
 
