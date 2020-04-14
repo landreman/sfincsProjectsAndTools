@@ -1017,6 +1017,19 @@ class Sfincs_simulation(object):
         return self.outputs["THats"][()]
 
     @property
+    def FSABjHatOverB0(self):
+        return self.outputs["FSABjHatOverB0"][()]
+
+    @property
+    def FSABjOverB0_Am2(self):
+        return self.FSABjHatOverB0 * self.normalization.eBar * self.normalization.nBar * self.normalization.vBar
+
+    @property
+    def FSABjOverB0_kAm2(self):
+        return self.FSABjOverB0_Am2/1000
+    
+    
+    @property
     def A1(self):
         ret = self.dnHatdpsiHats/self.nHats + self.dTHatdpsiHats/self.THats + self.input.alpha * self.input.Zs * self.dPhiHatdpsiHat/self.THats
         return ret
