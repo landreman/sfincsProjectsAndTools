@@ -1248,7 +1248,7 @@ class fluxcoorddiscr(object):
         ax.set_ylabel(self.name+r' poloidal coordinate $/(2\pi)$')
         if title!='':
             ax.set_title(title)
-        else:
+        elif isinstance(toshow,str):
             ax.set_title(toshow)
         plt.colorbar()
         #plt.show()
