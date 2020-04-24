@@ -1,4 +1,4 @@
-from __future__ import division
+from __future__ import division, print_function
 import numpy as np
 import f90nml
 import h5py
@@ -21,7 +21,7 @@ class Normalization(object):
         if units == "SI":
             self.units=units
         else:
-            print "units '" + units + "' are not supported. Supported units are: 'SI'"
+            print("units '" + units + "' are not supported. Supported units are: 'SI'")
         
         self.BBar=BBar
         self.RBar=RBar
@@ -33,7 +33,8 @@ class Normalization(object):
         self.vBar=np.sqrt(2*TBar/mBar)
         self.alpha = ePhiBar/TBar
         self.Delta = mBar*self.vBar/(eBar*BBar*RBar)
-
+        self.PhiBar = self.ePhiBar/self.eBar
+        
     def __str__(self):
         return str(self.RBar) + "," +str(self.BBar) + "," +str(self.TBar) + "," +str(self.mBar) + "," +str(self.nBar) + "," +str(self.eBar) + "," +str(self.ePhiBar)
 
@@ -163,7 +164,7 @@ class Sfincs_input(object):
             #strings must be enclosed in "" in namelists
             #may be wise to see if the string contains citation marks...
             if (value.find("'") != -1) or (value.find('"') != -1):
-                print "Warning! String to changevar contains a ' or \" character." 
+                print("Warning! String to changevar contains a ' or \" character.")
             value = '"' + value + '"'
         elif (type(value) == list) or (type(value) == np.ndarray):
             # arrays are space seperated
@@ -175,6 +176,31 @@ class Sfincs_input(object):
         else:
             pass    
         subprocess.call("sed -i -e '/\&"+group+"/I,/\&/{ s/^  "+var+" =.*/  "+var+" = "+str(value)+"/I } ' "+self.input_name, shell=True)
+
+    def changessvar(self,var,value):
+        # Warning: this command will fail silently if the pattern is not found. Sorry about that.
+        # Warning: case insensitive
+        if type(value) == bool:
+            if value == True:
+                value = ".true."
+            else:
+                value = ".false."
+        elif type(value) == str:
+            #strings must be enclosed in "" in namelists
+            #may be wise to see if the string contains citation marks...
+            if (value.find("'") != -1) or (value.find('"') != -1):
+                print("Warning! String to changevar contains a ' or \" character.")
+            value = '"' + value + '"'
+        elif (type(value) == list) or (type(value) == np.ndarray):
+            # arrays are space seperated
+            delimiter=' '
+            value_temp = '' 
+            for val in value:
+                value_temp =  value_temp + str(val) + delimiter
+            value = value_temp.rsplit(delimiter,1)[0]
+        else:
+            pass    
+        subprocess.call("sed -i -e 's/^\!ss "+var+" =.*/\!ss "+var+" = "+str(value)+"/' "+self.input_name, shell=True)
     
     def get_value_from_input_or_defaults(self,groupname,varname):
         varname = varname.lower()
@@ -364,9 +390,9 @@ class Sfincs_simulation(object):
 
     def copy(self,new_dirname):
         copytree(self.dirname,new_dirname)
-        return Sfincs_simulation(new_dirname,input_name=self.input_name,norm_name=self.norm_name,species_name=self.species_name,override_geometry_name=self.equilibrium_name)
+        return Sfincs_simulation(new_dirname,input_name=self.input_name,norm_name=self.norm_name,species_name=self.species_name,override_geometry_name=self.equilibrium_name, load_geometry=self.load_geometry)
         
-    def __init__(self,dirname,input_name="input.namelist",norm_name="norm.namelist",species_name="species",override_geometry_name=None, load_geometry=True):
+    def __init__(self,dirname,input_name="input.namelist",norm_name="norm.namelist",species_name="species",override_geometry_name=None, load_geometry=True, Booz=None, geom=None):
         #description of simulation, for usage as legend in plots, etc.
         self.description=""
 
@@ -396,27 +422,30 @@ class Sfincs_simulation(object):
         # read in the correct radius in the Boozer file
         self.geometry_halfloaded = False
         if (self.input.geometryScheme == 11) and load_geometry:
-            self.load_geometry()
+            self.load_geometry(Booz,geom)
             
         
-    def load_geometry(self):
+    def load_geometry(self,Booz,geom):
         # known problem: if self.input.equilibrium_name is changed
         # these quanitities will no longer correspond to those indicated by the input.namelist
         # in some sense, these belong to the input_file and not the simulation, but the input file doesn't right now know about it's directory and hence can't translate to absolute path.
-        self.symmetry='StelSym'
-        self.min_Bmn=0
-        self.max_m=float("inf")
-        self.maxabs_n=float("inf")
-        self.signcorr=1
-        verbose = 0
+        if geom is None:
+            self.symmetry='StelSym'
+            self.min_Bmn=0
+            self.max_m=float("inf")
+            self.maxabs_n=float("inf")
+            self.signcorr=1
+            verbose = 0
 
-        self.zeroout_Deltaiota = 0.000
+            self.zeroout_Deltaiota = 0.000
 
-        try:
-            self.geom = bcgeom(self.equilibrium_name,self.min_Bmn,self.max_m,self.maxabs_n,self.symmetry,self.signcorr,verbose)
-        except IOError as e:
-            raise IOError("Error loading geometry: " + str(e))
-
+            try:
+                print("Loading geometry " +self.equilibrium_name +" ...")
+                self.geom = bcgeom(self.equilibrium_name,self.min_Bmn,self.max_m,self.maxabs_n,self.symmetry,self.signcorr,verbose)
+            except IOError as e:
+                raise IOError("Error loading geometry: " + str(e))
+        else:
+            self.geom = geom
         self._Nperiods = self.geom.Nperiods
         self._psiAHat = self.geom.psi_a/(self.normalization.BBar*self.normalization.RBar**2)
         self._aHat = self.geom.minorradiusW7AS/self.normalization.RBar
@@ -426,8 +455,10 @@ class Sfincs_simulation(object):
         self.geometry_halfloaded = True
         self.rind=np.argmin(np.fabs(self.rNs - self.rN_wish))
         self._iota = self.geom.iota[self.rind]
-
-        self.Booz = fluxcoorddiscr(self.geom,self.rind,self.input.Ntheta,self.input.Nzeta,u_zeroout_Deltaiota=self.zeroout_Deltaiota,name='Boozer')
+        if Booz is None:
+            self.Booz = fluxcoorddiscr(self.geom,self.rind,self.input.Ntheta,self.input.Nzeta,u_zeroout_Deltaiota=self.zeroout_Deltaiota,name='Boozer')
+        else:
+            self.Booz=Booz
         self._GHat=self.Booz.G/(self.normalization.BBar*self.normalization.RBar)
         self._IHat=self.Booz.I/(self.normalization.BBar*self.normalization.RBar)
         self._B00Hat = self.Booz.B00/(self.normalization.BBar)
@@ -702,7 +733,7 @@ class Sfincs_simulation(object):
 
     
     @property
-    def Er(self):
+    def ErHat(self):
         if self.input.inputRadialCoordinateForGradients == 0:
             conversion_factor = (2*self.psiAHat*np.sqrt(self.psiN))/self.aHat
         elif self.input.inputRadialCoordinateForGradients == 1:
@@ -714,7 +745,7 @@ class Sfincs_simulation(object):
             conversion_factor = 1/self.aHat
         else:
             raise ValueError("inputRadialCoordinate should be 0,1,2,3,4; it is" + str(self.input.inputRadialCoordinate))
-        return self.input.dPhiHatds * conversion_factor
+        return -self.input.dPhiHatds * conversion_factor
 
     
     @property
@@ -809,6 +840,11 @@ class Sfincs_simulation(object):
         return self.input.mHats * self.normalization.mBar
 
     @property
+    def Zs(self):
+        return self.input.Zs
+    
+    
+    @property
     def charges(self):
         return self.input.Zs * self.normalization.eBar
         
@@ -834,6 +870,22 @@ class Sfincs_simulation(object):
     def r_eff(self):
         return self.rN * self.aHat * self.normalization.RBar
 
+        
+    @property
+    def dndrs(self):
+        return self.dnHatdrHats  * self.normalization.nBar/self.normalization.RBar
+    
+    @property
+    def dTdrs(self):
+        return  self.dTHatdrHats  * self.normalization.nBar/self.normalization.RBar
+    
+    @property
+    def dVdr(self):
+        return  (self.VPrimeHat/self.drHat_dpsiHat) * self.normalization.RBar**2
+
+    @property
+    def Er(self):
+        return self.ErHat * self.normalization.PhiBar/self.normalization.RBar
 
     @property
     def Gamma(self):
@@ -844,6 +896,12 @@ class Sfincs_simulation(object):
         """Gamma in units of 1/s"""
         return self.VPrimeHat * self.GammaHat * self.normalization.nBar*self.normalization.vBar*self.normalization.RBar**2
 
+    
+    @property
+    def Gamma_sm2(self):
+        """Gamma in units of 1/(sm^2)"""
+        return self.Gamma_s/self.dVdr
+    
     @property
     def Gamma_C(self):
         return self.GammaHat_C * self.normalization.nBar*self.normalization.vBar/self.normalization.RBar
@@ -853,6 +911,11 @@ class Sfincs_simulation(object):
         """Gamma_C in units of 1/s"""
         return self.VPrimeHat * self.GammaHat_C * self.normalization.nBar*self.normalization.vBar*self.normalization.RBar**2
 
+    
+    @property
+    def Gamma_C_sm2(self):
+        """Gamma_C in units of 1/(sm^2)"""
+        return self.Gamma_C_s/self.dVdr
 
     @property
     def Gamma_r(self):
@@ -954,6 +1017,19 @@ class Sfincs_simulation(object):
         return self.outputs["THats"][()]
 
     @property
+    def FSABjHatOverB0(self):
+        return self.outputs["FSABjHatOverB0"][()]
+
+    @property
+    def FSABjOverB0_Am2(self):
+        return self.FSABjHatOverB0 * self.normalization.eBar * self.normalization.nBar * self.normalization.vBar
+
+    @property
+    def FSABjOverB0_kAm2(self):
+        return self.FSABjOverB0_Am2/1000
+    
+    
+    @property
     def A1(self):
         ret = self.dnHatdpsiHats/self.nHats + self.dTHatdpsiHats/self.THats + self.input.alpha * self.input.Zs * self.dPhiHatdpsiHat/self.THats
         return ret
@@ -966,7 +1042,7 @@ class Sfincs_simulation(object):
     
     @property
     def A1_r(self):
-        print self.drHat_dpsiHat
+        print(self.drHat_dpsiHat)
         return self.A1/(self.drHat_dpsiHat*self.normalization.RBar)
         
     @property
@@ -1048,19 +1124,19 @@ if __name__=="__main__":
     species_filename = "species"
     simul = Sfincs_simulation('.')
 
-    print "GammaHat:"
-    print simul.GammaHat
-    print "GammaHat_C:"
-    print simul.GammaHat_C
-    print "QHat:"
-    print simul.QHat
-    print "QHat_C:"
-    print simul.QHat_C
-    print "FSABFlow:"
-    print simul.FSABFlow
+    print("GammaHat:")
+    print(simul.GammaHat)
+    print("GammaHat_C:")
+    print(simul.GammaHat_C)
+    print("QHat:")
+    print(simul.QHat)
+    print("QHat_C:")
+    print(simul.QHat_C)
+    print("FSABFlow:")
+    print(simul.FSABFlow)
 
-    print "Gamma_C/Gamma:"
-    print simul.GammaHat_C/simul.GammaHat
-    print "Q_C/Q:"
-    print simul.QHat_C/simul.QHat
+    print("Gamma_C/Gamma:")
+    print(simul.GammaHat_C/simul.GammaHat)
+    print("Q_C/Q:")
+    print(simul.QHat_C/simul.QHat)
 

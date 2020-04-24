@@ -12,13 +12,46 @@ class Er_scan(object):
 
     def __getattr__(self, name):
         """Get attributes from the underlying simulations by interpolation"""
-        # REMEMBER: we cannot acccess attributes of this class with dot notation
-        # use self.__dict__["variable name"] instead.
-        y = [getattr(s,name) for s in self.__dict__["simuls"]]
-        x = self.__dict__["Ers"]
-        return np.array([self.__dict__["interpolator"](x,y)(r) for r in self.__dict__["roots"]])
-
-    def __init__(self,dirname, interpolator =PchipInterpolator ,input_name="input.namelist",norm_name="norm.namelist",species_name="species",override_geometry_name=None, load_geometry=False):
+        if self.roots is None:
+            raise ValueError("Ambipolar radial electric field cannot be found by interpolation since the radial current does not reach zero!")
+            # TODO: give estimate of ambipolar Er value based on extrapolation
+        y = [getattr(s,name) for s in self.simuls]
+        x = self.Ers
+        if self.use_roots == "all":
+            return np.array([self.interpolator(x,y)(r) for r in self.roots])
+        
+        elif (self.use_roots == "i&e") or (self.use_roots == "e&i"):
+            if len(self.roots) == 3:
+                return np.array([self.interpolator(x,y)(r) for r in [self.roots[0],self.roots[2]]])
+            elif len(self.roots) == 1:
+                return self.interpolator(x,y)(self.roots[0])
+            
+        elif self.use_roots == "e":
+            if len(self.roots) == 3:
+                return self.interpolator(x,y)(self.roots[2])
+            elif len(self.roots) == 1:
+                if self.root_types[0] == "electron":
+                    return self.interpolator(x,y)(self.roots[0])
+                else:
+                    return None
+            else:
+                raise ValueError("Roots are unknown type")
+        
+        elif self.use_roots == "i":
+            if len(self.roots) == 3:
+                return self.interpolator(x,y)(self.roots[0])
+            elif len(self.roots) == 1:
+                if self.root_types[0] == "ion":
+                    return self.interpolator(x,y)(self.roots[0])
+                else:
+                    return None
+            else:
+                raise ValueError("Roots are unknown type")
+            
+        else:
+            raise ValueError("Cannot understand requested root types; supported values are: 'i&e', 'i', 'e' or 'all'." )
+                                 
+    def __init__(self,dirname, interpolator =PchipInterpolator ,input_name="input.namelist",norm_name="norm.namelist",species_name="species",override_geometry_name=None, load_geometry=False, use_roots = "i&e"):
         """ dirname: The directory where the Er scan is located in. 
                      This directory will be scanned for subdirs. """
 
@@ -26,25 +59,32 @@ class Er_scan(object):
         self.subdirs = [name for name in os.listdir(dirname) if os.path.isdir(os.path.join(dirname, name))]
         
         # sort simulations based on Ers
-        simuls = [Sfincs_simulation("./" + dirname + "/" + subdir, input_name,norm_name,species_name,override_geometry_name, load_geometry) for subdir in self.__dict__["subdirs"]]
+        if load_geometry:
+            simuls0 = Sfincs_simulation("./" + dirname + "/" + self.subdirs[0], input_name,norm_name,species_name,override_geometry_name, load_geometry)
+            # reuse the geometry from the first simulation
+            Booz = simuls0.Booz
+            geom = simuls0.geom
+            simuls = [Sfincs_simulation("./" + dirname + "/" + subdir, input_name,norm_name,species_name,override_geometry_name, load_geometry,Booz,geom) for subdir in self.subdirs[1:]]
+            simuls = [simuls0] + simuls
+        else:
+            simuls = [Sfincs_simulation("./" + dirname + "/" + subdir, input_name,norm_name,species_name,override_geometry_name, load_geometry) for subdir in self.subdirs]
+            
         #inputRadialCoordinateForGradients = np.array([s.input.inputRadialCoordinateForGradients for s in simuls])
         # NOTE: this assumes all the simulations use the same inputRadialCoordinateForGradients. TODO: remove this assumption.
         Ers = np.array([s.Er for s in simuls])
-        tmp = sorted(zip(Ers,simuls))
+        tmp = sorted(zip(Ers,simuls), key = lambda x: x[0])
         self.simuls = [b for a,b in tmp]
         self.Ers = [a for a,b in tmp]
         self.interpolator = interpolator
-        
+        self.use_roots = use_roots
         jrs = np.array([s.jrHat for s in self.__dict__["simuls"]])
         maxjr = np.max(jrs)
         minjr = np.min(jrs)
         if not ((maxjr > 0) and (minjr < 0)):
-            raise ValueError("Ambipolar radial electric field cannot be found by interpolation. maxjr = " + str(maxjr) + ", minjr = " + str(minjr))
-            # TODO: give estimate of ambipolar Er value based on extrapolation
+            self.roots = None
         else:
             self.roots = self.solve_for_ambipolar_Er(self.Ers,jrs)
-
-        self.root_types = self.classify_roots(self.__dict__["roots"])
+            self.root_types = self.classify_roots(self.__dict__["roots"])
 
 
     def solve_for_ambipolar_Er(self,Ers,jrs,NEr_fine = 500):
@@ -65,9 +105,9 @@ class Er_scan(object):
         for index,value in enumerate(signFlips):
             if value:
                 roots.append(brentq(interpolator,Er_fine[index],Er_fine[index+1]))
-                # Convert standard array to numpy array:
-                roots = np.sort(np.array(roots))
-
+               
+        # Convert standard array to numpy array:
+        roots = np.sort(np.array(roots))
         return roots
 
 
