@@ -230,7 +230,7 @@ class Sfincs_input(object):
     def nu_n(self):
         nu_n =  self.get_value_from_input_or_defaults("physicsparameters","nu_n")
         if nu_n<0:
-            # check that normalizations are correct
+            # TODO check that normalizations are correct
             lnLambda = (25.3e+0) - (1.15e+0)*np.log10(self.nHats[0]*(1e14)) + (2.30e+0)*np.log10(self.THats[0]*1000)
             eC = 1.6022e-19
             epsilon0 = 8.8542e-12
@@ -409,6 +409,7 @@ class Sfincs_simulation(object):
             self.outputs=h5py.File(self.absolute_path(self.input.output_filename),'r')
         except IOError:
             self.hasOutput=False
+            print("no output: " + str(self.absolute_path(self.input_name)))
         else:
             self.hasOutput=True
 
@@ -568,7 +569,18 @@ class Sfincs_simulation(object):
         BHat = self.BHat
         # order of axis: zeta, theta, species, iteration
         # thus the below sum over zeta and theta
-        return np.sum(X/BHat**2,axis=(0,1))/np.sum(1/BHat**2)
+
+        rank = len(X.shape)
+        if rank == 2:
+            return np.sum(X/BHat**2,axis=(0,1))/np.sum(1/BHat**2)
+        elif rank == 3:
+            return np.sum(X/BHat[:,:,np.newaxis]**2,axis=(0,1))/np.sum(1/BHat**2)
+        elif rank == 4:
+            X = X[:,:,:,-1]
+            return np.sum(X/BHat[:,:,np.newaxis]**2,axis=(0,1))/np.sum(1/BHat**2)
+        else:
+            print("Unsupported rank for FSA:" + str(rank))
+            raise ValueError 
             
     @property
     def mixed_col_NC_C_ratio(self):
@@ -651,6 +663,16 @@ class Sfincs_simulation(object):
                 return self.outputs["psiN"][()]
             except KeyError:
                 raise NotImplementedError("psiN cannot be calculated for this simulation since it does not use a .bc file and does not contain psiN in the output.")
+
+    @property
+    def theta(self):
+        return self.outputs["theta"][()]
+
+    
+    @property
+    def zeta(self):
+        return self.outputs["zeta"][()]
+    
     
     @property
     def rN(self):
@@ -761,8 +783,125 @@ class Sfincs_simulation(object):
         if self.includePhi1:
             return self.outputs["Phi1Hat"][:,:,-1]
         else:
-            None
+            return None
 
+    @property
+    def n1Hat(self):
+        # zeta,theta,species
+        return self.outputs["densityPerturbation"][:,:,:,-1]
+
+    
+    @property
+    def total_nHat(self):
+        # zeta,theta,species
+        return self.outputs["totalDensity"][:,:,:,-1]
+
+    
+    @property
+    def n1Hat2(self):
+        n1 = self.n1Hat
+        FSAn1 = self.FSA(n1)
+        return np.sqrt(self.FSA((n1 - FSAn1)**2))
+
+    @property
+    def n1Hat_adiabatic(self):
+        if self.includePhi1:
+            return self.nHats * (np.exp(-self.Zs * self.input.alpha * self.Phi1Hat[:,:,np.newaxis]/self.THats) - 1)
+        else:
+            return None
+
+    
+    @property
+    def externalNHat(self):
+        try:
+            return self.outputs["externalN"][:,:,:]
+        except KeyError:
+            return 0.0
+
+    
+    @property
+    def externalFlow(self):
+        try:
+            return self.outputs["externalFlow"][:,:,:]
+        except KeyError:
+            return 0.0
+
+    @property
+    def externalCurrent(self):
+        if self.externalZs is None:
+            print(self.dirname)
+            externalZs = 0.0
+        else:
+            externalZs = self.externalZs
+        
+        return np.sum(externalZs * self.externalFlow,axis=2)
+
+        
+    @property
+    def externalFlow_ms(self):
+        return self.externalFlow * self.normalization.nBar * self.normalization.vBar
+
+    @property
+    def externalCurrent_Am2(self):
+        return self.externalCurrent * self.normalization.nBar * self.normalization.vBar * self.normalization.eBar
+
+    
+    @property
+    def externalCurrent_kAm2(self):
+        return self.externalCurrent_Am2/1e3
+     
+    @property
+    def externalFSABFlow(self):
+        try:
+            return self.outputs["externalFSABFlow"][:]
+        except KeyError:
+            return 0.0
+
+    @property
+    def externalZs(self):
+        try:
+            return self.outputs["externalZs"][:]
+        except KeyError:
+            return None
+        
+    @property
+    def externalFSABjHat(self):
+        if self.externalZs is None:
+            print(self.dirname)
+            externalZs = 0.0
+        else:
+            externalZs = self.externalZs
+        return np.sum(externalZs * self.externalFSABFlow)
+
+    @property
+    def externalFSABjHatOverB0(self):
+        return self.externalFSABjHat/self.B00Hat
+
+    @property
+    def externalFSABjOverB0_Am2(self):
+        return self.externalFSABjHatOverB0 * self.normalization.eBar * self.normalization.nBar * self.normalization.vBar
+
+    @property
+    def externalFSABjOverB0_kAm2(self):
+        return self.externalFSABjOverB0_Am2/1e3
+    
+    @property
+    def FSAB2(self):
+        self.FSA(self.BHat**2)
+        
+    @property
+    def FSABExternalVelocityUsingFSADensityOverRootFSAB2(self):
+        return self.externalFSABFlow/(np.sqrt(self.FSAB2)*self.FSA(self.externalNHat))
+        
+
+    @property
+    def externalNHat2(self):
+        n1 = self.externalNHat
+        FSAn1 = self.FSA(n1)
+        print(FSAn1)
+        return np.sqrt(self.FSA((n1 - FSAn1)**2))
+        
+        
     @property
     def VPrimeHat(self):
         return self.outputs["VPrimeHat"][()]
@@ -888,6 +1027,11 @@ class Sfincs_simulation(object):
         return self.ErHat * self.normalization.PhiBar/self.normalization.RBar
 
     @property
+    def dPhidr(self):
+        return self.dPhiHatdrHat * self.normalization.PhiBar/self.normalization.RBar
+
+    
+    @property
     def Gamma(self):
         return self.GammaHat * self.normalization.nBar*self.normalization.vBar/self.normalization.RBar
 
@@ -969,9 +1113,30 @@ class Sfincs_simulation(object):
         return self.QHat_C_rHat *self.normalization.nBar*self.normalization.vBar**3*self.normalization.mBar
 
     @property
+    def FSABVelocityUsingFSADensityOverRootFSAB2_ms(self):
+        return self.FSABVelocityUsingFSADensityOverRootFSAB2 * self.normalization.vBar
+
+        
+    @property
+    def FSABExternalVelocityUsingFSADensityOverRootFSAB2_ms(self):
+        return self.FSABExternalVelocityUsingFSADensityOverRootFSAB2 * self.normalization.vBar
+    
+    @property
     def FSABFlow(self):
         return self.outputs["FSABFlow"][:,-1]
 
+    @property
+    def flow(self):
+        return self.outputs["flow"][:,:,:,-1]
+
+    @property
+    def flow_ms(self):
+        return self.flow * self.normalization.nBar * self.normalization.vBar
+
+    @property
+    def FSABVelocityUsingFSADensityOverRootFSAB2(self):
+        return self.outputs["FSABVelocityUsingFSADensityOverRootFSAB2"][:,-1]
+    
     @property
     def nuBar(self):
         # Inserting the definition of nu_n, this is
@@ -1000,6 +1165,12 @@ class Sfincs_simulation(object):
     def dPhiHatdpsiHat(self):
         return self.outputs["dPhiHatdpsiHat"][()]
 
+    
+    @property
+    def dPhiHatdrHat(self):
+        return self.outputs["dPhiHatdrHat"][()]
+
+    
     @property
     def dTHatdpsiHat(self):
         return self.outputs["dTHatdpsiHat"][()]
@@ -1018,7 +1189,7 @@ class Sfincs_simulation(object):
 
     @property
     def FSABjHatOverB0(self):
-        return self.outputs["FSABjHatOverB0"][()]
+        return self.outputs["FSABjHatOverB0"][()][-1]
 
     @property
     def FSABjOverB0_Am2(self):
@@ -1048,7 +1219,29 @@ class Sfincs_simulation(object):
     @property
     def A2_r(self):
         return self.A2/(self.drHat_dpsiHat*self.normalization.RBar)
-    
+
+    @property
+    def deltaT(self):
+        if self.input.geometryScheme == 11:
+            B00Hat = self.B00Hat
+            IHat = self.IHat
+            GHat = self.GHat
+            iota = self.iota
+        RHat = np.fabs((GHat + iota*IHat)/B00Hat)
+        LT =self.THats/self.dTHatdrHats
+        return  RHat/LT
+
+    @property
+    def deltaN(self):
+        if self.input.geometryScheme == 11:
+            B00Hat = self.B00Hat
+            IHat = self.IHat
+            GHat = self.GHat
+            iota = self.iota
+        RHat = np.fabs((GHat + iota*IHat)/B00Hat)
+        LN =self.nHats/self.dnHatdrHats
+        return  RHat/LN
+        
     @property
     def collisionality(self):
         if self.input.geometryScheme == 11:
