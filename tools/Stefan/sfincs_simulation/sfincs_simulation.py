@@ -209,11 +209,16 @@ class Sfincs_input(object):
         if not varname in inputs[groupname].keys():
             return Sfincs_input.defaults[groupname][varname]
         else:
-            return inputs[groupname][varname]
+            return inputs[groupname][varname]#.split('!',1)[0].strip()
     
     def __init__(self,input_name):
         self.input_name = input_name
 
+    def copy(self,new_dirname):
+        dirname = ("./" + self.input_name).rsplit("/",1)[0] +"/"
+        copytree(dirname,new_dirname)
+        return Sfincs_input(new_dirname)
+        
     @property
     def output_filename(self):
         return self.get_value_from_input_or_defaults("general","outputfilename")
@@ -254,10 +259,24 @@ class Sfincs_input(object):
     def nHats(self):
         return np.array(self.get_value_from_input_or_defaults("speciesparameters","nhats"))
 
+    @property
+    def dnHatdrHats(self):
+        return np.array(self.get_value_from_input_or_defaults("speciesparameters","dnhatdrhats"))
+
+    @property
+    def dTHatdrHats(self):
+        return np.array(self.get_value_from_input_or_defaults("speciesparameters","dthatdrhats"))
+
+    @property
+    def dPhiHatdrHat(self):
+        return np.array(self.get_value_from_input_or_defaults("physicsparameters","dphihatdrhat"))
+
 
     @property
     def Zeff(self):
-        return np.sum(self.Zs**2*self.nHats)/np.sum(self.Zs*self.nHats)
+        # exclude electrons from sum if electrons are included in the simulation
+        noe = np.where(Zs!=-1)
+        return np.sum(self.Zs[noe]**2*self.nHats[noe])/np.sum(self.Zs[noe]*self.nHats[noe])
     
     @property
     def THats(self):
