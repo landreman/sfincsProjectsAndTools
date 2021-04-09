@@ -215,6 +215,8 @@ class Sfincs_input(object):
         self.input_name = input_name
 
     def copy(self,new_dirname):
+        # copy the directory and everything in it, not only
+        # the input_namelist
         dirname = ("./" + self.input_name).rsplit("/",1)[0] +"/"
         copytree(dirname,new_dirname)
         return Sfincs_input(new_dirname)
