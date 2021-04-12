@@ -424,8 +424,14 @@ class Sfincs_simulation(object):
         
         
         self.input = Sfincs_input(self.absolute_path(self.input_name))
-        self.normalization = create_normalization(self.absolute_path(self.norm_name))
-        self.species = create_species(self.normalization,self.absolute_path(self.species_name))
+        try:
+            self.normalization = create_normalization(self.absolute_path(self.norm_name))
+        except FileNotFoundError:
+            self.normalization = Normalization(1,1,1.602176565e-16,1.672621898e-27,1e20,1.602176565e-19,1.602176565e-16,units="SI")
+        try:
+            self.species = create_species(self.normalization,self.absolute_path(self.species_name))
+        except FileNotFoundError:
+            pass
         try:
             self.outputs=h5py.File(self.absolute_path(self.input.output_filename),'r')
         except IOError:
@@ -497,6 +503,30 @@ class Sfincs_simulation(object):
             except KeyError:
                 raise NotImplementedError("Nperiods cannot be calculated for this simulation since it does not use a .bc file and does not contain NPeriods in the output.")
 
+    @property
+    def Nspecies(self):
+        return self.input.Nspecies
+
+    @property
+    def Ntheta(self):
+        return self.input.Ntheta
+
+    @property
+    def Nzeta(self):
+        return self.input.Nzeta
+    
+    @property
+    def Nx(self):
+        return self.input.Nx
+
+    @property
+    def Nxi(self):
+        return self.input.Nxi
+    
+    @property
+    def NL(self):
+        return self.input.NL
+    
     @property
     def psiAHat(self):
         if self.geometry_halfloaded:
@@ -820,6 +850,8 @@ class Sfincs_simulation(object):
     
     @property
     def n1Hat2(self):
+        # rms n1Hat
+        # close to zero for small density assymmetry
         n1 = self.n1Hat
         FSAn1 = self.FSA(n1)
         return np.sqrt(self.FSA((n1 - FSAn1)**2))
