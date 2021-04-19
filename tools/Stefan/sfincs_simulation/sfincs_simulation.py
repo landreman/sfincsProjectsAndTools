@@ -834,20 +834,56 @@ class Sfincs_simulation(object):
         if self.includePhi1:
             return self.outputs["Phi1Hat"][:,:,-1]
         else:
-            return None
+            prefactor=self.input.alpha * np.sum((self.Zs**2)*(self.nHats/self.THats))
+            charge_perturbation = np.sum(self.Zs*self.n1Hat,axis=2)
+            return charge_perturbation/prefactor
 
     @property
     def n1Hat(self):
         # zeta,theta,species
         return self.outputs["densityPerturbation"][:,:,:,-1]
 
+    @property
+    def n1(self):
+        # zeta,theta,species
+        return self.n1Hat * self.normalization.nBar
+
+    
+    @property
+    def rmsN1Hat(self):
+        n1 = self.total_nHat
+        FSAn1 = self.FSA(n1)
+        return np.sqrt(self.FSA((n1 - FSAn1)**2))/FSAn1
+
+    @property
+    def maxminN1Hat(self):
+        n1 = self.total_nHat
+        nmax = np.max(n1,axis=(0,1))
+        nmin = np.min(n1,axis=(0,1))
+        FSAn1 = self.FSA(n1)
+        return (nmax - nmin)/FSAn1
     
     @property
     def total_nHat(self):
         # zeta,theta,species
-        return self.outputs["totalDensity"][:,:,:,-1]
+        if self.includePhi1:
+            return self.outputs["totalDensity"][:,:,:,-1]
+        else:
+            return self.outputs["totalDensity"][:,:,:,-1] + self.n1Hat_adiabatic
 
-    
+
+    @property
+    def total_n(self):
+        # zeta,theta,species
+        return self.total_nHat * self.normalization.nBar
+
+
+    @property
+    def n1_adiabatic(self):
+        return self.n1Hat_adiabatic * self.normalization.nBar
+
+        
+            
     @property
     def n1Hat2(self):
         # rms n1Hat
@@ -861,7 +897,11 @@ class Sfincs_simulation(object):
         if self.includePhi1:
             return self.nHats * (np.exp(-self.Zs * self.input.alpha * self.Phi1Hat[:,:,np.newaxis]/self.THats) - 1)
         else:
-            return None
+            return -self.nHats * self.Zs * self.input.alpha * self.Phi1Hat[:,:,np.newaxis]/self.THats
+
+    @property
+    def boltzmann_factor(self):
+        return self.Zs * self.input.alpha * self.Phi1Hat[:,:,np.newaxis]/self.THats
 
     
     @property
@@ -940,21 +980,44 @@ class Sfincs_simulation(object):
     
     @property
     def FSAB2(self):
-        self.FSA(self.BHat**2)
+        return self.FSA(self.BHat**2)
+
+    @property
+    def B0Hat(self):
+        return 2*np.fabs(self.psiAHat)/self.aHat**2
         
     @property
-    def FSABExternalVelocityUsingFSADensityOverRootFSAB2(self):
-        return self.externalFSABFlow/(np.sqrt(self.FSAB2)*self.FSA(self.externalNHat))
-        
+    def FSABExternalFlowOverRootFSAB2(self):
+        return self.externalFSABFlow/(np.sqrt(self.FSAB2))#*self.FSA(self.externalNHat))
 
+    @property
+    def FSABExternalFlowOverRootFSAB2_sm2(self):
+        return self.FSABExternalFlowUsingFSADensityOverRootFSAB2 * self.normalization.vBar * self.normalization.nBar
+
+    @property
+    def FSABExternalFlow_arturo(self):
+        return self.externalFSABFlow * self.B0Hat/self.FSAB2
+
+    @property
+    def FSABFlow_arturo(self):
+        return (self.FSABFlow * self.B0Hat/self.FSAB2)
+
+    @property
+    def FSABExternalFlow_arturo_sm2(self):
+        return  self.FSABExternalFlow_arturo * self.normalization.vBar * self.normalization.nBar
+
+    @property
+    def FSABFlow_arturo_sm2(self):
+        return  self.FSABFlow_arturo * self.normalization.vBar * self.normalization.nBar
+    
     @property
     def externalNHat2(self):
         n1 = self.externalNHat
         FSAn1 = self.FSA(n1)
         print(FSAn1)
         return np.sqrt(self.FSA((n1 - FSAn1)**2))
-        
-        
+
+         
     @property
     def VPrimeHat(self):
         return self.outputs["VPrimeHat"][()]
@@ -1167,6 +1230,7 @@ class Sfincs_simulation(object):
 
     @property
     def FSABVelocityUsingFSADensityOverRootFSAB2_ms(self):
+        #print(self.FSABVelocityUsingFSADensityOverRootFSAB2)
         return self.FSABVelocityUsingFSADensityOverRootFSAB2 * self.normalization.vBar
 
         
