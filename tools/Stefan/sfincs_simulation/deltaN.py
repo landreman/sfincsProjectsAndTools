@@ -37,6 +37,9 @@ for subdir in subdirs:
         # skip this value
         print("Output not found for '" + subdir + "'.")
         continue
+    except AttributeError:
+        print("Simulation not (yet?) run for '"+ subdir + "'.")
+        continue
     param, xval = findTrailingInt(subdir)
     print(param)
     
@@ -49,9 +52,7 @@ for subdir in subdirs:
 # todo maxNspecies
 Nrows = maxNspecies * 1
 Ncols = len(d)
-fig,axes = plt.subplots(Nrows,Ncols,sharey=True)
-if Nrows == 1:
-    axes = [axes]
+fig,axes = plt.subplots(Nrows,Ncols,sharey=True,squeeze=False)
 for i,k in enumerate(d):
     for i_s in range(maxNspecies):
         for j in range(len(d[k])):
