@@ -1,4 +1,4 @@
-from __future__ import division
+from __future__ import division, print_function
 
 from numpy import sum,sqrt,array,zeros,exp
 from integrals import Fa as F, F2a as F2
@@ -136,6 +136,6 @@ if __name__ == "__main__":
 
     normalized_classical_transport = calculate_classical_transport(Zs,mHats,nHats,THats,ddpsiHat_nHats, ddpsiHat_THats ,Delta,alpha,nu_n, nablaPsiHat2,BHat)
     classical_transport = (nBar*sqrt(2*TBar/mBar)/RBar) * normalized_classical_transport/Z_increase
-    print classical_transport
+    print(classical_transport)
     quasi_neutrality = sum(Zs*normalized_classical_transport)
-    print quasi_neutrality
+    print(quasi_neutrality)
