@@ -51,6 +51,7 @@ radiusName = "rN" ##Radial coordinate to use on x-axis. Must be "psiHat", "psiN"
 #plotVariableName = "Er" ##Parameter to plot on y-axis. In this version it must be "Er", "dPhiHatdpsiHat", "dPhiHatdpsiN", "dPhiHatdrHat" or "dPhiHatdrN" .
 plotVariableName = "particleFlux_vd_rHat"
 species = 3
+decreaseForAdiabatic = True #This should only be true if an adiabatic species was included in any of the scans
 TransformPlotVariableToOutputUnitsFactor = vbar
 
 MinFloat = pow(10, -sys.float_info.dig) 
@@ -115,6 +116,8 @@ for directory in PlotDirectories:
                 integerToRepresentTrue = file["integerToRepresentTrue"][()]
                 includePhi1 = file["includePhi1"][()]
 
+                withAdiabatic = file["withAdiabatic"][()]
+
                 nHats = file["nHats"][()]
 
                 if includePhi1 == integerToRepresentTrue:
@@ -134,7 +137,10 @@ for directory in PlotDirectories:
                 #if plotVariableName == "particleFlux_vm_rHat":
                 if plotVariableName.find('Flux_v') != -1:
                     VariableValue = VariableValue[:, -1]
-                    VariableValue = VariableValue[species -1] 
+                    if decreaseForAdiabatic and withAdiabatic == integerToRepresentTrue:
+                        VariableValue = VariableValue[species - 2]
+                    else:
+                        VariableValue = VariableValue[species - 1] 
 
                 VariableValue = TransformPlotVariableToOutputUnitsFactor * VariableValue
                 if includePhi1 == integerToRepresentTrue:
@@ -150,7 +156,10 @@ for directory in PlotDirectories:
 
             #print("nHat: " + str(nHats[species -1]))
 
-            VariableValue = VariableValue / nHats[species -1]
+            if decreaseForAdiabatic and withAdiabatic == integerToRepresentTrue:
+                VariableValue = VariableValue / nHats[species - 2]
+            else:
+                VariableValue = VariableValue / nHats[species - 1]
 
             Nradii += 1
             radii.append(radiusValue)

@@ -6,16 +6,20 @@ import h5py
 def read_neoclassical_flux(radialCoordinate,sfincsOutputFilename):   
     if radialCoordinate == 0:
         # wish coordinate is psiHat
-        fluxname = "particleFlux_vd_psiHat"
+        particlefluxname = "particleFlux_vd_psiHat"
+        heatfluxname = "heatFlux_vd_psiHat"
     elif radialCoordinate == 1:
         # coordinate is psiN
-        fluxname = "particleFlux_vd_psiN"
+        particlefluxname = "particleFlux_vd_psiN"
+        heatfluxname = "heatFlux_vd_psiN"
     elif radialCoordinate == 2:
         # coordinate is rHat
-        fluxname = "particleFlux_vd_rHat"
+        particlefluxname = "particleFlux_vd_rHat"
+        heatfluxname = "heatFlux_vd_rHat"
     elif radialCoordinate == 3:
         # coordinate is rN
-        fluxname = "particleFlux_vd_rN"
+        particlefluxname = "particleFlux_vd_rN"
+        heatfluxname = "heatFlux_vd_rN"
 
     try:
         sfincsOutput = h5py.File(sfincsOutputFilename,'r')
@@ -23,10 +27,11 @@ def read_neoclassical_flux(radialCoordinate,sfincsOutputFilename):
         raise IOError("SFINCS output file '" + sfincsOutputFilename +"' not found.")
 
     try:
-        particleFlux = sfincsOutput["/"+fluxname][:,-1] #get last iteration for all species
+        particleFlux = sfincsOutput["/"+particlefluxname][:,-1] #get last iteration for all species
+        heatFlux = sfincsOutput["/"+heatfluxname][:,-1] #get last iteration for all species
     except:
         pass
-    return particleFlux
+    return particleFlux, heatFlux
 
 
 if __name__=="__main__":

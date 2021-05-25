@@ -103,6 +103,8 @@ for directory in PlotDirectories:
         Nradii = 0
         radii = []
         ydata = []
+
+        Nspecies = 0
         
         for SubDirectory in SubDirectories:
             fullSubDirectory = fullDirectory + "/" + SubDirectory
@@ -138,6 +140,8 @@ for directory in PlotDirectories:
                 IHat = file["IHat"][()]
                 iota = file["iota"][()]
                 nu_n = file["nu_n"][()]
+
+                Nspecies = file["Nspecies"][()]
 
                 DensityToNuFactor = np.absolute((GHat + iota*IHat)*nu_n*Zs**4 / (B0OverBBar*THats**2))
 
@@ -190,7 +194,7 @@ for directory in PlotDirectories:
         print ("")
         print (np.array(ydata_sorted))
 
-        for linenumber in range(0,4):
+        for linenumber in range(0,Nspecies):
             try:
                 LegendLabel = PlotLegendLabels[linenumber]
             except:
@@ -234,6 +238,16 @@ plt.subplots_adjust(left=LeftMargin, right=RightMargin, top=TopMargin, bottom=Bo
 
 if ShowSubPlotLabel:
     plt.text(SubPlotLabelXcoord, SubPlotLabelYcoord, SubPlotLabel)
+
+if NoScientificAxes :
+    ax.get_xaxis().get_major_formatter().set_scientific(False)
+    ax.get_yaxis().get_major_formatter().set_scientific(False)
+
+if ChangeXaxisTicks:
+    ax.xaxis.set_ticks(NewXaxisTicks)
+
+if ChangeYaxisTicks:
+    ax.yaxis.set_ticks(NewYaxisTicks)
     
 os.chdir(originalDirectory) 
 

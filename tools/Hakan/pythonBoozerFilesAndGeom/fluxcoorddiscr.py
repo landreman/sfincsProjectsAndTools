@@ -9,7 +9,7 @@ import matplotlib
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
 from matplotlib.ticker import LinearLocator, FormatStrFormatter
-
+import time
 import geomlib
 import mnFourierlib
 
@@ -101,19 +101,19 @@ import mnFourierlib
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Makes a 2d plot over the discretisation variables of an input quantity
 # Typical usage:
-# fig,plt=Booz.plot('gpsipsi',cmap='jet')                           shows a quantity from Booz
-# fig,plt=Booz.plot(nparrayquantity,title='The quantity',cmap=None) shows some input quantity
+# fig,ax=Booz.plot('gpsipsi',cmap='jet')                           shows a quantity from Booz
+# fig,ax=Booz.plot(nparrayquantity,title='The quantity',cmap=None) shows some input quantity
 # 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # plot3d() function 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Make a 3d plot of the flux surface with the input quantity shown as the color
 # Typical usage:
-# fig,plt=Booz.plot3d('B',title='Magnetic field',torstride=2,polstride=2,cmap=None)
-# fig,plt=Booz.plot3d(nparrayquantity,title='The quantity',torstride=1,polstride=1,cmap=None)
+# fig,ax=Booz.plot3d('B',title='Magnetic field',torstride=2,polstride=2,cmap=None)
+# fig,ax=Booz.plot3d(nparrayquantity,title='The quantity',torstride=1,polstride=1,cmap=None)
 
 
-class fluxcoorddiscr:
+class fluxcoorddiscr(object):
 
   @staticmethod
   def interp2_cyclic(uin,vin,F,ueval,veval,N):#general function to interpolate 2d cyclic on regular grids
@@ -242,7 +242,7 @@ class fluxcoorddiscr:
           Zmn=mnFourierlib.mnmat(Geom,Ntheta=Ntheta,Nzeta=Nzeta,rind=rind,quantity='Z')
           Dzetacylphimn=mnFourierlib.mnmat(Geom,Ntheta=Ntheta,Nzeta=Nzeta,rind=rind,quantity='Dphi')
           Dzetacylphi=Dzetacylphimn.ifft()
-          type(Bmn)
+          #type(Bmn)
           B=Bmn.ifft()
           R=Rmn.ifft()
           Z=Zmn.ifft()
@@ -644,8 +644,11 @@ class fluxcoorddiscr:
         absd2Bdz2_alongB=np.nan*np.zeros_like(th0s)
         th0step=th0s[2]-th0s[1]
         shortzetv0=np.linspace(-1.0,1.0,num=11,endpoint=False)*min(2.0*Dzeta,np.pi/Nperiods*0.1)
+        tstart=time.time()
+        patience=30 #seconds
         for th0i in range(len(th0s)):
-            print('th0i='+str(th0i))
+            if time.time()-tstart>patience:
+              print('th0i:'+str(th0i)+'/'+str(len(th0s)))
             shortzetv=shortzetv0+zetguess
             shortthev=th0s[th0i]+iota*shortzetv
             dBdzetv=iota*dBdthetamn.evalpoint(shortthev,shortzetv)+dBdzetamn.evalpoint(shortthev,shortzetv)
@@ -663,12 +666,26 @@ class fluxcoorddiscr:
               zetguess=zetv[np.argmax(Bmn.evalpoint(thev,zetv))]              
               
               if abs(zetguess-zes[th0i])>zetjumptolerance:
+                  print('started at th0i='+str(th0s[0]))
+                  print('problem at th0i='+str(th0i))
                   makeSmith=False
-                  plt.plot(zetv0,th0s[th0i]+iota*zetv0,'r--',
+                  fig,(ax1,ax2)=plt.subplots(2,1)
+                  ax1.plot(zetv0,th0s[th0i]+iota*zetv0,'r--',
                            zes,ths,'b-x',
                            zes_extrap,th0s[th0i+1]+iota*zes_extrap,'b+')
+                  zetaDouble=np.append(zeta-2*np.pi/Nperiods,zeta,axis=1)
+                  thetaDouble=np.append(theta,theta,axis=1)
+                  ax2.contour(np.append(zetaDouble,zetaDouble,axis=0),
+                              np.append(thetaDouble-2*np.pi,thetaDouble,axis=0),
+                              np.append(np.append(B,B,axis=1),np.append(B,B,axis=1),axis=0),20)
+                  ax2.plot(zetv0,th0s[th0i]+iota*zetv0,'r--',
+                           zes,ths,'b-x',
+                           zes_extrap,th0s[th0i+1]+iota*zes_extrap,'b+')
+                  #print('Smith not possible! Decrease th0step or try fewer mn modes in the equilibrium! '+
+                  print('Smith not possible! Try fewer mn modes in the equilibrium! '+
+                        'Close figure to end!')
                   plt.show()
-                  print('Smith not possible! Decrease th0step or try fewer mn modes in the equilibrium!')
+                  sys.exit('stop')
         #end for th0i
       #end if makeSmith
 
@@ -711,7 +728,7 @@ class fluxcoorddiscr:
         g_storstor = dXdstor**2 + dYdstor**2 + dZdstor**2
         g_spolspol = dXdspol**2 + dYdspol**2 + dZdspol**2
         g_spolstor = dXdstor*dXdspol + dYdstor*dYdspol + dZdstor*dZdspol
-        Smith_dBdl=sqrt(dXdstor**2+dYdstor**2+dZdstor**2)
+        Smith_dBdl=np.sqrt(dXdstor**2+dYdstor**2+dZdstor**2)
       #end if makeSmith
       
       ###########################################################
@@ -854,6 +871,7 @@ class fluxcoorddiscr:
       self.Dtor=Dzeta
       self.Dpol=Dtheta
       self.StelSym=Geom.StelSym
+      self.u_zeroout_Deltaiota = u_zeroout_Deltaiota
       
       if name=='Boozer':
           self.Dzetaphi  =Booz_Dzetaphi
@@ -918,6 +936,9 @@ class fluxcoorddiscr:
               self.gpsivthet   = gpsivthet              
           
           self.gradpsidotgradB = Booz_gradpsidotgradB
+          self.gradpsi_X=Booz_XYZ_gradpsi[:,:,0]
+          self.gradpsi_Y=Booz_XYZ_gradpsi[:,:,1]
+          self.gradpsi_Z=Booz_XYZ_gradpsi[:,:,2]
           self.curv_normal  = Booz_curv_normal
           
           self.B00=B00
@@ -1025,8 +1046,9 @@ class fluxcoorddiscr:
                                                                 self.theta,self.zeta,self.Nperiods) #Boozer specific
         self.Jacob_psi_ptheta_pzeta=fluxcoorddiscr.interp2_cyclic(theta,zeta,Booz_Jacob_psi_ptheta_pzeta,
                                                                 self.theta,self.zeta,self.Nperiods) #Boozer specific
-        self.Jacob_psi_spol_stor=fluxcoorddiscr.interp2_cyclic(theta,zeta,Booz_Jacob_psi_spol_stor,
-                                                                self.theta,self.zeta,self.Nperiods) #Boozer specific
+        if makeSmith:                                                        
+          self.Jacob_psi_spol_stor=fluxcoorddiscr.interp2_cyclic(theta,zeta,Booz_Jacob_psi_spol_stor,
+                                                                self.theta,self.zeta,self.Nperiods) #Smith specific
         self.g_thetatheta   =fluxcoorddiscr.interp2_cyclic(theta,zeta,g_thetatheta,self.theta,self.zeta,self.Nperiods)
         self.g_thetazeta    =fluxcoorddiscr.interp2_cyclic(theta,zeta,g_thetazeta,self.theta,self.zeta,self.Nperiods)
         self.g_zetazeta     =fluxcoorddiscr.interp2_cyclic(theta,zeta,g_zetazeta,self.theta,self.zeta,self.Nperiods)
@@ -1094,6 +1116,7 @@ class fluxcoorddiscr:
   def disp(self):
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         frm='{:8.4f}'
+        efrm='{:8.4e}'
         print('----------------------------------------------------------------------------------')
         print('Discretisation on a uniform '+self.name+' coordinate grid of the magnetic field')
         print('\\mathbf{B} = I\\nabla\\theta + G\\nabla\\zeta + B_\\psi(\\theta,\\zeta)\\nabla\\psi')
@@ -1109,7 +1132,7 @@ class fluxcoorddiscr:
         print('iota     = '+frm.format(self.iota))
         print('G        = '+frm.format(self.G))
         print('I        = '+frm.format(self.I))
-        print('mu0dpdpsi= '+frm.format(self.mu0dpdpsi))
+        print('mu0dpdpsi= '+efrm.format(self.mu0dpdpsi))
         print('FSAB2    = '+frm.format(self.FSAB2)+  '            : <B^2>')
         print('FSAu2B2  = '+frm.format(self.FSAu2B2)+'            : <u^2B^2>')
         print('FSAg_phiphi    = '+frm.format(self.FSAg_phiphi)+'      : <g_phiphi>')
@@ -1140,8 +1163,12 @@ class fluxcoorddiscr:
         print('dBpsidtheta    : dB_psi/dtheta (Boozer specific)')
         print('dBpsidzeta     : dB_psi/dzeta (Boozer specific)')
         print('Jacob_psi_theta_zeta                  : Boozer Jacobian (G+iota*I)/B^2')
+        if self.name=='Smith':
+            print('Jacob_psi_spol_stor                   : Smith Jacobian') 
         print('g_thetatheta, g_thetazeta, g_zetazeta : Boozer metric')
         print('g_vthetvthet, g_vthetphi,  g_phiphi   : Hamada metric')
+        if self.name=='Smith':
+            print('g_spolspol, g_spolstor, g_storstor    : Smith metric')
         print('gpsipsi         : |grad(psi)|^2')
         print('gradpsidotgradB : grad(psi) dot grad(B)')
         print('curv_normal     : normal curvature grad(psi)/|grad(psi)| dot (b dot grad)b')
@@ -1152,7 +1179,7 @@ class fluxcoorddiscr:
         print('------------------------------------------------------------------------------')
 
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  def plot(self,toshow,title='',cmap=None):
+  def plot(self,toshow='B',title='',cmap=None):
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         if cmap==None:
            #cmap='coolwarm'
@@ -1177,17 +1204,48 @@ class fluxcoorddiscr:
             x=self.stor
             y=self.spol
             
-        z = fun[:-1, :-1]
+        #z = fun[:-1, :-1]
+        z=fun
         z_min, z_max = z.min(), z.max()
 
+        xfull=np.zeros((x.shape[0]+2,x.shape[1]+2))
+        yfull=np.zeros((x.shape[0]+2,x.shape[1]+2))
+        zfull=np.zeros((x.shape[0]+1,x.shape[1]+1))
+        
+        xintermed=np.zeros((x.shape[0]+2,x.shape[1]))
+        yintermed=np.zeros((x.shape[0]+2,x.shape[1]))
+
+        xintermed[:-2,:]=x
+        xintermed[-1,:]=x[0,:]
+        xintermed[-2,:]=xintermed[-1,:]
+        xintermed[1:-1,:]=(xintermed[:-2,:]+xintermed[1:-1,:])/2.0
+        xfull[:,:-2]=xintermed
+        xfull[:,-1]=xintermed[:,0]+2*np.pi/self.Nperiods
+        xfull[:,-2]=xfull[:,-1] 
+        xfull[:,1:-1]=(xfull[:,:-2]+xfull[:,1:-1])/2.0
+        
+        yintermed[:-2,:]=y
+        yintermed[-1,:]=y[0,:]+2*np.pi
+        yintermed[-2,:]=yintermed[-1,:]
+        yintermed[1:-1,:]=(yintermed[:-2,:]+yintermed[1:-1,:])/2.0
+        yfull[:,:-2]=yintermed
+        yfull[:,-1]=yintermed[:,0]
+        yfull[:,-2]=yfull[:,-1]
+        yfull[:,1:-1]=(yfull[:,:-2]+yfull[:,1:-1])/2.0
+        
+        zfull[:-1,:-1]=z
+        zfull[:-1,-1]=z[:,0]
+        zfull[-1,:]=zfull[0,:]
+        
         fig = plt.figure()
         plt.subplot()
-        plt.pcolor(x, y, z, cmap=cmap, vmin=z_min, vmax=z_max)
+        plt.pcolor(xfull/(2*np.pi/self.Nperiods), yfull/(2*np.pi), zfull, cmap=cmap, vmin=z_min, vmax=z_max)
 
-        plt.axis([x.min(), x.max(), y.min(), y.max()])
+        #plt.axis([x.min(), x.max(), y.min(), y.max()])
+        plt.axis([0,1,0,1])
         ax = fig.gca()
-        ax.set_xlabel(self.name+' toroidal coordinate')
-        ax.set_ylabel(self.name+' poloidal coordinate')
+        ax.set_xlabel(self.name+r' toroidal coordinate $/(2\pi/N)$')
+        ax.set_ylabel(self.name+r' poloidal coordinate $/(2\pi)$')
         if title!='':
             ax.set_title(title)
         else:
@@ -1197,7 +1255,7 @@ class fluxcoorddiscr:
         return fig, ax
         
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  def plot3d(self,toshow,title='',torstride=1,polstride=1,cmap=None):
+  def plot3d(self,toshow='B',title='',torstride=1,polstride=1,cmap=None,wireframe=False):
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
         #help routine to plot routine
@@ -1277,7 +1335,10 @@ class fluxcoorddiscr:
         
         #print fcolors.shape
         #surf=ax.plot_surface(Xf, Yf, Zf,linewidth=0,cmap=cm.coolwarm,rstride=1,cstride=1, color=funfnorm, vmin=minn, vmax=maxx, shade=False)
-        surf=ax.plot_surface(Xf, Yf, Zf,rstride=polstride, cstride=torstride, facecolors=fcolors, vmin=minn, vmax=maxx, shade=False)#linewidth=0,rstride=1,cstride=1, facecolor=fcolors, vmin=minn, vmax=maxx, shade=False)
+        if wireframe:            
+          surf=ax.plot_wireframe(Xf, Yf, Zf,rstride=polstride, cstride=torstride)#, facecolors=fcolors, vmin=minn, vmax=maxx, shade=False)#linewidth=0,rstride=1,cstride=1, facecolor=fcolors, vmin=minn, vmax=maxx, shade=False)
+        else:
+          surf=ax.plot_surface(Xf, Yf, Zf,rstride=polstride, cstride=torstride, facecolors=fcolors, vmin=minn, vmax=maxx, shade=False)#linewidth=0,rstride=1,cstride=1, facecolor=fcolors, vmin=minn, vmax=maxx, shade=False)
         plt.colorbar(m)#fig.colorbar(surf)#, shrink=0.5, aspect=5)
         #fig.colorbar(surf, shrink=0.5, aspect=5)
         #surf=ax.plot_wireframe(Xf, Yf, Zf,rstride=polstride,cstride=torstride)#,linewidth=0,cmap=cm.coolwarm,)#, color=funf)

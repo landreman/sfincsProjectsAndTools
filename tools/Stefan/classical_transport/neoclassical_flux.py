@@ -17,10 +17,10 @@ def neoclassical_flux(inputFilename):
 
     outputFilename = os.path.dirname(os.path.abspath(inputFilename)) +"/" + outputFilename
 
-    particleFlux = read_neoclassical_flux(0,outputFilename)
-    return particleFlux
+    particleFlux,heatFlux = read_neoclassical_flux(0,outputFilename)
+    return particleFlux,heatFlux
 
 if __name__=="__main__":
     inputFilename = sys.argv[1]
-    particleFlux = neoclassical_flux(inputFilename)
-    print str(particleFlux)[1:-1]
+    particleFlux,heatFlux = neoclassical_flux(inputFilename)
+    print str(particleFlux)[1:-1] + " " + str(heatFlux)[1:-1]

@@ -41,11 +41,22 @@ exec(open(sfincsProjectsAndToolsHome + "/tools/Albert/version3/plot_tools"  + "/
 
 quantityToPlot = "Phi1Hat"
 
-filename = 'sfincsOutput.h5'
+#filename = 'sfincsOutput.h5'
+
+#W7X_180919.055
+#filename = 'SFINCS_kinetic-e_Fokker-Planck_r0p1148.h5'
+#filename = 'SFINCS_kinetic-e_Fokker-Planck_r0p220343.h5'
+filename = 'SFINCS_kinetic-e_Fokker-Planck_rOa0p31209.h5'
 
 #ncFilename = "/draco/u/almo/Phi1/LHD/lhd2_A_III/Input/wout_lhd2.nc"
 #ncFilename = "C:/Users/almo/Desktop/svn/sfincs/Impurities/Phi1/Results/LHD_Velasco_PPCF18/input/wout_lhd_r3.60_0.0.nc"
-ncFilename = "C:/Users/almo/Desktop/svn/sfincs/TJ-II/Input_TJII_case_Regana_NF17/wout_tj20.nc"
+#ncFilename = "C:/Users/almo/Desktop/svn/sfincs/TJ-II/Input_TJII_case_Regana_NF17/wout_tj20.nc"
+#ncFilename = "C:/Users/almo/Desktop/svn/sfincs/W7-X/OP1.1/XICS_data_Langenberg/Equilibria/wout_w7x.1000_1000_1000_1000_+0390_+0000.05.0000.nc"
+#ncFilename = "C:/Users/almo/Desktop/svn/sfincs/Impurities/Phi1/Results/LHD_Velasco_PPCF18/input/wout_lhd_r3.60_0.0.nc"
+
+#W7X_180919.055
+#ncFilename = "C:/Users/almo/Desktop/svn/sfincs/W7-X/OP1.2/W7X_180919.055/Equilibrium/wout_w7x.1000_1000_1000_1000_+0000_+0000.01.00jh_l+252.nc"
+ncFilename = "C:/Users/legen/Desktop/svn/sfincs/W7-X/OP1.2/W7X_180919.055/Equilibrium/wout_w7x.1000_1000_1000_1000_+0000_+0000.01.00jh_l+252.nc"
 
 #FigSize = (12,10)
 FigSize = (10,12)
@@ -54,7 +65,7 @@ RightMargin = 0.5
 TopMargin = 0.99
 BottomMargin = 0.01
 zLabelPad = 45
-PhiLabelPad = 34
+PhiLabelPad = 60
 
 #font = {'size':25}
 #matplotlib.rc('font', **font)
@@ -63,11 +74,11 @@ PhiLabelPad = 34
 
 zFactor = 1000 ##kV -> V
 ##W7-X##
-#xAxisTicks = [r'$0$', r'$\pi/10$', r'$2\pi/10$', r'$3\pi/10$', r'$4\pi/10$']
+xAxisTicks = [r'$0$', r'$\pi/10$', r'$2\pi/10$', r'$3\pi/10$', r'$4\pi/10$']
 ##LHD
 #xAxisTicks = [r'$0$', r'$\pi/20$', r'$2\pi/20$', r'$3\pi/20$', r'$4\pi/20$']
 ##TJ-II
-xAxisTicks = [r'$0$', r'$\pi/8$', r'$2\pi/8$', r'$3\pi/8$', r'$4\pi/8$']
+#xAxisTicks = [r'$0$', r'$\pi/8$', r'$2\pi/8$', r'$3\pi/8$', r'$4\pi/8$']
 
 yAxisTicks = [r'$0$', r'$\pi/2$', r'$\pi$', r'$3\pi/2$', r'$2\pi$']
 
@@ -79,22 +90,39 @@ numCols = 1
 numContours = 100
 #ContourLevels = [-3.0, -1.5, 0.0, 1.5, 3.0, 4.5, 6.0]
 #numLevels = 5
-numShowLevels = 8
+numShowLevels = 10
 
 ShowColorbar = True
 
-cbarTicks = [-2.0, -1.5, -1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0] # TJ-II TTF poster r/a=0.6
+#cbarTicks = [-2.0, -1.5, -1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0] # TJ-II TTF poster r/a=0.6
+#cbarTicks = [-12.0, -8.0, -4.0, 0.0, 4.0, 8.0, 12.0] # W7-X OP1.1 TTF poster r/a=0.5
+#cbarTicks = [-20.0, -15.0, -10.0, -5.0, 0.0, 5.0, 10.0] # LHD inward shifted TTF poster r/a=0.8
+#cbarTicks = [-40.0, -30.0, -20.0, -10.0, 0.0, 10.0, 20.0] # LHD inward shifted TTF poster r/a=0.8 with magnetic drifts
+#cbarTicks = [-10.0, -7.5, -5.0, -2.5, 0.0, 2.5, 5.0, 7.5, 10.0] # W7X_180919.055 r/a=0.21
+cbarTicks = [-8.0, -6.0, -4.0, -2.0, 0.0, 2.0, 4.0, 6.0, 8.0] # W7X_180919.055 r/a=0.32
+#cbarTicks = [-3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0] # W7X_180919.055 r/a=0.
 
-zMin = -2.0 # TJ-II TTF poster r/a=0.6
-zMax = 2.0 # TJ-II TTF poster r/a=0.6
+#zMin = -2.0 # TJ-II TTF poster r/a=0.6
+#zMax = 2.0 # TJ-II TTF poster r/a=0.6
+#zMin = -12.0 # W7-X OP1.1 TTF poster r/a=0.5
+#zMax = 12.0 # W7-X OP1.1 TTF poster r/a=0.5
+#zMin = -20.0 # LHD inward shifted TTF poster r/a=0.8
+#zMax = 10.0 # LHD inward shifted TTF poster r/a=0.8
+#zMin = -45.0 # LHD inward shifted TTF poster r/a=0.8 with magnetic drifts
+#zMax = 25.0 # LHD inward shifted TTF poster r/a=0.8 with magnetic drifts
+#zMin = -10.0 # W7X_180919.055 r/a=0.21
+#zMax = 10.0 # W7X_180919.055 r/a=0.21
+zMin = -7.0 # W7X_180919.055 r/a=0.32
+zMax = 7.0 # W7X_180919.055 r/a=0.32
+#zMin = -3.0 # W7X_180919.055 r/a=0.
+#zMax = 3.0 # W7X_180919.055 r/a=0.
+
 zLogAxis = False
 LinearThreshold = 1.0 #In symlog plot
 LinearScale = 1.0 #When linscale == 1.0 (the default), the space used for the positive and negative halves of the linear range will be equal to one decade in the logarithmic range.
 
 TickFormat = r'$%2.1f$'
 
-#zLabelPad = -30
-#PhiLabelPad = 30
 ExtendRectangle = True
 
 ContourLabelSize = 30

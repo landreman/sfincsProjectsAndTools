@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from __future__ import division
 import numpy as np
-import sys
+import sys, time, multiprocessing
 from scipy import interpolate
 import matplotlib.pyplot as plt
 import geomlib
@@ -38,6 +38,14 @@ from fluxcoorddiscr import fluxcoorddiscr
 # figures   : A list with the handles to the produced figures
 #
 ##########################################################################
+def oneradius(Geom,ridx,Npol,Ntor,myquant,coordname,pzweigh):
+    #This is used for parallelizing the radius loop  
+    Pest=fluxcoorddiscr(Geom,ridx,Npol,Ntor,name='Pest')
+    QuantPest_fullsurf=Pest.interpFromOtherCoords(myquant,coordname)
+    quantPest_ri=np.tensordot(pzweigh,QuantPest_fullsurf,axes=(1,1))
+    R_ri=np.tensordot(pzweigh,Pest.R,axes=(1,1))
+    Z_ri=np.tensordot(pzweigh,Pest.Z,axes=(1,1))
+    return (quantPest_ri,R_ri,Z_ri)
 
 def crossectplot(toshow,rNs,Geom,coordname='Boozer',Pest_zetas=0.0,
                  rNmin=0.0,rNmax=np.inf,rNcontours=None,savefilename=None):
@@ -51,6 +59,9 @@ def crossectplot(toshow,rNs,Geom,coordname='Boozer',Pest_zetas=0.0,
       sys.exit('rNs must be an ascending array!')
   if rNmax<=rNmin:
       sys.exit('rNmax must be > rNmin!')
+  if np.any(np.isnan(Pest_zetas)):
+      sys.exit('Error: NaNs in the array Pest_zetas!')
+      
   #Interpolation
   rNmin=max(rNmin,rNs[0])
   rNmax=min(rNmax,rNs[-1])
@@ -113,14 +124,28 @@ def crossectplot(toshow,rNs,Geom,coordname='Boozer',Pest_zetas=0.0,
       pzweigh[pzind,Lind]=(Dz-x)/Dz
       pzweigh[pzind,np.mod(Lind+1,Ntor)]=x/Dz
 
-
-  for ri in range(len(myrNs)):
+  t0=time.time()
+  parallelize=True
+  if parallelize:
+    Ncpu = multiprocessing.cpu_count()
+    args=[(Geom,ridxs[ri],Npol,Ntor,
+           myquant[ri],coordname,pzweigh) for ri in range(len(myrNs))]
+    with multiprocessing.Pool(processes=Ncpu) as pool:
+      out=pool.starmap(oneradius,args) #The distributed calculation
+    for ri in range(len(myrNs)):
+      quantPest[:,ri,:]=out[ri][0]  
+      R[:,ri,:]=out[ri][1]  
+      Z[:,ri,:]=out[ri][2]  
+  else:       
+    for ri in range(len(myrNs)):
       Pest=fluxcoorddiscr(Geom,ridxs[ri],Npol,Ntor,name='Pest')
       QuantPest_fullsurf=Pest.interpFromOtherCoords(myquant[ri],coordname)
       quantPest[:,ri,:]=np.tensordot(pzweigh,QuantPest_fullsurf,axes=(1,1))
       R[:,ri,:]=np.tensordot(pzweigh,Pest.R,axes=(1,1))
       Z[:,ri,:]=np.tensordot(pzweigh,Pest.Z,axes=(1,1))
-          
+      
+  print('loop time in crossectplot: '+str(time.time()-t0)+' s')
+              
   quantPest=np.append(quantPest,quantPest[:,:,[0]],axis=2)
   R=np.append(R,R[:,:,[0]],axis=2)
   Z=np.append(Z,Z[:,:,[0]],axis=2)
@@ -137,10 +162,13 @@ def crossectplot(toshow,rNs,Geom,coordname='Boozer',Pest_zetas=0.0,
 
   rNM=np.outer(myrNs,np.ones((R.shape[2])))
 
-  figures=[None]*len(Pest_zetas)
+  figs=[None]*len(Pest_zetas)
+  axs=[None]*len(Pest_zetas)
   
   for pzind in range(len(Pest_zetas)):
-    figures[pzind]=plt.figure()
+    (figs[pzind],axs[pzind])=plt.subplots(1,1)
+    #print('hhh') 
+    #figures[pzind]=plt.figure()
     if not(rNcontours is None):
       if len(rNcontours)>0:
         CS=plt.contour(R[pzind],Z[pzind],rNM,colors='k',levels=rNcontours)
@@ -161,6 +189,6 @@ def crossectplot(toshow,rNs,Geom,coordname='Boozer',Pest_zetas=0.0,
             filename=savefilename+degrees+'.eps'
         plt.savefig(filename)
 
-  return figures
+  return figs, axs
     
     
