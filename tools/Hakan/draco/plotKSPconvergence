@@ -83,29 +83,62 @@ f.close()
 print('plotting...')
 
 res=np.array(residual)
-Dtime=np.array(solvertime)
-time_minutes=np.cumsum(Dtime)/60.0
+Dtime_minutes=np.array(solvertime)/60.0
+time_minutes=np.cumsum(Dtime_minutes)
 itervec=np.arange(len(res))
+
+#estimate total time
+if res[-1]/res[0]>solverTolerance:
+  lnres=np.log(res/res[0])-np.log(solverTolerance)
+  if len(lnres)==2:
+    dlnres_diter=lnres[-1]-lnres[-2]
+  elif len(lnres)==3 or lnres[-3]-2.0*lnres[-2]+lnres[-1]<0:
+    weight=2.0/3.0 #Think a bit optimistic
+    dlnres_diter=(lnres[-2]-lnres[-3])*(1.0-weight)+(lnres[-1]-lnres[-2])*weight
+    #print '2'
+  else:
+    dlnres_diter=(lnres[-1]-lnres[-4])/3.0
+    #print '3' 
+  iter_togo=abs(lnres[-1]/dlnres_diter)
+  time_togo=np.mean(Dtime_minutes)*iter_togo
+  timeprognose=time_minutes[-1]+np.array([0.0,time_togo])
+  relresprognose=np.array([res[-1]/res[0],solverTolerance])
+  if time_togo>1.0:
+    time_togo_str=str(int(np.round(time_togo)))+' minutes'
+  else:
+    time_togo_str=str(int(np.round(time_togo*6.0))*10)+' seconds'
 
 #fig, (ax0,ax1) = plt.subplots(2,1,sharex=True,figsize=(6,7))
 fig, (ax0,ax1,ax2) = plt.subplots(3,1,sharex=False,figsize=(6,10))
 
 
-ax0.semilogy(time_minutes,res/res[0],'o-')
-if not(solverTolerance is None):
-  ax0.semilogy(time_minutes,solverTolerance*np.ones_like(time_minutes),'--')
+ax0.semilogy(time_minutes,res/res[0],'bo-')
+if res[-1]/res[0]>solverTolerance:
+  ax0.set_title('Time left (forecast): '+time_togo_str)
+  if not(solverTolerance is None):
+    ax0.semilogy(np.array([time_minutes[0],timeprognose[-1]]),
+                 solverTolerance*np.ones(2),'r--')
+    ax0.semilogy(timeprognose,relresprognose,'g--')
+    ax0.legend(('residual','tolerance','prognosis'))
+  else:
+    ax0.semilogy(timeprognose,relresprognose,'g--')
+    ax0.legend(('residual','prognosis'))
+elif not(solverTolerance is None):
+  ax0.semilogy(time_minutes,solverTolerance*np.ones_like(time_minutes),'r--')
   ax0.legend(('residual','tolerance'))
+
+  
 ax0.set_ylabel('relative')
 ax0.set_xlabel('time [min]')
 
-ax1.semilogy(res/res[0],'o-')
+ax1.semilogy(res/res[0],'bo-')
 if not(solverTolerance is None):
-  ax1.semilogy(itervec,solverTolerance*np.ones_like(itervec),'--')
+  ax1.semilogy(itervec,solverTolerance*np.ones_like(itervec),'r--')
   ax1.legend(('residual','tolerance'))
 ax1.set_ylabel('relative')
 ax1.set_xlabel('iterations')
 
-ax2.semilogy(res,'o-')
+ax2.semilogy(res,'bo-')
 ax2.set_ylabel('absolute')
 ax2.set_xlabel('iterations')
 
