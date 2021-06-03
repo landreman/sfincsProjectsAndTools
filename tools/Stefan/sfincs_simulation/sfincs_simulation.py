@@ -206,6 +206,9 @@ class Sfincs_input(object):
         varname = varname.lower()
         groupname = groupname.lower()
         inputs = f90nml.read(self.input_name)
+        #parser = f90nml.Parser()
+        #parser.comment_tokens = "!"
+        #inputs = parser.read(self.input_name)
         if not varname in inputs[groupname].keys():
             return Sfincs_input.defaults[groupname][varname]
         else:
@@ -774,6 +777,8 @@ class Sfincs_simulation(object):
             conversion_factor = 1/(2*self.psiAHat*np.sqrt(self.psiN))
         else:
             raise ValueError("inputRadialCoordinate should be 0,1,2,3,4; it is" + str(self.input.inputRadialCoordinate))
+        #print(conversion_factor)
+        #print(self.input.dnHatdss)
         return conversion_factor * self.input.dnHatdss
 
     @property
@@ -1025,7 +1030,10 @@ class Sfincs_simulation(object):
     @property
     def GammaHat(self):
         if self.includePhi1:
-            ret=self.outputs["particleFlux_vd_psiHat"][:,-1]
+            try:
+                ret=self.outputs["particleFlux_vd_psiHat"][:,-1]
+            except KeyError as e:
+                raise type(e)(str(e) + "in dir " + self.dirname)
         else:
             ret=self.outputs["particleFlux_vm_psiHat"][:,-1]
         return ret
