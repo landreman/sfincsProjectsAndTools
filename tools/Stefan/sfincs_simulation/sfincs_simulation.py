@@ -893,6 +893,23 @@ class Sfincs_simulation(object):
         return np.sqrt(self.FSA((n1 - FSAn1)**2))
 
     @property
+    def total_Zeff(self):
+        # exclude electrons from sum if electrons are included in the simulation
+        noe = np.where(self.Zs!=-1)[0]
+        n = self.total_nHat # total
+        ne = np.sum(self.Zs[noe] * self.nHats[noe]) # zeroth order
+        ret = np.sum(self.Zs[noe]**2 * n[:,:,noe],axis=2)/ne
+        return ret
+        
+    @property
+    def rms_total_Zeff(self):
+        # rms Zeff calculated from n1Hat
+        n1 = self.total_Zeff
+        FSAn1 = self.FSA(n1)
+        return np.sqrt(self.FSA((n1 - FSAn1)**2))
+
+    
+    @property
     def n1Hat_adiabatic(self):
         if self.includePhi1:
             return self.nHats * (np.exp(-self.Zs * self.input.alpha * self.Phi1Hat[:,:,np.newaxis]/self.THats) - 1)
