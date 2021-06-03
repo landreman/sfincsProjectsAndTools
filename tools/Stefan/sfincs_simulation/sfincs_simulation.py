@@ -16,6 +16,13 @@ from calculate_classical_transport import calculate_classical_transport
 
 elecharge = 1.60217662e-19
 
+
+try:
+    FileNotFoundError
+except NameError:
+    # python2 doesn't have this error built-in, so we define it.
+    FileNotFoundError = IOError
+
 class Normalization(object):
     def __init__(self,BBar,RBar,TBar,mBar,nBar,eBar,ePhiBar,units="SI"):
         if units == "SI":
@@ -469,7 +476,7 @@ class Sfincs_simulation(object):
 
             try:
                 print("Loading geometry " +self.equilibrium_name +" ...")
-                self.geom = bcgeom(self.equilibrium_name,self.min_Bmn,self.max_m,self.maxabs_n,self.symmetry,self.signcorr,verbose)
+                self.geom = bcgeom(self.equilibrium_name,self.min_Bmn,self.max_m,self.maxabs_n,symmetry=self.symmetry,signcorr=self.signcorr,verbose=verbose)
             except IOError as e:
                 raise IOError("Error loading geometry: " + str(e))
         else:
