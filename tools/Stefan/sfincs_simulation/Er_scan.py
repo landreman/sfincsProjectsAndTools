@@ -55,16 +55,20 @@ class Er_scan(object):
         # TODO: may not work on absolute paths. gotta test
         self.subdirs = [name for name in os.listdir(dirname) if os.path.isdir(os.path.join(dirname, name))]
         
+        if dirname[0] == "/":
+            absolute_dirname = dirname
+        else:
+            absolute_dirname = "./" + dirname
         # sort simulations based on Ers
         if load_geometry:
-            simuls0 = Sfincs_simulation("./" + dirname + "/" + self.subdirs[0], input_name,norm_name,species_name,override_geometry_name, load_geometry)
+            simuls0 = Sfincs_simulation(absolute_dirname + "/" + self.subdirs[0], input_name,norm_name,species_name,override_geometry_name, load_geometry)
             # reuse the geometry from the first simulation
             Booz = simuls0.Booz
             geom = simuls0.geom
-            simuls = [Sfincs_simulation("./" + dirname + "/" + subdir, input_name,norm_name,species_name,override_geometry_name, load_geometry,Booz,geom) for subdir in self.subdirs[1:]]
+            simuls = [Sfincs_simulation(absolute_dirname + "/" + subdir, input_name,norm_name,species_name,override_geometry_name, load_geometry,Booz,geom) for subdir in self.subdirs[1:]]
             simuls = [simuls0] + simuls
         else:
-            simuls = [Sfincs_simulation("./" + dirname + "/" + subdir, input_name,norm_name,species_name,override_geometry_name, load_geometry) for subdir in self.subdirs]
+            simuls = [Sfincs_simulation(absolute_dirname + "/" + subdir, input_name,norm_name,species_name,override_geometry_name, load_geometry) for subdir in self.subdirs]
             
         #inputRadialCoordinateForGradients = np.array([s.input.inputRadialCoordinateForGradients for s in simuls])
         # NOTE: this assumes all the simulations use the same inputRadialCoordinateForGradients. TODO: remove this assumption.

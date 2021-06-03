@@ -166,6 +166,8 @@ class Sfincs_input(object):
             if (value.find("'") != -1) or (value.find('"') != -1):
                 print("Warning! String to changevar contains a ' or \" character.")
             value = '"' + value + '"'
+            # escape slashes
+            value = value.replace("/","\/")
         elif (type(value) == list) or (type(value) == np.ndarray):
             # arrays are space seperated
             delimiter=' '
@@ -174,7 +176,8 @@ class Sfincs_input(object):
                 value_temp =  value_temp + str(val) + delimiter
             value = value_temp.rsplit(delimiter,1)[0]
         else:
-            pass    
+            pass
+        #print("sed -i -e '/\&"+group+"/I,/\&/{ s/^  "+var+" =.*/  "+var+" = "+str(value)+"/I } ' "+self.input_name)
         subprocess.call("sed -i -e '/\&"+group+"/I,/\&/{ s/^  "+var+" =.*/  "+var+" = "+str(value)+"/I } ' "+self.input_name, shell=True)
 
     def changessvar(self,var,value):
