@@ -16,6 +16,13 @@ from calculate_classical_transport import calculate_classical_transport
 
 elecharge = 1.60217662e-19
 
+
+try:
+    FileNotFoundError
+except NameError:
+    # python2 doesn't have this error built-in, so we define it.
+    FileNotFoundError = IOError
+
 class Normalization(object):
     def __init__(self,BBar,RBar,TBar,mBar,nBar,eBar,ePhiBar,units="SI"):
         if units == "SI":
@@ -206,6 +213,9 @@ class Sfincs_input(object):
         varname = varname.lower()
         groupname = groupname.lower()
         inputs = f90nml.read(self.input_name)
+        #parser = f90nml.Parser()
+        #parser.comment_tokens = "!"
+        #inputs = parser.read(self.input_name)
         if not varname in inputs[groupname].keys():
             return Sfincs_input.defaults[groupname][varname]
         else:
@@ -469,7 +479,7 @@ class Sfincs_simulation(object):
 
             try:
                 print("Loading geometry " +self.equilibrium_name +" ...")
-                self.geom = bcgeom(self.equilibrium_name,self.min_Bmn,self.max_m,self.maxabs_n,self.symmetry,self.signcorr,verbose)
+                self.geom = bcgeom(self.equilibrium_name,self.min_Bmn,self.max_m,self.maxabs_n,symmetry=self.symmetry,signcorr=self.signcorr,verbose=verbose)
             except IOError as e:
                 raise IOError("Error loading geometry: " + str(e))
         else:
@@ -774,6 +784,8 @@ class Sfincs_simulation(object):
             conversion_factor = 1/(2*self.psiAHat*np.sqrt(self.psiN))
         else:
             raise ValueError("inputRadialCoordinate should be 0,1,2,3,4; it is" + str(self.input.inputRadialCoordinate))
+        #print(conversion_factor)
+        #print(self.input.dnHatdss)
         return conversion_factor * self.input.dnHatdss
 
     @property
@@ -1042,7 +1054,10 @@ class Sfincs_simulation(object):
     @property
     def GammaHat(self):
         if self.includePhi1:
-            ret=self.outputs["particleFlux_vd_psiHat"][:,-1]
+            try:
+                ret=self.outputs["particleFlux_vd_psiHat"][:,-1]
+            except KeyError as e:
+                raise type(e)(str(e) + "in dir " + self.dirname)
         else:
             ret=self.outputs["particleFlux_vm_psiHat"][:,-1]
         return ret
