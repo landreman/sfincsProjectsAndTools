@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from numpy import sum
 #from numba import jit
 
@@ -42,10 +44,10 @@ if __name__=="__main__":
     #     return _jit_FSA
 
     t=timeit.Timer(test_FSA(A,B))
-    print min(t.repeat(100,1))
+    print(min(t.repeat(100,1)))
     
     t=timeit.Timer(test_FSA(A[0],B))
-    print N*min(t.repeat(100,1))
+    print(N*min(t.repeat(100,1)))
 
     # tjit=timeit.Timer(test_jit_FSA(A[0],B))
     # print N*min(tjit.repeat(100,1))

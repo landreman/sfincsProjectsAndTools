@@ -1,4 +1,4 @@
-from __future__ import division
+from __future__ import division, print_function
 
 from scipy.special import erf
 from scipy import exp,sqrt
@@ -118,18 +118,18 @@ if __name__ == "__main__":
     mC = 1*mC
     y = me/mC;
 
-    print "K, y>>1"
-    print K(1/y)*np.sqrt(mC) * (1 + 1/y)
-    print 0.25*y**(3/2)*np.sqrt(mC) * (1 + 1/y)
-    print "F, y>>1"
-    print F(1/y)*np.sqrt(mC) * (1 + 1/y)
-    print 0.25*y**(3/2)*np.sqrt(mC) * (1 + 1/y)
-    print "K, y<<1"
-    print K(y)*np.sqrt(me) * (1 + me/mC)
-    print -(1/8) *np.sqrt(me) * (1 + me/mC)
-    print "F, y<<1"
-    print F(y)*np.sqrt(me) * (1 + me/mC)
-    print 0.25*np.sqrt(me) * (1 + me/mC)
+    print("K, y>>1")
+    print(K(1/y)*np.sqrt(mC) * (1 + 1/y))
+    print(0.25*y**(3/2)*np.sqrt(mC) * (1 + 1/y))
+    print("F, y>>1")
+    print(F(1/y)*np.sqrt(mC) * (1 + 1/y))
+    print(0.25*y**(3/2)*np.sqrt(mC) * (1 + 1/y))
+    print("K, y<<1")
+    print(K(y)*np.sqrt(me) * (1 + me/mC))
+    print(-(1/8) *np.sqrt(me) * (1 + me/mC))
+    print("F, y<<1")
+    print(F(y)*np.sqrt(me) * (1 + me/mC))
+    print(0.25*np.sqrt(me) * (1 + me/mC))
 
     if test1:
         y0 = np.linspace(0.5,4)

@@ -12,6 +12,9 @@ class Er_scan(object):
 
     def __getattr__(self, name):
         """Get attributes from the underlying simulations by interpolation"""
+        if self.roots is None:
+            raise ValueError("Ambipolar radial electric field cannot be found by interpolation since the radial current does not reach zero!")
+            # TODO: give estimate of ambipolar Er value based on extrapolation
         y = [getattr(s,name) for s in self.simuls]
         x = self.Ers
         if self.use_roots == "all":
@@ -82,12 +85,10 @@ class Er_scan(object):
         maxjr = np.max(jrs)
         minjr = np.min(jrs)
         if not ((maxjr > 0) and (minjr < 0)):
-            raise ValueError("Ambipolar radial electric field cannot be found by interpolation. maxjr = " + str(maxjr) + ", minjr = " + str(minjr))
-            # TODO: give estimate of ambipolar Er value based on extrapolation
+            self.roots = None
         else:
             self.roots = self.solve_for_ambipolar_Er(self.Ers,jrs)
-
-        self.root_types = self.classify_roots(self.__dict__["roots"])
+            self.root_types = self.classify_roots(self.__dict__["roots"])
 
 
     def solve_for_ambipolar_Er(self,Ers,jrs,NEr_fine = 500):
