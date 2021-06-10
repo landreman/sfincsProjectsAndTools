@@ -841,6 +841,16 @@ class Sfincs_simulation(object):
         return self.outputs["integerToRepresentTrue"]
 
     @property
+    def converged(self):
+        try: 
+            o = self.outputs["particleFlux_vm_psiHat"]
+        except KeyError:
+            return False
+        else:
+            return True
+
+
+    @property
     def includePhi1(self):
         return (self.outputs["includePhi1"][()] == self.integerToRepresentTrue)
 
