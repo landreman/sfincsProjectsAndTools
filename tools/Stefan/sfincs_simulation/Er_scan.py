@@ -13,7 +13,7 @@ class Er_scan(object):
     def __getattr__(self, name):
         """Get attributes from the underlying simulations by interpolation"""
         if self.roots is None:
-            raise ValueError("Ambipolar radial electric field cannot be found by interpolation since the radial current does not reach zero!")
+            raise ValueError("Ambipolar radial electric field in '" + self.dirname + "' cannot be found by interpolation since the radial current does not reach zero!")
             # TODO: give estimate of ambipolar Er value based on extrapolation
         y = [getattr(s,name) for s in self.simuls]
         x = self.Ers
@@ -58,19 +58,28 @@ class Er_scan(object):
         # TODO: may not work on absolute paths. gotta test
         self.subdirs = [name for name in os.listdir(dirname) if os.path.isdir(os.path.join(dirname, name))]
         
+        if dirname[0] == "/":
+            absolute_dirname = dirname
+        else:
+            absolute_dirname = "./" + dirname
         # sort simulations based on Ers
+        self.dirname = absolute_dirname
         if load_geometry:
-            simuls0 = Sfincs_simulation("./" + dirname + "/" + self.subdirs[0], input_name,norm_name,species_name,override_geometry_name, load_geometry)
+            simuls0 = Sfincs_simulation(absolute_dirname + "/" + self.subdirs[0], input_name,norm_name,species_name,override_geometry_name, load_geometry)
             # reuse the geometry from the first simulation
             Booz = simuls0.Booz
             geom = simuls0.geom
-            simuls = [Sfincs_simulation("./" + dirname + "/" + subdir, input_name,norm_name,species_name,override_geometry_name, load_geometry,Booz,geom) for subdir in self.subdirs[1:]]
+            simuls = [Sfincs_simulation(absolute_dirname + "/" + subdir, input_name,norm_name,species_name,override_geometry_name, load_geometry,Booz,geom) for subdir in self.subdirs[1:]]
             simuls = [simuls0] + simuls
         else:
-            simuls = [Sfincs_simulation("./" + dirname + "/" + subdir, input_name,norm_name,species_name,override_geometry_name, load_geometry) for subdir in self.subdirs]
-            
-        #inputRadialCoordinateForGradients = np.array([s.input.inputRadialCoordinateForGradients for s in simuls])
+            simuls = [Sfincs_simulation(absolute_dirname + "/" + subdir, input_name,norm_name,species_name,override_geometry_name, load_geometry) for subdir in self.subdirs]
+        
+        # remove unconverged simulations
+        simuls = [s for s in simuls if s.converged]
+    
         # NOTE: this assumes all the simulations use the same inputRadialCoordinateForGradients. TODO: remove this assumption.
+        
+
         Ers = np.array([s.Er for s in simuls])
         tmp = sorted(zip(Ers,simuls), key = lambda x: x[0])
         self.simuls = [b for a,b in tmp]

@@ -93,6 +93,162 @@ def resolution_from_collisionality(configuration):
         
         precond_x_threshold = 10.0
 
+    elif configuration=="boz_EIM_20190220182940.bc":
+        # hi collisionality datapoints, nuPrime >= 1 
+        #   from from ref66
+        # very hi col: from Albert's PoP col scan without e-
+        # nuPrime<1:
+        # From resolution scan for this geometry
+        nuPrime_data = array([1.17e-3, 3e-03, 1e-02, 6e-02, 6.5e-1,    0.99e+00, 1e+00, 2.5e+00, 80 ,1.49e+02, 1.5e+02, 1.00000000e+04])
+        
+        Ntheta_data = array([19,  19,  19,  25,  25,   19, 19, 19, 31, 35, 35, 35])
+        Nzeta_data  = array([105, 105, 105, 105, 45,   45, 45, 31, 31, 31, 31, 31])
+        Nxi_data    = array([140, 140, 123, 80,  60,   60, 60, 27, 27, 27, 27, 27])
+        Nx_data     = array([10,  8,   8,   6,   6,    6,  8,  10, 14, 14, 14, 14])
+        NL_data     = array([4,   4,   4,   4,   4,    4,  4,  4,  4,  4,  4,  4])
+        
+        precond_x_threshold = 10.0
+
+
+    
+    elif configuration=="boz_EIM_20190220182950.bc":
+        # hi collisionality datapoints, nuPrime >= 1 
+        #   from from ref66
+        # very hi col: from Albert's PoP col scan without e-
+        # nuPrime<1:
+        # From resolution scan for boz_EIM_20190220182940.bc and verification
+        nuPrime_data = array([1.17e-3, 3e-03, 1e-02, 6e-02, 6.5e-1, 0.95e+00,     1e+00, 2.5e+00, 80 ,1.49e+02, 1.5e+02, 1.00000000e+04])
+        
+        Ntheta_data = array([19,  19,  19,  25,  25,   21,     19, 19, 31, 35, 35, 35])
+        Nzeta_data  = array([105, 105, 105, 105, 45,   45,     45, 31, 31, 31, 31, 31])
+        Nxi_data    = array([140, 140, 123, 80,  60,   60,     60, 27, 27, 27, 27, 27])
+        Nx_data     = array([6,   6,   6,   6,   6,    6,      8,  10, 14, 14, 14, 14])
+        NL_data     = array([4,   4,   4,   4,   4,    4,      4,  4,  4,  4,  4,  4])
+        
+        precond_x_threshold = 10.0
+
+    elif configuration=="boz_EIM_20190220182951.bc":
+        # hi collisionality datapoints, nuPrime >= 1 
+        #   from from ref66
+        # very hi col: from Albert's PoP col scan without e-
+        # nuPrime<1:
+        # From resolution scan for boz_EIM_20190220182940.bc
+        # and verified by a resolution scan.
+        nuPrime_data = array([1.17e-3, 3e-03, 0.02814753, 0.03920992, 0.09330015, 6e-02, 0.30997011, 6.5e-1, 0.95e+00,     1e+00, 2.5e+00, 80 ,1.49e+02, 1.5e+02, 1.00000000e+04])
+        
+        Ntheta_data = array([19,       19,    25,         25,          25,        25,    25,         25,   21,     19, 19, 31, 35, 35, 35])
+        Nzeta_data  = array([105,      105,   101,        101,         95,        101,   69,         45,   45,     45, 31, 31, 31, 31, 31])
+        Nxi_data    = array([140,      140,   124,        124,         77,        80,    68,         60,   60,     60, 27, 27, 27, 27, 27])
+        Nx_data     = array([8,        8,     8,          8,           6,         6,     6,          8,    8,      8,  10, 14, 14, 14, 14])
+        NL_data     = array([4,        4,     4,          4,           4,         4,     4,          4,    4,      4,  4,  4,  4,  4,  4])
+        
+        precond_x_threshold = 10.0
+
+
+    elif configuration=="boz_EIM_20190220182952.bc":
+        # hi collisionality datapoints, nuPrime >= 1 
+        #   from from ref66
+        # very hi col: from Albert's PoP col scan without e-
+        # nuPrime<1:
+        # From resolution scan for boz_EIM_20190220182951.bc
+        # NEEDS VERIFICATION
+        nuPrime_data = array([1.17e-3, 3e-03, 0.02814753, 0.03920992, 0.09330015, 6e-02, 0.30997011, 6.5e-1, 0.95e+00,     1e+00, 2.5e+00, 80 ,1.49e+02, 1.5e+02, 1.00000000e+04])
+        
+        Ntheta_data = array([19,       19,    25,         25,          25,        25,    25,         25,   21,     19, 19, 31, 35, 35, 35])
+        Nzeta_data  = array([105,      105,   101,        101,         95,        101,   69,         45,   45,     45, 31, 31, 31, 31, 31])
+        Nxi_data    = array([140,      140,   124,        124,         77,        80,    68,         60,   60,     60, 27, 27, 27, 27, 27])
+        Nx_data     = array([8,        8,     8,          8,           6,         6,     6,          8,    8,      8,  10, 14, 14, 14, 14])
+        NL_data     = array([4,        4,     4,          4,           4,         4,     4,          4,    4,      4,  4,  4,  4,  4,  4])
+        
+        precond_x_threshold = 10.0
+
+    elif configuration=="boz_EIM_20190220182954.bc":
+        # hi collisionality datapoints, nuPrime >= 1 
+        #   from from ref66
+        # very hi col: from Albert's PoP col scan without e-
+        # nuPrime<1:
+        # From resolution scan for boz_EIM_20190220182951.bc
+        # NEEDS VERIFICATION
+        nuPrime_data = array([1.17e-3, 3e-03, 0.02814753, 0.03920992, 0.09330015, 6e-02, 0.30997011, 6.5e-1, 0.95e+00,     1e+00, 2.5e+00, 80 ,1.49e+02, 1.5e+02, 1.00000000e+04])
+        
+        Ntheta_data = array([19,       19,    25,         25,          25,        25,    25,         25,   21,     19, 19, 31, 35, 35, 35])
+        Nzeta_data  = array([105,      105,   101,        101,         95,        101,   69,         45,   45,     45, 31, 31, 31, 31, 31])
+        Nxi_data    = array([140,      140,   124,        124,         77,        80,    68,         60,   60,     60, 27, 27, 27, 27, 27])
+        Nx_data     = array([8,        8,     8,          8,           6,         6,     6,          8,    8,      8,  10, 14, 14, 14, 14])
+        NL_data     = array([4,        4,     4,          4,           4,         4,     4,          4,    4,      4,  4,  4,  4,  4,  4])
+        
+        precond_x_threshold = 10.0
+
+    elif configuration=="boz_EIM_20190220182932.bc":
+        # hi collisionality datapoints, nuPrime >= 1 
+        #   from from ref66
+        # very hi col: from Albert's PoP col scan without e-
+        # nuPrime<1:
+        # From resolution scan for boz_EIM_20190220182951.bc
+        # NEEDS VERIFICATION
+        nuPrime_data = array([1.17e-3, 3e-03, 0.02814753, 0.03920992, 0.09330015, 6e-02, 0.30997011, 6.5e-1, 0.95e+00,     1e+00, 2.5e+00, 80 ,1.49e+02, 1.5e+02, 1.00000000e+04])
+        
+        Ntheta_data = array([19,       19,    25,         25,          25,        25,    25,         25,   21,     19, 19, 31, 35, 35, 35])
+        Nzeta_data  = array([105,      105,   101,        101,         95,        101,   69,         45,   45,     45, 31, 31, 31, 31, 31])
+        Nxi_data    = array([140,      140,   124,        124,         77,        80,    68,         60,   60,     60, 27, 27, 27, 27, 27])
+        Nx_data     = array([8,        8,     8,          8,           6,         6,     6,          8,    8,      8,  10, 14, 14, 14, 14])
+        NL_data     = array([4,        4,     4,          4,           4,         4,     4,          4,    4,      4,  4,  4,  4,  4,  4])
+        
+        precond_x_threshold = 10.0
+
+    elif configuration=="boz_EIM_20190220182941.bc":
+        # hi collisionality datapoints, nuPrime >= 1 
+        #   from from ref66
+        # very hi col: from Albert's PoP col scan without e-
+        # nuPrime<1:
+        # From resolution scan for boz_EIM_20190220182951.bc
+        # NEEDS VERIFICATION
+        nuPrime_data = array([1.17e-3, 3e-03, 0.02814753, 0.03920992, 0.09330015, 6e-02, 0.30997011, 6.5e-1, 0.95e+00,     1e+00, 2.5e+00, 80 ,1.49e+02, 1.5e+02, 1.00000000e+04])
+        
+        Ntheta_data = array([19,       19,    25,         25,          25,        25,    25,         25,   21,     19, 19, 31, 35, 35, 35])
+        Nzeta_data  = array([105,      105,   101,        101,         95,        101,   69,         45,   45,     45, 31, 31, 31, 31, 31])
+        Nxi_data    = array([140,      140,   124,        124,         77,        80,    68,         60,   60,     60, 27, 27, 27, 27, 27])
+        Nx_data     = array([8,        8,     8,          8,           6,         6,     6,          8,    8,      8,  10, 14, 14, 14, 14])
+        NL_data     = array([4,        4,     4,          4,           4,         4,     4,          4,    4,      4,  4,  4,  4,  4,  4])
+        
+        precond_x_threshold = 10.0
+    
+    elif configuration=="boz_EIM_20190220182939.bc":
+        # hi collisionality datapoints, nuPrime >= 1 
+        #   from from ref66
+        # very hi col: from Albert's PoP col scan without e-
+        # nuPrime<1:
+        # From resolution scan for boz_EIM_20190220182940.bc and boz_EIM_20190220182950.bc
+        nuPrime_data = array([1.17e-3, 3e-03, 1e-02, 6e-02, 6.5e-1, 0.95e+00, 1.49+00,     2.5e+00, 80 ,1.49e+02, 1.5e+02, 1.00000000e+04])
+        
+        Ntheta_data = array([19,  19,  19,  25,  25,   21, 19,    19, 31, 35, 35, 35])
+        Nzeta_data  = array([105, 105, 105, 105, 45,   45, 45,    31, 31, 31, 31, 31])
+        Nxi_data    = array([140, 140, 123, 80,  60,   60, 60,    27, 27, 27, 27, 27])
+        Nx_data     = array([10,  8,   6,   6,   6,    6,  8,     10, 14, 14, 14, 14])
+        NL_data     = array([4,   4,   4,   4,   4,    4,  4,     4,  4,  4,  4,  4])
+        
+        precond_x_threshold = 10.0
+    
+    elif configuration=="scaled_ref172.bc":
+        # hi collisionality datapoints, nuPrime >= 1 
+        #   from from ref66
+        # very hi col: from Albert's PoP col scan without e-
+        # nuPrime<1:
+        # based on "boz_EIM_20190220182951.bc":
+        # NOT VERIFIED
+        nuPrime_data = array([1.17e-3, 3e-03, 0.02814753, 0.03920992, 0.09330015, 6e-02, 0.30997011, 6.5e-1, 0.95e+00,     1e+00, 2.5e+00, 80 ,1.49e+02, 1.5e+02, 1.00000000e+04])
+        
+        Ntheta_data = array([19,       19,    25,         25,          25,        25,    25,         25,   21,     19, 19, 31, 35, 35, 35])
+        Nzeta_data  = array([105,      105,   101,        101,         95,        101,   69,         45,   45,     45, 31, 31, 31, 31, 31])
+        Nxi_data    = array([140,      140,   124,        124,         77,        80,    68,         60,   60,     60, 27, 27, 27, 27, 27])
+        Nx_data     = array([8,        8,     8,          8,           6,         6,     6,          8,    8,      8,  10, 14, 14, 14, 14])
+        NL_data     = array([4,        4,     4,          4,           4,         4,     4,          4,    4,      4,  4,  4,  4,  4,  4])
+        
+        precond_x_threshold = 10.0
+
+
+
+
     elif configuration=="real_tj20_jmc.bc":
         nuPrime_data = np.array([2.27e-3, 2.27e-2, 2.27e-1, 2.27e+0, 2.27e+1, 2.27e+2, 2.27e+3])
         Ntheta_data = np.array([61, 61, 51, 41, 23, 21, 21])
