@@ -41,8 +41,8 @@ matplotlib.rc('font', **font)
 matplotlib.rc('lines',markeredgewidth=0,markersize=3,linewidth=2.5)
 matplotlib.rc('axes',linewidth=1.5)
 
-matplotlib.rcParams['mathtext.default'] = 'it'
-matplotlib.rcParams['text.usetex'] = True
+#matplotlib.rcParams['mathtext.default'] = 'it'
+#matplotlib.rcParams['text.usetex'] = True
 
 zFactor = 1 ##T
 ###W7-X##
@@ -68,16 +68,19 @@ ColorMap = 'rainbow'
 ##END INPUT##
 #############
 
-def fmt_cbar(x, pos):
-   if x == 0.0:
-      return r'${}$'.format(x)
-   a, b = '{:.1e}'.format(x).split('e')
-   b = int(b)
-   return r'${} \cdot 10^{{{}}}$'.format(a, b)
+#def fmt_cbar(x, pos):
+#   if x == 0.0:
+#      #return r'${}$'.format(x)
+#      return r'{}'.format(x)
+#   a, b = '{:.1e}'.format(x).split('e')
+#   b = int(b)
+#   #return r'${} \cdot 10^{{{}}}$'.format(a, b)
+#   return r'${} \cdot 10^{{{}}}$'.format(a, b)
 
 def fmt_xy_axis(x, pos):
    #return r'${}$'.format(x)
-   return r'${}$'.format('{:1.2f}'.format(x))
+   #return r'${}$'.format('{:1.2f}'.format(x))
+   return r'{}'.format('{:1.2f}'.format(x))
 
 #for i in range(6):
 print ("Processing file ",filename)
@@ -106,8 +109,10 @@ ax = plt.subplot(numRows,numCols,1)
 BPlot = plt.contourf(zeta,theta,zFactor*BHat.transpose(),numContours, cmap=plt.get_cmap(ColorMap))
 BPlot2 = plt.contour(BPlot,levels=ContourLevels, colors='k', hold='on')
 #BPlot2 = plt.contour(BPlot,levels=BPlot.levels[::2], colors='k', hold='on')
-plt.xlabel(r'$\zeta$' + " " + r'$\mathrm{[rad]}$')
-plt.ylabel(r'$\theta$'+ " " + r'$\mathrm{[rad]}$')
+#plt.xlabel(r'$\zeta$' + " " + r'$\mathrm{[rad]}$')
+#plt.ylabel(r'$\theta$'+ " " + r'$\mathrm{[rad]}$')
+plt.xlabel(r'zeta' + " " + r'[rad]')
+plt.ylabel(r'theta'+ " " + r'[rad]')
 #plt.zlabel(r'$B$'+ ' [T]')
 plt.xticks([0,max(zeta)/4,max(zeta)/2,3*max(zeta)/4,max(zeta)])
 plt.yticks([0,max(theta)/4,max(theta)/2,3*max(theta)/4,max(theta)])
@@ -127,13 +132,16 @@ if show_rN:
 #cbar = plt.colorbar(BPlot, label=r'$B$'+ ' [T]', ticks=ContourLevels)
 #cbar = plt.colorbar(BPlot, label=r'$\Phi_1$'+ ' [V]', ticks=BPlot.levels[::2])
 #cbar.add_lines(BPlot2)
-cbar = plt.colorbar(BPlot, format=ticker.FuncFormatter(fmt_xy_axis), ticks=ContourLevels)
-cbar.ax.set_ylabel(r'$B$'+ " " + r'$\mathrm{[T]}$', rotation=0, labelpad=10)
+#cbar = plt.colorbar(BPlot, format=ticker.FuncFormatter(fmt_xy_axis), ticks=ContourLevels)
+cbar = plt.colorbar(BPlot, ticks=ContourLevels)
+#cbar.ax.set_ylabel(r'$B$'+ " " + r'$\mathrm{[T]}$', rotation=0, labelpad=10)
+cbar.ax.set_ylabel(r'B'+ " " + r'[T]', rotation=0, labelpad=10)
 
 #with warnings.catch_warnings():
 #    warnings.simplefilter("always")
 #plt.clabel(BPlot2, fmt='%2.1f', colors='k', fontsize=14)
-plt.clabel(BPlot2, fmt=ticker.FuncFormatter(fmt_xy_axis), colors='k', fontsize=18, inline=False)
+#plt.clabel(BPlot2, fmt=ticker.FuncFormatter(fmt_xy_axis), colors='k', fontsize=18, inline=False)
+plt.clabel(BPlot2, colors='k', fontsize=18, inline=False)
 
 #plt.subplots_adjust(wspace=0.27)
 
