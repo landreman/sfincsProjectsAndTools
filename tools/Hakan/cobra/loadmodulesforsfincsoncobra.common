@@ -1,0 +1,5 @@
+
+module load intel/19.1.2 impi/2019.8 hdf5-mpi/1.8.21 netcdf-mpi/4.4.1 petsc-real/3.13.5
+
+#module load intel/19.1.2 impi/2019.8 hdf5-mpi netcdf-mpi petsc-real
+
