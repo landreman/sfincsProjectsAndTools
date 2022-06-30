@@ -841,6 +841,16 @@ class Sfincs_simulation(object):
         return self.outputs["integerToRepresentTrue"]
 
     @property
+    def converged(self):
+        try: 
+            o = self.outputs["particleFlux_vm_psiHat"]
+        except (AttributeError, KeyError):
+            return False
+        else:
+            return True
+
+
+    @property
     def includePhi1(self):
         return (self.outputs["includePhi1"][()] == self.integerToRepresentTrue)
 
@@ -954,7 +964,6 @@ class Sfincs_simulation(object):
     @property
     def externalCurrent(self):
         if self.externalZs is None:
-            print(self.dirname)
             externalZs = 0.0
         else:
             externalZs = self.externalZs
@@ -992,7 +1001,6 @@ class Sfincs_simulation(object):
     @property
     def externalFSABjHat(self):
         if self.externalZs is None:
-            print(self.dirname)
             externalZs = 0.0
         else:
             externalZs = self.externalZs
@@ -1046,7 +1054,6 @@ class Sfincs_simulation(object):
     def externalNHat2(self):
         n1 = self.externalNHat
         FSAn1 = self.FSA(n1)
-        print(FSAn1)
         return np.sqrt(self.FSA((n1 - FSAn1)**2))
 
          
@@ -1365,7 +1372,6 @@ class Sfincs_simulation(object):
     
     @property
     def A1_r(self):
-        print(self.drHat_dpsiHat)
         return self.A1/(self.drHat_dpsiHat*self.normalization.RBar)
         
     @property
@@ -1462,6 +1468,33 @@ class Sfincs_simulation(object):
     @property
     def jrHat(self):
         return np.sum(self.input.Zs*self.GammaHat)
+
+        
+    @property
+    def GammaHat_vs_x(self):
+        # Nspecies, Nx
+        ret=self.outputs["particleFlux_vm_psiHat_vs_x"][:,:,-1]
+        return ret
+
+    @property
+    def QHat_vs_x(self):
+        # Nspecies, Nx
+        ret=self.outputs["heatFlux_vm_psiHat_vs_x"][:,:,-1]
+        return ret
+
+    @property
+    def FSABFlow_vs_x(self):
+        # Nspecies, Nx
+        ret=self.outputs["FSABFlow_vs_x"][:,:,-1]
+        return ret
+
+    @property
+    def x(self):
+        # the x grid
+        ret=self.outputs["x"][()]
+        return ret
+
+
             
 if __name__=="__main__":
 
