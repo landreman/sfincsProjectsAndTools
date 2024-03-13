@@ -85,7 +85,13 @@ class Scan1(Scan):
                         simul["FSABFlow"] = s.FSABFlow
                         simul["Q"] = s.QHat
                     except KeyError:
-                        raise KeyError("outputs cannot be read in '" + d + "'")
+                        # skip this simulation
+                        print("Simulation '" + d + "' has no output")
+                        continue
+                    except AttributeError:
+                        # skip this simulation
+                        print("Simulation '" + d + "' has no output")
+                        continue
                     simuls[i].append(simul)
         
         for i,p in enumerate(params):
@@ -95,8 +101,11 @@ class Scan1(Scan):
             tmp = sorted(zip(Nps,ss), key = lambda x: x[0])
             ss = [b for a,b in tmp]
             Nps = [a for a,b in tmp]
-            assert(len(ss)>1) # need more than 1 simul to check convergence
-            # TODO: fail more gracefully? (low priority)
+            if not len(ss)>1:
+                print(self.jobs)
+                # need more than 1 simul to check convergence
+                print("Need more than 1 simulation to assess convergence. Affected Parameter: '" + p + "'. Dir: '" + self.dirname + "'")
+                continue
             dX = None
             D = Nps[-1]/Nps[-2] - 1.0
             if np.fabs(D) > tol:
@@ -146,10 +155,10 @@ class Scan2(Scan):
         jrs = np.array([s.jrHat for s in simuls])
         if jrs[-1] * (Ers[-1] - Ers[-2]) < 0:
             # extrapolate up
-            newEr = -jrs[-1] * (Ers[-1] - Ers[-2])/(jrs[-1] - jrs[-2])
+            newEr = Ers[-1] - jrs[-1] * (Ers[-1] - Ers[-2])/(jrs[-1] - jrs[-2])
         elif jrs[0] *(Ers[1] - Ers[0]) > 0:
             # extrapolate down
-            newEr = -jrs[0] * (Ers[1] - Ers[0])/(jrs[1] - jrs[0])
+            newEr = Ers[0] - jrs[0] * (Ers[1] - Ers[0])/(jrs[1] - jrs[0])
         else:
             # this is awful
             newEr = None
@@ -176,10 +185,14 @@ class Scan2(Scan):
         minjr = np.min(jrs)
         if not ((maxjr > 0) and (minjr < 0)):
             roots = None
+            return roots
         else:
             roots = self.solve_for_ambipolar_Er(Ers,jrs)
             root_types = self.classify_roots(roots)
-        return roots
+            if len(roots) == 1:
+                return roots[0]
+            else:
+                raise ValueError("multiple roots!")
 
     def solve_for_ambipolar_Er(self,Ers,jrs,NEr_fine = 500):
         # code taken from sfincsScanPlot_2
@@ -204,6 +217,25 @@ class Scan2(Scan):
         roots = np.sort(np.array(roots))
         return roots
 
+    @property
+    def _Ers(self):
+        subdirs = [f for f in os.listdir(self.dirname) if os.path.isdir(os.path.join(self.dirname, f))]
+        simuls = [Sfincs_simulation(self.dirname + "/" + subdir,load_geometry=False) for subdir in subdirs]
+        # remove unconverged simulations
+        simuls = [s for s in simuls if s.converged]
+        Ers = np.array([s.dPhiHatdrHat for s in simuls])
+        return sorted(Ers)
+    
+
+    @property
+    def maxEr(self):
+        return self._Ers[-1]
+        
+    @property
+    def minEr(self):
+        return self._Ers[0]
+        
+
     def classify_roots(self,roots):
         # Classify roots as ion, unstable, or electron root
         # Code taken from sfincsScanPlot_2
@@ -224,6 +256,7 @@ class Scan2(Scan):
 class Job(object):
     donestring = "Done with the main solve."
     oomstring = "oom-kill"
+    maybeoomstring = "killed"
     timestring = "time limit"
 
     @staticmethod
@@ -262,6 +295,31 @@ class Job(object):
             status = "???"
         return status
 
+
+    def getTimeLimit(self):
+        with open(self.jobfile,'r') as f:
+            t = f.read().rsplit("#SBATCH --time=",1)[1].split(None,1)[0]
+        h,m,s = t.split(":")
+        h = int(h)
+        m = int(m)
+        s = int(s)
+        return h*3600 + m*60 + s
+
+    def setTimeLimit(self,s):
+        h = s//3600
+        m = (s%3600)//60
+        s = s%60 
+        t = str(h).zfill(2) +  ":" + str(m).zfill(2) + ":" + str(s).zfill(2)
+        new_filecontent = []
+        with open(self.jobfile,'r') as f:
+            for l in f.readlines():
+                if "#SBATCH --time=" in l:
+                    l = "#SBATCH --time=" + t + "\n"
+                new_filecontent.append(l)
+        with open(self.jobfile,'w') as f:
+            for l in new_filecontent:
+                f.write(l)
+        
     @property
     def status(self):
         if self.jobid is None:
@@ -281,6 +339,9 @@ class Job(object):
                 status = "OOM"
             elif Job.timestring in err.lower():
                 status = "TIME"
+            elif Job.maybeoomstring in err.lower():
+                # sometimes OOM results in a different error message
+                status = "OOM"
             else:
                 status = self.check_squeue()
         return status
@@ -318,7 +379,7 @@ def scanInDir(dirname):
     # or OOM
     # in the former case, nothing will actually be done
     # except that the list of unfinished simulations will be non-empty
-    # so that the program waits
+    # so that the program waits for user intervention
     for (x,y) in olddirs:
         s = Job(x,y).status
         if s == "OOM" or s == "TIME":
@@ -388,16 +449,16 @@ def addToN(dirname,Nplus = 2):
             f.write(l)
     return int(N+Nplus)
 
-def modifyScan2(dirname, N=5,lower=0.3, upper=0.3, Er = None):
+def modifyScan2(dirname, N=5,lower=0.3, upper=0.3, dPhidr = None):
     filename = dirname + "/input.namelist"
     modified_file = []
     with open(filename) as f:
         for l in f.readlines():
             if l.split("=")[0].strip() == "dPhiHatdrHat":
-                if Er is None:
+                if dPhidr is None:
                     dPhiHatdrHat = float(l.split("=")[1].split("!")[0])
                 else:
-                    dPhiHatdrHat = - Er
+                    dPhiHatdrHat = dPhidr
                 
 
             if l.split("=")[0].strip() == "!ss scanType":

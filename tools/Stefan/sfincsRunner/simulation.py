@@ -28,7 +28,7 @@ class Simulation(object):
 
     Usage (if the jobID of a simulation running in dirname is known):
     > Simulation(dirname,jobID) 
-    Usage (if only the directory is known; will place the simulation in a confused state until a run has produced some output. DO NOT DO THIS if a simulation is already queued up but not started)
+    Usage (if only the directory is known; will try to deduce jobID from finished or queued/running jobs)
     > Simulation.fromDir(dirname): 
 
     Run input variables (that a simulation may update if a run fails):
@@ -56,7 +56,8 @@ class Simulation(object):
 
     def __init__(self,dirname,jobID):
         self._dirname = dirname # needs to be set before jobID setter
-        self.jobID = jobID
+        self.jobID = jobID # needs to be set before dirname
+        self.dirname = dirname 
         self.auto = True
 
         
@@ -72,12 +73,6 @@ class Simulation(object):
             if force:
                 tmp = scancel(j=self.jobID)
                 self.jobID = sbatchInDir(self.dirname)
-        elif self.status == "MAYBEQUEUED":
-            if force:
-                self.jobID = sbatchInDir(self.dirname)
-            # maybe do this even without forced??
-            # simulation would enter a weird state where it constantly monitors for
-            # output
         
         elif self.status == "DONE":
             if force:
@@ -119,7 +114,6 @@ class Simulation(object):
             self.jobID =  getLatestJobIDInDir(self.dirname)
         return self.jobID
 
-
     @property
     def statestring(self):
         if self.status == "QUEUED":
@@ -130,8 +124,6 @@ class Simulation(object):
             ret = "TIME"
         elif self.status == "DONE":
             ret = "DONE"
-        elif self.status == "MAYBEQUEUED":
-            ret = "QUE?"
         elif self.status == "RUNNING":
             ret = "RUN"
         else:
@@ -190,8 +182,8 @@ class Simulation(object):
             # retry jobID once
             self.getLatestJobID()
             if self.jobID is None:
-                #if still none:
-                status = "MAYBEQUEUED"
+                # no job has been run or is running.
+                status = "???"
 
         elif not os.path.isfile(self.stdout):
             if self.inQueue():

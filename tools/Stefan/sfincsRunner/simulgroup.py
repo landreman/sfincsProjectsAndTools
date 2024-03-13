@@ -61,7 +61,6 @@ class Simulgroup(object):
         # 2nd: look for OLD_scan2
         # 3rd: look for scan1
         # 4th (TODO?): maybe look at current state in main directory?
-
         if os.path.isdir(os.path.join(self.dirname, type(self).archivedir1)):
             self.simullist = self.simullist +  [Simulation.fromDir(d) for d in subdirs(self.dirname + "/" + type(self).archivedir1)]
             if os.path.isdir(os.path.join(self.dirname, type(self).archivedir3)):
@@ -126,7 +125,7 @@ class Simulgroup(object):
         tmpscan = Scan1(self.dirname + "/" + type(self).archivedir2)
         conv,convparams = tmpscan.check_convergence(self.params)
         for ii,p in enumerate(self.params):
-            changeVar(newdir,"resolutionParameters", p,convparams[ii])
+            changeVar(self.dirname,"resolutionParameters", p,convparams[ii])
         # setup Er scan
         modifyScan2(self.dirname,N=type(self).NErScan2Simuls,lower=0.3,upper=0.3)
         self.startNewSimuls()
@@ -435,7 +434,7 @@ class Scan1(Scan):
                 if "N" in d:
                     s = Sfincs_simulation(d,load_geometry=False)
                     break
-        scale = max(s.GammaHat)
+            scale = max(np.fabs(s.GammaHat))
         return (s.jrHat/scale < tol)
 
 class Scan2(Scan):    
@@ -452,11 +451,21 @@ class Scan2(Scan):
         self.subdirs = [os.path.join(self.dirname, f) for f in os.listdir(self.dirname) if (os.path.isdir(os.path.join(self.dirname, f)) and f not in ["OLD_scan1","OLD_scan2","scan1"])]
         super().__init__(joblist,status)
 
-    def extrapolate_for_root(self):
-        simuls = [Sfincs_simulation(subdir,load_geometry=False) for subdir in self.subdirs]
-        
+    def get_converged_simuls(self):
+        simuls = []
+        for subdir in self.subdirs:
+            try:
+                s = Sfincs_simulation(subdir,load_geometry=False)
+            except:
+                pass
+            else:
+                simuls.append(s)
         # remove unconverged simulations
         simuls = [s for s in simuls if s.converged]
+        return simuls
+        
+    def extrapolate_for_root(self):
+        simuls = self.get_converged_simuls()
         Ers = np.array([s.dPhiHatdrHat for s in simuls])
         tmp = sorted(zip(Ers,simuls), key = lambda x: x[0])
         simuls = [b for a,b in tmp]
@@ -476,11 +485,7 @@ class Scan2(Scan):
 
     @property
     def roots(self):
-        simuls = [Sfincs_simulation(subdir,load_geometry=False) for subdir in self.subdirs]
-        
-        # remove unconverged simulations
-        simuls = [s for s in simuls if s.converged]
-    
+        simuls = self.get_converged_simuls()
         # sort simulations based on Er
         # NOTE: the sorting assumes all the simulations use the same inputRadialCoordinateForGradients. This should be true in all normal situations.
         
@@ -527,9 +532,7 @@ class Scan2(Scan):
 
     @property
     def _Ers(self):
-        simuls = [Sfincs_simulation(subdir,load_geometry=False) for subdir in self.subdirs]
-        # remove unconverged simulations
-        simuls = [s for s in simuls if s.converged]
+        simuls = self.get_converged_simuls()
         Ers = np.array([s.dPhiHatdrHat for s in simuls])
         return sorted(Ers)
     

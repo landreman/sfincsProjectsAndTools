@@ -78,6 +78,11 @@
      Copy simulgroup
      
 * TODO Better resolution estimate
+** TODO Script to run over simulations to extract input, geometry and numerical convergence status
+   ~/sfincsProjectsAndTools/tools/Stefan/sfincs_resolution/data/conv_data_from_scan.py
+** TODO Geometry representation useful to assess resolution requirements
+** TODO Categorizer that accounts for symmetry in input (SVM?)
+
 * TODO Change to collisional and nx preconditioner if needed?
   Might be best to do this manually for now, since memory requirements needs to be as low as possible. Should launch a different kind of scan to find as low resolution as possible for unaffected parameters?
 

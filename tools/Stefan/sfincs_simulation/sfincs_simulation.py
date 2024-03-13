@@ -139,6 +139,8 @@ class Sfincs_input(object):
                                        'dphihatdpsin' : 0.0,
                                        'dphihatdrhat' : 0.0,
                                        'dphihatdrn' : 0.0,
+                                       'includephi1' : False,
+                                       'readexternalf' : False,
                                    },
                 'speciesparameters' : {'zs' : [1.0],
                                        'mhats' : [1.0],
@@ -155,6 +157,12 @@ class Sfincs_input(object):
                                    },
                 'resolutionparameters' : {'forceoddnthetaandnzeta' : True,
                                           'xmax': 5.0,
+                                          'ntheta' : 15,
+                                          'nzeta' : 15,
+                                          'nxi' : 16,
+                                          'nx' : 5,
+                                          'nl' : 4,
+                                          'solvertolerance' : 1e-6,
                                       },
             }
 
@@ -259,6 +267,28 @@ class Sfincs_input(object):
         return nu_n
 
     @property
+    def rN_wish(self):
+        if self.inputRadialCoordinate == 0:
+            return np.sqrt(self.coordinate_wish/self.psiAHat)
+        elif self.inputRadialCoordinate == 1:
+            return np.sqrt(self.coordinate_wish)
+        elif (self.inputRadialCoordinate == 2) or (self.inputRadialCoordinate == 4):
+            return self.coordinate_wish/self.aHat 
+        elif self.inputRadialCoordinate == 3:
+            return self.coordinate_wish
+        else:
+            raise ValueError("inputRadialCoordinate should be 0,1,2,3,4; it is" + str(self.input.inputRadialCoordinate))
+        
+    @property
+    def includePhi1(self):
+        return np.array(self.get_value_from_input_or_defaults("physicsparameters","includephi1"))
+
+    @property
+    def readExternalF(self):
+        return np.array(self.get_value_from_input_or_defaults("physicsparameters","readexternalf"))
+
+
+    @property
     def Zs(self):
         return np.array(self.get_value_from_input_or_defaults("speciesparameters","zs"))
 
@@ -290,7 +320,7 @@ class Sfincs_input(object):
     @property
     def Zeff(self):
         # exclude electrons from sum if electrons are included in the simulation
-        noe = np.where(Zs!=-1)
+        noe = np.where(self.Zs!=-1)
         return np.sum(self.Zs[noe]**2*self.nHats[noe])/np.sum(self.Zs[noe]*self.nHats[noe])
     
     @property
@@ -316,6 +346,11 @@ class Sfincs_input(object):
     @property
     def NL(self): 
         return self.get_value_from_input_or_defaults("resolutionparameters","NL")
+
+    @property
+    def solverTolerance(self):
+        return self.get_value_from_input_or_defaults("resolutionparameters","solvertolerance")
+
 
     @property
     def forceOddNthetaAndNzeta(self):
@@ -406,6 +441,20 @@ class Sfincs_input(object):
         ret = self.dTHatdss/self.THats
         return np.array(ret)
 
+    @property
+    def collisionality(self):
+        if self.input.geometryScheme == 11:
+            B00Hat = self.B00Hat
+            IHat = self.IHat
+            GHat = self.GHat
+            iota = self.iota
+        RHat = np.fabs((GHat + iota*IHat)/B00Hat)
+        nu_n = self.input.nu_n
+        Zs = self.input.Zs
+        nHats = self.input.nHats
+        THats = self.input.THats
+
+
     def __str__(self):
         return str(self.input_name)
 
@@ -478,8 +527,6 @@ class Sfincs_simulation(object):
             self.signcorr=1
             verbose = 0
 
-            self.zeroout_Deltaiota = 0.000
-
             try:
                 print("Loading geometry " +self.equilibrium_name +" ...")
                 self.geom = bcgeom(self.equilibrium_name,self.min_Bmn,self.max_m,self.maxabs_n,symmetry=self.symmetry,signcorr=self.signcorr,verbose=verbose)
@@ -497,6 +544,7 @@ class Sfincs_simulation(object):
         self.rind=np.argmin(np.fabs(self.rNs - self.rN_wish))
         self._iota = self.geom.iota[self.rind]
         if Booz is None:
+            self.zeroout_Deltaiota = 0.000
             self.Booz = fluxcoorddiscr(self.geom,self.rind,self.input.Ntheta,self.input.Nzeta,u_zeroout_Deltaiota=self.zeroout_Deltaiota,name='Boozer')
         else:
             self.Booz=Booz
@@ -540,6 +588,11 @@ class Sfincs_simulation(object):
     def NL(self):
         return self.input.NL
     
+    @property
+    def solverTolerance(self):
+        return self.input.solverTolerance
+    
+
     @property
     def psiAHat(self):
         if self.geometry_halfloaded:
@@ -852,7 +905,19 @@ class Sfincs_simulation(object):
 
     @property
     def includePhi1(self):
-        return (self.outputs["includePhi1"][()] == self.integerToRepresentTrue)
+        try:
+            return (self.outputs["includePhi1"][()] == self.integerToRepresentTrue)
+        except AttributeError:
+            return self.input.includePhi1
+
+    
+    @property
+    def readExternalF(self):
+        try:
+            return (self.outputs["readExternalF"][()] == self.integerToRepresentTrue)
+        except (KeyError,AttributeError):
+            return self.input.readExternalF
+
 
     @property
     def Phi1Hat(self):
@@ -895,6 +960,47 @@ class Sfincs_simulation(object):
             return self.outputs["totalDensity"][:,:,:,-1]
         else:
             return self.outputs["totalDensity"][:,:,:,-1] + self.n1Hat_adiabatic
+
+
+    @property
+    def sin_n_variation(self):
+        n1 = self.total_nHat # nzeta,ntheta,nspecies
+        prefactor = self.Nperiods/(self.nHats * 2*np.pi**2)
+        tmp = np.trapz(n1,self.zeta,axis=0) #ntheta, nspecies
+        ret = np.trapz(np.sin(self.theta)[:,None]*tmp,self.theta,axis=0) # nspecies
+        return prefactor * ret
+
+    @property
+    def cos_n_variation(self):
+        n1 = self.total_nHat # nzeta,ntheta,nspecies
+        prefactor = self.Nperiods/(self.nHats * 2*np.pi**2)
+        tmp = np.trapz(n1,self.zeta,axis=0) #ntheta, nspecies
+        ret = np.trapz(np.cos(self.theta)[:,None]*tmp,self.theta,axis=0) # nspecies
+        return prefactor * ret
+
+
+    @property
+    def sin_n_variation_triangular(self):
+        # triangular is in the middle of the field-periods, at phicyl = 36 deg.
+        # we approximate the boozer angle with the cylindrical angle, for now.
+        n1 = self.total_nHat # nzeta,ntheta,nspecies
+        i1 = self.Nzeta//2
+        i2 = i1 + 1
+        n1 = (n1[i1] + n1[i2])/2.0 # ntheta, nspecies
+        prefactor = self.Nperiods/(self.nHats * np.pi)
+        ret = np.trapz(np.sin(self.theta)[:,None]*n1,self.theta,axis=0) # nspecies
+        return prefactor * ret
+
+    @property
+    def cos_n_variation_triangular(self):
+        n1 = self.total_nHat # nzeta,ntheta,nspecies
+        i1 = self.Nzeta//2
+        i2 = i1 + 1
+        n1 = (n1[i1] + n1[i2])/2.0 # ntheta, nspecies
+        prefactor = self.Nperiods/(self.nHats * np.pi)
+        ret = np.trapz(np.cos(self.theta)[:,None]*n1,self.theta,axis=0) # nspecies
+        return prefactor * ret
+
 
 
     @property
@@ -1134,13 +1240,22 @@ class Sfincs_simulation(object):
 
     @property
     def ms(self):
-        return self.input.mHats * self.normalization.mBar
+        return self.mHats * self.normalization.mBar
+
+    @property
+    def mHats(self):
+        return self.input.mHats
 
     @property
     def Zs(self):
         return self.input.Zs
     
+    @property
+    def Zeff(self):
+        return self.input.Zeff
     
+    
+
     @property
     def charges(self):
         return self.input.Zs * self.normalization.eBar
@@ -1320,14 +1435,14 @@ class Sfincs_simulation(object):
     def ns(self):
         return self.input.nHats * self.normalization.nBar
 
-    @property
-    def dPhiHatdpsiHat(self):
-        return self.outputs["dPhiHatdpsiHat"][()]
+    # @property
+    # def dPhiHatdpsiHat(self):
+    #     return self.outputs["dPhiHatdpsiHat"][()]
 
     
-    @property
-    def dPhiHatdrHat(self):
-        return self.outputs["dPhiHatdrHat"][()]
+    # @property
+    # def dPhiHatdrHat(self):
+    #     return self.outputs["dPhiHatdrHat"][()]
 
     
     @property
@@ -1340,15 +1455,28 @@ class Sfincs_simulation(object):
 
     @property
     def nHats(self):
-        return self.outputs["nHats"][()]
+        try:
+            return self.outputs["nHats"][()]
+        except AttributeError:
+            return self.input.nHats
 
     @property
     def THats(self):
-        return self.outputs["THats"][()]
+        try:
+            return self.outputs["THats"][()]
+        except AttributeError:
+            return self.input.THats
+
 
     @property
     def FSABjHatOverB0(self):
         return self.outputs["FSABjHatOverB0"][()][-1]
+
+    
+    @property
+    def FSABjHat(self):
+        return self.outputs["FSABjHat"][()][-1]
+
 
     @property
     def FSABjOverB0_Am2(self):
@@ -1358,6 +1486,18 @@ class Sfincs_simulation(object):
     def FSABjOverB0_kAm2(self):
         return self.FSABjOverB0_Am2/1000
     
+
+    @property
+    def FSABjHat_ATm2(self):
+        # Ampere Tesla / m^2
+        return self.FSABjHat * self.normalization.eBar * self.normalization.nBar * self.normalization.vBar * self.normalization.BBar
+
+
+    @property
+    def FSABjHat_MATm2(self):
+        # Mega Ampere Tesla / m^2
+        return self.FSABjHat_ATm2/1e6
+
     
     @property
     def A1(self):
@@ -1469,6 +1609,12 @@ class Sfincs_simulation(object):
     def jrHat(self):
         return np.sum(self.input.Zs*self.GammaHat)
 
+
+    @property 
+    def ambipolar(self):
+        tol = 0.1
+        scale = max(np.fabs(self.GammaHat))
+        return (self.jrHat/scale < tol)
         
     @property
     def GammaHat_vs_x(self):

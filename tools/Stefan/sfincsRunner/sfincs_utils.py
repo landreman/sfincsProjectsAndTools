@@ -11,9 +11,15 @@ from scipy.optimize import brentq
 from sfincs_simulation import Sfincs_simulation
 
 def getLatestJobIDInDir(dirname):
-    """Get the ID of the latest job that has been run in a directory.
-    returns None if no jobs have been run.
-    Warning: will return the ID of the latest job that was run, and not jobs that are merely queued. Use the instance method 'self.getLatestJobID()' if possible."""
+    """Get the ID of the latest job that is running or has been run in a directory.
+    returns None if no jobs are found."""
+
+    # see if a job is currently running
+    maybeJobID = jobQueuedInDir(dirname)
+    if maybeJobID is not None:
+        return maybeJobID
+
+    # look for past jobs
     tmp = subprocess.run("ls " + dirname + " | grep .out.", shell=True, capture_output=True, text=True) # list of .out files.
     filenames = tmp.stdout.split()
     if len(filenames) > 0:
@@ -24,6 +30,27 @@ def getLatestJobIDInDir(dirname):
         jobID = None
     return jobID
 
+def getQueuedJobDirs(u="sbul"):
+    dirs = []
+    out = squeue(u=u)
+    tmp = out.split('\n')
+    jobs = [t.split()[0] for t in tmp[1:-1]]
+    for job in jobs:
+        command2 = 'scontrol show job ' + job + ' | grep WorkDir'
+        result2 = subprocess.run(command2, shell=True, capture_output=True, text=True)
+        dirs.append(result2.stdout.split("=",1)[1][:-1])
+    return dirs,jobs
+
+
+def jobQueuedInDir(d,u="sbul"):
+    d = os.path.abspath(d)
+    dirs,jobs = getQueuedJobDirs(u=u)
+    for (dir,job) in zip(dirs,jobs):
+        if os.path.samefile(d,dir):
+            return job
+    else:
+        return None
+    
 
 class ErrOut(object):
     """An object to parse stdout and stderr produced by a Sfincs run. The main purpose is to deduce the "status" of that run, which is used within the simulation object to set its own status.
@@ -41,7 +68,6 @@ class ErrOut(object):
     def __init__(self,dirname,jobID=None):
         self.dirname = dirname
         if jobID is None:
-            #get latest
             self.jobID = getLatestJobIDInDir(dirname)
         else:
             self.jobID = jobID
@@ -173,8 +199,8 @@ def scanInDir(dirname):
     for d in olddirs:
         s = ErrOut(d).status
         if s == "OOM" or s == "TIME":
-            dirnames.append(x)
-            jobids.append(y)
+            dirnames.append(d)
+            jobids.append(getLatestJobIDInDir(d))
 
     return stype, dirnames, jobids
 
