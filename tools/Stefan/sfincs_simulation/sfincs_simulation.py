@@ -489,7 +489,11 @@ class Sfincs_simulation(object):
         try:
             self.normalization = create_normalization(self.absolute_path(self.norm_name))
         except FileNotFoundError:
-            self.normalization = Normalization(1,1,1.602176565e-16,1.672621898e-27,1e20,1.602176565e-19,1.602176565e-16,units="SI")
+            # T: keV
+            # charge: e
+            # mass: m_p
+            # n: 10^20 m^{-3}
+            self.normalization = Normalization(BBar=1,RBar=1,TBar=1.602176565e-16,mBar=1.672621898e-27,nBar=1e20,eBar =1.602176565e-19,ePhiBar=1.602176565e-16,units="SI")
         try:
             self.species = create_species(self.normalization,self.absolute_path(self.species_name))
         except FileNotFoundError:
@@ -643,7 +647,7 @@ class Sfincs_simulation(object):
                 return self.outputs["GHat"][()]
             except KeyError:
                 raise NotImplementedError("GHat cannot be calculated for this simulation since it does not use a .bc file and does not contain GHat in the output.")
-
+            
     @property
     def IHat(self):
         if self.geometry_loaded:
@@ -654,6 +658,14 @@ class Sfincs_simulation(object):
             except KeyError:
                 raise NotImplementedError("IHat cannot be calculated for this simulation since it does not use a .bc file and does not contain IHat in the output.")
 
+    @property
+    def G(self):
+        return self.GHat * self.normalization.BBar * self.normalization.RBar
+
+    @property
+    def I(self):
+        return self.IHat * self.normalization.BBar * self.normalization.RBar
+            
     @property
     def gpsipsiHat(self):
         if self.geometry_loaded:
@@ -790,6 +802,29 @@ class Sfincs_simulation(object):
     def zeta(self):
         return self.outputs["zeta"][()]
     
+
+    
+    @property
+    def temperature(self):
+        return self.outputs["THats"][()] * self.normalization.TBar
+    
+    @property
+    def density(self):
+        return self.outputs["nHats"][()] * self.normalization.nBar
+    
+    @property
+    def dTdpsiN(self):
+        return self.outputs["dTHatdpsiN"][()] * self.normalization.TBar
+
+    @property
+    def dndpsiN(self):
+        return self.outputs["dnHatdpsiN"][()] * self.normalization.nBar
+
+    @property
+    def dPdpsiN(self):
+        return np.sum(self.density * self.dTdpsiN + self.temperature * self.dndpsiN)
+
+    
     
     @property
     def rN(self):
@@ -858,6 +893,9 @@ class Sfincs_simulation(object):
             raise ValueError("inputRadialCoordinate should be 0,1,2,3,4; it is" + str(self.input.inputRadialCoordinate))
         return self.input.dTHatdss * conversion_factor
 
+
+    
+    
     @property
     def dPhiHatdpsiHat(self):
         if self.input.inputRadialCoordinateForGradients == 0:
@@ -1116,6 +1154,15 @@ class Sfincs_simulation(object):
     def externalFSABjHatOverB0(self):
         return self.externalFSABjHat/self.B00Hat
 
+
+    @property
+    def FSAB2_h5(self):
+        try:
+            return self.outputs["FSABHat2"][()] * self.normalization.BBar**2
+        except KeyError:
+            return None
+        
+    
     @property
     def externalFSABjOverB0_Am2(self):
         return self.externalFSABjHatOverB0 * self.normalization.eBar * self.normalization.nBar * self.normalization.vBar
@@ -1126,12 +1173,18 @@ class Sfincs_simulation(object):
     
     @property
     def FSAB2(self):
-        return self.FSA(self.BHat**2)
+        return self.FSA(self.BHat**2) *  self.normalization.BBar**2
 
     @property
     def B0Hat(self):
         return 2*np.fabs(self.psiAHat)/self.aHat**2
-        
+
+    
+    @property
+    def psiA(self):
+        return self.psiAHat * self.normalization.RBar**2 * self.normalization.BBar
+
+    
     @property
     def FSABExternalFlowOverRootFSAB2(self):
         return self.externalFSABFlow/(np.sqrt(self.FSAB2))#*self.FSA(self.externalNHat))
@@ -1489,8 +1542,29 @@ class Sfincs_simulation(object):
 
     @property
     def FSABjHat_ATm2(self):
+        # <B.J>
         # Ampere Tesla / m^2
         return self.FSABjHat * self.normalization.eBar * self.normalization.nBar * self.normalization.vBar * self.normalization.BBar
+
+    @property
+    def FSABjHat_FSAB2_Am2T(self):
+        # <B.J>/<B^2>
+        # Ampere /(m^2 Tesla)
+        return self.FSABjHat_ATm2 / self.FSAB2_h5
+
+    @property
+    def dIds_vmec(self):
+        # from https://terpconnect.umd.edu/~mattland/assets/notes/computing_vmec_AC_profile_from_a_bootstrap_current_code.pdf
+        # any sign errors are likely my own
+        mu0 = 4 * np.pi * 1.0e-7
+        print("!!!!!!!!")
+        print(self.FSABjHat_FSAB2_Am2T)
+        print(self.psiA)
+        print(self.FSAB2_h5)
+        print(self.dPdpsiN)
+        return self.FSABjHat_FSAB2_Am2T * 2*np.pi * self.psiA  - mu0 * self.I * self.dPdpsiN/self.FSAB2_h5
+
+    
 
 
     @property
@@ -1609,7 +1683,13 @@ class Sfincs_simulation(object):
     def jrHat(self):
         return np.sum(self.input.Zs*self.GammaHat)
 
+    @property 
+    def ambipolarity(self):
+        tol = 0.1
+        scale = max(np.fabs(self.GammaHat))
+        return self.jrHat/scale
 
+    
     @property 
     def ambipolar(self):
         tol = 0.1
