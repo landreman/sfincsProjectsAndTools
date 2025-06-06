@@ -1196,19 +1196,37 @@ if useFFT
   HamBmn=mnlist(fftmn(Ham.B),min_Bmn,'relative');
   HamRmn=mnlist(fftmn(Ham.cylR),min_Bmn,'relative');
   HamZmn=mnlist(fftmn(Ham.cylZ),min_Bmn,'relative');
-  Ham.m=HamBmn.m;
-  Ham.n=HamBmn.n;
   if Geom.StelSym
     if any(HamBmn.cosparity~=1)
-      error(['Something has gone wrong. The calculated Hamada Bmn is not stellarator ', ...
-             'symmetric!'])
+      goodinds=find(HamBmn.cosparity==1);
+      badinds=find(HamBmn.cosparity==0);
+      if max(abs(HamBmn.data(badinds)))>1e-6
+        disp(['max(abs(HamBmn.data(badinds)))=',num2str(max(abs(HamBmn.data(badinds))))])
+        disp(['Something has gone wrong. The calculated Hamada Bmn is not stellarator ', ...
+               'symmetric!'])       
+      end
+      Ham.parity=HamBmn.cosparity(goodinds);
+      Ham.m=HamBmn.m(goodinds);
+      Ham.n=HamBmn.n(goodinds);
+      Ham.Bmn=HamBmn.data(goodinds);
+      Ham.Rmn=HamRmn.data(goodinds);
+      Ham.Zmn=HamZmn.data(goodinds);
+    else
+      Ham.parity=HamBmn.cosparity;
+      Ham.m=HamBmn.m;
+      Ham.n=HamBmn.n;
+      Ham.Bmn=HamBmn.data;
+      Ham.Rmn=HamRmn.data;
+      Ham.Zmn=HamZmn.data;
     end
   else
     Ham.parity=HamBmn.cosparity;
-  end  
-  Ham.Bmn=HamBmn.data;
-  Ham.Rmn=HamRmn.data;
-  Ham.Zmn=HamZmn.data;
+    Ham.m=HamBmn.m;
+    Ham.n=HamBmn.n;
+    Ham.Bmn=HamBmn.data;
+    Ham.Rmn=HamRmn.data;
+    Ham.Zmn=HamZmn.data;
+  end
   
   %toc
 else

@@ -720,7 +720,7 @@ class bcgeom(object):
             Blist=(mnFourierlib.mnmat(Booz.B,Nperiods=self.Nperiods)).mnlist()
             Rlist=(mnFourierlib.mnmat(Booz.R,Nperiods=self.Nperiods)).mnlist()
             Zlist=(mnFourierlib.mnmat(Booz.Z,Nperiods=self.Nperiods)).mnlist()
-            Dphilist=(mnFourierlib.mnmat(Booz.Dzetapzeta,Nperiods=self.Nperiods)).mnlist()
+            Dphilist=(mnFourierlib.mnmat(Booz.Dzetapzeta*self.Nperiods/(2*np.pi),Nperiods=self.Nperiods)).mnlist()
 
             #NOTA BENE: The following works because Bmn.mnlist() gives first cos, then sin components of Bmn
             if self.StelSym:
@@ -759,7 +759,7 @@ class bcgeom(object):
             first_mode=ii[0]
             last_mode =ii[-1]
             ns=np.expand_dims(wout.xn[ii[0]:ii[-1]+1]//wout.nfp, axis=1) #row vector
-            nnmat=(1.0+(-1.0)**ns-ns.T)/2.0
+            nnmat=(1.0+(-1.0)**(ns-ns.T))/2.0
             accum=accum+m*np.sum((np.expand_dims(wout.rmnc[-1][ii[0]:ii[-1]+1], axis=1)*
                                   np.expand_dims(wout.zmns[-1][ii[0]:ii[-1]+1], axis=0))*nnmat)
 

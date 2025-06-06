@@ -441,7 +441,7 @@ def findSightLineCrossings(Geom,P0,P1):
 #####################################################################
 # Here the code starts
 ######################################################################
-        
+
 Geom=bcgeom('/afs/ipp-garching.mpg.de/home/s/smithh/Forskning/Stellarator/sfincs/gitsfincs/equilibria/w7x-sc1+252.bc')
 #Geom=bcgeom('/afs/ipp-garching.mpg.de/home/s/smithh/Forskning/Stellarator/sfincs/gitsfincs/equilibria/w7x-sc1.bc',max_m=4,maxabs_n=4)
 P0=[3.0,0.3,0.18] #x,y,z of starting point
