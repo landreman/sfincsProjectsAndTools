@@ -1,0 +1,96 @@
+* DONE Er search creates too many simulations?
+** DONE Bug in how new Er is extrapolated?
+** TODO Could be better, but it works as intended.
+* DONE OOM simulations with less helpful error message not restarted
+  Check if this works
+* DONE OOM simulations never look for manually started simulations
+  Check if this works now
+* DONE TIME simulations never look for manually started simulations
+  Check if this works now
+* DONE TIME simulations never increase time limit
+  Check if this works now
+* DONE Restarting Er scan
+  Check if it works?
+* DONE Check if can rerun "done" scan without any new simulations being started.
+
+
+
+
+* DONE States of outputs
+** TODO  Running
+** TODO  Finished
+** TODO  OOM
+** TODO  time
+  KSP not-converged
+
+
+* DONE simulMockup
+** Mock the stdout and stderr of simulation
+** Mock the output of squeue
+
+* DONE sfincs_utils
+** Perhaps rename to simul_utils?
+   Has wrappers so that the real simulations can be easily replaced by the mockupsabove.
+** Wrap squeue
+** Wrap sbatch
+
+* DONE State determined from stderr and stdout (ErrOut object)
+** DONE DONE, TIME, OOM works and tests in place.
+** TODO KSP non-converged: not implemented
+
+* DONE States of individual simulations (Simulation object)
+  Queued (if job ID exists in squeue and none of the below is true)
+  Maybe-queued (if job ID is not known and none of the below is true)
+  Running (if stderr is empty but stdout is not)
+  Finished (if stdout indicates finished simulation)
+  OOM (if stderr indicates)
+  time (if stderr indicates)
+  KSP not-converged (NOT IMPLEMENTED)
+
+** Variables that can be changed by simulation itself
+ -  time limit
+ -  number of nodes
+ -  icntl parameters
+ -  KSP parameters
+ -  preconditioner?
+ In general, they shouldn't change the "interpretation" of the simulation
+ with respect to the simulgroup.
+
+* DONE State of simulgroup
+  0: running convergence scan
+  1: running intermittent Er scan
+  2: running final Er scan
+  3: running follow-up convergence scan
+  9: all done
+  4: as low as possible convergence scan???
+
+** "Variables" the simulgroup can change
+   Add new simulations (with new values in resolution, Er, etc.)
+   Discard old simulations (maybe)
+   
+* DONE State visualizer
+  Viewer:
+     Expand simulgroup
+        Copy simulation
+        Expand simulation
+            Edit simulation
+                Plot simulation
+     Copy simulgroup
+     
+* TODO Better resolution estimate
+** TODO Script to run over simulations to extract input, geometry and numerical convergence status
+   ~/sfincsProjectsAndTools/tools/Stefan/sfincs_resolution/data/conv_data_from_scan.py
+** TODO Geometry representation useful to assess resolution requirements
+** TODO Categorizer that accounts for symmetry in input (SVM?)
+
+* TODO Change to collisional and nx preconditioner if needed?
+  Might be best to do this manually for now, since memory requirements needs to be as low as possible. Should launch a different kind of scan to find as low resolution as possible for unaffected parameters?
+
+
+* TODO Lowest possible converged resolution scan
+  Useful to change preconditioner, or increase resolution.
+  Maybe substates for different resolution parameters?
+* TODO Copy simulations/simulgroup
+* TODO Edit simulation/simulgroup
+* TODO Visualize simulation/simulgroup
+* TODO State1 state3 merge
